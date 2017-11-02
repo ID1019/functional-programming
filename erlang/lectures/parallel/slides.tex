@@ -1,0 +1,480 @@
+\input{../include/preamble}
+
+\title[ID1019 Parallel programming]{Parallel programming}
+ 
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Parallelism}
+
+Parallelism vs Concurrency 
+
+\vspace{20pt}
+
+\begin{columns}
+ \begin{column}{0.5\linewidth}
+  Concurrency:
+  \begin{itemize}
+    \item multiple threads of control
+    \item structure of architecture
+    \item particularly suited for interactive applications
+  \end{itemize}
+ \end{column}
+ \pause
+ \begin{column}{0.5\linewidth}
+  Parallelism:
+   \begin{itemize}
+    \item main goal - increase performance
+    \item make use of parallel hardware
+  \end{itemize}
+ \end{column}
+\end{columns}
+
+\pause\vspace{10pt}{\em A concurrent program could be parallelized.}
+
+\end{frame}
+
+\begin{frame}{types of parallel hardware}
+
+\begin{itemize}
+  \pause\item Multiple Instructions Multiple Data (MIMD) : what is
+  provided by a multi-core CPU but also by a distributed system
+
+\pause\item Single Instruction Multiple Data (SIMD): typically used by
+graphics cards, the same operations should be performed but on many
+objects or pixels
+
+\pause\item Pipeline : processing units that work in series, for
+example the stages of execution of an instruction in a CPU
+
+\end{itemize}
+
+\pause\vspace{20pt}
+
+{\em We will try to utilize a MIMD architecture.}
+
+\end{frame}
+
+\begin{frame}{types of parallel programming}
+
+Several models of parallel computations:
+
+\pause\vspace{20pt}
+
+\begin{itemize}
+ \pause\item loop parallelism: identify a loop where each iteration is independent
+ \pause\item map-reduce: for each element in a set - perform an operation and collect the result
+ \pause\item task parallelism: independent tasks are generated and executed in parallel
+ \pause\item stream parallelism: a stream of events should be processes by several combinators
+\end{itemize}
+
+\pause\vspace{10pt}{\em A concurrent program could be executed in parallel but the focus is then concurrency not parallelism.}
+\end{frame}
+
+\begin{frame}{language support}
+
+What language support do we have:
+
+\begin{itemize}
+ \pause\item parallel operators: extraction of parallelism by compiler, loop parallelism, map-reduce etc
+ \pause\item concurrency:  concurrent processes that the can be execute in parallel
+   \begin{itemize}
+     \pause\item synchronization by shared memory/objects - Java, C++, ...
+     \pause\item synchronization by message passing - Erlang, MPI, ...
+   \end{itemize}
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{how do we exploit parallelism}
+
+\begin{columns}
+ \begin{column}{0.5\linewidth}
+\begin{verbatim}
+fib(0) -> 1;
+fib(1) -> 1;
+fib(N) ->  
+   F1 = fib(N-1),
+   F2 = fib(N-2),
+   F1 + F2.
+\end{verbatim}
+ \end{column}
+\pause
+ \begin{column}{0.5\linewidth}
+\begin{verbatim}
+fib(0) -> 1;
+fib(1) -> 1;
+fib(N) ->  
+   F1 = spawn(fun() -> fib(N-1) end),
+   F2 = spawn(fun() -> fib(N-2) end),
+   F1 + F2.
+\end{verbatim}
+ \end{column}
+\end{columns}
+
+\pause\vspace{20pt}
+{\em Ehhh, not the best thing to do - does not work does it?}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{how do we exploit parallelism}
+
+\begin{columns}
+ \begin{column}{0.6\linewidth}
+ \begin{verbatim}
+fib(0) -> 1;
+fib(1) -> 1;
+fib(N) -> 
+   Ref = make_ref(),
+   parallel(fun() -> fib(N-1) end, Ref),
+   parallel(fun() -> fib(N-2) end, Ref),
+   F1 = collect(Ref),
+   F2 = collect(Ref),
+   F1 + F2.
+\end{verbatim}
+ \end{column}
+\pause
+ \begin{column}{0.4\linewidth}
+\begin{verbatim}
+parallel(Fun, Ref) ->
+   Self = self(),
+   spawn(fun() -> 
+          Res = Fun(), 
+          Self ! {ok, Ref, Res}
+         end).
+\end{verbatim}
+\begin{verbatim}
+collect(Ref) ->
+   receive 
+      {ok, Ref, Res} ->
+          Res
+   end.
+\end{verbatim}
+ \end{column}
+\end{columns}
+
+\pause\vspace{20pt}
+{\em All right, let's roll!}
+
+\end{frame}
+
+\begin{frame}{benchmark}
+
+fib(30),  parallel vs sequential, 2 x AMD Opteron 12 cores
+
+\pause\vspace{20pt}
+
+\begin{itemize}
+\pause \item sequential: 64 ms
+\pause \item parallel: \pause .... \pause 1800 ms
+\end{itemize}
+
+\vspace{20pt}
+{\em so much for parallelism}
+
+\end{frame} 
+
+\begin{frame}[fragile]{granularity}
+
+We need to control the granularity of task:
+
+ \begin{verbatim}
+fix(0, _) -> 1;
+fix(1, _) -> 1;
+fix(N, M) when N > M -> 
+   Ref = make_ref(),
+   parallel(fun() -> fix(N-1, M) end, Ref),
+   parallel(fun() -> fix(N-2, M) end, Ref),
+   F1 = collect(Ref),
+   F2 = collect(Ref),
+   F1 + F2;
+fix(N, _) -> fib(N).
+\end{verbatim}
+
+\pause\vspace{20pt}
+{\em All right, let's roll!}
+\end{frame}
+
+\begin{frame}[fragile]{finding the granularity}
+
+\begin{verbatim}
+> fib:bench(2).
+fib(40)  sequential: 7000 ms
+fix(40,38) : 2900 ms
+fix(40,36) : 1100 ms
+fix(40,34) : 610 ms
+fix(40,32) : 530 ms
+fix(40,30) : 490 ms
+fix(40,28) : 490 ms
+fix(40,26) : 480 ms
+fix(40,24) : 480 ms
+fix(40,22) : 480 ms
+fix(40,20) : 490 ms
+ok
+\end{verbatim}
+
+{\em When does it pay off, what is the overhead?}
+
+\end{frame}
+
+\begin{frame}[fragile]{the null test}
+
+\begin{columns}
+\begin{column}{0.5\linewidth}
+\begin{verbatim}
+ :
+ fix(N,_) -> 1.
+\end{verbatim}
+\end{column}
+\pause
+\begin{column}{0.5\linewidth}
+\begin{verbatim}
+> fib:bench(2).
+fib(40)  sequential: 7000 ms
+fix(40,38) : 0 ms
+fix(40,36) : 0 ms
+fix(40,34) : 0 ms
+fix(40,32) : 0 ms
+fix(40,30) : 1 ms
+fix(40,28) : 1 ms
+fix(40,26) : 3 ms
+fix(40,24) : 6 ms
+fix(40,22) : 17 ms
+fix(40,20) : 32 ms
+ok
+\end{verbatim}
+\end{column}
+\end{columns}
+
+\pause\vspace{20pt} 
+{\em How many processes are created in fix(40,20)?}
+
+\end{frame}
+
+\begin{frame}{how do we scale}
+
+\includegraphics[width=0.6\linewidth]{first.png}
+
+\end{frame}
+
+\begin{frame}{log scale}
+
+\includegraphics[width=0.6\linewidth]{logy.png}
+
+\end{frame}
+
+\begin{frame}{log-log scale}
+ 
+\includegraphics[width=0.6\linewidth]{logxy.png}
+
+\end{frame}
+
+\begin{frame}{as good as it gets}
+
+\begin{itemize}
+  \item speed-up 1 - 2 cores : 1.9 %% (/ 6542.0 3415)
+  \item speed-up 2 - 4 cores : 1.9 %% (/ 3415.0 1774)
+  \item speed-up 4 - 8 cores : 1.9 %% (/ 1774.0 9464)
+  \item speed-up 6 - 12 cores : 1.9 %% (/ 1237.0 638)
+\pause
+  \item speed-up 12 - 24 cores : 1.3 %% (/ 638.0 496)
+\end{itemize}
+
+\pause\vspace{20pt}
+
+Calculating Fibonacci in parallel is an example of an ``embarrassingly
+easy parallel program''.
+
+\end{frame}
+
+\begin{frame}{Image processing}
+
+Assume that we want to transform an image to black and white, and then
+reduce the color depth of the image.
+\end{frame}
+
+
+\begin{frame}{question}
+
+\begin{columns}
+ \begin{column}{0.3\linewidth}
+   \includegraphics[width=0.8\linewidth]{small.png}
+ \end{column}
+\pause
+ \begin{column}{0.3\linewidth}
+   \includegraphics[width=0.8\linewidth]{smallgray.png}
+ \end{column}
+\pause
+ \begin{column}{0.3\linewidth}
+   \includegraphics[width=0.8\linewidth]{smallreduced.png}
+ \end{column}
+
+\end{columns}
+
+\pause\vspace{20pt}How do we parallelize this?
+
+\end{frame}
+
+\begin{frame}{alternatives}
+
+\begin{itemize}
+\pause \item parallelize the gray transformer and/or the color-depth transformer 
+\pause \item let the gray transformer feed the color-depth transformer, line by line
+\end{itemize}
+
+\pause\vspace{10pt}{\em A pipe-line: reader - transform - transform - writer}
+
+\end{frame}
+
+\begin{frame}[fragile]{the pipeline}
+
+\begin{verbatim}
+test(6) ->
+    S = erlang:system_time(milli_seconds),
+    W = ppm:writer("reduced.pgm", self()),
+    B = image:reducer(10, W),
+    G = image:grayer(B),
+    ppm:reader("morfar.ppm", G),
+    receive 
+        done ->
+            ok
+    end,
+    T = erlang:system_time(milli_seconds),
+    io:format("reading, to gray, reducing and writing in ~w ms ~n", [T]).
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{a transformer}
+\begin{verbatim}
+grayer(Out) ->
+        spawn_link(fun() -> grayer_init(Out) end).
+
+grayer_init(Out) ->
+    receive 
+        {header, {P, Size, Depth}} ->
+            Out ! {header, {gray, Size, Depth}},
+            grayer_lines(P, Out)
+    end.
+\end{verbatim}
+\end{frame}
+
+
+\begin{frame}[fragile]{a transformer}
+\begin{verbatim}
+grayer_lines(P, Out) ->
+    receive
+        {line, N, Line} ->
+            Grayer = grayer_line(P, Line),
+            Out ! {line, N, Grayer},
+            grayer_lines(P, Out);
+        done ->
+            Out ! done
+    end.
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{benchmark}
+
+\begin{columns}
+ \begin{column}{0.5\linewidth}
+\begin{verbatim}
+> test:seq().
+reading in  118 ms 
+gray in      66 ms 
+reduce in    66 ms 
+writing in   96 ms 
+
+total in    349 ms
+\end{verbatim}
+ \end{column}
+\pause
+ \begin{column}{0.5\linewidth}
+\begin{verbatim}
+> test:test(6).
+ reading turning gray, 
+ reducing and writing in 260 ms 
+\end{verbatim}
+ \end{column}
+\end{columns}
+
+\pause\vspace{10pt}
+{\em This is using only one scheduler.}
+
+\end{frame}
+
+\begin{frame}[fragile]{benchmark}
+
+\begin{verbatim}
+> test:test(6).
+reading turning gray, reducing and writing in 260 ms 
+\end{verbatim}
+\pause
+\begin{verbatim}
+> erlang:system_flag(schedulers_online, 2). 
+1
+\end{verbatim}
+\pause
+\begin{verbatim}
+> test:test(6).                            
+reading turning gray, reducing and writing in 161 ms 
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{a sequence of task}
+
+  Assume we have a sequence of independent task (for example images
+  that should processes) how do we parallelize the execution?
+
+\pause\vspace{10pt}
+\begin{itemize}
+\pause\item pipe-line, each task passes a sequence of processes 
+\pause\item task parallel, each task is executed in a separate process
+\end{itemize}
+
+\pause\vspace{20pt}{\em Pros and cons?}
+
+\end{frame}
+
+\begin{frame}{stream parallelism}
+
+  Assume we have a flow of events (a twitter feed) and collect
+  statistics of the most frequent word during a minute, these words
+  are then forwarded to a counter etc.
+
+\pause\vspace{10pt}
+
+  Create a network of processes, each process receives events,
+  processes them and forwards them to other processes.
+
+\pause\vspace{20pt}{\em Apache Storm.}
+
+
+\end{frame}
+
+\begin{frame}{Summary}
+
+
+\begin{itemize}
+\pause\item parallelism vs concurrency
+\pause\item concurrency as a tool for parallelism 
+\pause\item embarrassing easy parallelism is often easy
+\pause\item pipe-line parallelism 
+\pause\item task parallelism 
+\pause\item stream parallelism
+\end{itemize}
+
+\end{frame}
+
+\end{document}

@@ -1,0 +1,608 @@
+\input{../include/preamble}
+
+\title[ID1019 Complexity]{Complexity}
+
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}[fragile]{run-time complexity of sum}
+
+Calculating the sum of all elements in a list:
+
+\pause\vspace{20pt}
+
+\begin{columns}
+   \begin{column}{.5\linewidth}
+     \begin{block}{sum/1}
+       \begin{verbatim}
+sum([]) -> 0;
+sum([H|T]) -> 
+   S = sum(T), 
+   H + S.
+       \end{verbatim}
+      \end{block}
+    \end{column}
+\pause
+    \begin{column}{.5\linewidth}
+     \begin{block}{sum/2}
+       \begin{verbatim}
+sum([], S) -> S;
+sum([H|T], S) -> 
+   S1 = H+S, 
+   sum(T, S1).
+       \end{verbatim}
+      \end{block}
+    \end{column}
+  \end{columns}
+
+\pause\vspace{20pt}
+What are the run-time complexities of sum/1 and sum/2?
+
+\end{frame}
+
+\begin{frame}[fragile]{run-time complexity of foo}
+
+
+\pause\vspace{20pt}
+\begin{columns}
+   \begin{column}{.5\linewidth}
+     \begin{block}{foo/1}
+       \begin{verbatim}
+foo([]) -> []
+foo([H|T]) -> 
+   Z = foo(T),
+   bar(Z, [H]).
+       \end{verbatim}
+      \end{block}
+    \end{column}
+\pause
+    \begin{column}{.5\linewidth}
+     \begin{block}{foo/2}
+       \begin{verbatim}
+foo([], Y) -> Y;
+foo([H|T], Y) -> 
+   Z = zot(H, Y),
+   foo(T, Z).
+       \end{verbatim}
+      \end{block}
+    \end{column}
+  \end{columns}
+
+\pause\vspace{20pt}
+What are the run-time complexities of foo/1 and foo/2?
+
+\end{frame}
+
+
+\begin{frame}[fragile]{run-time complexity of reverse}
+
+\pause\vspace{20pt}
+\begin{columns}
+   \begin{column}{.5\linewidth}
+     \begin{block}{nreverse/1}
+       \begin{verbatim}
+nreverse([]) -> []
+nreverse([H|T]) -> 
+   Z = nreverse(T),
+   append(Z, [H]).
+       \end{verbatim}
+      \end{block}
+    \end{column}
+\pause
+    \begin{column}{.5\linewidth}
+     \begin{block}{reverse/2}
+       \begin{verbatim}
+reverse([], Y) -> Y;
+reverse([H|T], Y) -> 
+   Z = cons(H, Y),
+   reverse(T, Z).
+       \end{verbatim}
+      \end{block}
+    \end{column}
+  \end{columns}
+
+\pause\vspace{20pt}
+What are the run-time complexities of nreverse/1 and reverse/2?
+
+\end{frame}
+
+
+\begin{frame}{run-time complexity of reverse}
+
+\begin{columns}
+   \begin{column}{.5\linewidth}
+     \begin{tikzpicture}[scale=0.4]
+        \node at (2,10) {{\tt nreverse/1}};
+        \filldraw [red] (0,8) rectangle +(0.7,0.7);
+        \pause
+        \filldraw [red] (0,7) rectangle +(0.7,0.7); 
+        \filldraw [red] (1,7) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (0,6) rectangle +(0.7,0.7); 
+        \filldraw [red] (1,6) rectangle +(0.7,0.7); 
+        \filldraw [red] (2,6) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (0,5) rectangle +(0.7,0.7); 
+        \filldraw [red] (1,5) rectangle +(0.7,0.7); 
+        \filldraw [red] (2,5) rectangle +(0.7,0.7); 
+        \filldraw [red] (3,5) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (0,4) rectangle +(0.7,0.7); 
+        \filldraw [red] (1,4) rectangle +(0.7,0.7); 
+        \filldraw [red] (2,4) rectangle +(0.7,0.7); 
+        \filldraw [red] (3,4) rectangle +(0.7,0.7); 
+        \filldraw [red] (4,4) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (0,3) rectangle +(0.7,0.7); 
+        \filldraw [red] (1,3) rectangle +(0.7,0.7); 
+        \filldraw [red] (2,3) rectangle +(0.7,0.7); 
+        \filldraw [red] (3,3) rectangle +(0.7,0.7); 
+        \filldraw [red] (4,3) rectangle +(0.7,0.7); 
+        \filldraw [red] (5,3) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (0,2) rectangle +(0.7,0.7); 
+        \filldraw [red] (1,2) rectangle +(0.7,0.7); 
+        \filldraw [red] (2,2) rectangle +(0.7,0.7); 
+        \filldraw [red] (3,2) rectangle +(0.7,0.7); 
+        \filldraw [red] (4,2) rectangle +(0.7,0.7); 
+        \filldraw [red] (5,2) rectangle +(0.7,0.7); 
+        \filldraw [red] (6,2) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (0,1) rectangle +(0.7,0.7); 
+        \filldraw [red] (1,1) rectangle +(0.7,0.7); 
+        \filldraw [red] (2,1) rectangle +(0.7,0.7); 
+        \filldraw [red] (3,1) rectangle +(0.7,0.7); 
+        \filldraw [red] (4,1) rectangle +(0.7,0.7); 
+        \filldraw [red] (5,1) rectangle +(0.7,0.7); 
+        \filldraw [red] (6,1) rectangle +(0.7,0.7); 
+        \filldraw [red] (7,1) rectangle +(0.7,0.7); 
+
+        \pause
+        \draw [<->] (-1,1) -- (-1,8.7); 
+        \pause
+        \node at (-2, 4) {{\large n}};
+        \pause
+        \draw [<->] (0,0) -- (7.7,0);         
+        \pause
+        \node at (4, -1) {{\large n}};
+
+     \end{tikzpicture}
+   \end{column}
+
+   \begin{column}{.5\linewidth}
+
+     \begin{tikzpicture}[scale=0.4]
+        \node at (2,10) {{\tt reverse/2}};
+        \filldraw [red] (0,8) rectangle +(0.7,0.7); 
+        \filldraw [red] (0,7) rectangle +(0.7,0.7); 
+        \filldraw [red] (0,6) rectangle +(0.7,0.7); 
+        \filldraw [red] (0,5) rectangle +(0.7,0.7); 
+        \filldraw [red] (0,4) rectangle +(0.7,0.7); 
+        \filldraw [red] (0,3) rectangle +(0.7,0.7); 
+        \filldraw [red] (0,2) rectangle +(0.7,0.7); 
+        \filldraw [red] (0,1) rectangle +(0.7,0.7); 
+        \pause
+        \draw [<->] (-1,1) -- (-1,8.7); 
+        \pause
+        \node at (-2, 4) {{\large n}};
+        \pause
+        \draw [<->] (0,0) -- (0.7,0);         
+        \pause
+        \node at (0.4, -1) {{\large 1}};
+     \end{tikzpicture}
+   \end{column}
+\end{columns}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{complexity of quick-sort}
+
+\begin{columns}
+   \begin{column}{.6\linewidth}
+    \begin{verbatim}
+qsort([]) -> [];
+qsort([P|T]) ->
+   {Low, High} = partition(T, P),
+   LowS = qsort(Low),
+   HighS = qsort(High),
+   append(LowS, [P|HighS]).
+    \end{verbatim}
+   \end{column}
+   \begin{column}{.4\linewidth}
+    \begin{itemize}
+      \pause \item What is done in each iteration?
+      \pause \item How many iterations do we have?       
+    \end{itemize}
+   \end{column}
+\end{columns}
+
+
+\end{frame}
+
+
+\begin{frame}{complexity of quick-sort}
+     \begin{tikzpicture}[scale=0.6]
+
+        \node at (2,10) {{\tt qsort/1}};
+        \filldraw [red] (0,8) rectangle +(0.7,0.7); 
+        \filldraw [red] (1,8) rectangle +(0.7,0.7); 
+        \filldraw [red] (2,8) rectangle +(0.7,0.7); 
+        \filldraw [red] (3,8) rectangle +(0.7,0.7); 
+        \filldraw [red] (4,8) rectangle +(0.7,0.7); 
+        \filldraw [red] (5,8) rectangle +(0.7,0.7); 
+        \filldraw [red] (6,8) rectangle +(0.7,0.7); 
+        \filldraw [red] (7,8) rectangle +(0.7,0.7); 
+        \pause
+        \draw [black] (3.85, 7.7) -- (3.85, 5);
+
+        \filldraw [red] (0,7) rectangle +(0.7,0.7); 
+        \filldraw [red] (1,7) rectangle +(0.7,0.7); 
+        \filldraw [red] (2,7) rectangle +(0.7,0.7); 
+        \filldraw [red] (3,7) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (4,7) rectangle +(0.7,0.7); 
+        \filldraw [red] (5,7) rectangle +(0.7,0.7); 
+        \filldraw [red] (6,7) rectangle +(0.7,0.7); 
+        \filldraw [red] (7,7) rectangle +(0.7,0.7); 
+
+        \pause
+        \draw [black] (1.85, 6.7) -- (1.85, 5);
+        \draw [black] (5.85, 6.7) -- (5.85, 5);
+
+        \pause
+        \filldraw [red] (0,6) rectangle +(0.7,0.7); 
+        \filldraw [red] (1,6) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (2,6) rectangle +(0.7,0.7); 
+        \filldraw [red] (3,6) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (4,6) rectangle +(0.7,0.7); 
+        \filldraw [red] (5,6) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (6,6) rectangle +(0.7,0.7); 
+        \filldraw [red] (7,6) rectangle +(0.7,0.7); 
+
+        \pause
+        \draw [black] (0.85, 5.7) -- (0.85, 5);
+        \draw [black] (2.85, 5.7) -- (2.85, 5);
+        \draw [black] (4.85, 5.7) -- (4.85, 5);
+        \draw [black] (6.85, 5.7) -- (6.85, 5);
+
+        \pause
+        \filldraw [red] (0,5) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (1,5) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (2,5) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (3,5) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (4,5) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (5,5) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (6,5) rectangle +(0.7,0.7); 
+        \pause
+        \filldraw [red] (7,5) rectangle +(0.7,0.7); 
+
+
+        \pause
+        \draw [<->] (-1,5) -- (-1,8.7); 
+        \pause
+        \node at (-4, 7) {{\large log(n)}};
+        \pause
+        \draw [<->] (0,4) -- (7.7,4);         
+        \pause
+        \node at (4, 3) {{\large n}};
+
+     \end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}{qsort worst case}
+
+What if we run qsort on a already ordered list?
+
+\end{frame}
+
+
+\begin{frame}[fragile]{complexity of merge-sort}
+
+\begin{columns}
+   \begin{column}{.6\linewidth}
+    \begin{verbatim}
+msort([]) -> [];
+msort(L) ->
+   {A, B} = split(L),
+   AS = msort(A),
+   BS = msort(B),
+   merge(AS, BS).
+   \end{verbatim}
+   \end{column}
+   \begin{column}{.4\linewidth}
+    \begin{itemize}
+      \pause \item What is done in each iteration?
+      \pause \item How many iterations do we have?       
+      \pause \item What is the run-time complexity?       
+      \pause \item Which is best qsort or msort?       
+    \end{itemize}
+   \end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{complexity of fibonacci}
+
+\begin{columns}
+   \begin{column}{.6\linewidth}
+    \begin{verbatim}
+fib(0) -> 1;
+fib(1) -> 1;
+fib(N) ->
+   fib(N-1) + fib(N-2).
+    \end{verbatim}
+   \end{column}
+   \begin{column}{.4\linewidth}
+    \begin{itemize}
+      \pause \item What is done in each iteration?
+      \pause \item How many iterations do we have?       
+    \end{itemize}
+   \end{column}
+\end{columns}
+
+\end{frame}
+
+
+\begin{frame}{complexity of fibonacci}
+     \begin{tikzpicture}[scale=0.6]
+
+        \node at (2,10) {{\tt fibonacci/1}};
+        \filldraw [red] (8,8) rectangle +(0.7,0.7);  % fib(4)
+        \pause
+        \draw [black] (8.35, 7.7) -- (8.35, 5);
+
+        \pause
+        \filldraw [red] (4,7) rectangle +(0.7,0.7);  % fib(3)
+        \filldraw [red] (12,7) rectangle +(0.7,0.7); % fib(2)
+        \pause
+        \draw [black] (4.35, 6.7) -- (4.35, 5);
+        \draw [black] (12.35, 6.7) -- (12.35, 5);
+
+
+        \pause
+        \filldraw [red] (2,6) rectangle +(0.7,0.7);  % fib(2)
+        \filldraw [red] (6,6) rectangle +(0.7,0.7); % fib(1)
+
+        \filldraw [red] (10,6) rectangle +(0.7,0.7);  % fib(1)
+        \filldraw [red] (14,6) rectangle +(0.7,0.7); % fib(0)
+
+        \draw [black] (2.35, 5.7) -- (2.35, 5);
+
+        \pause
+
+        \filldraw [red] (1,5) rectangle +(0.7,0.7);  % fib(1)
+        \filldraw [red] (3,5) rectangle +(0.7,0.7);  % fib(0)
+
+        \pause
+        \draw [red] (8,4) rectangle +(0.7,0.7);  % fib(4)
+        \draw [red] (4,4) rectangle +(0.7,0.7);  % fib(3)
+        \draw [red] (12,4) rectangle +(0.7,0.7); % fib(2)
+
+        \draw [red] (2,4) rectangle +(0.7,0.7);  % fib(2)
+        \draw [red] (6,4) rectangle +(0.7,0.7); % fib(1)
+
+        \draw [red] (10,4) rectangle +(0.7,0.7);  % fib(1)
+        \draw [red] (14,4) rectangle +(0.7,0.7); % fib(0)
+        \draw [red] (1,4) rectangle +(0.7,0.7);  % fib(1)
+        \draw [red] (3,4) rectangle +(0.7,0.7);  % fib(0)
+
+        \pause
+        \draw [<->] (-1,5) -- (-1,8.7); 
+        \pause
+        \node at (-3, 7) {{\large n}};
+        \pause
+        \draw [<->] (1,3) -- (14.7,3);         
+        \pause
+        \node at (7, 2) {{\large $2^n$}};
+     \end{tikzpicture}
+
+\pause  The more precise answer is $O(1.6^n)$
+
+\pause  The smarter implementation is $O(n)$
+
+\pause  {\em ... an even smart solution is $O(log(n))$}
+
+\end{frame}
+
+\begin{frame}
+
+What is the difference between a smart programmer and a not so smart programmer?
+
+\vspace{60pt}
+\pause \centerline{3 billion years?}
+
+\end{frame}
+
+\begin{frame}[fragile]{operations on trees}
+
+\begin{verbatim}
+ nil
+{node, Key, Value, Left, Right}
+\end{verbatim}
+\pause\vspace{20pt}
+    \begin{itemize}
+        \item lookup: search for an element 
+        \item modify: modify an element
+        \item insert: insert a new element
+        \item delete: delete an element
+     \end{itemize}
+
+\end{frame}
+
+
+
+
+
+\begin{frame}{why trees?}
+
+Why use trees, why not use lists?
+
+\end{frame}
+
+\begin{frame}{benchmark tree operations}
+ Operations on a tree.
+ \begin{figure}
+  \centering
+  \includegraphics[height=140pt]{tree.png}
+  \caption{Execution time in ms of 100.000 calls}
+ \end{figure}
+
+\end{frame}
+
+\begin{frame}{why trees?}
+
+\pause \vspace{40pt}
+Why use trees, why not use tuples?
+
+\end{frame}
+
+\begin{frame}[fragile]{tuples as a key value store}
+
+\begin{verbatim}
+new([A,B,C]) -> {A,B,C}.
+\end{verbatim}
+\pause
+\begin{verbatim}
+lookup(1, {A,_,_}) -> A;
+lookup(2, {_, B,_}) -> B;
+  :
+\end{verbatim}
+\pause
+\begin{verbatim}
+modify(1, V, {_,B,C}) -> {V, B, C};
+modify(2, V, {A,_,C}) -> {A, V, C};
+  :
+\end{verbatim}
+\pause
+\begin{verbatim}
+delete(1, {_,B,C}) -> {false, B, C};
+delete(2, {A,_,C}) -> {A, false, C};
+  :
+\end{verbatim}
+\pause
+\begin{verbatim}
+insert(4, V, {A,B,C}) -> {A,B,C,V}.
+insert(5, V, {A,B,C,D}) -> {A,B,C,D,V}.
+\end{verbatim}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{tuples as a key value store}
+
+\begin{verbatim}
+new(List) -> list_to_tuple(List).
+\end{verbatim}
+\pause
+\begin{verbatim}
+lookup(K, Tuple) -> element(K, Tuple).
+modify(K, V, Tuple) -> setelement(K, {value, V}, Tuple).
+delete(K, Tuple) -> setelement(K, false, Tuple).
+\end{verbatim}
+\pause
+\begin{verbatim}
+insert(K, V, Tuple) -> erlang:insert_element(K, {value, V}, Tuple).
+\end{verbatim}
+
+\pause{\em insert\_element/3 can only increment the tuple by one step}
+
+\end{frame}
+
+
+\begin{frame}{benchmark tuple operations}
+ Operations on a tuple.
+ \begin{figure}
+  \centering
+  \includegraphics[height=140pt]{tuple.png}
+  \caption{Execution time in ms of 100.000 calls}
+ \end{figure}
+
+\end{frame}
+
+
+
+\begin{frame}{compare tuples and trees}
+ Tuple vs tree.
+ \begin{figure}
+  \centering
+  \includegraphics[height=140pt]{bench.png}
+  \caption{Modify operations, execution time in ms of 100.000 calls}
+ \end{figure}
+
+\end{frame}
+
+\begin{frame}{root of all evil}
+
+\begin{quote}
+Programmers waste enormous amounts of time thinking about, or
+worrying about, the speed of noncritical parts of their programs, and
+these attempts at efficiency actually have a strong negative impact
+when debugging and maintenance are considered. We should forget about
+small efficiencies, say about 97 percent of the time: premature
+optimization is the root of all evil. Yet we should not pass up our
+opportunities in that critical 3 percent.
+\end{quote}
+
+ {\em Donald Knuth}
+
+
+\end {frame}
+
+\begin{frame}{code vs time}
+
+     \begin{tikzpicture}[scale=0.6]
+
+        \node at (8,10) {{\tt code size}};
+        \filldraw [blue] (2,8) rectangle +(14,0.7);  % 
+        \filldraw [red] (16,8) rectangle +(2,0.7);  % 
+        \pause
+
+        \node at (8,6) {{\tt execution time}};
+        \filldraw [blue] (2,4) rectangle +(2,0.7);  % 
+        \filldraw [red] (4,4) rectangle +(14,0.7);  % 
+        \pause
+   \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{programming rules}
+
+\begin{itemize}
+\pause
+\item understand the problem before starting coding
+\pause
+\item write well structured code that is easy to understand
+\pause
+\item use abstractions to separate functionality from implementation
+\pause
+\item think about complexity
+\pause
+\item benchmark your program 
+\pause
+\item if needed, optimize
+\end{itemize}
+
+\end{frame}
+
+
+\end{document}
+
+

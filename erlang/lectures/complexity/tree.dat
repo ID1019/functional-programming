@@ -1,0 +1,15 @@
+# Benchmark of tree operations, (100000 runs), times in ms
+#
+# n * 1000 is size of tree
+#      n   insert   lookup   modify   delete
+       1       53       23       47       57
+       2       56       25       51       63
+       4       67       29       60       73
+       8       77       35       70       81
+      16       81       36       72       86
+      32       86       39       76       89
+      64      110       46       97      118
+     128      128       58      115      136
+     256      155       71      131      152
+     512      173       83      144      165
+    1024      175       98      162      181

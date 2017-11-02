@@ -1,0 +1,559 @@
+\input{../include/preamble}
+ 
+ 
+\title[ID1019 DNS]{A DNS Resolver}
+ 
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Domain Name System}
+
+\end{frame}
+
+\begin{frame}[fragile]{RFC 1035}
+
+\begin{verbatim}
+             Local Host                        |  Foreign
+                                               |
++---------+               +----------+         |  +--------+
+|         | user queries  |          |queries  |  |        |
+|  User   |-------------->|          |---------|->|Foreign |
+| Program |               | Resolver |         |  |  Name  |
+|         |<--------------|          |<--------|--| Server |
+|         | user responses|          |responses|  |        |
++---------+               +----------+         |  +--------+
+                            |     A            |
+            cache additions |     | references |
+                            V     |            |
+                          +----------+         |
+                          |  cache   |         |
+                          +----------+         |
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}{the resolver}
+
+\begin{itemize}
+\item client: sends request to resolver
+\item resolver: receives requests, queries servers/resolvers and caches responses 
+\item server: responsible for sub-domain
+\end{itemize}
+
+\vspace{10pt}\pause  
+
+{\em The first resolver is most probably running on your laptop.}
+\end{frame}
+
+
+\begin{frame}[fragile]{let's build a DNS resolver}
+ 
+\pause
+
+\begin{verbatim}
+-module(dns).
+-export([start/2]).
+\end{verbatim}
+
+\begin{verbatim}
+start(Port, Server) ->
+    spawn(fun() ->init(Port, Server) end),
+\end{verbatim}
+
+\vspace{10pt}\pause
+{\em The server is the DNS server to which queries are routed.}
+
+\pause
+
+\begin{verbatim}
+init(Port, Server) ->
+   case gen_udp:open(Port, [{active, true}, binary]) of
+      {ok, Socket} ->
+           dns(Socket, Server);
+      {error, Error} ->
+           io:format("dns: error opening server socket - ~w~n", [Error])
+           ok
+   end.
+\end{verbatim}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{the server loop}
+
+\begin{verbatim}
+dns(Socket, Server) ->
+    receive 
+        {udp, Socket, IP, Port, Packet} ->
+            handler:handle(Packet, IP, Port, Socket, Server),
+            dns(Socket, Server);
+        stop ->
+            io:format("by by~n", []),
+            ok;
+        Strange ->
+            io:format("strange message ~w~n", [Strange]),
+            dns(Socket, Server)
+    end.
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{handle a request}
+
+\pause
+\begin{verbatim}
+-module(handler).
+
+-export([handle/5]).
+
+handle(Packet, IP, Port, _Socket, _Server) ->    
+    io:format("received request from ~w/~w: ~w~n", [IP, Port, Packet]).
+\end{verbatim}
+
+\vspace{20pt}\pause{\em Let's try.}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{forward it}
+
+\pause
+Let's forward the request to the DNS server above us.
+
+\pause
+
+\begin{verbatim}
+handle(Packet, IP, Port, Socket, Server) ->    
+    case forward(Packet, Server) of
+        {ok, Reply} ->
+            gen_udp:send(Socket, IP, Port, Reply);
+        {error, Error} ->
+            io:format("error in forward ~w~n", [Error])
+    end.
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{forward a request}
+
+\begin{verbatim}
+forward(Request, Server) ->
+    case gen_udp:open(0, [{active, true}, binary]) of
+        {ok, Client} ->
+            gen_udp:send(Client, Server, ?Port, Request),
+            Result = receive 
+                         {udp, Client, _IP, _Port, Reply} ->
+                             {ok, Reply}
+                     after ?Timeout ->
+                             {error, timeout}
+                     end,
+            gen_udp:close(Client),
+            Result;
+        Error ->
+            {error, Error}
+    end.
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}{deep inside}
+
+
+\vspace{10pt}\pause
+{\em Deep inside the resolver we hard code that we should use UDP packets.}
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]{abstractions}
+
+Hide the details, let the server module decide how things are done.
+
+\vspace{10pt}\pause
+ 
+\begin{verbatim}
+        {udp, Socket, IP, Port, Packet} ->
+\end{verbatim}\pause
+\begin{verbatim}
+            Reply = fun(Rep) ->  reply(Rep, Socket, IP, Port) end,
+\end{verbatim}\pause
+\begin{verbatim}
+            Forward =  fun(Req) -> forward(Req, Server) end,
+\end{verbatim}\pause
+\begin{verbatim}
+            handler:handle(Packet, Reply, Forward),
+\end{verbatim}\pause
+\begin{verbatim}
+            dns(Socket, Server);
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{an alternative}
+
+The handler process:
+\pause
+\begin{verbatim}
+handle(Packet, Reply, Forward) ->    
+    case Forward(Packet) of
+        {ok, Msg} ->
+            Reply(Msg);
+        {error, Error} ->
+            io:format("error in forward ~w~n", [Error])
+    end.
+\end{verbatim}
+
+\vspace{10pt}\pause
+{\em Separation of knowledge - a need to know basis.}
+
+\end{frame}
+
+
+\begin{frame}{increase throughput}
+
+How do we increase throughput?
+
+\end{frame}
+
+
+\begin{frame}[fragile]{the server loop}
+
+\begin{verbatim}
+dns(Socket, Server) ->
+    receive 
+        {udp, Socket, IP, Port, Packet} ->
+            Reply = fun(Rep) ->  reply(Rep, Socket, IP, Port) end,
+            Forward =  fun(Req) -> forward(Req, Server) end,
+            handler:start(Packet, Reply, Forward),
+            dns(Socket, Server);
+        stop ->
+            io:format("by by~n", []),
+            ok;
+        Error ->
+            io:format("strange message ~w~n", [Error]),
+            dns(Socket, Server)
+    end.
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{handle a request}
+
+\pause
+
+\begin{verbatim}
+-module(handler).
+-export([start/3]).
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+start(Packet, Reply, Forward) ->
+   spawn(fun() -> handle(Packet, Reply, Forward) end).
+\end{verbatim}
+
+\pause
+{\em Let's try.}
+\end{frame}
+
+\begin{frame}{encapsulation}
+
+Encapsulation of the handling of a request in a process gives us something more than throughput - what?
+
+\end{frame}
+
+
+\begin{frame}[fragile]{let's decode the message}
+
+
+  \begin{bytefield}{32}
+    \bitheader{0,7-8,15-16,23-24,31} \\
+
+    \begin{rightwordgroup}{transport \\ header}
+      \bitbox{16}{identifier} &  \bitbox{16}{flags}\\
+      \bitbox{16}{\# query blocks} &  \bitbox{16}{\# answer blocks }\\
+      \bitbox{16}{\# authority blocks} &  \bitbox{16}{\# additional blocks }
+    \end{rightwordgroup}\\
+    \begin{rightwordgroup}{data \\ fields}
+      \wordbox[lrt]{1}{%
+        \parbox{0.6\width}{\centering \vspace{10pt} query, answer, authority \\ and additional blocks}} \\
+      \skippedwords \\
+      \wordbox[lrb]{1}{} 
+    \end{rightwordgroup}
+
+  \end{bytefield}
+
+\vspace{10pt}\pause
+{\em Query and response messages of the same format.}
+
+\end{frame}
+
+ 
+\begin{frame}[fragile]{message flags}
+
+\begin{itemize}
+\item QR: query or reply
+\item Op-code: the operation 
+\item AA: authoritative answer (if the server is responsible for the domain)
+\item TC: message truncated, more to follow
+\item RD: recursion desired by client 
+\item RA: recursion available by server
+\item Resp-code: ok or error message in response
+\end{itemize}
+
+\vspace{10pt}\pause
+
+  \begin{bytefield}[bitwidth=2em]{16}
+    \bitheader{0,1,4-5,6,7,8-9,11-12,15} \\
+    \bitbox{1}{QR} & \bitbox{4}{Op-code} & \bitbox{1}{AA} & \bitbox{1}{TC} & \bitbox{1}{RD} & \bitbox{1}{RA} &  \bitbox{3}{-} &   \bitbox{4}{Resp-code} 
+  \end{bytefield}
+
+
+\vspace{10pt}\pause
+{\em This is getting complicated.}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{the bit syntax}
+
+\begin{verbatim}
+decode(<<Id:16, Flags:2/binary, 
+         QDC:16, ANC:16, 
+         NSC:16, ARC:16, 
+         Body/binary>>=Raw) ->
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+    <<QR:1, Op:4, AA:1, TC:1, RD:1, RA:1, _:3, Resp:4>> = Flags,
+\end{verbatim}
+\pause
+\begin{verbatim}
+    Decoded = decode_body(QDC, ANC, NSC, ARC, Body, Raw),
+\end{verbatim}
+\pause
+\begin{verbatim}
+    {Id, QR, Op, AA, TC, RD, RA, RCode, Decoded}.
+\end{verbatim}
+
+
+{\em Why passing the raw message to the decoding of the body?}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{decode the body}
+
+The body consists of a number of: query, response, authoritative (server node) and additional sections.
+
+\vspace{10pt}\pause
+
+The answer, authoritative and additional sections follow the same pattern,
+the query is slightly different.
+
+\begin{verbatim}
+decode_body(QDC, ANC, NSC, ARC, Body0, Raw) ->
+    {Query, Body1} = decode_query(QDC, Body0, Raw),
+    {Answer, Body2} = decode_answer(ANC, Body1, Raw),
+    {Authority, Body3} = decode_answer(NSC, Body2, Raw),
+    {Additional, _} = decode_answer(ARC, Body3, Raw),
+    {Query, Answer, Authority, Additional}.
+\end{verbatim}
+
+\vspace{10pt}\pause
+
+{\em Note the nestling of the reminder of the body.}
+
+\end{frame}
+
+\begin{frame}{decode a query}
+
+A query consists of a sequence of queries (we know from the header how many).
+
+\begin{grammar}
+<query> ::= <name> <query type> <query class>
+
+<name> ::= <empty> | <label> <name>
+
+<empty> ::=  0 
+
+<label> ::=  <byte representing length n> <byte sequence of length n> \\
+
+<query type> ::= {\em 16 bits}
+
+<query class> ::= {\em 16 bits}
+
+\end{grammar}
+
+{\em The length is maximum 63 i.e. the top two bits are set to zero.}
+
+\end{frame}
+
+\begin{frame}[fragile]{decode a query}
+
+\begin{verbatim}
+decode_query(0, Body, _) ->
+    {[], Body};
+decode_query(N, Queries, Raw) ->
+    {Name, <<QType:16, QClass:16, Next/binary>>} = 
+          decode_name(Queries, Raw),
+    {Decoded, Body} = decode_query(N-1, Next, Raw),
+    {[{Name, QType, QClass} | Decoded], Body}.
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{decode a name}
+
+\begin{verbatim}
+decode_name(Label, Raw) ->
+    decode_name(Label, [], Raw).
+\end{verbatim}
+\vspace{20pt}\pause
+
+\begin{verbatim}
+decode_name(<<0:1, 0:1, _:6, _/binary>>=Label, Names, Raw) -> 
+    decode_label(Label, Names, Raw).
+\end{verbatim}
+\end{frame}
+
+
+\begin{frame}[fragile]{decode a label}
+
+\begin{verbatim}
+decode_label(<<0:8, Rest/binary>>, Names, _) ->
+    {lists:reverse(Names), Rest};
+decode_label(<<N:8, Rest/binary>>, Names, Raw) ->
+    decode_label(N, Rest, [], Names, Raw).
+\end{verbatim}
+
+\vspace{20pt}\pause
+
+\begin{verbatim}
+decode_label(0, Rest, Sofar, Names, Raw) ->
+    decode_name(Rest, [lists:reverse(Sofar)|Names], Raw);
+
+decode_label(N, <<Char:8, Rest/binary>>, Sofar, Names, Raw) ->
+    decode_label(N-1, Rest, [Char|Sofar], Names, Raw).
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{query example}
+
+  Erlang binary:
+\begin{verbatim}
+  <<4,12, 1, 0,
+    0, 1, 0, 0,
+    0, 0, 0, 0,
+    3,119,119,119,3,107,116,104,2,115,101,0,
+    0,1,0,1>>
+\end{verbatim}
+
+\vspace{20pt} \pause
+  Decoded query:
+\begin{verbatim}
+  {1036,0,0,0,0,1,0,0,{[{["www","kth","se"],1,1}],[],[],[]}}
+\end{verbatim}  
+
+\end{frame}
+
+\begin{frame}{encoding names by offset}
+
+The names in answers may use a more compact form of encoding.  
+
+\vspace{20pt}\pause
+
+Assume we have encoded {\tt www.kth.se} and need to encode {\tt
+  mail.kth.se} - then we can reuse the coding of {\tt kth.se}.
+
+\vspace{20pt} \pause
+
+\begin{grammar}
+<label> ::=  <byte representing length n> <byte sequence of length n> | \\
+             <two bytes representing an offset \underline{ from the start of the message}>
+\end{grammar}
+
+
+\vspace{20pt} \pause
+
+
+{\em The length version will always have the top two bits set to {\tt 00} and the offset version will have them set to {\tt 11}.}
+
+\end{frame}
+
+\begin{frame}[fragile]{offset encoding}
+
+\begin{verbatim}
+decode_name(<<0:1, 0:1, _:6, _/binary>>=Label, Names, Raw) -> 
+    %% regular name encoding
+    decode_label(Label, Names, Raw);
+      
+decode_name(<<1:1, 1:1, N:14, Rest/binary>>, Names, Raw) ->
+    %% offset encoding
+    Offset = 8*N,    
+    <<_:Offset, Section/binary>> = Raw,
+    {Name, _} = decode_label(Section, Names, Raw),
+    {Name, Rest}.
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{decode an answer}
+
+All answer sections have the same basic structure:
+
+\begin{grammar}
+<answer> ::= <name> <type> <class> <ttl> <length> <resource record>
+\end{grammar}
+
+\begin{itemize}
+\item type 16-bits: A-type, NS-, CNAME-, MX- etc
+\item class 16-bits: Internet, ...
+\item TTL 32-bits: time in seconds (typical some hours)
+\item length 16-bits: the length of the record in bytes
+\end{itemize}
+
+\vspace{10pt}\pause
+{\em The resource record is coded depending on the type of resource.}
+
+\end{frame}
+
+
+\begin{frame}{let's try}
+
+Same proxy that forwards the requests but now with an effort to decode the messages.
+
+\end{frame}
+
+\begin{frame}{things to do}
+
+We're wasting UDP ports - a new port is used for each query, could we do better?
+
+\vspace{20pt}\pause
+
+We of course want to cache the replies so that we can generate a respons directly.
+
+
+
+\end{frame}
+
+
+
+
+\end{document}

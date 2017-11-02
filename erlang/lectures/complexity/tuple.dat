@@ -1,0 +1,15 @@
+# Benchmark of tuple operations, (100000 runs), times in ms
+#
+# n * 1000 is size of tuple
+#      n   insert   lookup   modify   delete
+       1       95        2       48       50
+       2      185        2       96       99
+       4      364        2      203      215
+       8      735        2      398      423
+      16     1469        2      799      863
+      32     3098        3     1740     2034
+
+
+
+
+

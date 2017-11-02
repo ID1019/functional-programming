@@ -1,0 +1,521 @@
+\input{../include/preamble}
+
+\title[ID1019 Processes]{Processes}
+
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}[fragile]{processes}
+
+\begin{columns}
+   \begin{column}{.5\linewidth}
+     \begin{block}{create and send}
+       \begin{verbatim}
+start() ->
+   Pid = spawn(fun() -> 
+                server(10) 
+               end),
+   Pid ! {add, 5},
+   Pid ! stop.
+       \end{verbatim}
+       \vfill
+     \end{block}
+   \end{column}
+   \pause
+   \begin{column}{.5\linewidth}
+     \begin{block}{receive}
+       \begin{verbatim}
+server(S) ->
+   receive
+    {add, X} ->
+       server(S+X);
+    stop ->
+       ok
+   end
+       \end{verbatim}
+     \end{block}
+   \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{processes}
+\begin{verbatim}
+first() ->
+    receive
+      tic -> io:format("tic~n", []), second()
+    end.
+\end{verbatim}
+\pause
+\begin{verbatim}
+second() ->
+    receive
+      tac -> io:format("tac~n", []), last();
+      toe -> io:format("toe~n", []), last()
+    end.
+\end{verbatim}
+\pause
+\begin{verbatim}
+last() ->
+    receive 
+      X -> io:format("~w~n", [X])
+    end.
+\end{verbatim}
+\pause
+\begin{verbatim}
+ P = spawn(fun()->first() end), P ! toe, P ! tac, P ! tic.
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{why}
+
+Erlang checks the first message in the queue against all clauses before
+moving to the second element. 
+
+Messages that do not match a clause are left in the queue.
+
+\pause\vspace{10pt}
+Why not the other way around?
+
+\pause\vspace{20pt}
+\begin{verbatim}
+priority(State) ->
+    receive 
+       {alarm, the, house, is, on, fire} -> 
+           call_112(State);
+       {harmless, X} -> 
+           take_it_easy(X, State)
+    end.
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{what now}
+
+\begin{block}{dead process}
+  \begin{verbatim}
+start() ->
+   Pid = spawn(fun() -> ok end),
+   Pid ! {add, 5},
+   Pid ! stop.
+       \end{verbatim}
+\end{block}
+\pause
+\begin{block}{no match}
+   \begin{verbatim}
+start() ->
+   Pid = spawn(fun() -> server(10) end),
+   Pid ! {gurka, 5},
+   Pid ! stop.
+   \end{verbatim}
+\end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]{example account}
+
+\begin{columns}
+   \begin{column}{.4\linewidth}
+     \begin{verbatim}
+acc(Saldo) ->
+  recieve
+     {dep, M} ->
+        acc(Saldo + M);
+     {wdr, M} ->
+        acc(Saldo - M)
+  end.
+     \end{verbatim}
+   \end{column}
+   \begin{column}{.6\linewidth}
+     \begin{verbatim}
+doit() ->
+  Acc = spawn(fun()->acc(0) end),
+  Acc ! {dep, 20},
+  Acc ! {wdr, 10}.
+  Acc.
+     \end{verbatim}
+     \vfill
+   \end{column}
+\end{columns}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{example account}
+
+\begin{columns}
+   \begin{column}{.45\linewidth}
+\begin{verbatim}
+acc(Saldo) ->
+  recieve
+    {dep, M} ->
+       acc(Saldo + M);
+    {wdr, M} ->
+       acc(Saldo - M);
+    {req, Pid} ->
+       Pid ! {reply, Saldo},
+       acc(Saldo)
+  end.
+\end{verbatim}
+\end{column}
+   \begin{column}{.45\linewidth}
+\begin{verbatim}
+check(Acc) ->
+  Acc ! {req, self()},
+  receive
+    {reply, Saldo} ->
+        Saldo
+  end.
+\end{verbatim}
+\vfill
+\end{column}
+\end{columns}
+\end{frame}
+
+
+\begin{frame}[fragile]{request reply}
+
+\begin{verbatim}
+client(Server) ->
+   Server ! {query, 42, self()},
+   receive 
+     {reply, X} ->
+        continue(X, Server)
+   end.
+\end{verbatim}
+\pause\vspace{10pt}
+\begin{verbatim}
+server() ->
+   receive 
+    {query, N, Client} ->
+         Client ! {reply, N+1},
+         server()
+   end.
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{unique ref}
+
+\begin{verbatim}
+client(Server) ->
+   Ref = make_ref(),
+   Server ! {query, 42, Ref, self()},
+   receive 
+     {reply, Ref, X} ->
+        continue(X, Server)
+   end.
+\end{verbatim}
+\pause\vspace{10pt}
+\begin{verbatim}
+server() ->
+   receive 
+    {query, N, Ref, Client} ->
+         Client ! {reply, Ref, N+1},
+         server()
+   end.
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{what if...}
+
+What if we send a request and never get a reply?
+
+\pause\vspace{20pt}
+\begin{verbatim}
+client(Server) ->
+   Server ! {query, 42, self()},
+   receive 
+     {reply, X} ->
+        continue(X, Server)
+   after 
+     4000 -> something(Server)
+   end.
+\end{verbatim}
+
+\pause\vspace{20pt}
+{\em Why is this dangerous?}
+\end{frame}
+
+
+
+\begin{frame}[fragile]{process pattern}
+
+\begin{verbatim}
+process(This, That) ->
+   receive
+      {foo, F} -> 
+           Upd = zot(This, F),
+           process(Upd, That);
+      {bar, B, A} ->
+           Ipd = zat(That, B, A),
+           process(This, Ipd);
+      Strange ->
+           underliga_saker_handa(Strange)
+   end.
+\end{verbatim}
+
+\pause\vspace{20pt}
+{\em Tail recursion!}
+
+\end{frame}
+
+\begin{frame}[fragile]{spawn}
+
+Assume we have mod:foo/1 defined, we can write:
+
+\vspace{20pt}
+\begin{verbatim}
+ Pid = spawn(fun() -> mod:foo(42) end)
+\end{verbatim}
+
+\pause
+ ... or:
+\vspace{10pt}
+
+\begin{verbatim}
+ Pid = spawn(mod, foo, [42])
+\end{verbatim}
+
+\pause
+ ... why not:
+\vspace{10pt}
+\begin{verbatim}
+ Pid = spawn(mod:foo(42))
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{linking}
+
+What if ...
+
+\begin{verbatim}
+    :
+  Pid = spawn(fun() -> start(42) end),
+  X = 5 div 0,
+    :
+\end{verbatim}
+
+\pause\vspace{10pt}
+
+\begin{verbatim}
+    :
+  %% if I crash, you die
+  Pid = spawn_link(fun() -> start(42) end),
+    :
+\end{verbatim}
+
+\pause\vspace{10pt}
+
+{\em ... but then, if you crash I die ... hmmm}
+\end{frame}
+
+\begin{frame}[fragile]{exit signals}
+
+An exception, division by zero:
+
+\begin{tikzpicture}[>=stealth', node distance=8cm, semithick, auto]
+    \node[state]                     (mother)   []                  {mother};
+    \node[state]                     (child)  [right of=mother]     {child};
+
+    \path[-, dashed]  (mother)   edge [bend left] node {link}                            (child);
+    \pause
+    \path[<-]         (mother)   edge             node {\{'EXIT', <0.55.0>, \{badarith, ...\}\}}       (child);
+\end{tikzpicture}
+
+\pause
+\begin{verbatim}
+> 
+=ERROR REPORT==== 26-Nov-2013::23:23:05 ===
+Error in process <0.55.0> with exit value: 
+           {badarith,[{erlang,'/',[1,0],[]}]}
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{exit signals}
+
+A normal termination:
+
+\begin{tikzpicture}[>=stealth', node distance=8cm, semithick, auto]
+    \node[state]                     (mother)   []                  {mother};
+    \node[state]                     (child)  [right of=mother]     {child};
+
+    \path[-, dashed]  (mother)   edge [bend left] node {link}                            (child);
+    \pause
+    \path[<-]         (mother)   edge             node {\{'EXIT', <0.55.0>, normal\}}       (child);
+\end{tikzpicture}
+
+\pause
+
+{\em the child dies but the mother survives}
+
+\end{frame}
+
+\begin{frame}[fragile]{exit signals}
+
+Propagating exit signals:
+
+\begin{tikzpicture}[>=stealth', node distance=4cm, semithick, auto]
+    \node[state]                     (mother)   []                  {mother};
+    \node[state]                     (child1)   [above right of=mother]     {child1};
+    \node[state]                     (child2)   [below right of=mother]     {child2};
+
+    \path[-, dashed]  (mother)   edge [bend left]  node {link}                            (child1);
+    \path[-, dashed]  (mother)   edge [bend right] node {link}                            (child2);
+    \pause
+    \path[->]         (child1)   edge  node {\{'EXIT', <0.55.0>, \{badarith, ..\}\}}  (mother);
+    \pause
+    \path[->]         (mother)   edge  node {\{'EXIT', <0.45.0>, \{badarith, ..\}\}}  (child2);
+
+\end{tikzpicture}
+
+\pause
+
+{\em only exceptions i.e. non-normal termination}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{trap exit signals}
+
+Do we have to die?
+
+\pause\vspace{10pt}
+
+\begin{verbatim}
+   process_flag(trap_exit, true),
+   Pid = spawn_link(fun() -> start(42) end),
+     :
+\end{verbatim}
+
+\pause\vspace{10pt}
+
+\begin{verbatim}
+     :
+   receive
+      {regular, Msg} -> 
+            do_this(Msg);
+      {'EXIT', From, Reason} ->
+            %% Someone crached
+            what_should_we_do(Reason)
+   end.
+\end{verbatim}
+
+
+\end{frame}
+
+\begin{frame}{link and trap}
+
+\begin{itemize}
+\item Link processes that need each other - recommended.
+\pause
+\item Don't use trap\_exit if you don't know what you're doing.
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{monitor}
+
+There is an alternative to link/trap, called {\em monitoring}.
+
+\pause\vspace{10pt}
+Monitors are more dynamic and should be used when you want to keep
+track of a process without actually linking to it.
+\pause\vspace{10pt}
+
+\begin{verbatim}
+  Ref = erlang:monitor(process, Pid),
+  receive 
+     {expected, Reply} ->
+            erlang:demonitor(Ref, [flush]),
+            ok(Reply);
+     {'DOWN', Ref, process, Pid, Reason} ->
+            something()
+  end
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{finding processes}
+
+How do you get hold of process identifiers?
+
+\pause\vspace{10pt}
+You know your own ... and the identifiers of your children, ... and?
+
+\pause\vspace{10pt}
+\begin{verbatim}
+init(State) ->
+  receive 
+     {logger, Logger} ->
+          server(State, Logger)
+  end
+\end{verbatim}
+
+\pause\vspace{10pt}
+{\em Hmm, this might become hairy}
+
+\end{frame}
+
+\begin{frame}[fragile]{process registry}
+
+Register processes under {\em names} in a process registry.
+
+\pause\vspace{10pt}
+The name, an atom, can be used to find the registered process.
+
+\pause\vspace{10pt}
+\begin{verbatim}
+    :
+  Logger = logger:start(),
+  register(logger, Logger)
+    :
+\end{verbatim}
+
+\pause\vspace{10pt}
+\begin{verbatim}
+    :
+  case X of
+    ok -> 
+       dothis();
+    ono -> 
+       logger ! {error, ono},
+       dothat()
+  end
+\end{verbatim}
+
+\pause\vspace{10pt}
+{\em Hmm, this might become hairy}
+
+\end{frame}
+
+
+\begin{frame}{summary}
+
+\begin{itemize}
+\item Processes created using spawn or better spawn\_link.
+\item Process state represented by procedure arguments.
+\item Messages handled by selective receive and implicit deferral.
+\item Exit signals propagate through links.
+\item Non-normal exit signals will kill a process.
+\item Exit signals can be trapped and handled as messages.
+\item Monitors more dynamic way of keeping track of a process.
+\item Processes can be registered under names (pros and cons).
+\end{itemize}
+\end{frame}
+
+\end{document}
+
+
+

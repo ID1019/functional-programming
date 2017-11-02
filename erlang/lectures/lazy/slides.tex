@@ -1,0 +1,34 @@
+\input{../include/preamble}
+
+
+\title[ID1019 Lazy evaluation]{Lazy evaluation}
+
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+
+\begin{frame}{the environment}
+
+\pause We have presented an evaluation where $\sigma$ only contains a maping from variables to {\bf structures}. $\sigma = \lbrace X/\lbrace a, b\rbrace, Y = b\rbrace$
+
+\pause What if $\sigma$ was a maping from variables to {\bf expressions}. $$\sigma = \lbrace X/\lbrace a, Y\rbrace, Y/b \rbrace\rbrace$$
+
+\pause Could we then have the simple rule:
+
+  \begin{itemize} 
+   \pause\item $E\sigma({\rm name}(e_1, \ldots)) \rightarrow E\{v_1/e_1, \ldots\}({\rm sequence} )$ if
+  \end{itemize}
+
+\pause What if $e$ is $\lbrace a, Y\rbrace$ and $Y$ has a binding in $\sigma$?
+
+
+\end{frame}
+\end{document}

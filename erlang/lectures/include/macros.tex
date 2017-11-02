@@ -1,0 +1,76 @@
+\newcommand{\LET}{$\ {\rm let}\ $ }
+\newcommand{\IN}{$\ {\rm in}\ $ }
+
+
+\newenvironment{eval}
+  {\ttfamily \vspace{10pt} \begin{tabular}{lllllll}} 
+  {\end{tabular} \par}
+
+\newcommand{\pointer}[4]{%
+  \path (#1,#2) ++(1.5, 0) coordinate (from);
+  \path (#3,#4) ++(-0.5,0) coordinate (to);
+
+  \draw [ultra thick] (from) circle [radius =0.1];
+  \draw [ultra thick] (from) to [out=0, in=180] (to);
+  \draw [ultra thick, ->] (to) -- +(0.5,0);
+
+}
+
+\newcommand{\cell}[2]{%
+  \path (#1,#2) ++ (0.5,-0.5) coordinate (origin);
+  \draw [ultra thick] (origin) rectangle +(2,1);
+}
+
+\newcommand{\cons}[3]{%
+   \path (#1,#2) coordinate (origin);
+   \path (origin) ++(0.5,-0.5) coordinate (car);
+   \path (origin) ++(0.5,-1.5) coordinate (cdr);
+   \draw [ultra thick] (car) rectangle +(2,1) node at +(1,0.5) {{\bf #3}};
+   \draw [ultra thick] (cdr) rectangle +(2,1);
+}
+
+
+\newcommand{\cdrnil}[2]{%
+  \path (#1,#2) ++(0.5,-1.5) coordinate (from);
+  \draw [ultra thick] (from) -- +(2,1);
+}
+
+\newcommand{\cdrpointer}[4]{%
+   \pointer{#1}{#2-1}{#3}{#4}
+}
+
+
+\newcommand{\branch}[3]{%
+   \path (#1,#2) coordinate (origin);
+   \path (origin) ++(0.5,-0.5) coordinate (node);
+   \path (origin) ++(0.5,-1.5) coordinate (value);
+   \path (origin) ++(0.5,-2.5) coordinate (left);
+   \path (origin) ++(0.5,-3.5) coordinate (right);
+   \draw [ultra thick] (node) rectangle +(3,1) node at +(1,0.5) {node};
+   \draw [ultra thick] (value) rectangle +(3,1) node at +(1,0.5) {#3};
+   \draw [ultra thick] (left) rectangle +(3,1);
+   \draw [ultra thick] (right) rectangle +(3,1);
+}
+
+\newcommand{\leaf}[3]{%
+   \path (#1,#2) coordinate (origin);
+   \path (origin) ++(0.5,-0.5) coordinate (leaf);
+   \path (origin) ++(0.5,-1.5) coordinate (value);
+   \draw [ultra thick] (leaf) rectangle +(3,1) node at +(1,0.5) {leaf};
+   \draw [ultra thick] (value) rectangle +(3,1) node at +(1,0.5) {#3};
+}
+
+\newcommand{\branchleft}[4]{%
+   \pointer{#1}{#2-2}{#3}{#4}
+}
+
+\newcommand{\branchright}[4]{%
+   \pointer{#1}{#2-3}{#3}{#4}
+}
+
+
+
+
+\newenvironment{code}
+  {\ttfamily \vspace{30pt} \begin{tabular}{rllllll}} 
+  {\end{tabular} \par}

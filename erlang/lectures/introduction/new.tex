@@ -1,0 +1,447 @@
+\input{../include/preamble}
+
+
+\title[ID1019 Introduction]{Introduction}
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{introduction}
+  Functional programming - what?
+\end{frame}
+
+
+\begin{frame}{functional expressions}
+
+$$(3 + 8) * (6 - 3)$$
+
+\pause\vspace{20pt}
+
+$$(\sqrt[3]{3 + 5^4})$$
+
+\end{frame}
+
+\begin{frame}{a small language}
+
+\pause
+
+\begin{itemize}
+ \item a domain: $\mathbb{Z}$ i.e. $\{... -2,-1,0,1,2... \}$
+\pause
+ \item a set of primitive functions: $+$, $-$, $*$, $\mathrm{mod}$,  $\mathrm{div}$ 
+\pause
+ \item syntax: symbols, precedence, parentheses i.e. a way to write expressions
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{evaluation of expressions}
+\begin{columns}
+ \begin{column}{0.5\linewidth}
+  \begin{itemize}
+   \pause \item $(3 + 5) * (6 - 3)$
+   \pause \item $8 * (6 - 3)$
+   \pause \item $8 * 3$
+   \pause \item $24$
+  \end{itemize}   
+ \end{column}
+ \begin{column}{0.5\linewidth}
+  \begin{itemize}
+   \pause \item $(3 + 5) * (6 - 3)$
+   \pause \item $(3 + 5) * 3$
+   \pause \item $8 * 3$
+   \pause \item $24$
+  \end{itemize}   
+ \end{column}
+ \end{columns}
+\end{frame}
+
+\begin{frame}{how about this}
+
+\pause
+$$5 * (4+2)$$
+
+\pause
+$$17 \ \mathrm{mod}\  5$$
+
+\pause
+
+$$7 \ \mathrm{mod}\  0$$
+
+\end{frame}
+
+\begin{frame}{bottoms}
+
+\pause
+
+\vspace{20pt}\hspace{60pt}$ 5 \ \mathrm{mod}\ 0 \equiv \perp$
+
+\pause
+
+\vspace{20pt}\hspace{60pt}$\perp$ is called {\em bottoms}, {\em undefined} or ... {\em exception}
+\pause
+
+\vspace{20pt}\hspace{60pt}We extend the domain: $\mathbb{Z} \cup \{\perp\}$
+
+\pause 
+
+\vspace{20pt}\hspace{60pt}What is the definition of: $5 * \perp$
+
+\end{frame}
+
+\begin{frame}{strict functions}
+
+\vspace{20pt}\hspace{80pt}\parbox[l][60pt][l]{240pt}{
+
+A function that is defined to be $\perp$ if any of its arguments is $\perp$, is called a {\em strict function},
+
+\vspace{20pt}All of our regular arithmetic functions are strict.
+}
+
+\end{frame}
+
+\begin{frame}{ok, I get it}
+
+\vspace{20pt}\hspace{40pt}What is the value of: $x\ \mathrm{div}\ x$
+
+\end{frame}
+
+\begin{frame}{evaluation of expressions}
+\begin{columns}
+ \begin{column}{0.5\linewidth}
+  \begin{itemize}
+   \pause \item $(\sqrt[3]{3 + 5^4}) * (6 - 6)$
+   \pause \item $(\sqrt[3]{3 + 5^4}) * 0$
+   \pause \item $0$
+  \end{itemize}   
+ \end{column}
+ \begin{column}{0.5\linewidth}
+  \begin{itemize}
+   \pause \item $(512\ \mathrm{div}\ 0) * (6 - 6)$
+   \pause \item $(512\ \mathrm{div}\ 0) * 0$
+   \pause \item $0$
+   \pause \item hmmm, not so good
+  \end{itemize}   
+ \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{order of evaluation}
+
+\vspace{20pt}\hspace{60pt}\parbox[l][60pt][l]{300pt}{If all functions are strict:
+\begin{itemize}
+\pause \item then all arguments of the function must be evaluated
+\pause \item the order does not matter\pause ,... or does it?
+\end{itemize}}
+
+\end{frame}
+
+
+\begin{frame}{variables and functions}
+
+
+Too make life more interesting, we introduce 
+
+\vspace{10pt}\hspace{40pt}variables: $x$, $y$, 
+
+\vspace{10pt}\hspace{40pt}and functions: $\lambda x \rightarrow x+5$
+
+\pause
+
+\vspace{20pt}{\em Most often written $\lambda x.x+5$ but we will use $\rightarrow$.}
+
+\pause
+
+\vspace{20pt}{\em So far, functions do not have names.}
+
+\end{frame}
+
+
+\begin{frame}{functions}
+  \begin{itemize}
+   \pause \item $\lambda x \rightarrow x + 5$
+   \pause \item $(\lambda x \rightarrow x + 5) \ 7$
+   \pause \item $(7 + 5)$
+   \pause \item $12$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{application}
+
+We {\em apply a function} to an argument (or actual arguments),
+\vspace{10pt}
+
+  \begin{itemize}
+   \pause \item $(\lambda x \rightarrow \langle E \rangle) 7$
+  \end{itemize}
+
+\pause\vspace{10pt}
+by {\em substituting} the parameter (or formal argument) of the function with the argument.
+
+\pause\vspace{10pt}
+  \begin{itemize}
+   \pause \item $[x/7]\langle E \rangle$
+  \end{itemize}
+
+
+\pause\vspace{20pt}
+
+But, things could go wrong.
+
+\end{frame}
+
+\begin{frame}{scope of declaration}
+
+\pause
+
+  In an expression $\lambda x \rightarrow  \langle E \rangle$, the {\em scope} of $x$
+  is $\langle E \rangle$. 
+
+\pause\vspace{10pt}
+
+  We say that $x$ is {\em free} in $\langle E \rangle$ but {\em bound} in
+  $\lambda x \rightarrow \langle E \rangle$.
+
+\pause\vspace{60pt}
+
+{\em We can write $\lambda x \rightarrow ( \lambda x -> (x*x))$, which does complicate things.}
+
+\end{frame}
+
+
+\begin{frame}{substitution}
+  
+
+A substitution $[x/\langle F \rangle]\langle E \rangle$ is possible if
+$\langle F \rangle$ does not have any free variables ...
+\pause
+
+\vspace{5pt}\hspace{40pt} that become bound in $[x/\langle F \rangle]\langle E \rangle$.
+
+\pause\vspace{20pt}
+
+\begin{columns}
+ \begin{column}{0.5\linewidth}
+$$(\lambda x \rightarrow (\lambda y \rightarrow  (y + x))) (y + 5)$$
+\pause
+$$[x/(y + 5)] (\lambda y \rightarrow  (y + x))$$
+\pause
+$$\lambda y \rightarrow  (y + (y + 5))$$
+ \end{column}
+
+\pause
+ \begin{column}{0.5\linewidth}
+$$(\lambda x \rightarrow (\lambda z \rightarrow  (z + x))) (y + 5)$$
+\pause
+$$[x/(y + 5)] (\lambda z \rightarrow  (z + x))$$
+\pause
+$$\lambda z \rightarrow  (z + (y + 5))$$
+ \end{column}
+
+\end{columns}
+
+\pause
+
+\vspace{20pt}{\em We have to be careful but renaming variables solves the problem.}
+
+
+\end{frame}
+
+
+
+\begin{frame}{functions}
+  A function is:
+ \vspace{40pt}
+ \begin{columns}[t]
+      \begin{column}{0.5\textwidth}
+        {\em \ldots a many to one mapping from one domain to another:  $A \mapsto B$ }
+      \end{column}
+      \begin{column}{0.5\textwidth}
+        {\em \ldots a description of the expression that should be evaluated: $\lambda x \rightarrow x + 2$}
+      \end{column}
+   \end{columns}
+
+\vspace{40pt}{\em In mathematics we can work with functions even if we do not know how to compute them.}
+
+
+\end{frame}
+
+
+\begin{frame}{$\lambda$ calculus}
+  \begin{itemize}
+
+    \pause \item The $\lambda$ calculus was introduced in the 1930s by Alonzo Church. 
+
+    \pause \item Easy to define:
+      \begin{itemize} 
+         \pause \item only three types of expressions: variable, lambda abstraction, application 
+         \pause \item only one rule: evaluation of application
+         \pause \item (you don't even need data structures nor named functions)
+      \end{itemize}
+
+    \pause \item Anything that is {\em computable} can be expressed in
+    $\lambda$ calculus, it is as powerful as a {\em Turing machine}.
+
+    \pause \item We will use some extensions to the language when we describe
+    functional programming.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}{currying}
+
+  A function of two arguments, can be described as function of two
+  argument that evaluates to another function of a second argument.
+
+  \begin{itemize}
+   \pause \item $(\lambda x \rightarrow (\lambda y \rightarrow x + y)) \ 7 \ 8$
+   \pause \item $(\lambda y \rightarrow 7 + y) \ 8$
+   \pause \item $7 + 8$
+  \end{itemize}
+
+ \vspace{10pt}
+ We can write:
+  \begin{itemize}
+   \pause \item $\lambda x y \rightarrow  x + y$
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}{let expressions}
+  \begin{itemize}  
+   \pause \item $\lambda x \rightarrow  (x + 2) +  (x + 2)$
+   \pause \item $\lambda x \rightarrow  ((\lambda y \rightarrow y + y) (x + 2))$  
+   \pause \item $\lambda x \rightarrow  \LET y = x + 2 \IN y + y $
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{no recursive definitions}
+  \begin{itemize}  
+   \pause \item $\lambda x \rightarrow  \LET y = x + y \IN y + y $
+   \pause \item $\lambda x \rightarrow  ((\lambda y \rightarrow y + y) (x + y))$  
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{this is ok}
+  \begin{itemize}  
+   \pause \item $\lambda x \rightarrow  \LET y = x + 2 , z = y + 5 \IN z + z $
+   \pause \item $\lambda x \rightarrow  ((\lambda y \rightarrow (\lambda z \rightarrow z + z)(y + 5)) (x + 2))$  
+  \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}{functional programming languages}
+
+ \begin{itemize}
+   \pause\item $\lambda$-calculus
+       \begin{itemize}        
+          \pause \item not the best syntax - not important 
+          \pause \item no ``data structures'' - functions are all you need 
+          \pause \item no defined evaluation order  
+       \end{itemize}   
+    \pause\item functional programming languages: 
+       \begin{itemize}        
+            \pause \item different syntax, some good some strange 
+            \pause\item almost always provide built-in or user defined data structures 
+            \pause\item defines the evaluation order 
+       \end{itemize}               
+ \end{itemize}
+\end{frame}
+
+\begin{frame}{Erlang}
+
+ \begin{itemize}
+    \pause \item a syntax that is similar to the one used in for example Prolog 
+
+    \pause \item a small set of built-in data structures, no user defined 
+
+    \pause \item an ``eager evaluation'' i.e. arguments are evaluated before the function is applied 
+ \end{itemize}
+
+\pause\vspace{40pt}
+{\em Erlang is extended to be able to model concurrency. In the first part of this course we will only use the functional subset.}
+
+\end{frame}
+
+
+\begin{frame}{lambda expression}
+  $\lambda x \rightarrow 2 + x$
+  \pause
+
+  \begin{code}
+   fun(X) -> 2 + X end
+  \end{code}
+
+  \begin{code}
+    (fun(Y) -> 2 + Y end)(4)
+  \end{code}
+\end{frame}
+
+
+\begin{frame}{let expression}
+  $\LET x = 2, y = x + 3 \IN y + y $
+  \pause
+
+  \begin{code}
+    X = 2, Y = X + 3, Y + Y
+  \end{code}
+\end{frame}
+
+
+\begin{frame}{function definition}
+
+  $inc \equiv \lambda x \rightarrow x + 1$
+  \pause
+
+  \begin{code}
+    inc(X) -> X + 1.
+  \end{code}
+
+\end{frame}
+
+\begin{frame}{multiple arguments}
+
+  $add \equiv \lambda x y \rightarrow x + y$
+  \pause
+
+  \begin{code}
+    add(X, Y) -> X + Y.
+  \end{code}
+
+\end{frame}
+
+\begin{frame}{literals}
+ \begin{itemize}
+  \pause \item {atoms:} {\tt a, b, foo, bar}
+  \pause \item {integer:} {\tt 1,23, 3456789012345678901233456}
+  \pause \item {bool:} {\tt true, false}
+  \pause \item {more:} there are more but this is enough for now
+ \end{itemize}
+\end{frame}
+
+
+\begin{frame}{compound structures}
+ \begin{itemize}
+  \pause \item {tuples:} {\tt \{\}, \{foo, bar\}, \{a, 42, true\}}
+  \pause \item {lists:} [], [1|[]], [1,2,3,4]  (more on this later)
+ \end{itemize}
+\end{frame}
+
+\begin{frame}{evaluation}
+
+\pause
+\vspace{100pt}\hspace{100pt}Next time.
+
+\end{frame}
+
+
+\end{document}

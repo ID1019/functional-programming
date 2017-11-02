@@ -1,0 +1,487 @@
+\input{../include/preamble}
+
+
+\title[ID1019 OTP]{OTP}
+
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{a framework}
+
+OTP, Open Telecom Platform, the system that we have used:
+
+\pause\vspace{20pt}
+\begin{itemize}
+\item compiler and run-time system
+\item set of libraries
+\item generic templates to implement servers  
+\item tools and services: database servers, parsers, debugger etc
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{a server}
+
+\begin{verbatim}
+gen_start(Init) ->
+ spawn(fun() -> init(Init) end).
+
+init(Init) -> 
+  :
+ server(State).
+
+server(State) ->
+ receive
+   {request, Msg, From}->
+          :
+      From ! Reply,
+      server(Updated);
+    :
+ end.           
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{generic and specific}
+
+What is generic, same for any server, and what is specific.
+
+\pause\vspace{20pt}
+
+An important factor in any systems development is to work with layers
+of abstraction. 
+
+\vspace{20pt}
+Separate the generic behavior of a set of services in one abstraction, and
+then use this abstraction when defining the actual services.
+
+\end{frame}
+
+\begin{frame}[fragile]{abstractions}
+
+\begin{verbatim}
+sum([]) -> 0;
+sum([H|T]) -> H + sum(T).
+\end{verbatim}
+
+\pause\vspace{20pt}
+
+\begin{verbatim}
+sum(L) -> foldr(fun(H,A) -> H + A end, 0, L).
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{a server}
+
+\begin{verbatim}
+gen_start(Init) ->
+ spawn(fun() -> init(Init) end).
+
+init(Init) -> 
+  :
+ server(State).
+
+server(State) ->
+ receive
+   {call, Msg, From}->
+          :
+      From ! Reply,
+      server(Updated);
+    :
+ end.           
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{a generic server}
+
+\begin{verbatim}
+start(Init) -> spawn(fun() -> gen_init(Init) end).
+
+gen_init(Init) ->
+ {ok, State} = init(Init),
+ server(State).
+
+server(State) ->
+ receive
+   {call, Msg, From}->
+      {reply, Reply, Updated} = handle_call(Msg, State),
+      From ! Reply,
+      server(Updated);
+    :
+ end.           
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{a generic server}
+
+\begin{verbatim}
+-module(gen_server).
+
+start(Module, Init) -> 
+   spawn(fun() -> init(Module, Init) end).
+
+init(Module, Init) ->
+ {ok, State} = apply(Module, init, [Init]),
+ server(Module, State).
+\end{verbatim}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{a generic server}
+
+\begin{verbatim}
+server(Module, State) ->
+ receive
+   {call, Msg, From}->
+      {reply, Reply, Updated} =  apply(Module, handle_call, [Msg, State]),
+      From ! Reply,
+      server(Module, Updated);
+
+    :
+
+ end.           
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{the server}
+\begin{verbatim}
+-module(account).
+
+start(Init) ->
+  gen_server:start(account, Init).
+
+init(State) ->
+  {ok, State}.
+
+hande_call(saldo, _From, State} ->
+  {reply, {saldo, State}, State}.
+
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{gen\_server}
+
+The {\tt gen\_server} definition:
+
+\begin{itemize}
+\item {\tt init(Args)}: return {\tt \{ok, State\}} or {\tt \{stop, Reason\}}.
+\pause
+\item {\tt handle\_call(Request, From, State)} : return 
+ \begin{itemize} 
+  \item {\tt \{reply, Reply, New\_state\}} : Reply is sent to the requester
+\pause
+  \item {\tt \{noreply, New\_state\}} : no reply is returned
+\pause
+  \item {\tt \{stop, Reason, New\_State\}} :  terminate/2 is called
+ \end{itemize}
+\pause
+\item {\tt handle\_cast(Request, State)} : similar but no replies
+\pause
+\item {\tt terminate(Reason, State)} : opposite to init/1
+\end{itemize}
+
+\pause\vspace{20pt}
+{\em there are more}
+
+\end{frame}
+
+\begin{frame}{the gen\_server api}
+
+The {\tt gen\_server} interface:
+
+\pause\vspace{20pt}
+
+\begin{itemize}
+\item {\tt gen\_server:start(Module, Args, Options)} : starts the server defined in Module
+\pause
+\item {\tt gen\_server:call(Server, Request)} : returns a reply from the server
+\pause
+\item {\tt gen\_server:cast(Server, Request)} : sends the request, no reply
+\end{itemize}
+
+\pause\vspace{20pt}
+{\em there are more}
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]{the server}
+\begin{verbatim}
+-module(account).
+
+start(Init) ->
+  gen_server:start(account, Init).
+
+saldo(Account) ->
+  gen_server:call(Account, saldo).
+
+init(State) ->
+  {ok, State}.
+
+hande_call(saldo, _From, State} ->
+  {reply, {saldo, State}, State}.
+
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{gen\_server}
+
+The {\em gen\_server} defines a server with a request-reply pattern. 
+
+\pause\vspace{20pt}
+There is no implicit deferral of messages!
+
+\pause\vspace{20pt}
+All messages must be handled by the {\tt handle\_call} and {\tt handle\_cast} functions.
+
+\pause\vspace{20pt}
+A compiler directive in the module is used to have the compiler check that all necessary functions are included:
+
+\begin{verbatim}
+-behaviour(gen_server).
+\end{verbatim}
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]{gen\_fsm}
+
+\pause\vspace{20pt}
+There is a sister behavior {\tt gen\_fsm}, that tries to capture the
+generic behavior of a finite state machine.
+
+
+\end{frame}
+
+
+\begin{frame}[fragile]{event handlers}
+
+What is an ``event''?
+
+\pause\vspace{20pt} 
+Send all events of a particular type to an {\em event manager process}. 
+
+\pause\vspace{20pt} 
+Register {\em handlers modules} wit the manager process.
+
+\pause\vspace{20pt} 
+Each time an event is received by the manager, all handlers will be called.
+
+\end{frame}
+
+\begin{frame}[fragile]{gen\_event}
+
+\begin{verbatim}
+-module(error_handler).
+-export([init/1, handle_event/2, terminate/2]).
+
+init(Name) ->
+    {ok, []}.
+
+handle_event({error, Msg}, []) ->
+   io:format("error: ~w~n", [Msg]),
+   {ok, []};
+handle_event(_, []) ->
+   {ok, []};
+
+   :
+   :
+
+terminate(_Args) ->
+    ok.
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{gen\_event}
+
+\begin{verbatim}
+-module(test).
+
+start() ->
+   Manager = gen_event:start({local, tracer}),
+   gen_event:add_handler(tracer, error_handler, []),
+   server().
+\end{verbatim}
+
+
+
+\begin{verbatim}
+server() ->
+  receive 
+    {expected, Msg} ->
+        handle(Msg),
+        server();
+    Error ->
+        gen_event:notify(tracer, {error, Error}),
+        server()
+  end.
+\end{verbatim}
+
+\end{frame}
+
+
+\begin {frame}[fragile]{supervision of processes}
+
+\begin{verbatim}
+start(Init) ->
+   process_flag(trap_exit, true),
+   Server = gen_server:start_link(my_server, Init, []),
+   supervise(Server, Init).
+\end{verbatim}
+
+\pause\vspace{20pt}
+\begin{verbatim}
+supervise(Server, Init) ->
+  receive
+    {'EXIT',Server, _Reason} ->
+       Restarted = gen_server:start_link(my_server, Init, []),
+       supervise(Restarted, Init);
+    terminate ->
+       gen_server:cast(Server,stop_what_your_doing)
+ end.
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{the generic supervisor}
+
+\begin{itemize}
+\item {\tt init(Args)} : returns {\tt \{ok, Modes, Specs\}} that describes which servers should be started and how the supervisor should operate
+\end{itemize}
+
+\pause\vspace{20pt}
+
+\begin{itemize}
+ \item {\tt Modes} : {\tt \{Strategy, Allowed, Time\}}
+ \pause
+ \begin{itemize}
+  \item {\tt one\_for\_one} : if a server dies, restart it
+  \pause
+  \item {\tt all\_for\_one} : terminate all servers and restart them 
+  \pause
+  \item {\tt rest\_for\_one} : terminate the ones after the server that died and then restart them
+  \pause
+ \end{itemize}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{the generic supervisor}
+
+\pause\vspace{20pt}
+
+\begin{itemize}
+ \item {\tt Specs} : {\tt \{Id, \{Module, Name, Args\}, Restart, Shutdown, Type, Modules\}}
+ \pause
+ \begin{itemize}
+  \item {\tt Id} : a name local to the supervisor
+  \pause
+  \item {\tt \{Module, Name, Args\}} : description of the server to start
+  \pause
+  \item {\tt Restart} : {\tt transient} (do not restart), {\tt temporary} (restart if exception) or {\tt permanent} (always restart)
+  \pause
+  \item {\tt Shutdown} : for how long is the process allowed to do clean-up when terminated
+  \pause
+  \item {\tt Type} : a {\tt worker} or {\tt supervisor} 
+  \pause
+  \item {\tt Modules} : used when code base is updated 
+ \end{itemize}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{a supervisor tree}
+
+\begin{tikzpicture}[>=stealth', node distance=2.5cm, semithick, auto]
+    \node[state]        (s1)                              {supervisor};
+    \node[state]        (s2)     [below right of=s1]      {supervisor};
+    \node[state]        (w1)     [below left of=s1]       {worker};
+    \node[state]        (w2)     [left of=w1]             {worker};
+    \node[state]        (w3)     [left of=w2]             {worker};
+
+
+    \node[state]        (w4)     [below right of=s2]       {worker};
+    \node[state]        (w5)     [left of=w4]             {worker};
+
+    \path[->]   (s1)      edge       []    node      {}    (s2);
+    \path[->]   (s1)      edge       []    node      {}    (w1);
+    \path[->]   (s1)      edge       []    node      {}    (w2);
+    \path[->]   (s1)      edge       []    node      {}    (w3);
+    \path[->]   (s2)      edge       []    node      {}    (w4);
+    \path[->]   (s2)      edge       []    node      {}    (w5);
+\end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}
+
+An OTP server architecture becomes quite complicated. 
+
+\pause\vspace{20pt}
+It is over-kill for smaller systems or when you're all alone.
+
+\pause\vspace{20pt}
+It is invaluable for larger systems or if you are more than one programmer.
+
+\pause\vspace{20pt}
+Try first to implement a supervisor tree from scratch, then you will
+appreciate (and understand) the power of the OTP framework.
+
+\pause\vspace{20pt}
+If you start by learning OTP without having done it yourself, you will
+most likely not understand how it works or why it is needed.
+
+
+\end{frame}
+
+\begin{frame}{other OTP frameworks}
+
+\begin{itemize}
+\item {\tt application}: handle a set of modules, and possibly a supervisor tree,  as one component
+\pause
+\item {\tt release} : a set of Erlang {\tt applications} and additional information that should be treated as a release
+\pause
+\item {\tt release handling} : updating a running system to the next release
+\pause
+\item {\tt rebar} : (not a proper part of OTP), the Erlang framework to automatically build applications and releases 
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Summary}
+
+The OTP framework is invaluable when developing larger applications. 
+
+\pause\vspace{20pt}
+
+You should not start using it before you know how to program in Erlang.
+
+
+
+\end{frame}
+
+
+
+\end{document}
+
+

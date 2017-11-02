@@ -1,0 +1,184 @@
+\input{../include/preamble}
+
+\title[ID1019 Exceptions]{Exceptions}
+
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}[fragile]{when things go wrong}
+
+\begin{verbatim}
+>42 = foo.
+** exception error: no match of right hand side value foo
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{clause selection}
+
+\begin{itemize}
+\item {\tt function\_clause}:  no match in a {\em function definition}
+\pause
+\item {\tt case\_clause}: no match in a {\em case expression}
+\pause
+\item {\tt if\_clause}: no match in an {\em if expression}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{clause selection}
+
+\begin{verbatim}
+eval([]) ->  [];
+eval([Exp|Rest]) ->
+    case Exp of
+      {add, X, Y} -> [X + Y | eval(Rest)];
+      {sub, X, Y} -> [X - Y | eval(Rest)];
+      {cmp, X, Y} -> 
+           Cmp = if 
+                   X > Y -> greater
+                   X < Y  lesser
+                 end,
+           [Cmp| eval(Rest)]
+    end.
+\end{verbatim}
+
+\pause\vspace{20pt}
+{\em Give me three examples of error messages.}
+\end{frame}
+
+\begin{frame}{more errors}
+
+\begin{itemize}
+\item {\tt badmatch}: for example foo = 5
+\pause
+\item {\tt undef}: the function is not defined
+\end{itemize}
+\pause\vspace{20pt}
+
+And some, only used for builtin functions:
+\pause
+
+\begin{itemize}
+\item {\tt badarg}: {\em length(foo)}
+\pause
+\item {\tt badarith}: {\tt 5 + foo} or {\tt 5/0}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{try catch}
+
+\begin{code}
+     <expression> ::=  & <try expression> | ...
+\end{code}
+\pause
+\begin{code}
+     <try &expression> ::=  \\
+           & try <expression> of <clauses>  \\
+           & catch <catch clauses> \\
+           & end
+\end{code}
+\pause
+\begin{code}
+     <catch clauses> ::=  & <catch clause> | ...
+\end{code}
+\pause
+\begin{code}
+     <catch clause> ::=  & <exception pattern> -> <sequence>
+\end{code}
+\end{frame}
+
+\begin{frame}{exceptions}
+
+\begin{code}
+     <exception pattern > ::=  & <exception class> : <pattern>
+\end{code}
+\pause
+\begin{code}
+     <exception class> ::=  & error | throw | exit
+\end{code}
+\end{frame}
+
+\begin{frame}[fragile]{try example}
+
+\begin{verbatim}
+foo(X) ->
+  try length(X) of
+     0 -> empty;
+     _ -> something
+  catch
+     error:Error -> {arghh, Error}
+  end.
+\end{verbatim}
+\pause
+
+\begin{verbatim}
+> foo([a,b,c]).
+something
+> foo(gurka)
+{arghh,badarg}
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{exception classes}
+\begin{itemize}
+\item {\tt error}: runtime error when evaluating a function
+\item {\tt throw}: user generated, don't use this
+\item {\tt exit}: the process has received an exit signal
+\end{itemize}
+\end{frame}
+
+\begin{frame}{exceptions}
+
+An exception is a compund datastructure  \ldots
+
+\pause\vspace{20pt}\hspace{40pt} without a syntax.
+
+\pause\vspace{20pt} You cannot construct a exception, {\tt error:badarg}, why?
+
+\pause\vspace{20pt} Exceptions patterns are only allowed in {\em try-catch expressions}.
+
+
+\end{frame}
+
+\begin{frame}[fragile]{generating exceptions}
+You can generate exceptions:
+
+\pause\vspace{20pt}
+\begin{verbatim}
+sum([]) -> 0;
+sum([H|T]) -> H + sum(T);
+sum(What) -> error({argh, "What is this", What}).
+\end{verbatim}
+
+\pause\vspace{20pt}
+\begin{verbatim}
+> test:sum(foo).
+** exception error: {argh,"What is this",foo}
+     in function  test:sum/1 (test.erl, line 18)
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{defensive programming}
+
+\begin{quote}
+A defensive program is one where the programmer does not "trust" the input data to the part of the system they are programming. In general one should not test input data to functions for correctness. Most of the code in the system should be written with the assumption that the input data to the function in question is correct.
+\end{quote}
+ ``Programming Rules and Conventions'' Klas Eriksson, Mike Williams, Joe Armstrong 
+
+
+
+\end{frame}
+
+
+
+\end{document}
+
+

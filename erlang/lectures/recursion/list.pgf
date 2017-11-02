@@ -1,0 +1,33 @@
+
+
+
+
+\begin{tikzpicture}[scale=0.5]
+
+\path (2,2) coordinate (origin);
+
+\node at (origin) {foo};
+
+\node at (0,7.5) {{\huge X:} };
+\node at (0,1) {{\huge X = [a, b] }};
+
+\draw [ultra thick, black] (2,7) rectangle +(2,1);
+\draw [ultra thick, black] (3, 7.5) circle [radius =0.1];
+\draw [ultra thick, black, ->] (3,7.5) -- (5.8, 7.5); 
+
+\draw [ultra thick, blue] (6,7) rectangle +(2,1) node at +(1,0.5) {{\bf a}};
+\draw [ultra thick, red] (6,6)  rectangle +(2,1);
+
+\draw [ultra thick, red] (7, 6.5) circle [radius =0.1];
+\draw [ultra thick, red] (7,6.5)  to [out=0, in=180]  (9.8,4.5);
+\draw [ultra thick, red, ->] (9.8, 4.5) -- (10,4.5);
+
+\draw [ultra thick, blue] (10,4) rectangle +(2,1) node at +(1,0.5) {{\bf b}};
+\draw [ultra thick, red] (10,3) rectangle +(2,1);
+\draw [ultra thick, red] (10,3) -- +(2,1);
+
+
+
+
+
+\end{tikzpicture}

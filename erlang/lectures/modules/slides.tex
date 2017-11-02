@@ -1,0 +1,298 @@
+\input{../include/preamble}
+
+\title[ID1019 Modules]{Modules}
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}[fragile]{the module}
+
+\begin{verbatim}
+%%% A comment at the begining of a row.
+
+-module(set).
+
+-export([new/0,  union/2, intersection/2,]).
+
+new() -> []. % a coment at the end of a line
+
+union(A, B) -> 
+         %% a comment that is intended
+         lists:append(A, B).
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{a module}
+
+What is a module: 
+
+\begin{itemize}
+\pause
+\item an abstraction layer
+\pause
+\item hiding of implementation details
+\pause
+\item the unit of compilation
+\pause
+\item the unit of loading
+\end{itemize}
+
+\pause\vspace{40pt}
+{\em The file name should be the same as the module name.}
+
+\end{frame}
+
+\begin{frame}[fragile]{exporting an interface}
+
+Exported functions are visible utside of the module \ldots the API.
+\pause
+
+\begin{verbatim}
+-export([foo/1, bar/2]).
+\end{verbatim}
+
+\pause {\em A way of hiding the internals, allows for changes and compiler optimizations.}
+\end{frame}
+
+\begin{frame}[fragile]{exporting an interface}
+Imported functions can be used in the module without using the module prefix.
+
+\begin{verbatim}
+-import(lists, [append/2, delete/2, member/2]).
+
+   :
+
+set_diff(As, []) ->
+            As;
+set_diff(As, [B|Bs]) ->
+            set_diff(delete(B, As), T).
+\end{verbatim}
+\pause \vspace{20pt}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{import or not}
+
+\pause \vspace{20pt}
+Exported functions can be used explicitly in the code:
+
+\begin{verbatim}
+insert_all([Key|Rest], Store) ->
+        inser_all(Rest, foo:insert(Key, ok, Store)).
+\end{verbatim}
+
+\pause \vspace{20pt}
+or made available by an {\tt import} attribute:
+
+\begin{verbatim}
+-import(foo, [new/1, insert/2, lookup/2]).
+
+insert_all([Key|Rest], Store) ->
+        inser_all(Rest, insert(Key, ok, Store)).
+\end{verbatim}
+\pause \vspace{20pt}
+Pros and cons?
+
+\end{frame}
+
+\begin{frame}[fragile]{more attributes}
+
+\begin{verbatim}
+-compile(debug_info).  % have you found the debugger?
+-compile(export_all).  % very handy 
+\end{verbatim}
+\pause \vspace{20pt}
+
+\begin{verbatim}
+-include("my_macros.hrl").   % macros - what macros?
+\end{verbatim}
+\pause \vspace{20pt}
+
+{\em many more attributes, even user defined}
+
+\pause \vspace{20pt}
+
+\begin{verbatim}
+ > lists:module_info().
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{user defined attributes}
+\begin{verbatim}
+-module(test).
+
+-foo("this is it").
+
+-bar([gurka, 42]).
+\end{verbatim}
+\pause
+ \vspace{20pt}
+\begin{verbatim}
+ > test:module_info(attributes).
+\end{verbatim}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{an overview}
+
+The stages of a source code to running program:
+\pause
+\begin{itemize}
+\item preprocess: source to source transformation
+\pause
+\item compilation: source to machine code transformation
+\pause
+\item link: link inter-module procedure calls
+\pause
+\item load: load to (virtual) machine 
+\pause
+\item run: ... start executing
+\end{itemize}
+\pause \vspace{20pt}
+
+{\em These stages are more or less visible, depending on language environment.}
+
+\end{frame}
+
+\begin{frame}[fragile]{macros}
+
+\begin{verbatim}
+-module(test).
+
+-define(pi, 3.14).
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+area(R) -> math:pow(R,2)*?pi.
+\end{verbatim}
+\pause
+
+\pause
+\begin{verbatim}
+> compile:file(test, ['P']).
+\end{verbatim}
+
+\pause\vspace{20pt}
+
+{\em \ldots check test.P}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{macros}
+
+\begin{verbatim}
+-module(test).
+
+-define(TRACE(Msg), io:format("trace: ~s~n", [Msg])).
+%-define(TRACE(Msg), true).
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+area(R) -> 
+   ?TRACE("the area function was called"),
+   math:pow(R,2)*?pi.
+\end{verbatim}
+\pause \vspace{20pt}
+
+{\em make sure the result has correct syntax}
+
+\end{frame}
+
+\begin{frame}[fragile]{conditional macros}
+
+\begin{verbatim}
+-module(test).
+
+-ifdef(debug).
+-define(TRACE(Msg), io:format("trace: ~s~n", [Msg])).
+-else.
+-define(TRACE(Msg), true).
+-endif.
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+> c(test, [{d, debug}]).
+\end{verbatim}
+\pause \vspace{20pt}
+\pause
+\begin{verbatim}
+$ erlc -Ddebug test.erl
+\end{verbatim}
+\pause
+
+\end{frame}
+
+\begin{frame}{predefined macros}
+
+Some useful predefined macros, useful when debugging and tracing.
+
+\begin{itemize}
+\pause
+\item {\tt ?MODULE}: the name of the current module.
+\pause
+\item {\tt ?LINE}: the current line number.
+\pause
+\item \ldots some more
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{macros or functions}
+
+Anything that can be done with macros can be done with functions.
+
+\pause \vspace{20pt}
+
+Pros and cons?
+
+\end{frame}
+
+\begin{frame}{Erlang modules}
+
+{\em Erlang uses a flat name space for modules - not good.}
+
+\pause\vspace{20pt}
+
+Useful library modules:
+\pause\vspace{20pt}
+
+\begin{itemize}
+\item {\bf erlang}: automatically imported, (mostly) builtins that can not be implmented in Erlang itself
+\pause
+\item {\bf lists}: efficient implementation, some in C, of the most comon functions over lists
+\pause
+\item {\bf math}: mathematical expressions
+\pause
+\item {\bf file}: handling files, open, close, byte oriented operations
+\pause
+\item {\bf io}: read and write of terms etc
+\end{itemize}
+
+\pause\vspace{20pt}
+
+{\em \ldots library modules grouped in a hierachy in the manual}
+
+\end{frame}
+
+
+
+
+
+
+\end{document}
+
+

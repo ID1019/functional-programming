@@ -1,0 +1,11 @@
+# Benchmark of tree vs tuple, modify operations, (100000 runs), times in ms
+#
+# n  is is size of tree/tuple
+#      n     tree    tuple 
+     100       31        6 
+     200       36       11 
+     400       41       15 
+     800       46       29 
+    1600       54       57 
+    3200       58      149 
+

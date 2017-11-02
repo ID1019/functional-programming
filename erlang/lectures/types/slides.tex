@@ -1,0 +1,511 @@
+\input{../include/preamble}
+
+\title[ID1019 Types]{Types}
+
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}[fragile]{Java}
+
+\pause 
+\begin{verbatim}
+        :
+    public static int fibonacci(int n) {
+
+        int current = 0;
+        int prevprev = 0, prev = 1;
+
+        for(int i = 0; i < n; i++) { 
+            current = prev + prevprev;  
+            prevprev = prev;
+            prev = current; 
+        }
+        return current;
+    };
+        :
+\end{verbatim}
+
+\end{frame} 
+
+\begin{frame}[fragile]{Erlang}
+
+\begin{verbatim}
+fib(0) -> 0;
+fib(1) -> 1;
+fib(N) -> fib(N-1) + fib(N-2).
+\end{verbatim}
+\pause\vspace{10pt}
+\begin{verbatim}
+-spec fib(integer()) -> integer().
+\end{verbatim}
+\pause\vspace{10pt}
+{\em .. or, is this the whole truth?}
+\end{frame}
+
+\begin{frame}[fragile]{Erlang}
+
+{\em ... better:}
+\vspace{20pt}
+
+\begin{verbatim}
+fib(0) -> 0;
+fib(1) -> 1;
+fib(N) when is_integer(N) and N > 1 -> 
+   fib(N-1) + fib(N-2).
+\end{verbatim}
+\pause\vspace{10pt}
+\begin{verbatim}
+-spec fib(integer()) -> integer().
+\end{verbatim}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{the compiler}
+
+Why does this compile?
+
+\begin{verbatim}
+test() ->
+   fib(3.5).
+
+fib(0) -> 0;
+fib(1) -> 1;
+fib(N) when is_integer(N) and N > 1 -> 
+   fib(N-1) + fib(N-2).
+\end{verbatim}
+
+\pause\vspace{20pt}
+{\em ... hmm, if the compiler only knew about types}
+
+\end{frame}
+
+\begin{frame}{types in Erlang}
+
+What types do we have:
+\pause\vspace{10pt}
+Singletons, the types of individual data structures:
+\begin{itemize}
+\item  1, 2 or 42
+\item 'foo', 'bar' or 'atom'
+\item  \{foo, 42\}
+\end{itemize}
+\pause\vspace{10pt}
+Unions of singletons, what we normally refer to as ``types'':
+\begin{itemize}
+\item integer(): any integer value 
+\item float(): any floating point value 
+\item atom(): any atom 
+\item pid(): a process identifier
+\item ref(): a reference
+\item fun(): a function 
+\item .. and many more
+\end{itemize}
+
+{\em ... why atom(), why not simply call the type atom?}
+\end{frame}
+
+\begin{frame}{types in Erlang}
+Types for compound data structures:
+\pause\vspace{10pt}
+\begin{itemize}
+\item  tuple(): a tuple of any form
+\item  list(): a proper list of any length
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{type declarations}
+
+We have seen this:
+\begin{verbatim}
+-spec fib(integer()) -> integer().
+\end{verbatim}
+
+\pause\vspace{10pt}
+Cards are represented as  {\tt \{card, Suit,
+Value\}}, where the suit is represented using the atoms {\tt spade},
+{\tt heart}, {\tt diamond} and {\tt clubs}.
+
+\vspace{10pt}
+How do we specify the type for {\em suit/1}:
+
+\begin{verbatim}
+suit({card, Suit, _}) -> Suit.
+\end{verbatim}
+\pause\vspace{10pt}
+\begin{verbatim}
+-spec suit(tuple()) -> atom().
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{defining types}
+
+We would like to define our own type that specifies what a card looks like.
+
+\begin{verbatim}
+-type value() :: 1..13.
+\end{verbatim}
+\pause
+
+\begin{verbatim}
+-type suit() :: spade | heart | diamond | clubs.
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+-type card() :: {card, suit(), value()}.
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+-spec suit(card()) -> suit().
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{defining types}
+
+\pause
+\begin{verbatim}
+-type boolean() :: true | false.
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+-type byte() :: 1..255.
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+-type number() :: integer() | float().
+\end{verbatim}
+\pause
+The type {\tt any()}, defines the union of all types.
+
+\end{frame}
+
+
+\begin{frame}[fragile]{defining types}
+
+The type list(T) is the type of lists containing elements of type T.
+\pause
+
+\begin{verbatim}
+-type list(T) :: [] | [T|list(T)].
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+-type string() :: list(char()).
+\end{verbatim}
+
+Define the type of a deck of cards.
+\pause
+\begin{verbatim}
+-type deck() :: list(card()).
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{types of lists}
+
+\begin{verbatim}
+-type list(T) :: [] | [T|list(T)].
+\end{verbatim}
+
+\begin{verbatim}
+-type nonempty_list(T) :: [T|list(T)].
+\end{verbatim}
+
+\begin{verbatim}
+-type improper_list(T,Nil) :: 
+      Nil | [T|improper_list(T,Nil)]
+\end{verbatim}
+
+\begin{verbatim}
+-type maybe_improper_list(T,Nil) :: 
+      Nil | [] | 
+      [T|maybe_improper_list(T,Nil)]
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}{the lattice of types}
+
+\begin{tikzpicture}[>=stealth', node distance=2cm, semithick, auto]
+    \node[state]        (any)                              {any()};
+    \node[state]        (number) [below left of=any]       {number()};
+    \node[state]        (integer)[below right of=number]   {integer()};
+    \node[state]        (float)  [below left  of=number]     {float()};
+    \node[state]        (atom)   [right of = integer]        {atom()};
+    \node[state]        (list)   [right of = atom]         {list()};
+    \node[state]        (tuple)   [right of = list]         {tuple()};
+    \node[state]        (bottom) [below of = integer]          {$\perp$};
+
+    \path[->]   (integer) edge       []    node      {}    (number);
+    \path[->]   (float)   edge       []    node      {}    (number);
+    \path[->]   (number)  edge       []    node      {}    (any);
+    \path[->]   (atom)    edge       []    node      {}    (any);
+    \path[->]   (list)    edge       []    node      {}    (any);
+    \path[->]   (tuple)   edge       []    node      {}    (any);
+
+    \path[->]   (bottom)  edge       []    node      {}    (integer);
+    \path[->]   (bottom)  edge       []    node      {}    (float);
+    \path[->]   (bottom)  edge       []    node      {}    (atom);
+    \path[->]   (bottom)  edge       []    node      {}    (list);
+    \path[->]   (bottom)  edge       []    node      {}    (tuple);
+
+\end{tikzpicture}
+
+\end{frame}
+
+\begin{frame}{program annotation}
+
+Type specifiers are used for:
+\begin{itemize}
+\item documentation of intended usage
+\pause
+\item automatic detection of type errors
+\end{itemize}
+
+\pause\vspace{20pt}
+{\em the compiler does not check types}
+
+\end{frame}
+
+\begin{frame}[fragile]{exporting types}
+
+We can export types from a module:
+
+\begin{verbatim}
+-module(cards).
+
+-export_type([card/0, deck/0, suit/0, value/0]).
+\end{verbatim}
+
+\pause\vspace{20pt}
+
+\begin{verbatim}
+-module(poker).
+
+-type hand() :: hand(cards:card()).
+-type hand(C) :: {hand, C, C, C, C, C}.
+
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}{TypEr and Dialyzer}
+
+Why annotate programs if the annotations are not used?
+
+\pause\vspace{20pt}
+
+TypEr:  
+\begin{itemize}
+\item {\em infers} types, i.e. tries to determine the function specifications
+\pause
+\item checks that given specifications agree with the inferred types
+\end{itemize}
+
+Dialyzer:
+
+\begin{itemize}
+\item checks that given specifications agree with call patterns
+\pause
+\item detects exceptions and dead code 
+\end{itemize}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{TypEr example}
+
+\begin{verbatim}
+fib(0) -> 0;
+fib(1) -> 1;
+fib(N) -> fib(N-1) + fib(N-2).
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+%% File: "fib.erl"
+%% ---------------
+-spec fib(non_neg_integer()) -> non_neg_integer().
+\end{verbatim}
+
+\pause {\em TypEr is not wrong but could give a more general proposal.}
+
+\end{frame}
+
+\begin{frame}[fragile]{Dialyzer example}
+
+\begin{verbatim}
+-module(test).
+
+test() -> fib(a).
+\end{verbatim}
+
+\pause\vspace{20pt}
+
+\begin{verbatim}
+   :
+test.erl:4: Function test/0 has no local return
+test.erl:4: The call test:fib('a') will never return ...
+   :
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{problems}
+
+What is the type of {\tt and/2}:
+
+\begin{verbatim}
+and(false, _) -> false;
+and(_, false) -> false;
+and(true, true) -> true.
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{function overloading}
+
+\begin{verbatim}
+gr({card,_,V1}, {card, _, V2}) -> 
+   V1 > V2;
+gr(V1, V2) -> 
+   V1 > V2.
+\end{verbatim}
+
+\pause\vspace{20pt}
+\begin{verbatim}
+   :
+ case gr({card, heart,4}, {card, spdes, 2}) of
+   :
+ end.
+\end{verbatim}
+
+\pause\vspace{10pt}
+
+\begin{verbatim}
+   :
+ case gr(7, 4) of
+   :
+ end.
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{dynamically typed}
+
+Erlang is a {\em dynamically typed} language: types are checked and handled at run time.
+
+{\em other dynamically typed languages: PHP, Python, Lisp}
+
+\vspace{20pt}
+
+Java is a {statically typed} language: types are checked and handled at compile time.
+
+{\em other statically typed languages: C++, Haskell, Scala}
+
+\end{frame}
+
+\begin{frame}{dynamic vs static}
+
+The pros and cons of dynamically typed languages:
+
+\begin{itemize}
+\item quick to write code
+\item compiling an easier task
+\item induces an overhead at run-time
+\item errors detect first at run-time (and maybe very late)
+\end{itemize}
+
+{\em So why is Erlang dynamically typed?}
+
+\end{frame}
+
+\begin{frame}[fragile]{types and concurrency}
+
+What is the type of {\tt server/1}:
+
+\begin{verbatim}
+server(State) ->
+   receive 
+       {query, X, Pid} ->
+           Pid ! {reply, query(X, State)},
+           server(State)
+   end.
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{types and dynamic code}
+
+Erlang allows code to be updated while running.
+
+\pause\vspace{10pt}
+
+Very hard (limiting the functionality) to ensure that all type
+information can be checked at compile time.
+
+\pause\vspace{10pt}
+
+A static type system would cover 90 percent of an Erlang system, but
+it is the 10 percent that makes Erlang unique.
+
+\end{frame}
+
+\begin{frame}{strong vs weak}
+
+There is no precise definition of strong vs weak type system. In
+general a type system is said to be weak if you can change the types
+of variables either at compile time and/or at run-time.
+
+\pause\vspace{20pt}
+
+Erlang is a {\em strongly typed} programming language: variables can not be reinterpreted.
+
+\vspace{10pt}
+
+{\em other strongly typed languages: Haskell, Lisp, Java, Python}
+
+\pause\vspace{20pt}
+
+C++ is a {\em weakly typed} programming language: variables can be reinterpreted.
+
+\vspace{10pt}
+
+{C++ inherits its most dangerous constructs from  C}
+
+\end{frame}
+
+\begin{frame}{Summary}
+
+\begin{itemize}
+\item Erlang is a dynamically typed programming language
+\item External tools (TypEr, Dialyzer) can check for type errors.
+\item Type specification, if correct, helps in understanding the code.
+\item Dynamic vs static type systems - pros and cons.
+\end{itemize}
+
+
+\end{frame}
+
+\end{document}
+
+

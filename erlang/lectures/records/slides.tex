@@ -1,0 +1,408 @@
+\input{../include/preamble}
+
+\title[ID1019 Records]{Records}
+
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}[fragile]{name and age}
+
+\pause 
+\begin{verbatim}
+-module(person).
+
+new(Name, Age) ->
+  {person, Name, Age}.
+
+name({person, Name, _}) -> Name.
+
+age({person, _, Age}) -> Age.
+\end{verbatim}
+
+\pause\vspace{20pt}
+{\em Now let's add a phone number to our structure.}
+
+\end{frame} 
+
+\begin{frame}[fragile]{name, age and phone}
+
+\pause 
+\begin{verbatim}
+-module(person).
+
+new(Name, Age, Phone) ->
+  {person, Name, Age, Phone}.
+
+name({person, Name, _, _}) -> Name.
+
+age({person, _, Age, _}) -> Age.
+
+phone({person, _, _, Phone}) -> Phone.
+\end{verbatim}
+
+\pause\vspace{20pt}
+{\em There should be a better way.}
+
+\end{frame} 
+
+\begin{frame}[fragile]{if we had types}
+
+Warning - this is not Erlang
+
+\begin{verbatim}
+-type person :: {name :: string(), age :: integer()}
+
+
+-spec new(string(), intger()) -> person().
+new(Name, Age) ->
+   person#{name=Name, age=Age}.
+
+-spec name(person()) -> string().
+name(P) -> P.name.
+
+-spec age(person()) -> integer().
+age(P) -> P.age.
+\end{verbatim}
+\pause
+{\em Things would be easier with a static type system.}
+
+\end{frame}
+
+\begin{frame}{records}
+
+\begin{center}
+Records gives us some of the benefits of a static type system.
+\end{center}
+\pause\vspace{30pt}
+\begin{center}
+It is not a proper type system.
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]{records}
+
+\begin{verbatim}
+-module(person).
+
+-record(person, {name, age}).
+
+new(Name, Age) ->
+  #person{name=Name, age=Age}.
+\end{verbatim}
+\pause
+\begin{verbatim}
+name(#person{name=Name}) -> Name.
+
+age(#person{age=Age}) -> Age.
+\end{verbatim}
+
+\end{frame} 
+
+\begin{frame}[fragile]{defining records}
+
+\begin{verbatim}
+-record(Name, {Field [=Default], ...}
+\end{verbatim}
+
+\pause\vspace{20pt}
+\begin{itemize}
+\item Name : an atom 
+\item Field : an atom naming the field
+\item Default : an optional default value  (if not given 'undefined' is used)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{constructing records}
+
+\begin{verbatim}
+      :
+    Sune = person#{name = "Sune"},
+      :
+\end{verbatim}
+
+\pause\vspace{20pt}
+{\em It is not necessary to speciefy all fields.}
+\end{frame}
+
+\begin{frame}[fragile]{pattern matching}
+
+\begin{verbatim}
+name(#person{name=Name}) -> Name.
+\end{verbatim}
+
+\pause\vspace{10pt}
+
+\begin{verbatim}
+       :
+    #person{name=Name} = Person,
+       :
+\end{verbatim}
+
+\pause\vspace{10pt}
+
+\begin{verbatim}
+       :
+    Name = P#person.name,
+       :
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{internal representation}
+
+To know but never to use!
+\pause\vspace{20pt}
+
+Since we do not have a regular type declarations in Erlang we have to
+fake it. 
+
+\begin{verbatim}
+-record(person, {name, age}).
+
+new(Name, Age) ->
+  #person{name=Name, age=Age}.
+\end{verbatim}
+
+\pause\vspace{20pt}
+
+\begin{verbatim}
+> person:new("Sune", 24).
+{person,"Sune",24}
+\end{verbatim}
+
+\pause\vspace{20pt}
+{\em A record structure is simply a tuple with the name of the type as it's first element.}
+
+\end{frame}
+
+\begin{frame}[fragile]{pre-processing}
+
+\begin{verbatim}
+>compile:file(person,['E']).
+{ok, person}
+\end{verbatim}
+
+\pause\vspace{20pt}
+\begin{block}{person.E}
+\begin{verbatim}
+  :
+new(Name, Age) ->
+    {person,Name,Age}.
+
+name({person,Name,_}) ->
+    Name.
+  :
+\end{verbatim}
+\end{block}
+
+\end{frame}
+
+\begin{frame}{smart kid - not}
+
+\begin{center}
+Ahh, since I know that a record structure is just a tuple - then I can ....
+\end{center}
+
+\pause\vspace{20pt}
+\begin{center}
+   \includegraphics[width=0.5\linewidth]{badidea.jpg}
+\end{center} 
+
+\end{frame}
+
+\begin{frame}[fragile]{a trick}
+
+\begin{verbatim}
+     :
+   Name = element(#person.name, P),
+     :
+\end{verbatim}
+
+\pause 
+\begin{verbatim}
+       :
+    case lists:keysearch(49, #person.age, Persons) of
+       {value, #person{name=Name}} -> 
+             Name ++ " is soon turning 50.";
+        false ->
+             "No one will turn 50 anytime soon."
+    end.
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{how do we work with records}
+
+Record declarations in a source file are local to the module.
+\begin{block}{person.hrl}
+\begin{verbatim}
+-record(person, {name, age}).
+\end{verbatim}
+\end{block}
+
+\pause
+\begin{block}{party.erl}
+\begin{verbatim}
+   -include("person.hrl").
+
+     Sune = person:new("Sune", 24),
+       :
+     "Hi " ++ Sune#person.name.
+
+\end{verbatim}
+\end{block}
+
+{\em Hmmm, should we allow the party module to know anything about our representation?}
+\end{frame}
+
+
+\begin{frame}[fragile]{abstract data types}
+
+
+\begin{block}{party.erl}
+\begin{verbatim}
+-include("person.hrl").
+
+  Sune = person:new("Sune", 24),
+    :
+  "Your ref is: " ++ Sune#person.ref.
+\end{verbatim}
+\end{block}
+
+\pause
+
+\begin{block}{party.erl}
+\begin{verbatim}
+
+  Sune = person:new("Sune", 24),
+    :
+  "Hi " ++ person:name(Sune) ++ " you're invited!"
+
+\end{verbatim}
+     \end{block}
+\pause\vspace{10pt}
+{\em Only exporting functions gives us more control over what is used outside of the module.}
+
+\end{frame}
+
+\begin{frame}[fragile]{let's only export functions}
+
+Assume that your waiting for a message from the {\em person process} (that we have not define):
+
+\pause\vspace{20pt}
+
+\begin{block}{party.erl}
+\begin{verbatim}
+    :
+  receive 
+      P -> 
+           person:name(P) ++ " let's go!"
+  end.
+\end{verbatim}
+     \end{block}
+
+\end{frame}
+
+\begin{frame}[fragile]{deferring messages}
+
+
+\begin{block}{party.erl}
+\begin{verbatim}
+-include("person.hrl").
+    
+    :
+  receive 
+      #person{name=Name} -> 
+           Name ++ ``let's go!''
+  end.
+\end{verbatim}
+\end{block}
+
+\end{frame}
+
+\begin{frame}{records and messages}
+
+Since we want to defer messages we need to expose the structure.
+
+\pause\vspace{20pt}
+Making a record declaration visible, and restricting usage to a few
+fields (that will not change) is much better than announcing the full
+tuple representation.
+
+\pause\vspace{20pt}
+
+\end{frame}
+
+\begin{frame}[fragile]{updating message structure}
+
+How do we update a message structure of a process without changing the
+receivers?
+
+\pause\vspace{20pt}
+
+Records help us, but not all the way.
+
+\pause\vspace{20pt}
+
+Optional information in a list?
+
+\end{frame}
+
+
+\begin{frame}[fragile]{updating message structure}
+
+\begin{block}{person.hrl}
+\begin{verbatim}
+-record(person, {name, age, opt=[]}).
+\end{verbatim}
+\end{block}
+
+\pause\vspace{10pt}
+\begin{block}{party.erl}
+\begin{verbatim}
+-include("person.hrl").
+    
+    :
+  receive 
+      #person{name=Name, opt=Opt} -> 
+           case lists:keysearch(phone, 1, Opt) of
+             {found, {phone, Nr}} ->
+                   Name ++ ``: phone: '' ++ Nr;
+             false ->
+                   Name ++ " no phone"
+           end
+  end.
+\end{verbatim}
+\end{block}
+
+
+\end{frame}
+
+
+
+\begin{frame}{Summary}
+
+Records are good!
+
+\pause\vspace{20pt}
+Use them as much as possible.
+
+\pause\vspace{20pt}
+It is not a type system :-(
+
+
+\end{frame}
+
+
+\end{document}
+
+

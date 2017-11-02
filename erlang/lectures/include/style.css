@@ -1,0 +1,87 @@
+body {
+
+	color: black; font-family: "Gill Alternate One Monotype",
+	"Gill Sans", sans-serif; background : #ffffee; text-align:
+	justify; text-indent: 0; margin: 1em 2em 1em 25%; line-height:
+	1.3; margin-left: 100px; margin-right: 200px; }
+
+
+
+h1 { font-size: 18px; font-weight: bold; color: #000000 }
+
+h2 { font-size: 14px; font-weight: bold; color: #336699; }
+
+h3 { font-size: 12px; font-weight: regular; color: #668899; }
+
+h4 { font-size: 10px; font-weight: bold; color: #668899; }
+
+h5 { font-size: x-small; font-weight: normal; color: #668899; }
+
+
+
+
+
+a:link { text-decoration:none; color: #458585; }
+
+a:visited { text-decoration: none; color : #336655; }
+
+a:hover { text-decoration: none; color : #337565; }
+
+
+a.menu:link { font-size: 11px; color : #000000; text-decoration: none;
+	}
+
+
+
+a.menu:visited { font-size: 11px; color : #000000; text-decoration:
+	none; }
+
+
+
+a.menu:hover { font-size: 11px; color: #222222; text-decoration: none;
+	}
+
+
+p { font-size: 12px; font-weight: normal; margin-left: 4px;
+	margin-right: 4px; }
+
+p.italic { font-size: 12px; font-style : italic; }
+
+
+
+p.small { font-size: 10px; font-weight: normal; letter-spacing :
+	normal; }
+
+
+
+p.bold { font-size: 12px; font-weight: bold; letter-spacing : normal;
+	}
+
+p.bigbold { font-size: 14px; font-weight: bold; letter-spacing:
+	normal; }
+
+p.schedule { font-size: 14px; font-weight: bold; letter-spacing :
+	normal; color: #336699; }
+
+
+
+p.color { font-size: 12px; font-weight: bold; letter-spacing : normal;
+	color: #333366; }
+
+
+
+ul { font-size: 12px; font-weight: normal; list-style : disc;
+	list-style-type: disc; }
+
+
+form { margin-bottom: 0px; margin-top: 0px; }
+
+
+td { font-size: 12px; font-weight: normal; }
+
+
+
+
+
+
+

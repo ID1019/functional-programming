@@ -1,0 +1,17 @@
+-file("test.erl", 1).
+
+-module(test).
+
+-compile(export_all).
+
+-foo("this is it").
+
+-bar([gurka|"*"]).
+
+area(R) ->
+    ok,
+    true,
+    R * math:pow(3.14, 2).
+
+
+

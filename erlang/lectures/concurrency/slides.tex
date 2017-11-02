@@ -1,0 +1,516 @@
+\input{../include/preamble}
+
+\title[ID1019 Concurrency]{Concurrency}
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}[fragile]{concurrency}
+
+{\em What do we mean by concurrency?}
+
+
+\end{frame}
+
+
+\begin{frame}{why?}
+
+{\em Why concurrency, it's hard enough to handle one thread of execution?} 
+
+\end{frame}
+
+\begin{frame}{actor model}
+
+An actor:
+\begin{itemize}
+\item state: keeps a private state that can only be changed by the actor
+\pause
+\item receive: has one channel of incoming {\em messages}
+\pause
+\item execute: given a state and a received message, the actor can
+\begin{itemize}
+\pause
+\item send: send a number of messages to other actors
+\pause
+\item spawn: create a number of new actors
+\pause
+\item transform: modify its state an continue, or terminate
+\end{itemize}
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{ordering of messages}
+
+{\em Is the set of messages to an actor ordered?}
+
+\pause\vspace{20pt}
+{\em In what order should the messages be handled?}
+
+\pause\vspace{20pt}
+{\em The evaluation of a function is deterministic, how about the execution of an actor?}
+
+
+\end{frame}
+
+\begin{frame}{naming of actors}
+
+{\em How can an actor direct a message to a specific actor?}
+
+\pause\vspace{20pt}
+{\em Do we have a global naming scheme?}
+
+\pause\vspace{20pt}
+{\em How do we find the identifier of an actor?}
+     
+\end{frame}
+
+
+
+\begin{frame}{exceptions}
+
+{\em What should we do if we're sending a message to an actor that has terminated?}
+
+\pause\vspace{20pt}
+{\em What if we're waiting for a message that will never be sent?}
+
+\pause\vspace{20pt}
+{\em Are sent messages guaranteed to arrive?}
+
+\end{frame}
+
+
+\begin{frame}{process identifier}
+
+We introduce one additional data structure:
+\pause\vspace{20pt}
+
+\begin{code}
+ <structure> ::= <process identifier> | ...
+\end{code}
+
+
+\pause\vspace{20pt} 
+{\em There is no term nor pattern that corresponds to an identifier.}
+\end{frame}
+
+\begin{frame}[fragile]{spawn}
+
+  A new process is spawned by giving it a function to evaluate, \pause
+  
+  \vspace{10pt}\hspace{40pt}... the result is a process identifier (pid).
+
+\pause\vspace{20pt}
+\begin{verbatim}
+  Pid = spawn(fun() -> ... end)
+\end{verbatim}
+\pause\vspace{10pt}
+or
+\pause\vspace{10pt}
+\begin{verbatim}
+  Pid = spawn(Module, Name, [Arg, ...])
+\end{verbatim}
+\pause\vspace{10pt}
+{\em In the later case, the function must be exported from the module.}
+
+\end{frame}
+
+\begin{frame}[fragile]{send}
+
+Given a process identifier, an arbitrary data structure can be sent to the process.
+
+\pause\vspace{10pt}
+
+\begin{verbatim}
+   Pid ! Message
+\end{verbatim}
+
+\pause\vspace{20pt}
+{\em The send operator {\tt !}, is often called ``bang''.}
+
+\end{frame}
+
+\begin{frame}{receive}
+
+We extend expressions:
+
+\pause\vspace{10pt}
+\begin{code}
+    <expression> ::=  & <receive expression> | ...
+\end{code}
+\pause\vspace{10pt}
+\begin{code}
+   <receive & expression> ::= \\
+            & receive <clauses>  end
+\end{code}
+\pause\vspace{20pt}
+
+{\em similar to case expressions}
+\end{frame}
+
+\begin{frame}[fragile]{example}
+
+\begin{verbatim}
+server(Sum) ->
+   receive 
+     {add, X} ->
+           server(Sum + X);
+     {sub, X} ->
+           server(Sum - X)
+   end.
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{side effects}
+
+In a {\em pure functional} program, the only effect of evaluating an
+expressions is the returned value \pause - not any more.
+
+\pause\vspace{10pt}
+\begin{verbatim}
+   Pid = spawn(fun() -> foo() end),
+      :
+    X = bar(Pid),
+    Y = bar(Pid),
+      :
+\end{verbatim}
+
+\pause\vspace{10pt}
+
+\begin{columns}
+  \begin{column}{0.5\linewidth}
+\begin{verbatim}
+bar(Pid) ->
+    Pid ! {hello, 42}.
+\end{verbatim}
+  \end{column}
+  \pause
+  \begin{column}{0.5\linewidth}
+\begin{verbatim}
+bar(_) ->
+   receive 
+     Msg -> {hello, Msg}
+   end.
+\end{verbatim}
+ \end{column}
+\end{columns}  
+
+\end{frame}
+
+
+\begin{frame}[fragile]{side effects}
+
+In a {\em pure functional} program, the order of execution is not important (modulo infinit and failing computations)
+expressions is the returned value \pause - not any more.
+
+\pause\vspace{10pt}
+\begin{verbatim}
+bar(X,Y) ->
+    Z = this(X,Y),
+    Q = that(X),
+    {Z,Q}.
+\end{verbatim}
+
+\pause\vspace{10pt}
+
+\begin{verbatim}
+bar(Pid) ->
+    Pid ! {hello, 42},
+    Pid ! {hello, 17}.
+\end{verbatim}
+
+\end{frame}
+
+ 
+\begin{frame}[fragile]{Who am I?}
+
+One more built-in function:
+
+\pause\vspace{10pt}
+
+\begin{verbatim}
+    MyPid = self()
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{few extensions}
+
+Few extensions to the functional subset:
+\pause\vspace{10pt}
+\begin{itemize}
+\pause\item pid: a process identifier as a data structure
+\pause\item spawn: creating a process, returning a pid
+\pause\item send: sending of messages to pids
+\pause\item receive: selective receive of messages
+\pause\item self: the process identifier of the current process
+\end{itemize}
+
+\pause\vspace{10pt}
+{\em All constructs can, apart from the receive statement, almost be given a functional interpretation.}
+
+\end{frame}
+
+\begin{frame}[fragile]{order of messages}
+
+Message passing is: unreliable FIFO.
+
+\pause\vspace{10pt}
+\begin{verbatim}
+           :
+        Pid ! {this, is, message, 1},
+        Pid ! {this, is, message, 2},
+        Pid ! {this, is, message, 3},
+           :
+\end{verbatim}
+
+\pause What could be the result at the receiving end?
+
+\pause\vspace{10pt}
+{\em How many messages are lost in reality?} 
+
+\end{frame}
+
+
+\begin{frame}[fragile]{selective receive}
+
+\begin{verbatim}
+sum(S) ->
+    receive 
+        {add, X} -> sum(S + X);
+        {sub, X} -> sum(S - X);
+        {mul, X} -> sum(S * X)
+    end.
+\end{verbatim}
+
+\pause\vspace{10pt}
+
+Assume we spawn a process given the expression {\tt fun() -> sum(10) end}, \pause and the sequence of messages in the queue is:
+
+\vspace{10pt}
+{\tt \{sub, 4\}, \{add, 10\}, \{mul, 4\}, \{mul, 2\}, \{sub, 10\}}
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]{selective receive}
+
+\begin{columns}
+ \begin{column}{0.5\linewidth}
+\begin{verbatim}
+closed(S) ->
+    receive 
+        {mul, X} -> closed(S * X);
+        open -> open(S)
+    end.
+\end{verbatim}
+ \end{column}
+\pause
+ \begin{column}{0.5\linewidth}
+\begin{verbatim}
+open(S) ->
+    receive 
+        {mul, X} -> open(S * X);
+        {sub, X} -> open(S - X);
+        close -> closed(S)
+    end.
+\end{verbatim}
+ \end{column}
+\end{columns}
+
+
+\pause\vspace{10pt}
+
+Assume we spawn {\tt fun() -> closed(10) end} and the sequence of messages is:
+
+\vspace{10pt}
+
+{\tt \{sub, 4\}, \{mul, 4\}, open, \{mul, 2\}, close, \{sub, 10\}}
+
+\pause\vspace{10pt}
+
+In every receive expression we start from the beginning of the queue.
+
+\end{frame}
+
+
+\begin{frame}{implicit deferral}
+
+{\em Selective receive}: we specify which messages we are willing to accept.
+
+{\em Implicit deferral}: messages that we do not explicitly receive remain in the message queue.
+
+\pause\vspace{10pt}
+
+Pros and cons - we could have chosen either.
+
+\end{frame}
+
+
+\begin{frame}{finite state automata}
+
+
+\begin{tikzpicture}[>=stealth', node distance=3cm, semithick, auto]
+    \node[initial, state]            (closed)                              {closed};
+    \node[state]                     (open)    [above right of=closed]     {open};
+    \node[accepting, state]          (final)   [below right of=closed]     {final};
+
+    \path[->]   (closed) edge       [bend left]     node      {open}          (open)
+                         edge       [loop below]    node      {\{mul, X\}}    (closed)
+                         edge       [bend left]     node      {done}          (final)
+                (open)   edge       [loop above]    node      {\{mul, X\}}    (open)
+                         edge       [loop right]    node      {\{sub, X\}}    (open)
+                         edge       [bend left]     node      {close}         (closed);
+\end{tikzpicture}
+
+
+\end{frame}
+
+
+\begin{frame}{finite state automata}
+
+Erlang receive statements are not a direct realization of a finite state
+automata.
+
+\pause\vspace{10pt}
+
+Messages that arrive too early in a finite state automata would give
+us a undefined state.
+
+\pause\vspace{10pt}
+
+The {\em implicit deferral} give us a very simple description of a
+finite state automata where all messages are allowed to arrive too
+early.
+
+
+
+\end{frame}
+
+\begin{frame}[fragile]{time to deliver}
+
+\begin{columns}
+   \begin{column}{.5\linewidth}
+     \begin{block}{src/2}
+\begin{verbatim}
+src(Sink, Frw) ->
+    Sink ! a,
+    Frw ! b.
+\end{verbatim}
+      \end{block}
+     \begin{block}{frw/2}
+\begin{verbatim}
+frw(Sink) -> 
+   receive 
+     Msg -> Sink ! Msg
+   end.
+\end{verbatim}
+      \end{block}
+    \end{column}
+\pause
+    \begin{column}{.5\linewidth}
+\begin{tikzpicture}[>=stealth', node distance=3cm, semithick, auto]
+    \node[state]                     (src)   []             {src};
+    \node[state]                     (sink)  [right of=src]     {sink};
+    \node[state]                     (frw)   [below right of=src]     {frw};
+
+    \path[->]  (src)   edge        node           {a}       (sink)
+                       edge        node           {b}       (frw);
+    \pause
+    \path[->]  (frw)   edge        node           {b}       (sink);
+
+\end{tikzpicture}
+    \end{column}
+
+  \end{columns}
+
+
+\end{frame}
+ 
+\begin{frame}[fragile]{example account}
+
+\begin{columns}
+   \begin{column}{.5\linewidth}
+     \begin{verbatim}
+acc(Saldo) ->
+  recieve
+     {deposit, M} ->
+        acc(Saldo + M);
+     {withdraw, M} ->
+        acc(Saldo - M)
+  end.
+     \end{verbatim}
+   \end{column}
+\pause
+  \begin{column}{.5\linewidth}
+     \begin{verbatim}
+doit() ->
+  Acc = spawn(fun()->acc(0) end),
+  Acc ! {deposit, 20},
+  Acc ! {withdraw, 10}.
+  Acc.
+     \end{verbatim}
+   \end{column}
+\end{columns}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{example account}
+
+\begin{columns}
+   \begin{column}{.45\linewidth}
+\begin{verbatim}
+acc(Saldo) ->
+  recieve
+    {deposit, M} ->
+       acc(Saldo + M);
+    {withdraw, M} ->
+       acc(Saldo - M);
+    {request, Pid} ->
+       Pid ! {saldo, Saldo},
+       acc(Saldo)
+  end.
+\end{verbatim}
+\end{column}
+\pause
+   \begin{column}{.45\linewidth}
+\begin{verbatim}
+check(Acc) ->
+  Acc ! {request, self()},
+  receive
+    {saldo, Saldo} ->
+        Saldo
+  end.
+\end{verbatim}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{summary}
+
+\begin{itemize}
+\item asynchronous: messages are sent and eventually (hopefully) delivered
+\item FIFO: message delivery is ordered
+\item selective receive: the receiver decides the order of handling messages
+\item implicit deferral: messages remain in the queue untill handled
+\end{itemize}
+
+\end{frame}
+
+
+\end{document}
+
+
+

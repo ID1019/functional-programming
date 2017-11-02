@@ -1,0 +1,414 @@
+\input{../include/preamble}
+
+\title[ID1019 Meta Interpreter]{Meta Interpreter}
+
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}
+\begin{figure}
+  \includegraphics[width=\linewidth]{breaking.jpg}
+\end{figure}
+
+\end{frame}
+
+\begin{frame}{interpreter}
+
+Let's write a program that evaluates an expression in our language. 
+
+\pause\vspace{20pt}
+
+Since the language we have defined is close to Erlang and we will
+implement the interpreter in Erlang, we call it a {\em meta
+interpreter}. 
+
+\pause\vspace{20pt}
+
+{\em This is more common than you might think, gcc - a very popular
+C/C++ compiler is written in ... C/C++. The Java compiler javac is
+written in ... Java.}
+
+\end{frame}
+
+
+\begin{frame}{a recap}
+
+  \begin{tabular}{r l l}
+   {\em Atoms} & = & \{a, b, c, \ldots\} \\
+   {\em Structures} & = & {\em Atoms} $\cup$ \{ \{a, b\} \textbar a $\in$ {\em Structures}  $\wedge$  b $\in$ {\em Structures} \}
+  \end{tabular}
+
+\end{frame}
+
+
+\begin{frame}{expressions and patterns}
+
+\begin{grammar}
+<atom> ::= a | b | c | \ldots
+
+<variable> ::= X | Y | Z | \ldots
+
+<expression> ::= <atom> | <variable> | '\{' <expression> ',' <expression> '\}'
+
+<pattern> ::= <atom> | <variable> | '\_' | '\{' <pattern> ',' <pattern> '\}'
+
+<match> ::=  <pattern> '=' <expression>
+
+<sequence> ::=  <expression> | <match> ',' <sequence>
+\end{grammar}
+\end{frame}
+
+\begin{frame}{operational semantics}
+
+ \begin{itemize}
+   \pause \item $E\sigma(a) \rightarrow s$ if $a \equiv s$ 
+   \pause \item $E\sigma(v) \rightarrow s$ if $v/s \in \sigma$
+   \pause \item $E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow \lbrace E\sigma(e_1), E\sigma(e_2) \rbrace$
+ \end{itemize}
+
+\begin{itemize}
+  \pause \item $E\sigma(p = e, {\rm sequence}) \rightarrow E\theta({\rm sequence})$ if  $E\sigma(e) \rightarrow s \wedge P\sigma(p, s) \rightarrow \theta$
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{operational semantics}
+
+\pause
+\begin{itemize}
+  \pause \item $P\sigma(a, s) \rightarrow \sigma$  if  $a \equiv s$
+  \pause \item $P\sigma(\_, s) \rightarrow \sigma$  
+  \pause \item $P\sigma(v, s) \rightarrow \sigma$  if \pause $ v/s \in \sigma $
+  \pause \item $P\sigma(v, s) \rightarrow \lbrace v/s \rbrace \cup \sigma$ if \pause $ v/t \not\in \sigma$
+  \pause \item $P\sigma(\lbrace p_1, p_2 \rbrace , \lbrace s_1, s_2 \rbrace) \rightarrow \theta$ if
+      $P\sigma(p_1 , s_1) \rightarrow \theta' \wedge P\theta'(p_2 , s_2) \rightarrow \theta$
+\end{itemize}
+\pause
+\begin{itemize}
+  \pause \item $P\sigma(t = s) \rightarrow$ \pause $\  \mathrm{fail}\ $ if no other rule apply
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{outline}
+
+\pause Our language:
+
+\begin{itemize}
+\pause \item Data structures: atoms and compound structures
+\pause \item Expressions: terms, patterns, matching, sequences ...
+\end{itemize}
+
+\pause Operational semantics:
+
+\begin{itemize}
+\pause \item Environment: a mapping from variables to values
+\pause \item Eval: evaluation of an expression, given an environment
+\pause \item Match: pattern matching of pattern and data structure given an environment
+\end{itemize}
+
+\pause {\em Our implementation must be {\em sound} and (hopefully) {\em complete}}.
+\end{frame}
+
+\begin{frame}{things to do}
+
+\begin{itemize}
+ \pause \item define a representation 
+  \begin{itemize}
+     \pause \item of data structures (this is the easy part)
+     \pause \item of a sequence of expressions (also easy)
+     \pause \item of an environment (simple)
+  \end{itemize}
+ \pause \item implement functions
+  \begin{itemize}
+    \pause \item that can map variables to data structures given an environment (even easier)
+     \pause \item that takes an expression and returns a data structure (hmmm, yes easy)
+     \pause \item that takes a pattern and a data structure and returns an updated environment (actually easy)
+     \pause \item that takes a sequence and an environment and returns a structure (you would not beleive me, but it's easy)
+  \end{itemize}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{high level description}
+
+\begin{itemize}
+ \pause \item \verb+eval_expr(Exr, Env)+ :  evaluate the expression, given the environment
+ \pause \item \verb+eval_seq(Sequence, Env)+ :  evaluate the sequence, given the environment
+ \pause \item \verb+eval_match(Patter, Sructure, Env)+ :  match the pattern to the structure
+\end{itemize}
+
+\pause\vspace{20pt}{Sound easy - let's go!}
+\end{frame}
+
+\begin{frame}{data structures}
+
+  \begin{tabular}{r l l}
+   {\em Atoms} & = & \{a, b, c, \ldots\} \\
+   {\em Structures} & = & {\em Atoms} $\cup$ \{ \{a, b\} \textbar a $\in$ {\em Structures}  $\wedge$  a $\in$ {\em Structures} \}
+  \end{tabular}
+
+\pause  \vspace{20pt}
+
+Let's represent {\em atoms} as Erlang atoms and compound {\em structures} as Erlang tuples.
+
+\end{frame}
+
+
+\begin{frame}{term expressions}
+
+\begin{grammar}
+<atom> ::= a | b | c | \ldots
+
+<variable> ::= X | Y | Z | \ldots
+
+<literal> ::= <atom>
+
+<pattern> ::= <literal> | <variable> | '\_' | '\{' <pattern> ',' <pattern> '\}'
+
+<expression> ::= <literal> | <variable> |  '\{' <expression> ',' <expression> '\}'
+\end{grammar}
+
+\pause We need to be able to look at an element an determine if it is an atom, variable or compound structure.
+
+\end{frame}
+
+\begin{frame}[fragile]{representing terms and patterns}
+
+\pause\vspace{20pt}
+\begin{itemize}
+ \pause \item atoms: {\tt \{atm, a\}, \{atm, b\}, \ldots} 
+ \pause \item variables: {\tt \{var, x\}, \{var, y\}, \ldots} 
+ \pause \item \_:  \verb+ignore+.
+ \pause \item compound: {\tt \{cons, \{atm, c\}, \{var, z\}\}, \ldots}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{representing sequences}
+
+\begin{grammar}
+<pattern matching> ::=  <pattern> '=' <expression>
+
+<sequence> ::=  <expression> | <pattern matching> ',' <sequence>
+\end{grammar}
+
+\pause\vspace{20pt} Why not represent it as a list of tuples, \verb+{match, Pattern, Expression}+, ending in a single expression.
+
+\end{frame}
+
+\begin{frame}[fragile]{parse and interpret}
+
+\pause A parser would take a source program (or in our case a source sequence):
+
+\pause\vspace{10pt}\hspace{40pt}\verb+ X = a, Y = {X,b}, {c, Y}+
+
+\pause \vspace{10pt} and transform it to a representation
+
+\pause\vspace{10pt}
+\begin{verbatim}
+   [{match, {var, x}, {atm, a}}, 
+    {match, {var, y}, {cons, {var, x},{atm, b}}, 
+    {cons, {atm, c}, {var, y}}]
+\end{verbatim}
+\pause \vspace{10pt} that is evaluated to return a data structure
+
+\pause\vspace{10pt}\hspace{40pt}\verb+{c {a,b}}+
+
+\end{frame}
+
+
+\begin{frame}[fragile]{an environment}
+
+The environment will map variables to values.
+
+\pause\vspace{20pt}
+A list of tuples \verb+{Variable, Structure}+ will do fine.
+
+\pause\vspace{20pt}
+\hspace{40pt}\verb+[{x, a}, {y, {b,c}}, {z,d}]+
+
+\pause\vspace{20pt}
+.... ehh, why not a tree, $O(lg(n))$ is better than $O(n)$, ... 
+
+\end{frame}
+
+\begin{frame}[fragile]{abstraction}
+
+Separate the implementation of the environment in its own module.
+
+\pause\vspace{20pt}Export a set of functions and only use these in the interpreter.
+
+
+\begin{itemize}
+  \pause\item \verb+new()+ : return a new environment
+  \pause\item \verb+add(Var, Str, Env)+ : return an environment where the variable is bound to the structure
+  \pause\item \verb+lookup(Var, Env)+ : return either \verb+{Var, Str}+ or \verb+false+ 
+\end{itemize}
+
+
+\pause\vspace{20pt}You have implemented an ``abstract data type''.
+
+\end{frame}
+
+\begin{frame}[fragile]{evaluate an expression}
+
+\begin{verbatim}
+eval_expr({atm, A}, Env) -> ...
+\end{verbatim}
+\begin{verbatim}
+eval_expr({var, V}, Env) -> ...
+\end{verbatim}
+\begin{verbatim}
+eval_expr({cons, H, T}, Env) -> ...
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{pattern matching}
+
+We're matching a pattern to a data structure, returning either \verb+{ok, Env}+ or \verb+fail+.
+
+\begin{verbatim}
+eval_match({ignore, _, Env) -> ...
+\end{verbatim}
+\pause
+\begin{verbatim}
+eval_match({var, V}, S, Env) -> ... 
+\end{verbatim}
+\pause
+\begin{verbatim}
+eval_match({atm, A}, A, Env) -> ...
+\end{verbatim}
+\pause
+\begin{verbatim}
+eval_match({cons, P1, P2},{S1,S2}, Env) -> ... 
+\end{verbatim}
+\pause
+\begin{verbatim}
+eval_match(_, _, Env) -> ...
+\end{verbatim}
+
+\pause{\em We're so close.}
+\end{frame}
+
+\begin{frame}[fragile]{evaluating a sequence}
+
+\begin{verbatim}
+eval_seq([Expresion], Env) -> ...
+\end{verbatim}
+
+\begin{verbatim}
+eval_seq([{match, Pattern, Expresion}|Sequence], Env) ->
+    case ... of
+        error -> 
+            ...;
+        {ok, Str}  ->
+            case ... of
+                fail ->
+                    error;
+                {ok, ...} ->
+                    ...
+            end
+    end.
+\end{verbatim}
+
+\pause{\em let's take her for a spin}
+
+\end{frame}
+
+\begin{frame}{benchmark (full interpreter)}
+
+\pause Naive reverse of a list of 20 element (an $O(n^2)$ algorithm).
+
+\begin{columns}
+ \begin{column}{0.5\linewidth}
+  \begin{itemize}
+   \pause \item The interpreter
+   \pause \item Erlang using tuples
+   \pause \item Erlang using lists
+   \pause \item Erlang using '++'
+  \end{itemize}
+ \end{column}
+ \begin{column}{0.5\linewidth}
+  \begin{itemize}
+   \pause \item 3.9 s
+   \pause \item 84 ms (x46 speed up)  
+   \pause \item 36 ms (x110 speed up) 
+   \pause \item 21 ma (x190 speed up) 
+  \end{itemize}
+ \end{column}
+\end{columns}
+
+\vspace{20pt}
+\pause{\em Actually not that bad for an hour of work.}
+
+\end{frame}
+
+\begin{frame}[fragile]{case expression}
+
+\begin{verbatim}
+   case  X  of 
+       a ->  foo;
+       b ->  bar
+   end
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{case expression}
+
+\begin{grammar}
+     <expression> ::=  <case expression> | ...  
+
+     <case expression> ::= 'case' <expression> 'of' <clauses>  'end' 
+
+     <clauses> ::=   <clause> | <clause> ';' <clauses>
+
+     <clause> ::=  <pattern> '->' <sequence>
+\end{grammar}
+
+\pause How should we represent a case expression? 
+
+\pause How should we represent a sequence of clauses?
+
+\pause How should we represent a clause?
+
+\end{frame}
+
+
+\begin{frame}{evaluation of case expression}
+ 
+$E\sigma({\tt case}\ e \ {\tt of}\ {\rm clauses} \ {\tt end}) \rightarrow C\sigma(s, {\rm clauses})$ if $ E\sigma(e) \rightarrow s$
+
+\pause\vspace{10pt}
+$C\sigma(s, p \rightarrow  {\rm sequence} ; {\rm clauses}) \rightarrow E\sigma'({\rm sequence})$ if $P\sigma(p = s) \rightarrow \sigma'$
+
+\pause\vspace{10pt}otherwise 
+
+\pause\vspace{10pt}
+$C\sigma(s, {\rm clause} ; {\rm clauses}) \rightarrow C\sigma(s, {\rm clauses})$ 
+
+\pause\vspace{20pt}
+If no successful clause is found, return an error ($\perp$).
+
+\end{frame}
+
+
+\begin{frame}{why}
+
+\pause\vspace{40pt}\hspace{60pt}Why do we do this?
+
+\end{frame}
+
+\end{document}

@@ -1,0 +1,161 @@
+\input{../include/preamble}
+
+\title[ID1019 Parallel programming]{The Mandelbrot set}
+ 
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}[fragile]{Mandelbrot}
+
+\begin{verbatim}
+rows( _, 0, _, _, Rows)->
+    Rows;
+rows(W, H, Tr, Depth, Rows) ->
+    Row = row(W, H, Tr, Depth, []),
+    rows(W, H-1, Tr, Depth, [Row|Rows]).
+\end{verbatim}
+
+\pause\vspace{20pt}{\em How do we speed this up?}
+\end{frame}
+
+\begin{frame}[fragile]{Mandelbrot}
+
+\begin{verbatim}
+mandelbrot(Width, Height, X, Y, K, Depth) ->
+    Trans = fun(W, H) -> ...  end,
+    rows(Width, Height, Trans, Depth, ??),
+    <something that ...>.
+
+rows( _, 0, _, _, _)->
+    ok
+rows(W, H, Tr, Depth, ??) ->
+    < something that calculates the row and ... to ?? >
+    rows(W, H-1, Tr, Depth, ??).
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{Mandelbrot}
+
+\begin{verbatim}
+mandelbrot(Width, Height, X, Y, K, Depth) ->
+    Trans = fun(W, H) -> ...  end,
+    rows(Width, Height, Trans, Depth, self()),
+    collect(Height, []).
+
+rows( _, 0, _, _, _)->
+    ok
+rows(W, H, Tr, Depth, Ctrl) ->
+    spawn_link(fun() -> report(W,H,Tr,Depth, Ctrl) end),
+    rows(W, H-1, Tr, Depth).
+\end{verbatim}
+
+\pause\vspace{20pt}{\em Write collect/2 and report/5, and give it a spin.}
+
+\end{frame}
+
+\begin{frame}{benchmark}
+
+Can we do better?
+
+\end{frame}
+
+\begin{frame}[fragile]{distributed computing}
+
+{\em To start an erlang shell in distributed mode:}
+
+\begin{verbatim}
+erl -name brot@130.163.10.23 -setcookie mandel
+\end{verbatim}
+\pause\vspace{10pt}
+
+{\em in one Erlang shell}
+
+\begin{verbatim}
+P = spawn(fun()-> receive X -> io:format("wow ~w~n", [X]) end end).
+\end{verbatim}
+\pause
+\begin{verbatim}
+register(wow, P).
+\end{verbatim}
+
+\pause\vspace{10pt}
+
+{\em in another Erlang shell (also started in distributed mode)}
+
+\begin{verbatim}
+{wow, 'brot@130.163.10.23'} ! hello.
+\end{verbatim}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{the server}
+
+\begin{verbatim}
+rows( _, 0, _, _, _)->
+    done(); % reply with done
+rows(W, H, Tr, Depth, Ctrl) ->
+    receive 
+        {request, From} ->
+            From ! {task, W, H, Tr, Depth, Ctrl},
+            rows(W, H-1, Tr, Depth, Ctrl);
+        stop ->
+            ok
+    end.
+\end{verbatim}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{the client}
+
+\begin{verbatim}
+client(Server, N) ->
+    Server ! {request, self()},
+    receive
+        {task, W, H, Tr, Depth, Ctrl} ->
+            Row = row(W, H, Tr, Depth, []),
+            Ctrl ! {row, H, Row},
+            client(Server, N+1);
+        done ->
+            {ok, N} %% how many rounds did we do
+    end.
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{start the system}
+
+{\em in one Erlang shell started in distributed mode}
+
+\begin{verbatim}
+{ok, P} = server:start(600,400,-2.6,1.2,0.004,64,"demo.ppm").
+
+register(server, P).
+\end{verbatim}
+
+{\em in anothe Erlang shell started in distributed mode}
+
+\begin{verbatim}
+client:start({serrver, 'brot@130.163.10.23'}).
+\end{verbatim}
+
+\vspace{20pt}
+{\em note - the client must have access to cmplx, color and brot, the server to print and ppm}
+
+\end{frame}
+
+\end{document}
+
+
+

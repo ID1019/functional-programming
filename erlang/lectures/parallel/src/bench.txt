@@ -1,0 +1,99 @@
+Erlang R16B03 (erts-5.10.4) [source] [64-bit] [smp:1:1] [async-threads:10] [kernel-poll:false]
+
+Eshell V5.10.4  (abort with ^G)
+1> fib:bench(2).
+fib(40)  sequential: 6781 ms
+fib(40,38) : 6509 ms
+fib(40,36) : 6535 ms
+fib(40,34) : 6755 ms
+fib(40,32) : 6806 ms
+fib(40,30) : 6757 ms
+fib(40,28) : 7116 ms
+fib(40,26) : 6960 ms
+fib(40,28) : 6555 ms
+fib(40,28) : 6555 ms
+fib(40,22) : 6595 ms
+
+Erlang R16B03 (erts-5.10.4) [source] [64-bit] [smp:2:2] [async-threads:10] [kernel-poll:false]
+
+Eshell V5.10.4  (abort with ^G)
+1> fib:bench(2).
+fib(40)  sequential: 6758 ms
+fib(40,38) : 3875 ms
+fib(40,36) : 3435 ms
+fib(40,34) : 3537 ms
+fib(40,32) : 3287 ms
+fib(40,30) : 3294 ms
+fib(40,28) : 3294 ms
+fib(40,26) : 3344 ms
+fib(40,28) : 3628 ms
+fib(40,28) : 3491 ms
+fib(40,22) : 3598 ms
+ok
+
+Erlang R16B03 (erts-5.10.4) [source] [64-bit] [smp:4:4] [async-threads:10] [kernel-poll:false]
+
+Eshell V5.10.4  (abort with ^G)
+1> fib:bench(2).
+fib(40)  sequential: 7131 ms
+fib(40,38) : 2733 ms
+fib(40,36) : 1943 ms
+fib(40,34) : 1898 ms
+fib(40,32) : 1783 ms
+fib(40,30) : 1794 ms
+fib(40,28) : 1891 ms
+fib(40,26) : 1803 ms
+fib(40,28) : 1784 ms
+fib(40,28) : 1687 ms
+fib(40,22) : 1866 ms
+
+Erlang R16B03 (erts-5.10.4) [source] [64-bit] [smp:8:8] [async-threads:10] [kernel-poll:false]
+
+Eshell V5.10.4  (abort with ^G)
+1> fib:bench(2).
+fib(40)  sequential: 6799 ms
+fib(40,38) : 2816 ms
+fib(40,36) : 1098 ms
+fib(40,34) : 1020 ms
+fib(40,32) : 955 ms
+fib(40,30) : 949 ms
+fib(40,28) : 908 ms
+fib(40,26) : 905 ms
+fib(40,28) : 950 ms
+fib(40,28) : 919 ms
+fib(40,22) : 881 ms
+ok
+
+Erlang R16B03 (erts-5.10.4) [source] [64-bit] [smp:16:16] [async-threads:10] [kernel-poll:false] 
+
+Eshell V5.10.4  (abort with ^G)
+1> fib:bench(2).
+fib(40)  sequential: 6786 ms
+fib(40,38) : 2823 ms
+fib(40,36) : 1127 ms
+fib(40,34) : 721 ms
+fib(40,32) : 612 ms
+fib(40,30) : 600 ms
+fib(40,28) : 587 ms
+fib(40,26) : 584 ms
+fib(40,28) : 582 ms
+fib(40,28) : 599 ms
+fib(40,22) : 575 ms
+
+rlang R16B03 (erts-5.10.4) [source] [64-bit] [smp:24:24] [async-threads:10] [kernel-poll:false] 
+
+Eshell V5.10.4  (abort with ^G)
+1> fib:bench(2).
+fib(40)  sequential: 6965 ms
+fib(40,38) : 2761 ms
+fib(40,36) : 1099 ms
+fib(40,34) : 615 ms
+fib(40,32) : 521 ms
+fib(40,30) : 497 ms
+fib(40,28) : 483 ms
+fib(40,26) : 481 ms
+fib(40,28) : 480 ms
+fib(40,28) : 481 ms
+fib(40,22) : 483 ms
+
+
