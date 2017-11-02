@@ -1,0 +1,311 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{wrapfig}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+
+\usepackage{listings}
+\lstset{language=erlang}
+
+
+\newcommand{\nnsection}[1]{
+\section*{#1}
+\addcontentsline{toc}{section}{#1}
+}
+
+\begin{document}
+
+\begin{center}
+\vspace{20pt}
+\textbf{\large A 2-3 tree insertion}\\
+\vspace{10pt}
+\textbf{Johan Montelius}\\ 
+\vspace{10pt}
+\textbf{\today}
+\end{center}
+
+\nnsection{Introduction}
+
+You hopefully know about a tree structure called 2-3 trees. This is an
+ordered tree where nodes either have two or three branches. The beauty
+is that it is perfectly balanced and this balance is maintained with
+not to much overhead. 
+
+All operations (search, insert, delete) are $O(lg(n))$ and there are
+no worst case scenarios since the insert and delete operations will
+preserve the balance. We're not relying on luck as we are if we us a
+simple binary tree.
+
+In this assignment you're going to learn how to implement a quite
+tricky algorithm and doing so using pattern matching. If you don't
+remember how 2-3 trees work refresh your memory before you start.
+
+\section{The 2-3 tree}
+
+In this implementation we will create a 2-3 tree that keeps key-value
+pairs. The key-values will only reside in the leafs of the tree but he
+keys will of course also be present in the nodes to guide a search.
+
+A tree is either: empty, a leaf, a two-node or a {\em three-node}. The
+tree is balanced so all leafs are on the same level in the tree. A
+simple representation of these different trees could be:
+
+\begin{itemize}
+  \item {\em the empty tree}: {\tt nil}
+  \item {\em a leaf}: {\tt \{leaf, Key, Value\}}  
+  \item {\em a two-node}: {\tt \{two, Key, Left, Right\}}
+  \item {\em a three-node}: {\tt \{three, K1, K2, Left, Middle, Right\}}      
+\end{itemize}
+
+All keys in the left branch of a two-node are smaller or equal to the
+key of the node. In a three-node the keys of the left branch is
+smaller of equal to the first key and the keys of the middle branch are
+less than or equal to the second key.
+
+  
+We will in our implementation also work with a third type of node, a
+node with four branches. The tree that we work with will never contain
+a {\em four-node} but we will allow the insertion function to return
+this structure.
+
+\begin{itemize}
+  \item {\em a four-node}: {\tt \{four, K1, K2, K3, Left, M1, M2, Right\}}      
+\end{itemize}
+
+Doing search in this tree is of course trivial but doing insert or
+delete requires some more thinking. 
+
+\section{The rules of insertion}
+
+Remember the rules of the insert operation; we have some simple cases
+in the bottom of the tree and then some tricky cases where we end up
+with a four-node. Let's start with a description of the simple cases:
+
+\begin{itemize}
+
+\item {\em empty tree}: To insert a key-value pair in an empty tree
+  return a leaf containing the key and value.
+
+  \item {\em a lead}: To insert a key-value pair in a leaf return a
+    two-node containing the existing leaf and a new leaf. The smaller
+    of the keys should be the key of the two-node.
+\end{itemize}  
+
+So far, so good - now to the case were we have a two-node or a
+three-node. We should do quite different thing depending on if the
+node holds leafs or if it is an internal node that holds two-nodes or
+three-nodes. Note that a two-node or three-node either holds only
+leafs or only two- and three-nodes, it can not hold only one leaf node
+since all leafs are on the same level in the tree.
+
+So let's see what the rules are if we encounter a two- or three-node
+that holds only leafs.
+
+\begin{itemize}
+  \item {\em two-node holding leafs}: Create a new leaf and return a
+    three-node containing all three leafs. Make sure that the leafs
+    are ordered and that the three-node hold the two smallest keys.
+
+  \item {\em three-node holding leafs}: Cr-eat a new leaf and return a
+    four-node containing all four leafs. Make sure that the leafs
+    are ordered and that the four-node hold the three smallest keys.     
+\end{itemize}
+
+Now this was simple but we have of course possibly returned a
+four-node. We will see how this will be removed when we do the
+recursive step.
+
+When we encounter an internal two-node or three-node will proceed and
+insert the new key-value pair in the right branch. If we do this we
+could end up with a four-node and then we have to think twice before
+we return an new tree.
+
+\begin{itemize}
+\item {\em two-node general case}: If the insert operation of the right branch returns a four-node, construct a valid three-node, where the middle key of the returned four-node is the new key in the three-node. Otherwise, return an updated two-node.
+
+\item {\em three-node general case}: If the insert operation of the right branch returns a four-node, construct a valid four-node, where the middle key of the returned four-node is the new key in the four-node. Otherwise, return an updated three-node.
+\end{itemize}
+
+The only thing that is left is the rule to handle the root of the
+tree. Everything works fine with the rules that we have but it could
+of course be that we will return a four-node and we don't want to have
+four-nodes in our tree.
+
+\begin{itemize}
+\item {\em the root} : If, by updating the root, we return a four-node
+  then split the four-node into two two-nodes that are branches of a
+  new two-node root.
+\end{itemize}
+
+That is it, now let's see how hard this is to implement.
+
+\section{The implementation}
+
+Let's implement a function {\tt insertf(Key, Value, Tree)} that takes a
+key, a value and a 2-3 tree and returns a 2-3 tree or possibly a
+four-node containing 2-3 trees of equal depth (we will deal with the
+root case last). Look at the rules and star with the base cases.
+
+\begin{lstlisting}
+  insertf(Key, Value, nil) ->
+      {leaf, Key, Value};
+  insertf(K, V, {leaf, K1, _}=L) ->
+    if
+        K =< K1 ->
+            {two, K, {leaf, K, V}, L};
+        true ->
+            {two, K1, L, {leaf, K, V}}
+    end;
+\end{lstlisting}
+
+You might not have seen the construct {\tt =L} in the head but it is a
+very convenient syntax. We do want the second argument to match the
+pattern but at the same time we would like to use the data
+structure. We could have written this without using this syntax but it
+would be more to write and it would not be as efficient.
+
+So the two first rules was easy, now for the rules were we are looking
+at a two-node that holds only leafs. I leave this with some holes for
+you to fill in, you should do more than just copy and paste. Look at
+the rules, you should return a three-node that holds two keys and
+three leafs.
+
+\begin{lstlisting}
+  insertf(K, V, {two, K1, {leaf, K1, _}=L1,
+                          {leaf, K2, _}=L2}) ->
+    if 
+        K =< K1 ->  
+            ...;
+        K =< K2 -> 
+            ...;
+        true ->
+            ...
+    end;
+\end{lstlisting}  
+
+The keys should of course be {\tt K1}, {\tt K2} and {\tt K}, but in
+the right order and the corresponding leafs should follow. When you
+think you have it, take it for a spin, terminate the clause with a dot,
+compile and do some experiments. You should be able to handle a empty
+tree, a tree of only a leaf and a two-node with two leafs. If you got
+it proceed to the three-node.
+
+\begin{lstlisting}
+  insertf(K, V, {three, K1, K2, {leaf, K1, _}=L1,
+                                {leaf, K2, _}=L2,
+                                {leaf, K3, _}=L3}) ->
+    if 
+        K =< K1 ->  
+            ...
+        K =< K2 -> 
+            ...
+        K =< K3 -> 
+            ...
+        true ->
+            ...
+    end;
+\end{lstlisting}  
+
+What is the result of inserting a key-value pair in a three-node
+holding three leafs? Look at the rule, complete the code, compile and
+test. Ok - then the recursive cases.
+
+\begin{lstlisting}
+insertf(K,  V, {two, K1, Left, Right}) ->
+    if 
+        K =< K1 ->
+            case insertf(K, V, Left) of
+                {four, Q1, Q2, Q3, T1, T2, T3, T4} -> 
+                    ....;
+                Updated ->
+                    {two, K1, Updated, Right}
+            end;
+        true ->
+            case insertf(K, V, Right) of
+                {four, Q1, Q2, Q3, T1, T2, T3, T4} -> 
+                    ....;
+                Updated ->
+                    {two, K1, Left, Updated}
+            end
+    end;
+\end{lstlisting}
+
+Look at the first case, we have tried to insert the new key-value in
+the left branch but ended up with a four-node. The four-node should be
+divided into two two-nodes, one holding {\tt Q1} and one holding {\tt
+  Q3}. The key {\tt Q2} should be used to create a new three-node,
+holding the two newly created two-nodes and the original right
+node. The three-node should thus have the keys: {\tt Q2} and {\tt K1} but
+you need to put this together in the right order.
+
+If you manage to solve the first puzzle then the second case is
+easy. Again, compile and test - can you handle the test below?
+
+\begin{lstlisting}
+  test() ->
+         insertf(14, grk, {two, 7,
+                     {three, 2, 5,
+                       {leaf, 2, foo},
+                       {leaf, 5, bar},
+                       {leaf, 7, zot}},
+                     {three, 13, 16,
+                       {leaf, 13, foo},
+                       {leaf, 16, bar},
+                       {leaf, 18, zot}}}).    
+\end{lstlisting}
+
+The case where we have a three-node is of course very similar, it's a
+lot of code but it should not be to difficult. You will probably make
+mistakes but these are more mistakes of typos. It could be easier to
+write the tree on a paper that clearly shows what {\tt Q1}, {\tt Q2}
+etc are referring to.
+
+\begin{lstlisting}
+insertf(K, V, {three, K1, K2, Left, Middle, Right}) ->
+    if 
+        K =< K1 ->
+            case insertf(K, V, Left) of 
+                {four, Q1, Q2, Q3, T1, T2, T3, T4} -> 
+                    {four, Q2, K1, K2, ..., ..., ..., ...}; 
+                Updated ->
+                    {three, K1, K2, ..., ..., ...}
+            end;
+        K =< K2 ->
+            case insertf(K, V, Middle) of
+                {four, Q1, Q2, Q3, T1, T2, T3, T4} ->           
+                    ....:
+                Updated ->
+                    {three, K1, K2, ..., ..., ...}
+            end;
+        true ->
+            case insertf(K, V, Right) of
+                {four, Q1, Q2, Q3, T1, T2, T3, T4} ->           
+                    ....;
+                Updated ->
+                    {three, K1, K2, ..., ..., ...}
+            end
+    end.
+\end{lstlisting}
+
+There is only one rule that is missing and this is the rule that we
+apply to the root of the tree. Define a function {\tt insert(Key,
+  Value, Root)} that inserts a key-value in a tree using {\tt
+  insertf/3}. If the {\tt insert/3} function returns a four-node, this
+should be broken up into a three two-nodes.
+
+\begin{lstlisting}
+insert(K, V, Root) ->
+    case insertf(K, V, Root) of
+        {four,Q1, Q2, Q3, T1, T2, T3, T4} ->
+            {two, Q2, ..., ...};
+        Updated ->
+            Updated
+    end.
+\end{lstlisting}
+
+That should be it - compile and test.
+
+
+
+
+\end{document}

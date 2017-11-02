@@ -1,0 +1,492 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[latin1]{inputenc}
+
+\newcommand{\nnsection}[1]{
+\section*{#1}
+\addcontentsline{toc}{section}{#1}
+}
+
+\usepackage{syntax}
+
+
+\begin{document}
+
+\begin{center}
+\vspace{20pt}
+\textbf{\large Operational semantics of a small functional programming language.}\\
+\vspace{10pt}
+\textbf{Johan Montelius}\\
+\vspace{10pt}
+\today{}
+\end{center}
+
+
+\nnsection{Introduction}
+
+The operational semantics of a language should answer the question
+what an expression will evaluate to. The description should not leave
+any room for interpretation since the description is what defines the
+language.
+
+The operational semantics should preferably be described in a way that
+it also captures the time and memory complexity of an execution. It
+does not have to be a detailed description of how things are actually
+implemented but it should give an understanding of the execution to
+allow a programmer to reason about the efficiency of a particular
+program.
+
+The operational semantics of a language can also serve as a
+architecture for an abstract machine for the language or as the design
+criteria for a compiler. The observable properties of a program
+execution should conform to the properties one can derive from the
+description of the operational semantics.
+
+There are many ways to describe an operational semantics of a
+programming language and we will use a strategy called {\em big-step
+  semantics}. We will describe the semantics as a set of rewrite rules
+or evaluation relation; given an expression in the language we ill
+describe the rule of how to evaluate the expression to obtain an
+answer.
+
+This description of an operational semantics for our small functional
+programming language will serve our purposes in that we will be able
+to talk and reason about program execution. We will also be able to
+use it when we implement an interpreter for the langauge.
+
+
+\section{The language}
+
+Our language is a very small functional programming language. We will
+in the beginning only have a handful of data types and program
+constructions but will the extend the language to look more like a
+proper language. To start with our language will only consist of the
+constructs to express a sequence of pattern matching expressions
+followed by a single expression.
+
+\begin{figure}[ht]
+\center
+{\tt X = foo, Y = nil, \{Z,_\} = \{bar,grk\}, \{X,\{Z,Y\}\}.}
+\caption{a simple sequence}
+\label{fig:seq1}
+\end{figure}
+
+The expressions that we allow are simple {\em term expressions}
+i.e. no function calls, {\em case} or {\em if expressions}. We define
+this language using a BNF grammar.
+
+We assume that we have two lexical constructs, {\em atoms} and {\em
+  variables} that consist of all words written in with an initial
+lowercase, atoms, and initial uppercase letters, variables.  We also
+have one compound expression called a {\em cons}. This is a simple
+binary construct that holds two expressions.
+
+
+\begin{grammar}
+<expression> ::= <atom> \alt <variable> \alt <cons> 
+
+<cons> ::= '\{' <expression> ',' <expression> '\}'
+\end{grammar}
+
+
+
+If this was the whole language we would only be able to write
+expressions like {\tt {foo, {X, zot}}}. This would not be that
+interesting so we add the the description of a {\em sequence}.
+
+\begin{grammar}
+<sequence> ::= <expression> \alt <match> ',' <sequence>
+
+<match> ::= <pattern> '=' <expression> 
+\end{grammar}
+
+
+A {\em pattern matching expression} consists of a {\em pattern} and an
+expressions, and the pattern will look almost exactly as an
+expression. The only difference is that we allow {\tt '_'} which will
+be called {\em don't care}.
+
+\begin{grammar}
+<pattern> ::= <atom>
+\alt <variable>
+\alt '_'  
+\alt <cons-pattern> 
+
+<cons-pattern> ::= '\{' <pattern> ',' <pattern> '\}'
+\end{grammar}
+
+An expression is just a syntactical construct, the grammar presented
+does not give any meaning to the expressions that we can write bit it
+defines which sequences of characters are legal sequences, patterns
+and expressions.
+
+\section{The domain}
+
+The {\em domain} is the set of data structures that will be the result
+of our computation. It is the set of all {\em atoms} and {\em
+  compound} data structures that we can generate from elements in the
+domain.
+
+$${\rm domain} = \{a,b,c, ...\} \cup \{c(d_1, d_2) | d_i \in {\rm domain}\}$$
+
+There is of course a equivalence relation between our atoms in the
+language and the atoms in the domain. You might wonder if they are not
+the same but there is a difference between expressions in our language
+and elements in our domain. Think about the written number ``12'' or
+in Roman ``XII'' and the number twelve. We will have expression that
+look like {\tt \{foo, \{bar, zot\}\}} and data structures that we
+write {\em c(foo, c(bar, zot))}. If everything works out fine, the
+{\em evaluation} of an expression will return the corresponding data
+structure.
+
+\section{An environment}
+
+In the description of the evaluation we will need an {\em
+  environment}. This is a mapping from variables in expressions to
+elements in the domain. We will start with an empty environment and
+gradually add more information as we evaluate a sequence of pattern
+matching expressions. 
+
+An environment is represented as a set of bindings $v/s$. Here $v$ is
+a variable (and we will typically use $v$ or $x$, $y$ etc when we talk
+about variables) and $t$ is a data structure. An environment that
+binds X to a and Y to b would then be written:
+
+$$\{X/a, Y/b\}$$
+
+
+\section{The evaluation function}
+
+So we're now ready to describe the operational semantics of our
+programming language and we do this by describing how an expressions is
+{\em evaluated}. We will start with the simplest expressions and then
+work our way up to more complex expressions.
+
+The evaluation of an expression $e$ is written $E\sigma(e)$, meaning
+that we evaluate the expression in the context of the environment $\sigma$.
+
+When we describe our rules for evaluation we will use
+ a notation that is:
+
+$$\frac{{\rm prerequisite}}{E\sigma({\rm expression}) \rightarrow {\rm result}}$$
+
+In this description $E$ is the evaluation function, and we will also
+have rules for other functions and $\sigma$ an environment. The result
+of applying the function is a data structure.
+
+In order to apply the rule the prerequisite must be met and this will
+in the end guide us in how we can implement a recursive evaluator. The
+so called {\em big-step} operational semantics is often used since it
+is easily turned into an implementation of the language.
+
+\subsection{atoms}
+
+The simplest rule is the one that describes how we evaluate an
+expression consisting of a simple atom.
+
+$$\frac{a \equiv s}{E\sigma(a) \rightarrow s}$$  
+
+This mean that if we have an atom, for example {\tt foo} then this is
+evaluated to the corresponding data structure {\em foo}. The
+environment $\sigma$, is in this case not relevant. 
+
+A variable is of course different since we then need to consult the
+environment for a binding of the variable.
+
+   $$\frac{v/s \in \sigma}{E\sigma(v) \rightarrow s}$$
+
+The rule for a compound expression {\tt \{foo, bar\}} is straight
+forward Given that we can evaluate its two components we will of
+course be able to evaluate the compound expression.
+
+$$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow c(s_1, s_2)}$$
+
+\subsection{a pattern matching expression}
+
+Slightly more complex is how to evaluate a pattern matching
+expression. What we need to do is to first evaluate the right hand
+side and then try to match the pattern of the left hand side to the
+data structure that we obtain. The result of a pattern matching is
+either an extended environment or a {\em failure}. This failure is
+important since we will later use it in our case statement.
+
+We will start with one rule that might seam to be a bit redundant but
+it will save us some problems when we have to write up rules for
+failure. A pattern matching given a failed environment will result a i
+a failure.
+
+$$\frac{}{P\;{\rm fail}\;(e, s) \rightarrow {\rm fail}}$$ 
+
+We now proceed with the rules how to do pattern matching. The first
+two rules are simple; an atom will of course match its corresponding
+data structure and the don't care symbol will match anything.
+
+$$\frac{a \equiv s}{P\sigma(a, s) \rightarrow \sigma}$$ 
+
+$$\frac{}{P\sigma(\_,s) \rightarrow \sigma}$$
+
+If we try to match an atom to a data structure that is not the
+corresponding data structure then we fail.
+
+$$\frac{a \not\equiv s}{P\sigma(a, s) \rightarrow {\rm fail}}$$ 
+
+If we have a variable as a pattern then we have some options; either
+the variable is bound to a structure in the environment or there is no
+binding. If we have a binding the hope is of course that the variable
+is bound to, we will have the same alternatives as for the matching of
+atoms.
+
+$$\frac{v/s \in \sigma}{P\sigma(v, s) \rightarrow \sigma}$$
+
+$$\frac{v/t \in \sigma  \qquad s \not= t}{P\sigma(v, s) \rightarrow {\rm fail}}$$
+
+If we do not have a binding of the variable we add a new binding to
+the environment. We express the prerequisite as $v/t \not\in \sigma$,
+meaning that for now data structure $t$ is there a bindings $v/t$ in
+$\sigma$.
+
+$$\frac{v/t \not\in \sigma}{P\sigma(v, s) \rightarrow \lbrace v/s \rbrace \cup \sigma}$$ 
+
+Matching a cons expression is quite simple but note what the rules
+says about the environment. We need to do the pattern matching of the
+expression $e_1$ and the data structure $s_1$ in $\sigma$ but the
+o matching of $e_2$ and $s_2$ in $\sigma'$. We thus gain information in
+the first matching that must be consisting with the second matching.
+
+$$\frac{P\sigma(p_1, s_1) \rightarrow \sigma' \wedge P\sigma'(p_2, s_2) \rightarrow \theta}{P\sigma(\lbrace p_1, p_2 \rbrace  = \lbrace s_1, s_2 \rbrace) \rightarrow \theta}$$
+
+As an exercise you should do the pattern matching of the expression
+{\tt \{X, \{X, b\}\}} and the data structure {\em c(a, c(a, b))}. Note
+how we first add {\em X/a} as a binding and then use this binding when
+we match {\tt \{X, b\}} and {\em c(a,b)}.
+
+The remaining alternative, the case where we have a cons expression and
+we try to match this to an data structure that is not a compound data
+structure, will of course lead to a failure.
+
+$$\frac{s \not = c(s_1, s_2)}{P\sigma(\lbrace p_1, p_2 \rbrace = s) \rightarrow {\rm fail}}$$
+
+That it is as far as pattern matching goes. Try to do some matching by
+hand and explain which rules you apply. Try these:
+
+\begin{itemize}
+\item {\tt \{X, b\}} = {\em c(a, b)}, 
+\item {\tt \{X, X\}} = {\em c(a, a)}, 
+\item {\tt \{b, a\}} = {\em c(a, b)}, 
+\end{itemize}
+
+
+\subsection{a sequence}
+
+So now we're ready to evaluate a sequence; a sequence that always
+consist of zero or more pattern matching expressions followed by a
+single expression. The pattern matching expressions will, if they
+succeed, add more bindings to the environment as we proceed and the
+final expression is then evaluated given this environment.
+
+The rule is quite straight forward, we first evaluate the expression,
+$e$, of the pattern matching expression, the evaluate the matching
+giving us an updated environment, $\sigma'$, that is used to evaluate
+the remaining sequence.
+
+$$\frac{   
+E\sigma(e) \rightarrow t
+\qquad P\sigma(p, t) \rightarrow \sigma'
+\qquad E\sigma'({\rm sequence}) \rightarrow s
+}{E\sigma(p = e, {\rm sequence}) \rightarrow s}$$ 
+
+A sequence consist of one or more patter matching expressions
+followed by an expression, so the rule will terminate once we reach
+the final expression.
+
+\subsection{that's it}
+
+That is it, we now have all the rules to evaluate a sequence on the
+form shown in fig:\ref{fig:seq1}. Make sure that you understand
+the rules and how they are applied by evaluating the sequence by
+hand. If you get it right the result will be {\em c(foo, c(bar,
+  nil))}. When you get it right you're ready to continue.
+
+
+\section{Adding a case expression}
+
+The expressions that we have seen so far are rather boring. In order to
+write a program that is at lest marginally interesting we need a
+construct that evaluates to different data structures depending on the
+state of the execution. We could have introduced a {\em if-then-else}
+expression but we choose to introduce a so called {\em case expression}.
+
+We first need to extend the grammar so that we have a syntax to express
+our new construct. We choose a syntax that is similar to the case
+expression in Erlang.
+
+\begin{grammar}
+     <expression> ::=  <case expression> | ...  
+
+     <case expression> ::= 'case' <expression> 'of' <clauses>  'end' 
+
+     <clauses> ::=   <clause> | <clause> ';' <clauses>
+
+     <clause> ::=  <pattern> '-\textgreater' <sequence>
+\end{grammar}
+
+We then extend the rules for evaluation an expression, hopefully
+capturing our intended meaning. We will use a new set of rules, $C$,
+that will describe how the right clause is selected. 
+
+
+$$\frac{E\sigma(e) \rightarrow t \qquad C\sigma(t, {\rm clauses}) \rightarrow s }{E\sigma({\tt case}\ e \ {\tt of}\ {\rm clauses} \ {\tt end}) \rightarrow s}$$
+
+The right clause is selected by trying to match the pattern of the
+first clause with the data structure obtained by evaluating the
+expression. If the pattern matching succeeds we will continue to
+evaluate the sequence of the clause, in the extended environment.
+
+$$\frac{P\sigma(p, s) \rightarrow \sigma' \qquad \sigma' \not = {\rm fail} \qquad E\sigma'({\rm sequence}) \rightarrow s}{
+C\sigma(s, p \;{\rm -\textgreater}\;    {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
+
+If the pattern matching fails we will simply try the next clause in
+the sequence of clauses.
+
+$$\frac{P\sigma(p, s) \rightarrow {\rm fail} \qquad
+  C\sigma(s, {\rm clauses}) \rightarrow s}{
+C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
+
+We now have everything we need to handle case expressions in our
+language, this is starting to look like something.
+
+\section{Adding lambda expressions}
+
+The real task is when we want to add lambda expressions, or unnamed
+functions. To do this wee need to do several things. We need to extend
+the syntax to represent a function and to apply a function to a
+sequence of arguments. We also need to add a new data structure to
+represent a function and, extend the rules of evaluation to give
+everything a meaning.
+
+
+\subsection{free variables}
+
+We want to know which variables in the function expression that are
+{\em free}. To see the problem let's look at the function expression
+that has a match expression in the sequence.
+
+\begin{verbatim}
+F = fun(X) -> Y = 5, X + Y end
+\end{verbatim}
+
+Is {\tt Y} a {\em free} variable in the expression? You should of
+course answer no, since the variable {\tt Y} is introduced, and gets
+its binding in, the match expression {\tt Y = 5}. If you would
+translate this to lambda calculus the expression would look like
+follows:
+
+$$ \lambda x \rightarrow {\rm let} \quad y = 5 \quad {\rm in} \quad x + y $$
+
+
+Now look at the following sequence:
+
+\begin{verbatim}
+Y = 3, F = fun(X) -> Y = 5, X + Y end
+\end{verbatim}
+
+Where is {\tt Y} introduced? Is {\tt Y} free in the function
+expression? Is this sequence equivalent to:
+
+\begin{verbatim}
+Y = 3, F = fun(X) -> Z = 5, X + Z end
+\end{verbatim}
+
+Erlang does not have any explicit construct to represent the scope of
+the variable so to handle this we will treat {\tt Y} as a free
+variable in the function expression. If {\tt Y} has a binding in the
+surrounding environment this binding is used, if {\tt Y} does not exist
+in the surrounding environment {\tt Y} is introduced in the local match
+expression. Note that this confusion would not arise if the syntax had
+an explicit construct to determine the scope of variables.
+
+\subsection{function expression and application}
+
+So we introduce two new constructs in our language, one to express a
+function and one to apply a function to a sequence of
+arguments. Different from Erlang we don't allow patterns in function
+parameters; this is only to make the riles of the evaluation easier to
+describe.
+
+A function consist of the keyword {\tt fun} followed by a, possibly
+empty, sequence of parameters (all unique variables). After the arrow
+we have a regular sequence as we have defined before and everything is
+finished by the keyword {\tt end}.
+
+\begin{grammar}
+<function> ::= 'fun' '(' <parameters> ')' '-\textgreater' <sequence> 'end'
+
+<parameters> ::= ' ' | <variables> 
+
+<variables> ::= <variable> |  <variable> ',' <variables>
+\end{grammar}
+
+A function application is simply any expression (that hopefully will
+be evaluated to a {\em closure} and a sequence of arguments enclosed
+in parentheses. The arguments can of course be arbitrary expressions.
+
+\begin{grammar}
+<expression> ::=  <expression>'(' <arguments> ') | \ldots 
+
+<arguments> ::= '  ' | <expressions> 
+
+<expressions> ::= <expression> | <expression> ',' <expressions>
+\end{grammar}
+
+\subsection{closures}
+
+The next thing we need to do is to extend our set of data
+structures. When we evaluate a function expression we will construct
+something called a {\em closure}. A closure is a triplet: the parameters
+of the function, the sequence to evaluate and an environment. The
+environment is constructed by taking the bindings of all free
+variables in the sequence, not including the variables that are bound
+by the parameters.
+
+$$\frac{ \theta = \{ v/s \mid  v/s \in \sigma \wedge v {\rm\ free\  in\ sequence}\}}{
+E\sigma({\rm fun}({\rm parameters})\; {\rm -\textgreater}\; {\rm sequence}\; end \rightarrow  {\rm parameters}:{\rm sequence}:\theta}$$
+
+\subsection{applying a closure}
+
+So now to the interesting part where we apply a closure to a sequence
+of arguments. We first need to evaluate the arguments and then add a
+set of bindings to the environment of the closure. We then evaluate
+the sequence in the updated environment.
+
+$$\frac{E\sigma(e) \rightarrow v_1, \ldots:{\rm seq}:\theta \qquad E\sigma(e_i) \rightarrow s_i \qquad E\{v_1/s_1, \ldots\}\cup\theta({\rm seq}) \rightarrow s}{
+E\sigma(e(e_1, \ldots)) \rightarrow s}$$ 
+
+Note that the closure that we get, $v_1, \ldots:{\rm seq}:\theta$
+consist of a sequence of variables $v_1, \ldots$, that are all
+distinct. This is why we can simply add the bindings
+$v_i/s_i$ to $\theta$, there will not be any duplicate bindings.
+
+Looks complicated but it's quite straight forward. Go through the
+evaluation of sequence \ref{fig:seq2}. If everything works out fine
+the result should be {\em c(foo, bar)}.
+
+\begin{figure}[ht]
+\center
+{\tt X = foo, F = fun(Y) -> {X,Y} end,  F(bar)}
+\caption{a sequence with a function}
+\label{fig:seq2}
+\end{figure}
+
+\section{An interpreter}
+
+The big-step operational semantics that we have used in describing the
+language is very useful when one wants to implement an interpreter
+for the language. If we can only come up with a scheme to represent
+expressions, data structures and environments then the rules will give
+us a recursive interpreter with very little effort.
+
+
+
+
+
+\end{document}

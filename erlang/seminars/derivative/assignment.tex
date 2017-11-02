@@ -1,0 +1,227 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{wrapfig}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+
+\newcommand{\nnsection}[1]{
+\section*{#1}
+\addcontentsline{toc}{section}{#1}
+}
+
+\begin{document}
+
+\begin{center}
+\vspace{20pt}
+\textbf{\large Taking the derivative}\\
+\vspace{10pt}
+\textbf{Johan Montelius}\\ 
+\vspace{10pt}
+\textbf{\today}
+\end{center}
+
+\nnsection{Introduction}
+
+You of course know how to take the derivative of a function, this is
+something you probably learned already in high school. There are some
+simple rules that one applies and in five minutes one can find the
+derivative of even complicated functions.
+
+Our task in this tutorial is to work with functions as symbolic
+expressions and compute the derivative of functions. Part of the
+problem is to understand how we can represent functions using the data
+structures that we have in Erlang. Once we know how to do this the
+derivation will be quite simple.
+
+\section{Representing functions}
+
+You might wonder what the problem is; after all we represent a function in Erlang using the syntax:
+
+\begin{verbatim}
+fun(X) -> X * 2 end
+\end{verbatim}
+
+This is only partly true, what we do is express what the function
+should look like, how it is actually represented is hidden to us. If we
+write:
+
+\begin{verbatim}
+ F = fun(X) -> X * 2 end
+\end{verbatim}
+
+then {\tt F} is a function of one argument that we can use, but if we
+only have access to {\tt F} we can not determine that it is a function
+of one argument nor that the the body of the function is a
+multiplication of the argument and a constant.
+
+In order to derivate the function {\tt F}, with respect to {\tt X}, we
+need to know that the body of the expression is {\tt X * 2}. We need to
+be able to examine the expressions {\tt X*2}, and determine that it is
+a product of the variable {\tt X} and {\tt 2}, only then can we
+determine that the derivative is $2$. So, just because we have {\em
+  functions} in Erlang, does not mean that we necessarily should use
+them to represent our ``functions''. 
+
+\subsection{an expression}
+
+Let's start by finding a representation for constants and
+variables. We can limit ourselves to the domain of reals and a real
+number could of course be represented by a Erlang number. This is of
+course trivial but remember to separate the real number $2.34$ from the
+representation in Erlang by {\tt 2.34}. A variable could be represented
+as an atom so the variable $x$ is represented by the Erlang atom {\tt
+  x}.
+
+This simple mapping of elements in our domain to Erlang data structures
+is tempting to use but it has some disadvantages, we can not use
+pattern matching to determine if an element is a number or a
+variable. In our program we would have to use the built-in recognizers
+to separate the two cases; we would use code as the following:
+
+\begin{verbatim}
+derivative(N) when is_number(N) -> 
+          ....;
+derivative(N) when is_atom(N) -> 
+          ....;
+\end{verbatim} 
+
+We would also have to think twice when we want to include constants
+such as $\pi$, could we represent it using the atom {\tt pi}?
+Moreover, when we derivatives, is it important to separate the
+constant $\pi$ from the constant $2.34$?
+
+A better approach (all though it will turn our expressions into huge
+data structures) is to be more explicit in our choice of
+representation. What if we choose to represent all constants using the
+tuple {\tt\{const, C\}} where {\tt C} could be either an atom ({\tt
+  pi}) or a number ({\tt 2.34}). Variables could, in the same way, be
+represented by tuples {\tt \{var, V\}} where {\tt V} is a atom that
+identifies the variable.
+
+If constants and variables are our {\tt literals}, we have the
+following definition:
+
+\begin{verbatim}
+-type literal() :: {const, number()} | {const, atom()} | {var, atom()}.
+\end{verbatim}
+
+\subsection{expressions}
+
+Assume that we, for the time being, limit ourselves to the arithmetic
+operations multiplication and addition, we have a very natural
+representation. We will of course represent them using tuples where
+the first element is an atom that identifies the operation. We have
+{\tt\{mul, A, B\}} and {\tt \{add, A, B\}}. Expressions are thus:
+
+\begin{verbatim}
+-type expr() :: literal() | {mul, expr(), expr()} | {add, expr(), expr()}
+\end{verbatim}
+
+
+This gives us everything we need to represent a limited sets of
+expressions. The expression $2x + 3$ could for example be represented
+by the Erlang structure:
+
+\begin{verbatim}
+   {add, {mul, {const, 2}, {var, x}}, {const, 3}}
+\end{verbatim}
+
+As you see it it is not a syntax we would like to use when we write
+expressions by had but it has its advantages when it comes to handle
+the expressions using Erlang clauses.
+
+\section{the derivative of}
+
+
+What are the rules of derivation? You of course remember that derivative
+of $2x + 3$ with respect to $x$ is $2$, and that the derivative of
+$x^2$ is $2x$ but now we should define a program that does this
+automatically so we need to have very clear understanding if the
+rules. If you have not done so yet, this is the point where you should
+brush up on derivative rules so that you can follow the reasoning.
+
+These are two rules that we will use:
+
+\begin{itemize}
+\item $d/dx \: x \equiv 1$
+\item $d/dx \: c \equiv 0$  for any literal different from $x$
+\item $d/dx \: f(x) + g(x) \equiv  f'(x) + g'(x)$
+\item $d/dx \: f(x) \times  g(x) \equiv  f'(x) \times  g(x) + f(x) \times  g'(x)$
+\end{itemize}
+
+The third rule is quiet straight forward; the derivative of an sum is
+the sum of the derivatives of the terms. The derivative of $4x² + 2x +
+5$ is $8x + 2$ since since the derivative of $4x²$ is $8x$ etc. 
+
+The last rule, you might not even have learned as a rule but simply
+it's consequences in the most common cases, is the rule that says that
+$4x²$ is $8x$ and $2x$ is $2$. When learning using examples like these
+the general rule is quite simple: multiply the constant with the power
+and reduce the power by one. The general rule gives us the definition
+for any product, be it $2x$ or $2x^2$.
+
+
+\section{the rules of the game}
+
+So if we know how expressions are represented and how to take the
+derivative of sums and products, we are ready to implement the
+rules. This is a skeleton on what a function {\tt deriv/2} would look like:
+
+\begin{verbatim}
+deriv({const, _}, _) ->
+    ...;
+deriv({var, V}, V) ->
+    ...;
+deriv({var, Y}, _) ->
+    ...;
+deriv({add, E1, E2}, V) ->
+   ...;
+deriv({mul, E1, E2}, V) ->
+   ...;
+\end{verbatim}
+
+What is the derivative of $2X² + 3x + 5$ with respect to $x$? How do
+we represent the expression in our system? Can you calculate the
+derivative using the {\tt deriv/2} function?
+
+The answer that you get might not look like the answer you would have
+hoped for but it might be that what you see is an expression that can
+be simplified. The derivative of $2x$ is of course $2$ but our function
+will return something that looks like $0\times x + 2\times 1$, which of course is
+equal to $2$.
+
+
+\section{carrying on}
+
+Add more rules to the {\tt deriv/2} function. We should of course be
+able to take the derivative of the following expressions:
+
+\begin{itemize}
+\item $x^n$
+\item ${\rm ln}(x)$
+\item $1/x$
+\item $\sqrt{x}$
+\item $sin(x)$
+\end{itemize}
+
+To be able to handle these expressions you of course need to find a
+suitable representation. You then have to find the general rule for
+finding the derivative.
+
+\section{simplification}
+
+The results of our derivation might be correct but they are very hard
+to read. They contain multiplications with zero, addition with
+constant values etc. All of those could be removed if we simplified the results.
+
+Simplification could be tricky, You could start by transforming an
+expression so that all functions with constant arguments were actually
+evaluated. You could the remove expressions that are multiplied with
+zero etc. The problem is to know if there are any more things that
+could be done; how do we know that will not be able to do more.
+
+There will also be a discussion of what the simplest form would look like. Should we write $$ x \times  (y + 2)$$ or should we write $$xy + 2x$$
+
+
+
+\end{document}

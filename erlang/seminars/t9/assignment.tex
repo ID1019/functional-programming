@@ -1,0 +1,141 @@
+\documentclass[a4paper,11pt]{article}
+
+
+\usepackage[latin1]{inputenc}
+
+\usepackage{amsmath}
+
+
+\newcommand{\nnsection}[1]{
+\section*{#1}
+\addcontentsline{toc}{section}{#1}
+}
+
+\begin{document}
+
+\begin{center}
+\vspace{20pt}
+\textbf{\large T9}\\
+\vspace{10pt}
+\textbf{Johan Montelius}\\
+\vspace{10pt}
+\today{}
+\end{center}
+
+\nnsection{Let's apply for a job}
+
+This was an assignment that I got from one of my students. She was
+applying for a job at Ericsson and she had been given an assignment
+that she needed some help with. The task was quite interesting yet
+very simple to describe. I can understand that they gave this as an
+assignment, the solution will show how far you have reached.
+
+The problem is to implement a technique that you probably use every
+day, the quick typing on mobile phones known as T9. You're given a
+list of integers that represents the keys presses and your task is to
+find the possible words given a small dictionary,
+
+For historical reasons the keys on a phone are mapped starting on $2$,
+that is mapped to (a,b,c) continuing to $9$ that is mapped to
+(w,x,y,z). If you're given the list {\tt [4,3,5,5,6]} you should
+generate the list {\tt [``hello'']} if we have ``hello'' in the
+dictionary. You should return a list of all possible words so if a
+sequence can match two words both words should be in the list.
+
+The assignment was not to give the most efficient solution but to give
+an elegant solution. Let's start with a simple solution and then a 
+more efficient.
+
+\nnsection{the first solution}
+
+Let's do an initial solution that solves the problem. Assume we have a
+dictionary that simply lists all possible words.
+
+\begin{verbatim}
+dictionary :: [String]
+dictionary = ["foo", "bar", "abr", "gul", "eri"]
+\end{verbatim}
+
+The idea for the first solution will look as follows. First we will
+construct a {\em table} that is a list of pairs {\em (Digits, Word)}
+where the digits is a list of the digits that correspond to the word. 
+
+If we have the table of all words in the dictionary we can filter it
+using one digit at a time from the sequence of digits that we are
+given. When we are done we simply convert the remaining table to a
+list of words.
+
+First define a function {\em table} that produces the table. If you
+follow these steps you can have it done in no time.
+
+\begin{itemize}
+\item Implement a function {\em char\_to\_digit} that takes a
+  character and returns a digit.
+
+\item Implement a function {\em encode} that takes a word and returns
+  a list of digits.
+
+\item If you map {\em encode} to the dictionary you will get a list of
+  digit sequences.  
+
+\item Use the predefined function {\em zip} and
+  take the generated list and the dictionary to create the table.
+\end{itemize}
+
+When you implement these functions, try them one by one in GCHi to see
+that they works as expected.
+
+Once we have our table we can simply filter the table given the
+sequence that we're given. Once we have reduces the pairs in the table
+we can apply a mapping function that selects the words from the pairs
+and we're done.
+
+\nnsection{a more efficient solution}
+
+If this second solution is more efficient actually depends on the
+usage. If we only have one sequence to check it was probably already
+unnecessary to construct the table in the first solution. The table
+only makes sense if we can use it more than once. The second solution
+will build an even more complicated table but will have much better
+performance for large dictionaries.
+
+The change we will do is to implement the table not as a list of
+pairs but as a tree of degree eight, one branch for each digit (2..9). A path
+from the root of the tree to a node represents a sequence of digits
+and the reached node will have a set w words that corresponds to this
+sequence.
+
+We will first describe the data type {\em Node} that holds a list of
+{\em Branches}, where a branch is a tuple of a digit and a node, and a
+list of {\em Words}. This means that a leaf node is identified by a
+empty list of branches. An empty tree consists of a node with no
+branches nor words.
+
+First implement the data types needed and the operations {\em root},
+{\em insert} and {\em select}.
+
+\begin{itemize}
+\item Root will create a empty node. 
+\item Insert will add a {\em Pair} (defined in the previous solution)
+  to a tree.
+\item Select will select a sub-tree (the node of a branch) given a digit. 
+\end{itemize}
+
+If you get these functions right you should be able to construct a tree
+from the table. You should also be able to implement the main function
+of T9 that should take a sequence of digits and first selects the
+sub-tree and then returns the corresponding words.
+
+\nnsection{Generic tree patterns}
+
+One can of course implement a set of generic tree algorithms that
+traverses, search or adds information to a generic tree. This is
+however hardly worth the trouble since trees are not as uniform as
+lists. In our case we had branches represented a list of pars where
+most trees would have a left and a right branch. We would have to
+parametrize the algorithm to use given functions for navigating down
+the branches and accessing node data. 
+
+
+
+\end{document}

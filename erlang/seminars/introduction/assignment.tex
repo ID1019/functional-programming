@@ -1,0 +1,422 @@
+\documentclass[a4paper,11pt]{article}
+
+
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+
+
+\newcommand{\nnsection}[1]{
+\section*{#1}
+\addcontentsline{toc}{section}{#1}
+}
+
+\begin{document}
+
+\begin{center}
+\vspace{20pt}
+\textbf{\large Erlang: getting started}\\
+\vspace{10pt}
+\textbf{Johan Montelius}\\
+\vspace{10pt}
+\today{}
+\end{center}
+
+
+\nnsection{Getting started}
+
+We assume that you have Erlang up and running and an editor to write
+your first Erlang programs. You don't need a full IDE, rather the
+less you have to think about the better.
+
+
+In this tutorial we will write input to the Erlang shall as follow:
+\begin{verbatim}
+> x + 2.
+\end{verbatim}
+
+
+\section{Simple arithmetic}
+
+Open up a Erlang shell and try some simple arithmetic. Try these examples:
+
+\begin{verbatim}
+>6 + 2.
+
+>6 div 2.
+
+>7 div 2.
+
+>7 rem 2.
+
+>-1 rem 5.
+
+>7 / 2.
+\end{verbatim}
+
+Some simple comparisons.
+
+\begin{verbatim}
+>3 == 3
+
+>3 /= 4
+
+>4 < 7
+\end{verbatim}
+
+
+\section{A first program}
+
+Open up a file {\em test.erl} and create a module called {\em test}. In
+this module we define a function called {\tt double} that takes one
+argument and returns the double of that argument. 
+
+\begin{verbatim}
+-module(test).
+
+double(N) -> ...
+\end{verbatim}
+
+In the Erlang shell you can load the module and try if it works.
+
+\begin{verbatim}
+>double(4).
+\end{verbatim}
+
+Now in the same module define the following functions:
+
+\begin{itemize}
+\item a function that converts from Fahrenheit to Celsius (the
+  function is as follows:$$C = (F-32)/1.8$$)
+
+\item a function that calculates the area of a rectangle give the
+  length of the two sides
+
+\item a function that calculates the area of a square, using the
+  previous function
+
+\item a function that calculates the area of a circle given the radius
+\end{itemize} 
+
+\section{Recursive definitions}
+
+Assume that all we have is addition and subtraction but need to define
+multiplications. How would you do? You will have to use recursion and
+you solve it by first describing the multiplication functions by words.
+
+{\em The product of m and n is: 0 if $m$ is equal to $0$, otherwise the
+  product is $n$ plus the product of $m-1$ and $n$.}
+
+Once you have written down the definition, the coding is simple.
+
+\begin{verbatim}
+product(M, N) -> 
+   if 
+     M == 0 -> ...;
+     true -> ...
+   end.
+\end{verbatim}
+
+There are alternative ways of writing this, we could use a {\em case
+  expression}:
+
+\begin{verbatim}
+product(M, N) -> 
+   case M of 
+     0 -> ...;
+     _ -> ...
+   end.
+\end{verbatim}
+
+or simply written it as two {\em clauses}:
+
+\begin{verbatim}
+product(0, _) -> 
+   0;
+product(M, N) -> 
+   ... .
+\end{verbatim}
+
+The last definition might be the easiest to read and is often used.
+
+Define a function, {\tt exp/2}, that computes the exponentiation,
+$x^y$. Use only the addition and subtraction and the function {\tt
+  product/2}, that you defined.
+
+\begin{verbatim}
+exp(X, ...) -> 
+   ...;
+exp(X, Y) -> 
+   ... .
+\end{verbatim}
+
+Use the built-in arithmetic functions {\em rem}, {\em div} and
+multiplication {\em *} to implement a much faster exponentiation using
+the following definition:
+
+\begin{itemize}
+  \item x raised to 1 is x
+  \item x raised to n, if n is even, is x raised to n/2 multiplied by itself
+  \item x raised to n, if n is odd, is x raised to (n-1) multiplied by x
+\end{itemize}
+
+
+\section{List operations}
+
+You will do more operations on list than you have ever done before so
+you might as well get use to them. These are operations that you should
+know by heart.
+
+\begin{verbatim}
+>[1|[]].
+
+>[1|[2|[]]].
+
+>[1,2].
+
+>[1,2] = [1|[2|[]]].
+
+>[A,B,C] = [1,2,3]
+
+>[H|T] = [1,2,3].
+
+>[_, {X,Y} | _] = [{a,1},{b,2}, {c,3}, {d,4}].
+
+>[Z] = [1,2,3].
+\end{verbatim}
+
+\subsection{Simple functions on list}
+
+These are some simple functions that you should implement. They will
+all use recursion so first try to formulate in words what the
+definition should look like, then encode it using two or more clauses.
+
+\begin{itemize}
+\item nth(N, L): return the N't element of the list L
+\item number(L): return the number of element in the list L
+\item sum(L): return the sum of all elements in the list L, assume
+  that all elements are integers
+\end{itemize}
+
+
+These functions take some more thinking. You should return a list as a
+result of evaluating the function.
+
+\begin{itemize}
+\item duplicate(L): return a list where all elements are duplicated
+\item unique(L): return a list of unique elements in the list L, that is {\tt [a,b,d]} are the unique elements in the list {\tt [a,b,a,d,a,b,b,a]}
+\item reverse(L): return a list where the order of elements is reversed
+\item pack(L): return a list containing lists of equal elements, {\tt
+  [a,a,b,c,b,a,c,]} should return {\tt [[a,a,a], [b],[c,c]]}
+\end{itemize}
+
+
+
+\subsection{Sorting}
+
+There are several ways to sort a list and you should know them all. We
+will start with the most basic algorithm and then try some other (more or less good).
+
+\subsection{insertion sort}
+
+In {\em insertion sort}, you sort a list of elements by taking them
+one at a time and {\em insert} them into an already sorted list. The
+already sorted list will of course be empty when we start but will
+when we are done contain all the elements.
+
+Start by defining a function {\em insert(Element, List)}, that inserts
+the element at the right place in the list. Think of the two mayor
+cases, what to do if the list is empty and what to do if the list
+contains at least one element. Assume that the elements are integers
+and can be compared using the regular {\em <} operator.
+
+
+Once you have {\em insert/2} working, implement the sorting function
+{\em isort(List, Sorted)}; again what should you do if the list is
+empty, what should you do if it contains at least one element?
+
+Now all you have to do is provide a function {\em isort(List)}, that
+calls the function {\em isort/2} using the right arguments.
+
+\begin{verbatim}
+isort(L) -> isort(L, ...).
+
+isort(.., ...) ->
+  ...;
+isort(..., ...) ->
+  isort(..., ...).
+
+insert(..., ...) ->
+  ...;
+insert(..., ...) ->
+  if 
+    ... -> ...;
+    true -> ...
+  end.
+\end{verbatim}
+
+
+\subsection{merge sort}
+
+In {\em merge sort}, you divide the list into two (as equal as
+possible) list. Then you merge sort each of these lists to obtain two
+sorted sub-lists. These sorted sub-lists are then {\em merged} into
+one final sorted list. 
+
+The two lists are merged by picking the smallest of the elements from
+each of the lists. Since each list is sorted, one need only to look at
+the first element of each list to determine which element is the
+smallest.
+
+The skeleton code below will give you an idea of what the solution
+will look like.
+
+\begin{verbatim}
+msort(..) -> 
+    ...;
+msort(..) -> 
+    ...;
+msort(...) ->
+   {..., ...} = msplit(..., [], []),
+   merge(msort(...), msort(...)).
+
+msplit(..., ..., ...) ->
+   {..., ...};
+msplit(..., ..., ...) ->
+   msplit(..., ..., ...).
+\end{verbatim}
+
+\subsection{quick sort}
+
+The {\em quick sort} algorithm sounds even quicker than merge sort but
+this is not true. The idea is similar but now we ``do our sorting on
+the way down''. First split the list into two parts, one containing low
+elements and one containing high elements. Then sort the two lists and
+when you're done append the results. 
+
+Splitting the lists is done using the first element in the list as a
+{\em pivot element}, all smaller or equal than this is added in one
+list and all larger in one list. When you're appending the final
+result, remember to put the pivot element in the middle.
+
+\begin{verbatim}
+qsort(...) -> ...;
+qsort(...) ->
+   {..., ...} = qsplit(..., ..., [], []),
+   SmallSorted = ...;
+   LargeSorted = ...;
+   append(..., ...).
+
+qsplit(..., ..., ..., ...) ->
+  {..., ...};
+qsplit(..., ..., ..., ...) ->
+  qsplit(..., ..., ..., ...).
+\end{verbatim}
+
+\section{Reverse}
+
+One interesting problem to look at is how to reverse a list. The {\em
+  naive} way to do it is quite straight forward. We do it recursively
+by removing the first element of the list, reversing the rest and then
+appending the reversed list to a list containing only the first element.
+
+\begin{verbatim}
+nreverse([]) -> [];
+nreverse([H|T]) ->
+   R = nreverse(T),
+   append(R, [H]).
+\end{verbatim}
+
+A smarter way to do it, is to use an {\em accumulator} and add the
+first element to this accumulator. When we have added all elements in
+the lists the accumulated list is the reversed list.
+
+\begin{verbatim}
+reverse(L) -> 
+   reverse(L, []).
+
+reverse([], R) ->
+   R;
+reverse([H|T], R) ->
+   reverse(T, [H|R]).
+\end{verbatim}
+
+Ok, so what is so smart by doing this? This is your assignment, you
+should do some performance analysis of these two functions and
+describe what is happening. To have some data lead you in the right
+direction and to back up your findings you should start by doing some
+performance measurements. We have here used some library functions and
+higher order programming that you might not have seen so far but 
+
+
+\begin{verbatim}
+bench() ->
+    Ls = [16, 32, 64, 128, 256, 512],
+    N = 100,
+    Bench = fun(L) ->
+       S = lists:seq(1,L),
+       Tn = time(N, fun() -> nreverse(S) end),
+       Tr = time(N, fun() -> reverse(S) end),
+       io:format("length: ~10w  nrev: ~8w us    rev: ~8w us~n", [L, Tn, Tr])
+       end,
+    lists:foreach(Bench, Ls).
+
+time(N, F)->
+    %% time in micro seconds
+    T1 = erlang:system_time(micro_seconds),
+    loop(N, F),
+    T2 = erlang:system_time(micro_seconds),
+    (T2 -T1).
+
+loop(N, Fun) ->
+  if N == 0 -> ok; true -> Fun(), loop(N-1, Fun) end.
+\end{verbatim}
+
+
+\section{Binary coding}
+
+As the next exercise, you should implement a function that takes an
+integer and return its binary representation coded as a list of ones
+and zeroes. The binary form of $13$ is for example {\em [1,1,0,1]}. 
+
+There are many ways to solve this problem and you should solve it in
+two different ways, describing the difference and if one is better
+than the other.
+
+
+\section{Fibonacci}
+
+The Fibonacci sequence is the sequence $0,1,1,2,3,5,8,13,21,
+\ldots$. The two first numbers are $0$ and $1$ and the following
+numbers are calculated by adding the two previous number. To calculate
+the Fibonacci value for $42$, all you have to do is find the Fibonacci
+number for $40$ and $41$ and then add them together.
+
+Write simple Fibonacci function {\em fib/1} and do some performance
+measurements. Adapt the benchmark program above and run some tests.
+
+\begin{verbatim}
+fibb() ->
+    Ls = [8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40],
+    N = 10,
+    Bench = fun(L) ->
+       T = time(N, fun() -> fib(L) end),
+       io:format("n: ~4w  fib(n) calculated in: ~8w us~n", [L, T])
+       end,
+    lists:foreach(Bench, Ls).
+\end{verbatim}
+
+Find an arithmetic expression that almost describes the computation
+time for $fib(n)$. Can you justify this arithmetic expression by
+looking at the definition of the function?  How large Fibonacci number
+do you think you can compute if you start now and let your machine run
+until the seminar? First make a guess, don't try to do the calculation
+in your head just make a wild guess, then try to estimate how long
+time that would take using your arithmetic function, would you be able
+to make it? 
+
+Calculate a Fibonacci number as high as you possibly can.
+
+\end{document}
+
+
+\grid

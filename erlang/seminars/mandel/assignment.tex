@@ -1,0 +1,276 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+\usepackage{verbatim}
+
+\usepackage[breaklinks=true,
+            bookmarksnumbered=true,
+            pdftitle={Distributed Computing},
+            pdfauthor={Johan Montelius},
+            pdfsubject={Distributed Mandelbrot set},
+            pdfkeywords={distributed computing erlang}
+            ]{}
+
+\newcommand{\nnsection}[1]{
+\section*{#1}
+\addcontentsline{toc}{section}{#1}
+}
+
+\begin{document}
+
+\begin{center}
+\vspace{20pt}
+\textbf{\large Generating a Mandelbrot image }\\
+\vspace{10pt}
+\textbf{Johan Montelius}\\
+\vspace{10pt}
+\today{}
+\end{center}
+
+\nnsection{Introduction}
+
+In this exercise you will implement a Mandelbrot set generator, or
+rather an image generator. You should do some reading so that you
+understand the basics of what the Mandelbrot set is and why it can
+generate some beautiful images; this text only contains a minimal
+explanation.
+
+\section{Mandelbrot}
+
+The Mandelbrot set is defined as the set of complex numbers $c$ for
+which the sequence $z_n$ does not approach infinity. The value $z_n$
+is defined as follows:
+
+\begin{eqnarray*}
+    z_0 &= &0 \\ 
+    z_{n+1} & = &z_n² + c
+\end{eqnarray*}
+
+If you remember how to do the square of a complex numbers you know
+everything there is to know to start:
+
+$$ (x + yi)² = x² - y² + 2xyi$$
+
+How do we know if a complex number $(x + yi)$ belongs to the
+Mandelbrot set? We could of course start to compute $z_n$ for higher
+values and see if we approach infinity but that would of course take
+a very long time (to say the least). 
+
+An observation saves us from spending the rest of our lives computing
+$z_n$: {\em if $|z_n| >= 2$ then there is no turning back, $z_n$ will
+  only increase in size}. The absolute value of a complex number is of
+course:
+
+$$|(x + yi)| = \sqrt{x² + y²}  $$
+
+We still do not want to compute forever; if the number actually does
+belong to the Mandelbrot set we will of course never hit the
+threashold. Therefore, we set an upper limit $n$ that will be the
+maximum {\em depth} of our computation.
+
+So given a maximum value of $n$, we can for any complex number $c$ say
+if it {\em definitely does not belong to} or if it {\em could possibly
+  belong to} the Mandelbrot set. In the case where we know for sure
+that the number does not belong to the set we also have a value $i$
+which was the point where $|z_i| >= 2$. This value $i$ is the color we
+need to generate a beautiful Mandelbrot image.
+
+\subsection{complex numbers}
+
+Since we are going to work with complex numbers we might as well start
+by implementing a module to handle these. Let's make it simple and
+represent a complex number as a tuple with its real and imaginary
+values. Create a module {\tt cmplx} that exports the following
+functions:
+
+\begin{itemize}
+ \item {\tt new(X, Y)} : returns the complex number with real value X and imaginary Y
+ \item {\tt add(A, B)} : adds two complex numbers
+ \item {\tt sqr(A)} : squares a complex number
+ \item {\tt abs(A)} : the absolute value of A
+\end{itemize}
+
+You might want to use the {\tt sqrt/1} function exported from the {\tt
+  math} module when calculating the absolute value.
+
+\subsection{the brot module}
+
+For no reason at all we will call our first module {\tt brot}, it will
+implement the computation of the $i$ value given a complex value
+$c$. We must of course give it a maximum iteration {\em depth} or we
+risk getting stuck in an infinite computation.
+
+Implement a function {\tt mandelbrot/2} that, given the complex number
+$c$ and the maximum number of iterations $m$, return the value $i$ at
+which $|z_i| >= 2$ or $0$ if it does not for any $i < m$ i.e. it
+should always return a value in the range $0..(m-1)$.
+
+\begin{verbatim}
+mandelbrot(C, M) -> 
+    Z0 = cmplx:new(...,...),
+    I = 0,
+    test(I, Z0, C, M).
+\end{verbatim}
+
+The {\tt test/4} function should of course test if we have reached the
+maximum iteration, in which case it returns zero, or if the absolute
+value of {\tt Z} is greater than $2$, in which case it returns {\tt
+  I}. Make sure that you use the functions exported from the {\tt
+  cmplx} module.
+
+Do some test to see that the function works (here I'm writing the
+complex numbers directly knowing that we represent them as tuples,
+this is of course cheating but very convenient).
+
+\begin{itemize}
+ \item {\tt brot:mandelbrot(\{0.8, 0\}, 30)}
+ \item {\tt brot:mandelbrot(\{0.5, 0\}, 30)}
+ \item {\tt brot:mandelbrot(\{0.3, 0\}, 30)}
+ \item {\tt brot:mandelbrot(\{0.27, 0\}, 30)} 
+ \item {\tt brot:mandelbrot(\{0.26, 0\}, 30)}
+ \item {\tt brot:mandelbrot(\{0.255, 0\}, 30)}
+\end{itemize}
+
+What is happening? Which values could possibly belong to the
+Mandelbrot set - how sure are you? Do some more testing, why stop at
+thirty iterations? Try fifty!
+
+\subsection{the printer}
+
+Before carrying on we should make sure that we can generate an
+image. You should have the file {\tt ppm} module that will write the
+final image to a file. Make sure that you can use this module and that
+you know where files are located when created.
+
+The api to the module is:
+
+\begin{itemize}
+ \item {\tt write(Name, Image)}: where the name is the name (possibly
+   full path name) of the file and the image is a list of rows where
+   each row is a list of tuples {\tt \{R,G,B\}} (each value being in
+   the range 0..255).
+\end{itemize}
+
+So once we know that it is working we can carry on to produce some images. 
+
+\subsection{colors}
+
+We create one module (that in the end will be the one that you want to
+play with the most), the {\tt color} module. This module should export
+a function {\tt convert(Depth, Max)} that given a depth on a scale
+from zero to max gives us a color,
+
+The conversion of depth information to {\em RGB values} can of course
+be done in many different ways and the one presented here is only for
+inspiration.
+
+Let's assume that we have a depth of a point $D$, with the maximum
+possible depth being $M$. We could create five sections that divides
+the range $0$ to $M$. Divide $D$ by $M$ and so that you have a
+fraction $F$. Then multiply this fraction by four to generate a
+floating point $A$ from $0$ to $4$. Now truncate the value to give you
+an integer $X$ from $0$ to $4$ (this is the section) and generate an
+offset $Y$ that is the truncated value of $255*(A-X)$.
+
+The two values $X$ and $Y$ will now be used to give you an RGB
+value. You can use the following transformation:
+
+\begin {itemize}
+\item 0 : $\lbrace Y, 0, 0 \rbrace$
+\item 1 : $\lbrace 255, Y, 0 \rbrace$
+\item 2 : $\lbrace 255-Y, 255, 0 \rbrace$
+\item 3 : $\lbrace 0, 255, Y \rbrace$
+\item 4 : $\lbrace 0, 255-Y, 255 \rbrace$
+\end{itemize}
+
+What colors does this correspond to? Does it look anything like a
+rainbow? Close to a rainbow? The mapping from depth to colors is one
+thing that one can play with, its not at all given that the colors
+should be chosen base only on the depth, one might even want to know
+the distribution of depths in the whole image or reuse colors at
+different depths.
+
+
+\subsection{computing the set}
+
+So we know how to find the depth of a complex number so why not try to
+compute the depth at all points in a rectangular plane. We create a
+module {\tt mandel} that should calculate an image. The function that
+will be our interface to the module looks like this:
+
+\begin{verbatim}
+mandelbrot(Width, Height, X, Y, K, Depth) ->
+    Trans = fun(W, H) -> 
+              cmplx:new(X + K*(W-1), Y-K*(H-1))
+            end,
+    rows(Width, Height, Trans, Depth, []).
+\end{verbatim}
+
+What is happening here? We want to generate an image of the size {\em
+  Width x Height}. The upper left corner of this image is the point $X
++ Yi$ and the offset between two points is $K$. This means that the
+first pixels of the upper row should correspond to the ``depth'' of
+$X+Yi$, $(X+K) + Yi$, $(X+2K) + Yi$ etc and that the second row starts
+with $X + (Y-K)i$. 
+
+To help the mandelbrot generator from keeping track of this we simply
+provide a function that does the work. The {\em Trans} function will
+take a pixel position ($W$,$H$) and return a complex number that is
+the one we should compute the depth of. It is better to do this here
+and then we could more easily change the function rather than passing
+all the necessary information in arguments.
+
+Now the {\em rows} function should return a list of rows, where each
+row is a list of colors. Each item in a row corresponds to a pixel at
+($W$, $H$) and the color is computed by:
+
+\begin{itemize}
+ \item generating the complex number that corresponds to the pixel
+ \item calculate the depth of this value
+ \item convert the depth to a color
+\end{itemize}
+
+The only tricky issue is to generate the rows in ``correct'' order, it
+is easy to generate the image up side down or mirrored. In the end it
+does not mean very much but try to get it right.
+
+When you can generate an image, write it to a file using the {\tt ppm}
+module. This code would hopefully give you a first look at the Mandelbrot set.
+
+\begin{verbatim}
+demo() ->
+    small(-2.6,1.2,1.6).
+
+small(X,Y,X1) ->
+    Width = 960,
+    Height = 540,
+    K = (X1 - X)/Width,
+    Depth = 64,
+    T0 = now(),
+    Image = mandelbrot(Width, Height, X, Y, K, Depth),
+    T = timer:now_diff(now(), T0),
+    io:format("picture generated in ~w ms~n", [T div 1000]),
+    ppm:write("small.ppm", Image).
+\end{verbatim}
+
+\section{Carrying on}
+
+Generate a nice looking image, you will find the most interesting
+things close to the edge of the black set. This is where the fractals
+start to spin out of control and the beauty of the Mandelbrot set is
+found. It's amazing that so much information could be hidden in a
+function this simple.
+
+\begin{eqnarray*}
+    z_0 &= &0 \\ 
+    z_{n+1} & = &z_n² + c
+\end{eqnarray*}
+
+Could we speed up the calculations? Are there any operations that are
+of unnecessary complexity? Can you include an image in your report
+(you would probably have to convert it to png)?
+
+
+
+\end{document}

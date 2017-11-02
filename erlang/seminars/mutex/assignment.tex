@@ -1,0 +1,586 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\newcommand{\nnsection}[1]{
+\section*{#1}
+\addcontentsline{toc}{section}{#1}
+}
+
+\begin{document}
+
+\begin{center}
+\vspace{20pt}
+\textbf{\large Mutual exclusion - locks, semaphores and monitors}\\
+\vspace{10pt}
+\textbf{Johan Montelius}\\
+\vspace{10pt}
+\today{}
+\end{center}
+
+
+\nnsection{Getting started}
+
+In this assignment you will learn about the concept of {\em mutual
+  exclusion} and how locks, semaphores and monitors can give us what
+we want. These concepts are not frequently used in Erlang programming
+but you should know about them and understand why they are not often
+explicity used in Erlang.
+
+The main idea with mutual exclusion is that we wan to limit the
+concurrency to at most one executing process in a {\em critical
+  section}. A critical section could be a section in the program where
+we modify some data structure and we do not want any other process to
+see what we have done until we are completely done. Since we do not
+have any updatable data structures in Erlang the need for locks is
+limited but think about updating a set of files where you want to do
+all the changes before you let another process see what you have done
+or do their modifications.
+
+\section{Let's implement a lock}
+
+We will start by implement a {\em lock process} (or rather try to
+implement it). A lock is something that can only be held by one
+process, the process that {\em takes the lock} knows that it is the
+sole owner of the lock and can proceed to a critical section.
+
+
+
+Our first attempt to implement a lock process is quite straight forward
+- we will implement the lock as a process that only holds one value
+and accepts two messages: set and get.
+
+\begin{verbatim}
+-module(cell).
+-export([new/0]).
+
+new() -> spawn_link(fun() -> cell(open) end).
+
+cell(State) ->
+  receive
+     {get, From} -> 
+         From ! {ok, State}, 
+         cell(State);
+     {set, Value, From} -> 
+         From ! ok, 
+         cell(Value)
+  end.
+\end{verbatim}
+
+To make it easier to use the lock we also provide two functions that
+hide the fact that we do asynchronous communication.
+
+\begin{verbatim}
+get(Cell) ->
+   Cell ! {get, self()},
+   receive 
+       {ok, Value} -> Value
+   end.   
+
+set(Cell, Value) ->
+   Cell ! {set, Value, self()},
+   receive 
+       ok -> ok
+   end.
+\end{verbatim}
+
+If we have created a cell we could use it to protect a critical
+operation using the codes that follows (not true so don's stop reading
+here).
+
+\begin{verbatim}
+do_it(Thing, Lock) ->
+   case cell:get(Lock) of
+     taken ->
+        do_it(Thing, Lock);
+     open -> 
+        cell:set(Lock, taken),
+        do_ya_critical_ting(Thning),
+        cell:set(Lock, open)
+   end.
+\end{verbatim}
+
+Perfect, case closed ... ehhh, there is something wrong - what happens
+if...? Before you continue think about what would happen if two
+processes called the {\tt do\_it/2} procedure with the same lock; do we
+guarantee that the two processes will never ever execute the critical
+section at the same time?
+
+\section{the atomic swap}
+
+There are two solutions to the problem of the lock in the first
+section: {\em atomic swap} and {\em Peterson's algorithm}. Using atomic
+swap we implement a new message that will read and write to the cell
+in the same operation. This feature is often found in hardware and
+programs written in C or C++ can often make direct use of this. In our
+implementation we will implement it ourselves with a small extension to the cell. 
+
+\begin{verbatim}
+cell(State) ->
+  receive
+     {swap, Value, From} -> 
+         From ! {ok, State},
+         cell(Value);
+     {set, Value, From} -> 
+         From ! ok, 
+         cell(Value)
+  end.
+\end{verbatim}
+
+Assuming we also provide a functional interface we could now use the lock as follows.
+
+\begin{verbatim}
+do_it(Thing, Lock) ->
+   case cell:swap(Lock, taken) of
+     taken ->
+        do_it(Thing, Lock);
+     open -> 
+        do_ya_critical_ting(Thing),
+        cell:set(Lock, open)
+   end.
+\end{verbatim}
+
+In this version it does not matter if two processes calls the
+procedure at the same time; both of them will swap in the value {\tt
+  taken} but only one of them would receive the {\tt open} value in
+return. The process that looses the race will have to retry to take
+the lock and will succeed once the holding process sets the lock to
+{\tt open}.
+
+\section{Peterson's algorithm}
+
+You might wonder if there is a way to implement a lock without an
+atomic swap operations. If not, we are sure lucky that the hardware
+people have implemented it. It turns out that there is and the
+algorithm is fairly simple once you understand why it works.
+
+\subsection{the algorithm}
+
+Assume we have our original cell with only the {\tt get} and {\tt set}
+operations. We also assume that there are only two processes that will
+compete for the lock. We will now use three cells: {\tt P1}, {\tt P2}
+and {\tt Q}. In the cell {\tt P1} the first process will declare its
+interest in moving into the critical section. The second process will
+declare its interest using {\tt P2}. The {\tt Q} cell will be used to
+determine the winner if we have a draw.
+
+
+The two processes will execute slightly different code when trying to
+enter the critical section; or rather, the code is the same but the
+parameters are shifted. The first process will call the procedure {\tt
+  lock(0,P1,P2,Q)} where as the second process will call {\tt lock(1, P2, P1,
+  Q)}.
+
+\begin{verbatim}
+lock(Id, M, P, Q) ->
+   cell:set(M, true),
+   Other = (Id+1) rem 2,
+   cell:set(Q, Other), 
+   case cell:get(P) of
+      false ->
+         locked;
+      true ->
+         case cell:get(Q) of
+            Id -> 
+               locked;
+            Other ->
+                lock(Id, M, P, Q)
+          end
+   end
+end.
+
+unlock(_Id, M, _P, _Q) ->
+   cell:set(M, false).
+\end{verbatim}
+
+The intuition is that each process begins to declare that they are
+interested in taking the lock. They then set the common cell {\tt
+  Q} to the second process's identifier as a signal to the second
+process to go ahead if they are both interested of the lock. If a
+process is however sees that the second process is not interested it
+holds the lock and proceed into the critical section.
+
+\subsection{prove it}
+
+To understand how Peterson's algorithm works is not easy; to prove
+that it ensures that the two processes do not believed to hold the
+lock at the same time is more difficult. 
+ 
+If you want to prove that Peterson's algorithm works, you can draw a
+finite state machine diagram with the state of the variables: {\em
+  p1}, {\em p2}, {\em q} and two variable {\em l1} and {\em l2} that
+describes if a process is in the critical sector. One alternative
+method is to use so-called {\em temporal logic} where the rules can
+prove that it is never so that {\em l1} and {\ em l2} are both true.
+
+An interesting question is whether one can make use of Peterson's
+algorithm in a computer that has as much as possible in the cache, or
+in a distributed system where clients have local copies. A
+prerequisite for the algorithm to work is that if a process sets {\em
+  p1} to {\em true} and then reads that {\em p2} is {\em false} then
+it can not be that the second process manages to set {\em p2} to {\em
+  true} and then read that {\em p1} is {\em false}. Describe a
+scenario using cached local copies that will violate this prerequisite. 
+
+\subsection{the bakery algorithm}
+
+When I lived in Barcelona I learned a wonderful algorithm for keeping
+track of who is next to be served in a bakery. When you entered a
+bakery (or butchery) you simply greeted every one with the phrase
+``¿Buenas diaz, ultimo?''. The person who was the last person in line
+would reply ``Si'' and then you would know who was the person just in
+front of you. If someone else entered the store you would be the one
+to reply ``Si'' and that was it. The system works perfectly and you
+avoid the hassle of finding a machine to give you a ticket. If Leslie
+Lamport had lived in Barcelona he would probably never have named his
+algorithm {\em the bakery algorithm} since it is based on a numbering
+system where entering processes picks a number that is higher than any
+other number in the queue.
+
+The algorithms uses a shared array with one index per process. If the
+index of a process is set to $0$
+it means that the process is not interested in entering the
+critical section. When a process wishes to enter the critical section it
+will scan the array and find the highest ticket number and then set
+its own index to the number plus one. The intuition is that all
+processes that entered the store before it should have precedence. It
+could of course happen that two processes enters at the same time and
+chooses an identical ticket but this is solved by giving precedence to
+the process with the lowest id.
+
+When a process has selected a ticket number it will again scan the
+array from the beginning and wait until all indexes before its own, are
+either set to $0$
+or have a ticket number that is higher than its own and, all indexes
+after its own are set to $0$
+or have ticket numbers higher or equal to its own. When the process
+has scanned the array it is allowed into the critical section and will
+when it is done set its own index to $0$.
+
+The scanning of the array can proceed one step at a time, if a index
+has the value $0$
+it could of course be set by the owner of the index but then it will be
+set to a value equal or higher to the ticket of the scanning
+process. An index that holds a value that is lower than then ticket of
+the scanner will eventually be set to $0$
+once the processed has completed its critical section. 
+
+\section{why not in Erlang}
+
+Atomic swap, Peterson's or the bakery algorithm are hardly ever used
+in a Erlang program, nor in any higher level program. The reason is
+that the mutual exclusion problem is solved by language constructs that
+hides the details of how things are implemented. The first higher level construct that we will take a look at is {\em the semaphore}.
+
+\section{The semaphore}
+
+In the previous section we implemented the locks using a {\em busy
+  waiting} or {\em spin-lock} strategy. A process that would not
+immediately require the lock would try and try again until the lock
+was acquired. This is a very aggressive strategy that in the worst case
+means that a process will spend a lot of resources just reading from a
+memory location, or as in our case send thousands of messages to a
+cell process and request its state.
+
+A better strategy (not always better) could be to suspend the
+execution if the lock is not taken and only continue to execute once
+the lock has been acquired. The semaphore concept is also often
+described as being more general compared to a binary lock. We will
+describe a semaphore that will allow at most {\em n} processes to
+enter the critical section. If {\em n} is $1$
+then it called a {\em binary semaphore}.
+
+
+\subsection{was this it}
+
+In Erlang this is expressed so easily that you hardly realize that you
+have implemented a semaphore. Look at the code below:
+
+\begin{verbatim}
+semaphore(0) ->
+   receive 
+     release ->
+        semaphore(1)
+   end;
+semaphore(N) ->
+   receive 
+      {request, From} ->
+         From ! granted,
+         semaphore(N-1);
+      release ->
+         semaphore(N+1)
+   end.
+\end{verbatim}
+      
+If we create a semaphore with the initial value $4$
+then at most four processes will be granted access to the critical
+section. The code for requesting entrance would of course look like follows:
+
+\begin{verbatim}
+request(Semaphore) ->
+   Semaphore ! {request, self()},
+   receive 
+      granted -> 
+        ok;
+   end.
+\end{verbatim}
+
+The difference from the locks we implemented before is that the
+requesting process will now be suspended waiting in a receive
+statement until the semaphore responds with a {\tt granted} message. 
+
+\subsection{I've heard it was tricky}
+
+In the classical description of a semaphore one must explain what
+happens when a process request access and there are no resources
+left. One will then describe how this process is added to a queue of
+waiting processes and how it then yields the execution. When a process
+leaves the critical section, the first process in the queue of
+suspended processes will be selected and added to the set of runnable
+processes (often by sending it a signal to wake up).
+
+In our Erlang implementation all this is hidden in the message
+queue. A process that sends a {\tt request} message will of course
+have its message inserted as the last message in the message queue. If
+there are no resources left (the first clause), then request messages
+will simply not be handled. Only when resources are available will the
+semaphore handle requests and then it will of course handle them in the
+order they have arrived in the message queue.
+
+As an exercise you can re-write the semaphore so that it only has one
+clause and always accepts requests. If there are no resources
+available the requesting process must be held on hold in a list of
+waiting processes. When a release message is received and the resource
+is incremented from zero the first process, if any, in the lists of
+waiting processes should be granted access. 
+
+\section{The monitor}
+
+The semaphore gave us a solution to the mutual exclusion problem but
+is does of course require that the processes do respect the rules. No
+process is allowed to enter the critical section if it has not being
+granted access by the semaphore. It must also release its access when
+it leaves the critical section. A process that not play by the rules
+could of course ruin the whole system.
+
+A better strategy is to encapsulate the critical section inside a
+semaphore so that no process can enter the critical section without
+using the semaphore. This concept is called {\em a monitor} and is how
+things are done in Erlang as well as Java. In Java one would declare a
+method of an object to be {\em synchronized} thereby preventing more
+than one thread at a time to execute the method. In Erlang the same
+thing is of course handled by messages. 
+
+\begin{verbatim}
+monitor(State) ->
+   receive 
+     {request,  From} ->
+         Updated = critical(State), 
+         From ! ok,
+         monitor(Updated)
+   end.
+\end{verbatim}
+
+The Actors model, that Erlang is built on, automatically gives us the
+properties of a monitor. From the implementation of {\tt monitor/1}
+we easily see that request to execute the critical section are of
+course handled one by one and will even be done in a fair order.
+
+You could easily implement more advanced constructs where a request
+could contain a lambda expression that should be applied to the
+monitor state. In this way the requesting process has more freedom to
+control what should be done.
+
+\begin{verbatim}
+monitor(State) ->
+   receive 
+     {request, Fun, From} ->
+         Updated = Fun(State), 
+         From ! ok,
+         monitor(Updated)
+   end.
+\end{verbatim}
+
+In one way, you can view every Erlang process as a monitor that
+protects its state. It will only handle one message at a time and it
+is the only process that has access to the state.
+
+\section{Deadlocks}
+
+The locks, semaphores and monitors solves the problem of data
+corruption i.e. by only allowing one transformation at a time. As you
+have seen the Actors model gives us this almost for free but this is
+only half of the problem introduced by concurrency. A equally important
+problem is the problem of {\em deadlock} i.e. a situation were no
+process can proceed since they are all waiting for someone else to
+take the first step.
+
+\subsection{shades of hell}
+
+A complete deadlock is of course the worst thing that could happen but
+there are other related problems that are almost as bad:
+
+\begin{itemize}
+ \item deadlock: Nothing moves.
+ \item livelock: Things move but we're not making progress.
+ \item starvation: We make progress but at least one process is prevented from progressing.
+ \item non-fair scheduling: All processes make progress but some processes do not get a fair share of the resources. 
+\end{itemize}
+
+It is not necessarily so that every system you implement must
+implement a fair scheduling algorithm that guarantees that all
+processes should have a equal chance in acquiring the resources of the
+system. It could be enough that it is starvation free or proved to
+never go into a livelock. Its important to understand what is required
+and then choose algorithms to meet these requirements. If you always
+go for an implementation that guarantees fair scheduling then you
+might pay more than anyone asked for.
+
+\subsection{locks, semaphores and monitors}
+
+Go back to the locks, semaphores and monitors in the previous section
+and ask yourself what the implemented solutions actually provided. They
+were hopefully dead lock free but were they starvation free? Did they
+provide a fair scheduling i.e. if a process has requested a lock or
+access to a critical section, will the process be granted access
+before any process that issues a request at a later moment?
+
+
+\subsection{detecting a deadlock}
+
+Even if the locks, semaphores and monitors that we have discussed have
+algorithms that will not deadlock, we can easily create a deadlock if
+we have two or more locks. If process {\em P1} is granted a lock {\em
+  A}, process {\em P2} is granted a lock {\em B} and requests lock
+{\em A} it will of course have to wait. If process {\em P1} now
+requests lock {\em B} we have a circular dependency that has caused a
+deadlock.
+
+We can create a similar circular dependency with monitors if one
+monitor will, as part of its critical section, request the service of
+another monitor. This monitor might in turn request a third resource
+that request the service of the first monitor.
+
+One way to break the deadlock is to give up waiting for a lock,
+release some of the locks held, do something else for a while and then
+retry to take the locks. We can implement this using a timeout in the
+receive statement. The implementation will however be more complicated
+than you might first think.
+
+\subsection{master should be resting}
+
+Assume that we have implemented a semaphore and use the following
+function to acquire access.
+
+\begin{verbatim}
+request(Semaphore) ->
+  Semaphore ! {request, self()},
+  receive 
+    granted ->
+       ok
+  after 1000 ->
+       abort
+  end.    
+\end{verbatim}
+
+A process that calls the procedure {\tt request/1} will then be given
+the result {\tt ok} or {\tt aborted}. If everything went fin it will
+continue to execute but if it receives {\tt aborted} it knows that we
+could in the worst case be in a deadlock. If it is not holding any
+other lock it is not much it can do but if it holds another request a
+good strategy could be to release this resource and then ponder $\pi$
+for a while.
+
+\begin{quotation}
+This all sounds fine but the above explanation could have been given
+by Gollum.
+\end{quotation}
+
+If you implement it like this your in for a surprise. The message that
+you sent to the semaphore is not lost but simply waiting in the
+message queue of the semaphore. Sooner or later the semaphore will
+handle this request and send a {\tt granted} message to you. Now you
+have the resource even if you don't realize it. If you at a later point
+in time return to the semaphore and again request the resource you
+will find this granted message that has been there all the time. 
+
+This means that you can not just walk away from a request. The
+interesting thing is that you can return a resource before you got it
+- look at this:
+
+\begin{verbatim}
+request(Semaphore) ->
+   Ref = make_ref(),
+   Semaphore ! {request, Ref, self()},
+   wait(Semaphore, Ref).
+
+wait(Semaphore, Ref) ->
+  receive 
+    {granted, Ref} ->
+       ok;
+    {granted, _} ->
+       wait(Semaphore, Ref)
+  after 1000 ->
+       Semaphore ! release
+       abort
+  end.
+\end{verbatim}
+
+We should of course also change the implementation of the semaphore so
+that it accepts requests on the form {\tt \{request, Ref, From\}} and
+reply with a {\tt \{granted, Ref\}} but then we are on the safe side.
+
+The reason we can send a {\tt release} before we actually have been
+granted the request is that we know that our request is in the message
+queue. We also make sure, by using the unique references, that we will
+not mistake an old granted message as a reply to a new request. 
+
+Better than trying to resolve a deadlock situation is of course to
+avoid it all together and there is a simple strategy that will always work. 
+
+
+\subsection{avoiding deadlock}
+
+The problem with a deadlock is of course that we have a circular
+structure where everyone is waiting for someone else. If we can avoid
+building a circular structure we could avoid deadlocks all together.
+
+Assume all resources (locks, semaphores or monitors) are ordered and
+you're never allowed to take higher resource before a lower
+resource. If you find that you're waiting for a resource the resource
+is of course held by someone. This someone is either working, in which
+case everything is fine and you will be given access sooner or later,
+or suspended waiting for a higher resource. It can not be suspended
+waiting for a lower resource since it is not allowed to request a
+lower resource if it is holding the resource that you're waiting for.
+
+You might ask, what happens if the process is suspended waiting for a
+higher resource but then it is in the same situation as you are. We
+have a chain of processes, all waiting. Since we only have a finite
+set of resources the process in the end of the chain is not suspended
+but working. Sooner or later it will let go of its resources and allow
+the next process in line to continue its execution.
+
+The only problem with this strategy is that it sometimes is hard to
+order the resources so that everyone knows the order. Nor is it always
+easy to determine beforehand which resources that will be needed - if
+you start by grabbing a resource that you know you need you're not
+allowed to grab a resource with a lower rank.
+
+
+\section{Summary}
+
+The Actors model of handling concurrency saves us from most of the
+problems of protecting critical sections. The process is in a sense a
+monitor that protects a critical section and the message handling will
+give all processes fair access to the resource.
+
+Deadlock is a problem but can often be avoided by ordering the
+resources and always request the resources in this order. Detecting a
+deadlock situation and resolve the situation might be trickier than
+think. 
+
+
+\end{document}
+

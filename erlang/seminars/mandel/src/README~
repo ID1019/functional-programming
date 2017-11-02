@@ -1,0 +1,5 @@
+
+The native interface is compiled like follows:
+
+
+gcc -o depth_nif.so -fpic -shared depth.c depth_nif.c

@@ -1,0 +1,714 @@
+\documentclass[a4paper,dvips,11pt]{article}
+
+\usepackage{pstricks}
+\usepackage{pst-node}
+\usepackage{pst-tree}
+\usepackage{wrapfig}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+
+\usepackage[dvips,%
+            breaklinks=true,
+            bookmarksnumbered=true,
+            pdftitle={Distributed Computing},
+            pdfauthor={Johan Montelius},
+            pdfsubject={playing around with ICY},
+            pdfkeywords={distributed computing media distribution erlang}
+            ]{hyperref}
+
+\newcommand{\nnsection}[1]{
+\section*{#1}
+\addcontentsline{toc}{section}{#1}
+}
+
+\begin{document}
+
+\begin{center}
+\vspace{20pt}
+\textbf{\large A Shoutcast Jukebox }\\
+\vspace{10pt}
+\textbf{Johan Montelius}\\
+\vspace{10pt}
+\today{}
+\end{center}
+
+\nnsection{Introduction}
+
+In this assignment you will build a small jukebox. We will play around
+with shoutcast streams and build a shoutcast server. You will use the
+Erlang bit-syntax to implement a communication protocol over HTTP. The
+parser will be implemented using higher order functions to hide the
+socket interface. You will learn how to decode a mp3 audio stream and
+make it available for connecting media players. Sounds fun? - Let's
+go!
+
+\section{Shoutcast - ICY}
+
+You first need to understand how shoutcast works. It's very simple
+protocol for streaming audio content built using HTTP. It was at first
+called ``I Can Yell'' and you therefore see a lot of {\tt icy} tags in
+the HTTP header; we will also refer to it as the ICY protocol. 
+
+One module, {\tt icy}, will implement all details of how the ICY
+protocol is encoded and decoded. To make it more interesting we will
+use higher order functions and make the module both able to handle
+incomplete sequences and being unaware of how byte sequences are
+actually read or written.
+
+\subsection{request - reply}
+
+A media client, such as Amarok or VLC, connects to a server by sending a HTTP
+GET request. In this request the client asks for a specific feed in the
+same way as it would ask for a web page. In the request header it also
+announce if it can handle meta-data, the name of the player etc. A
+request could look like this:
+
+
+\begin{verbatim}
+GET / HTTP/1.0<cr><lf>
+Host: mp3-vr-128.smgradio.com<cr><lf>
+User-Agent: Casty<cr><lf>
+Icy-MetaData: 1<cr><lf>
+<cr><lf>
+\end{verbatim}
+
+
+The {\tt Icy-Metadata} header is important since it signals that our
+client is capable of receiving meta data in an audio stream. To see that
+this actually works you could use {\tt wget} and look at what for
+example Virgin Radio returns when you try to connect. Try the
+following command in a Unix shell, but terminate it with ctrl-c or it will
+keep reading the audio stream.
+
+\begin{verbatim}
+wget --header="Icy-MetaData:1" -S -O body.txt \
+  http://mp3-vr-128.smgradio.com
+\end{verbatim}
+
+Now look at the reply (you did terminate the loading right). Decode
+the reply and try to figure out what the different header tag
+means. One reply header that is very important for us is the {\tt
+  icy-metaint} header. It typically has the value 8192 (or 4096) which
+is the number of bytes in each mp3-block that is sent. Since the bit
+rate for this audio stream is 128Kb/s a 8192 byte block will contain
+half a second of music. Look at position 8192 in the body (body.txt),
+do you find the meta data?
+
+
+\subsection{meta-data}
+
+The meta data comes as a sequence of characters after each audio
+block. The length of the sequence is coded in one integer $k$ in the
+first byte of the meta data block. The length of the sequence is
+$16*k$ bytes (not including the k-byte); the smallest meta data block
+is thus simply one k-byte of zero. If the text message is not an even
+multiple of $16$ it is padded with trailing zeros. In Erlang
+bit-syntax (do some reading on bit-syntax, you will need it) a meta
+data segment could be written as follows:
+
+\begin{verbatim}
+<<1,104,
+  101,108,
+  108,111,
+  0,0,0,0,
+  0,0,0,0,
+  0,0,0>>
+\end{verbatim}
+
+The first byte is a the length of the following padded string. The
+next five bytes spell out ``hello'' and the padding consist of 11
+zeros. This could also be written:
+
+\begin{verbatim}
+   <<1,"hello", 0:(11*8)>>
+\end{verbatim}
+
+When you attach to a shoutcast radio station you will see that most
+meta data blocks are empty. When a new song i played they use the meta
+data to send the name of the artist, title etc. We could for example
+use this string to encode the title:
+
+\begin{verbatim}
+   "StreamTitle:'This is the title';"
+\end{verbatim}
+
+If this string is padded correctly it will be used by the client to
+display the title of the current song.
+
+
+\subsection{decoding a request}
+
+We will of course communicate using sockets but why build this into
+the icy module. The icy module will only deal with the format of
+request and replies and not how these are actually read or written.
+
+\subsection{continuations}
+
+To understand the structure of our parser one must understand the
+problem with reading from a stream socket. Reading from a socket is
+very different from reading from a file. When reading from a socket
+there are two things we need to handle, what happens if there is no
+data to read and, what if only half of the data is available. 
+
+If there is no data to read we will be suspended until the client
+closes the connection and in a concurrent system this might be a
+problem. If a process is suspended in a read operation we will not be
+able to send it any messages (for example to quit what it is doing).
+
+In Erlang there is a solution to this problem. Instead of ``reading''
+from the socket, we have the socket send us segments as they
+arrive. We can thus go into a receive statement and wait for either a
+segment or any other message. Read about how sockets can be opened in
+{\tt active} mode.
+
+A process that is receiving segments from socket
+could then be programmed as follows:
+
+\begin{verbatim}
+reader(Socket) ->
+   receive
+       {tcp, Socket, Segment} ->
+           icy:parse_request(Segment);
+       {tcp_closed, Socket} ->
+           {error, "socket closed"};
+       stop ->
+           ok
+   end.
+\end{verbatim}
+
+The process that calls {\tt reader/1} can now be aborted by sending a
+stop message. This solves the first problem but the second remains,
+the received segment could contain only half a message. The parser
+must be aware of this and inform us that more data is needed. The
+structure could then be as follows:
+
+\begin{verbatim}
+reader(Socket, Sofar) ->
+   receive
+       {tcp, Socket, Rest} ->
+           Segment = <<Sofar/binary,Rest/binary>>,
+           case icy:parse_request(Segment) of
+              {ok, Parsed} -> 
+                   Parsed;
+              more ->
+                   reader(Socket, Segment)
+           end;
+       {tcp_closed, Socket} ->
+           {error, "socket closed"};
+       stop ->
+           ok
+   end.
+\end{verbatim}
+
+This has the drawback that we might have to parse the same message
+several times if it broken up into several segments. We need to try to
+parse it because there is no other way of telling if we have a complete
+message, but the problem is that we have to start from the beginning
+every time.
+
+
+To make it more efficient we can use something called
+``continuations''. The parser will then return either the parse tree
+or a function that we can use to continue the parsing. 
+
+\begin{itemize}
+
+ \item {\tt \{ok, Parsed, Rest\}} : if the parsing was successful,
+   Parsed is the result of the parser and Rest is what is left of the
+   segment.
+
+ \item {\tt \{more, Continuation\}} : if more segments are needed,
+   Continuation is a function that should be applied to the next segment.
+
+ \item {\tt \{error, Error\}} : if the parsing failed.
+
+\end{itemize}
+
+We then define a general purpose user of the parser that uses a zero
+argument function. The function is applied without arguments and
+could then result in a parsed result, a request for more or an error. 
+
+\begin{verbatim}
+reader(Parser, Socket) ->
+    receive
+       {tcp, Socket, More} ->
+           case Parser(More) of
+               {ok, Parsed, Rest} ->
+                   {ok, Parsed, Rest};
+               {more, Cont} ->
+                    reader(Cont,  Socket);
+               {error, Error} ->
+                    {error, Error}
+            end;
+       {tcp_closed, Socket} ->
+            {error, "server closed connection"};
+       stop ->
+             ok
+    end.
+\end{verbatim}
+
+If we receive a new TCP block we construct a new function and apply
+{\tt reader/2} recursively. To read and parse a message from a socket,
+we could call the reader as follows:
+
+\begin{verbatim}
+reader(Socket) ->
+    reader(fun(More) -> icy:parse_request(More) end, Socket).
+\end{verbatim}
+
+The user of the parser will be a processes that we will define
+later. The server will accept request from a client, Amarok or VLC, and
+start streaming music.
+
+\subsection{the parser}
+
+So now let's look at the parser. We will only need to parse one type
+of messages: the request. The request will be sent by a media client
+to our server and the server will reply with a shoutcast stream. The
+socket will deliver information in binary format since delivering the
+audio stream in binary format is more efficient. The parser of course
+then has to parse binary data but with the bit-syntax this is very
+similar to parsing from a list of characters.
+
+
+\subsubsection{a request}
+
+Parsing a request is quite simple, we read the first line (all lines
+are terminated by \textless cr\textgreater \textless lf\textgreater)
+and check that it is equal to ``GET / HTTP/1.1''. Now this is of
+course a simplification; a request could of course include something
+more interesting than ``/'' (the resource we are asking for) but it
+will do for now.
+
+The {\tt request\_line/2} function will try to parse a complete request-line, if this
+is not possible it will return {\tt more}. The request parser
+will then return a continuation in the form of a function that should
+be applied to the next segment. We could make this more complicated
+but why not simply return a function that appends the segment that we
+have to the next segment and tries to redo the parsing of the request.
+
+\begin{verbatim}
+parse_request(Segment) ->
+  case request_line(Segment) of
+    {ok, Method, Resource, Version, R1} ->
+      case parse_headers(R1, []) of
+        {ok, Headers, Body} ->
+           {ok, {Method, Resource, Version, Headers}, Body};
+         more ->
+           {more, fun(More) -> parse_request(<<Segment/binary, More/binary>>) end}
+      end;
+    {ok, Req, _} ->
+      {error, "invalid request: " ++ Req};
+    more ->
+      {more, fun(More) -> parse_request(<<Segment/binary, More/binary>>) end}
+  end.
+\end{verbatim}
+
+Note how the scoping rules work; Erlang uses lexical scoping and the
+variable {\tt Segment} will have it's binding when the function {\tt
+  request/1} is called. The returned function could now be called in
+any environment and the {\tt Segment} variable will maintain it's
+binding. This is called static or lexical scoping. 
+
+Once we have seen the request line we continue to parse the
+headers. The parsing of the headers will either succeed or result in a
+request of more information. If we succeed we return the Headers and
+also what is left of the segment that we parsed. In practice the rest
+will be an empty segment and probably ignored by the caller but why
+not be polite and return what is left.
+
+Note that we have made a simplification in the implementation of the
+parse. If the function {\tt request\_line/1} or {\tt parse\_headers/2} has stepped
+through a hundred characters only to find out that more characters are
+needed, they simply return the atom {\tt more}. The next time they are
+called they will have to run through the same hundred characters
+again. It would of course be nice if we could save exactly the
+position that we're in and continue only with the new segment. This
+would however make the function {\tt parse\_request/1} more complicated. We
+would have to keep track of if we should continue reading a line or a
+header. 
+
+Reading a line is a simple pattern matching exercise that is left as
+an exercise. This is skeleton to work on: (\textless cr\textgreater
+could be written as {\tt 13} or {\tt \$\textbackslash r} and \textless
+lf\textgreater as {\tt 10} or {\tt \$\textbackslash n}). 
+
+\begin{verbatim}
+parse_request_line(Segment) when size(Segment) < 4 ->
+    more;
+prse_request_line(<<$G, $E, $T, 32, R1/binary>>)     ->
+    case parse_resource(R1) of
+        {ok, Resource, R2} ->
+           case parse_version(R2) of 
+               {ok, Version, R3} ->
+                   {ok, get, Resource, Version, R3};
+               more ->
+                   more;
+               Other ->
+                   {error, "strange version: " ++ Other}
+           end;
+        more ->
+            more;
+        error ->
+            {error, "failed to parse resource"}
+    end;
+request_line(Line) ->
+    {error, "not a GET request: " ++ Line}.
+\end{verbatim}
+
+To parse the resource you simply scan the sequence until you find a
+space character. Everything up to the space character is the resource
+we're looking for.
+
+
+When you implement {\tt parse\_version/1} you need to identify
+when/if you need more data. You can check if the segment contains at
+least ten characters using a guard statement. 
+
+\begin{verbatim}
+parse_version(Segment) when size(Segment) <  10 ->
+    more;
+parse_version(<<..., .., ..., Rest/binary>>) ->
+                   {ok, v10, Rest};
+parse_version(<<"..., .., ...,  Rest/binary>>) ->
+                   {ok, v11, Rest}.
+\end{verbatim}
+
+Parsing the headers should be equally simple. We read headers until we
+hit a empty line (\textless cr \textgreater, (\textless lf
+\textgreater). The individual headers can be represented by tuples
+            {\tt \{Key, Value\}}, where key is an atom and the value
+            is a string.  Since we will not look into these headers
+            you could also simply represent them as a single string
+            i.e. {\tt ``foo: 12''} instead of {\tt\{foo, ``12''\}}.
+
+\subsection{does it work}
+
+Complete a module {\tt icy} that exports the above described
+functions. You can then test your implementation with the following test examples:
+
+\begin{verbatim}
+icy:parse_request(<<"GET / HTTP/1.1\r\nkey:value\r\n\r\n">>).
+\end{verbatim}
+
+Let's try parsing something incomplete.
+
+\begin{verbatim}
+{more, F} = icy:parse_request(<<"GET / HTTP/1.0\r\nkey:value\r\n">>).
+\end{verbatim}
+The request is incomplete since we need an extra \verb+\r\n+. We do now
+however, have a closure that we can apply to some additional information.
+
+\begin{verbatim}
+F(<<"\r\n">>).
+\end{verbatim}
+
+This should hopefully give us the parsed result. Identify the
+different pieces of information, the request type, the resource
+requested, the headers, the version and, the body.
+
+\begin{verbatim}
+{ok,{get,"/",[{key,"value"}],v10},<<>>}
+\end{verbatim}
+
+
+
+\subsection{encoding the stream}
+
+The last thing we need to implement in the icy module is how to encode
+the reply to the client. We need to encode the HTTP status line and
+headers that should be the first thing we reply. We also need to
+encode mp3 content in a sequence of segments of equal size separated
+by meta data.
+
+The encoding of the HTTP reply could look as follows. The most
+important thing is that we supply the {\tt icy-metaint} header that
+describes the size of our segments. Other headers can be added that
+tells the media client a bit about our radio station etc.
+
+\begin{verbatim}
+encode_response(Header) ->
+    Status = "ICY 200 OK\r\n",
+    MetaInt = "icy-metaint: " ++ integer_to_list(?Chunk) ++ "\r\n",
+    Reply = Status ++ MetaInt ++ encode_header(Header),
+    list_to_binary(Reply).
+\end{verbatim}
+
+A server that replies to a client should first send a HTTP reply as
+shown above and then send a stream och segments and meta data. The
+segments is just a chunk of mp3 data. The only problem we have when
+dividing some mp3 data into chunks is what to do with the last chunk
+if it does not fill a full segment. If we are a radio station we would
+of course just append the next song but we will simply throw the last
+chunk away. This might sound stupid but it will make things a lot
+easier when we extend this jukebox.
+
+\begin{verbatim}
+segments(<<Chunk:?Chunk/binary, Rest/binary>>) ->
+    [{seg, Chunk}| segments(Rest)];
+segments(_) ->
+    [].
+\end{verbatim}
+
+The meta data is a bit tricky: it needs to be padded with zeros, it
+should be of a length multiple of 16 plus one and the first byte
+should state how many multiples we have. The content itself should be
+a string of tags and arguments as you have seen before. The tricky
+thing is how to pad this string, you will have to do some modular
+arithmetic to get it right.
+
+\begin{verbatim}
+encode_meta(Meta) ->
+    Encoded = encode_meta_info(Meta),
+    {K, Padded} = padding(Encoded),
+    <<K/integer, Padded/binary>>.    
+\end{verbatim}
+
+Assume that the meta data is given as a list of tag value tuples, for
+example {\tt \{title, ``this is the title''\}}. You need to encode
+each one of them as a string, for example {\tt ``StreamTitle='this is
+  the title';''}, append them all together and then do the
+padding. Note that the information elements are all encoded in one
+sequence, separated by semicolon.
+
+
+\section{Something about mp3}
+
+It turns out that we do not need to know very much about mp3 encoding;
+we will simply read the encoded data from a file and send it as it is
+to the media client. There is however one thing that we need to know,
+ID3 tags. The ID3 tags are not part of the mp3 standards (or MPEG),
+it's a hack added later to encode the title, artist, track number etc
+in the mp3 file. We need to find this tag, extract it and interpret
+it.
+
+\subsection{ID3 tags}
+
+There is a whole family of ID3 tags but we will only look at the
+original. It consists of the last 128 bytes in a file and has the
+following format.
+
+\begin{table}[center]
+\begin{tabular}{|l|l|}
+``TAG'' & 3 bytes, the ASCII value of TAG, works as an indicator\\
+title& 30 bytes\\
+artist& 30 bytes\\
+album& 30 bytes\\
+year& 4 bytes\\
+comment& 28 bytes\\
+0& 1 byte, a delimiter in version 1.1\\
+track & 1 byte \\
+genre & 1 byte \\
+\end{tabular}
+\caption{The format of a ID3 tag}
+\end{table}
+
+Create a module, mp3, and define the following procedure. You need to
+write the {\tt id3\_tag/2} function that looks at the last 128 bytes
+of a file (you can read at a specified position using {\tt
+  file:pread(S, Size-128, 128)}) and determines if we have a ID3
+tag. 
+
+\begin{verbatim}
+read_file(File) ->
+    Size = filelib:file_size(File),
+    {ok, S} = file:open(File, [read, binary, raw]),
+    {ok, Id3, End} = id3_tag(S, Size),
+    {ok, Data} = file:pread(S, 0, End),
+    Title = id3_title(Id3),
+    {mp3, Title, Data}.
+\end{verbatim}
+
+If there is a tag you should parse it and return a tuple on the
+format below. Note that the strings are all coded as 30 byte
+sequences where the last bytes have been set to zero. You need to
+remove those trailing zeros in order to get a printable string.
+
+\begin{verbatim}
+{ok, {id3,[{title, "This is the title"}
+           {artist, "Bobby Womak"}
+                 :
+                 :
+          ]}
+      645677}
+\end{verbatim}
+
+If no ID3 tag is found you should return {\tt \{ok, na, Size\}}. The
+function call thus always succeeds and returns the size of the music
+data in the mp3 file.
+
+
+\section{The smallest Jukebox}
+
+Our goal is to build a minimal ICY server. It will only stream one
+tune, the idea is to get it to work and then try to extend it.  A
+Server will be started, it will read a mp3 file and prepare it for
+streaming. Once a media player connects it will stream the content and
+then quit.
+
+\subsection{the server}
+
+The proxy will listen on a TCP port (8080) and wait for incoming
+connection. Once a connection is accepted a request is read from the
+socket. The content of the request is not important for our needs, we
+will happily connect any media client and stream them the same content.
+
+This will be the header of the server module. 
+
+\begin{verbatim}
+-module(server).
+
+-export([start/1]).
+
+-define(Opt,[binary, 
+            {packet, 0}, 
+            {reuseaddr, true}, 
+            {active, true}, 
+            {nodelay, true}]).
+
+-define(Port, 8080).
+
+-define(Header, [{'icy-name', "ID1019"}, 
+                 {'icy-genre', "Groove"}, 
+                 {'icy-notice1', "Our own Jukebox"}]).
+\end{verbatim}
+
+When creating the listen socket we specify the properties in a options
+list. The options we will use are:
+
+\begin{itemize}
+
+\item {\tt binary}: more efficient since there is no point in handling
+  the mp3 audio as list of integers.
+
+\item {\tt \{packet, 0\}}: framing messages with the length of the
+  message is very useful but we're dealing with the ICY protocol and not our own.
+
+\item {\tt \{reuseaddr, true\}}: allow us to reuse the port (and we will) 
+
+\item {\tt \{active, true\}}: the socket process will send us segments
+  as they arrive, we do not have to suspend reading the socket.
+
+\item {\tt \{nodelay, true\}}: send segments as soon as possible
+
+\end{itemize}
+
+The mp3 file is read by using the procedures from the mp3 module. We
+are given the title as a string and the data as a huge binary. The icy
+module now helps us to encode a meta data that describes the title and
+also divides the data into segments.
+
+\begin{verbatim}
+start(File) ->
+    spawn(fun() -> init(File) end).
+
+init(File) ->
+    .... = mp3:read_file(File),
+    ... = icy:encode_meta([{title, Title}]),
+    ... = icy:segments(Data),
+    ... = gen_tcp:listen(?Port, ?Opt),
+    server(Meta, Segments, Listen).
+\end{verbatim}
+
+We open the socket for connections and enter the state where we are
+waiting for a client to connect. When a client does connect we read a
+request from the socket and, if we are lucky, prepare to steam the
+data segments.
+
+\begin{verbatim}
+server(Meta, Segments, Listen) ->
+    ... = gen_tcp:accept(Listen),
+    io:format("server: connect~n",[]),
+    case read_request(...) of
+        {ok, ..., _} ->
+            io:format("server: received request ~p~n", [Request]),
+            gen_tcp:send(..., icy:encode_response(...)),
+            loop(Meta, Segments, Socket, 0);
+        {error, Error} ->
+            io:format("server: ~s~n", [Error])
+    end.
+\end{verbatim}
+
+The reading is using our parser that could return continuations. 
+
+\begin{verbatim}
+read_request(Socket) ->
+    reader(fun(More)-> ...  end, Socket).
+            
+reader(Cont, Socket) ->
+    receive
+        {tcp, Socket, More} ->
+            case ... of 
+                {ok, Parsed, Rest} ->
+                    ...;
+                {more, Fun} ->
+                    ...;
+                {error, Error} ->
+                    ...              
+            end;
+        {tcp_closed, Socket} ->
+            ...
+    after ?TimeOut ->
+           ...
+    end.
+\end{verbatim}
+
+In this simple server, we simply send all the segments to the client
+and when we are done we terminate. This is of course the smallest
+jukebox that you have ever seen but there are enough things that can go
+wrong so let's keep it simple.
+
+\begin{verbatim}
+loop(_, [], _, _) ->
+    io:format("server: done ~n", []),
+    ok;
+loop(Meta, [{seg, Segment}|Rest], Socket, N) ->
+    gen_tcp:send(Socket, Segment),
+    io:format("server: sent segment ~w ~n", [N]),
+    gen_tcp:send(Socket, Meta),           
+    io:format("server: sent header ~w ~n", [N]),
+    loop(Meta, Rest, Socket, N+1).
+\end{verbatim}
+ 
+Try to listen to your first tune delivered by the server.
+
+\section{Your Jukebox}
+
+So now it is time to start working, what will you jukebox look
+like. You should extend the small jukebox in one or more ways so that
+it can handle for example:
+
+\begin{itemize}
+\item Several concurrent clients accessing their own music stream. 
+
+\item Let the request contain information which song that should be played.
+
+\item Separate the sending of the audio stream from selecting the
+  audio stream i.e. a handler process request segments from a music
+  server process that decides which segments (and header information)
+  that should be played.
+
+\item Talk to the music server through Erlang messages to change the music.
+
+\item Turn the jukebox into a radio station that plays songs from a pre-selected schedule.
+
+\item Allow several client listening to the same radio stream.
+
+\item Have a web interface to the jukebox so one can start the VLC
+  client to start and play the song that is selected.
+\end{itemize}
+
+Write up a small report on problems that you encountered and how you
+solved them. Describe the extension that you have done and ideas of
+what could be done more.
+
+
+\nnsection{Acknowledgment}
+
+This topic of this seminar, and some of the code, is taken from the
+book ``Programming Erlang: Software for a Concurrent World'' by Joe
+Armstrong. The book contains more programming examples that are highly
+recommended to study.
+
+
+\end{document}

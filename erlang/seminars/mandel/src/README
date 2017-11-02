@@ -1,0 +1,6 @@
+
+The native interface is compiled like follows:
+
+> gcc -o depth.so -fpic -shared depth.c
+
+This will be loaded as the module depth.erl is loaded.

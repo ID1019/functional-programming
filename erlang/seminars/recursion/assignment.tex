@@ -1,0 +1,220 @@
+\documentclass[a4paper,11pt]{article}
+
+
+\usepackage[latin1]{inputenc}
+
+\usepackage{amsmath}
+
+\newcommand{\nnsection}[1]{
+\section*{#1}
+\addcontentsline{toc}{section}{#1}
+}
+
+\begin{document}
+
+\begin{center}
+\vspace{20pt}
+\textbf{\large Recursion}\\
+\vspace{10pt}
+\textbf{Johan Montelius}\\
+\vspace{10pt}
+\today{}
+\end{center}
+
+\nnsection{Simple arithmetic functions}
+
+Implement the following arithmetic functions and save them in a file
+{\tt recursion.erl}. Start with simple recursive implementations that
+are not necessarily tail-recursive. In order not to create any
+conflicts with builtin function, you will have to call your
+functions something different i.e. prod instead of product etc.
+
+When you implement them: write a small documentation, write the type
+definition and the definition, then try them using GHCi. For example:
+
+\begin{verbatim}
+-module(recursion).
+
+%% product of n and m : 
+%%   if n is 0 
+%%          then ....
+%%     otherwise 
+%%          the result ...
+
+
+prod(.., ..) -> 
+    case ...  of
+       ... ->  ...;
+       ... ->  ...
+    end.
+\end{verbatim}
+
+
+\begin {itemize}
+\item prod: complete the above implementation of product
+\item prod: change the above definition so that it also works for
+  negative numbers
+\item power: implement the power function for non-negative exponents
+\item qpower: use the two functions $div$ and $rem$ to implement a
+  faster version of the power function by dividing the exponent by two
+  in each recursive step (what must be done if the exponent is odd?)
+\end{itemize}
+
+\nnsection{Binary}
+
+Implement a function {\tt binary/1} that takes an integer and produces its binary
+encoding, represented ad a list of ones and zeros. Your firts solution
+should look something like this:
+
+\begin{verbatim}
+binary(0) ->
+    [];
+binary(...) ->
+    binary(...) ++ [...].
+\end{verbatim}
+
+Note that the {\tt ++ } operator is just a short form of writing {\tt
+  append/2}. What is the deficiency of this implementation. What is
+the runtime complexity?
+
+Change your implementation so that it has a {\em O(n)} komplexity. The
+solution will look something like this:
+
+\begin{verbatim}
+binary2(I) ->
+    binary(I, ...).
+
+binary2(0, Sofar) ->
+    lists:reverse(Sofar);
+binary2(..., ....) ->
+    binary2(..., ...).
+\end{verbatim}
+
+We're using the library function {\tt lists:reverse/1} to reverse the
+acumulated value.
+
+
+
+
+\nnsection{Fibonacci}
+
+Try some more complex functions, for example the Fibonacci function:
+
+\[
+  fib(n) = \left\{
+  \begin{array}{l l}
+    0 & \quad \text{if $n$ is 0}\\
+    1 & \quad \text{if $n$ is 1}\\
+    fib(n-1)+fib(n-2) & \quad \text{otherwise}\\
+  \end{array} \right.
+\]
+
+The straight forward implementation is a bit inefficient, when
+evaluating fib(n-1) in the recursion we of course learn fib(n-2) as a
+by product but this is not taken advantage of. Can you change the
+implementation so that it only computes each Fibonacci number once? 
+
+\nnsection{Ackermann}
+
+You can also give the Ackermann function a try:
+
+\[
+  ackerman(m,n) = \left\{
+  \begin{array}{l l}
+    n+1 & \quad \text{if $m=0$}\\
+    ackerman(m-1,1) & \quad \text{if $m>0$ and $n=0$}\\
+    ackerman(m-1,ackerman(m,n-1)) & \quad \text{otherwise}\\
+  \end{array} \right.
+\]
+
+This looks like an innocent little function but don't try too high numbers :-) 
+
+\nnsection{list processing}
+
+Open up new module and implement the following list processing
+functions (again we will have to call them something not that obvious
+in order not to create a conflict with the functions in Prelude):
+
+\begin{itemize}
+\item drp: drop the first $n$ elements of a list
+\item tak: take the first $n$ elements of a list
+\item append: append two lists
+\item rev: reverse a list
+\item palindrome: return $True$ if a list is a palindrome.
+\end{itemize}
+
+\nnsection{sorting}
+
+The final assignment will be to implement the {\em merge sort}
+algorithm. Open up a new file {\tt Sort.hs} and start with a new module.
+
+\begin{verbatim}
+module Sort
+       where
+\end{verbatim}
+
+To implement the algorithm we need some additional tools. The algorithm
+is straight forward i.e. split a list in two, sort the two parts and
+then merge them together, but the tricky issue is how to write a
+function that returns two list. The simplest way to do this is to
+return a tuple that consist of two elements. The syntax for tuples is
+{\tt (a,b)} and the split function has the following type:
+
+\begin{verbatim}
+split :: Ord a => [a] -> ([a], [a])
+\end{verbatim}
+
+To implement {\tt split} we might want to use a help function, a
+version of split that takes three arguments: the rest of the list that
+we should split, half of the elements that we have seen and the other
+half. Call this function {\tt distribute} and then define {\tt split}
+as follows:
+
+\begin{verbatim}
+split xs = distribute xs [] []
+\end{verbatim}
+
+The next function we need is the {\tt merge} function. It should take
+two sorted lists and merge them into one sorted lists. If one of the
+two lists is empty he other list is of course the result, if not we
+must compare the two first elements of the two lists. 
+
+\begin{verbatim}
+merge :: Ord a => [a] -> [a] -> [a]
+merge [] ys = ...
+merge xs [] = ...
+merge (x:xs) (y:ys) = ..... | ....
+merge (x:xs) (y:ys) = ..... | ....
+\end{verbatim}
+
+Time to wrap it up, we now need a construct that lets us first split
+the list and then work on the two sub lists. This is done using a {\tt
+  let in} expression. The expression allows us to perform one or more
+function calls to evaluate results that we need in our main expression. 
+
+\begin{verbatim}
+msort :: Ord a => [a] -> [a]
+msort [] = ...
+msort [x] = ...
+msort xs = 
+   let 
+     (as, bs) = split xs
+   in
+     merge ... ...
+\end{verbatim}
+
+I this definition we use the let expression to get direct access to
+the two list that {\tt split} returns. The {\tt (as,bs)} on the right
+hand side works as a pattern that the result is matched with. The
+variables {\tt as} and {\tt bs} will as a result be bound to the two
+lists.
+
+If you have time you can try to implement quick sort. You might find
+that an {\tt if} expression comes handy:
+
+\begin{verbatim}
+   if x < p then (x:lo, hi) else (lo, x:hi)
+\end{verbatim}
+
+
+\end{document}

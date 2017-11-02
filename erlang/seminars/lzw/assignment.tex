@@ -1,0 +1,131 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[latin1]{inputenc}
+
+\newcommand{\nnsection}[1]{
+\section*{#1}
+\addcontentsline{toc}{section}{#1}
+}
+
+\begin{document}
+
+\begin{center}
+\vspace{20pt}
+\textbf{\large An LZW encoder}\\
+\vspace{10pt}
+\textbf{Johan Montelius}\\
+\vspace{10pt}
+\today{}
+\end{center}
+
+
+\nnsection{Getting started}
+
+Lempel-Ziv-Welch (LZW) is a compression algorithm that takes advantage
+of frequent occurance of sequences of characters. It will detect
+sequences on the fly while doing the compression and thus create
+individual codes for sequences as it goes along. The beauty of the
+algorithm is that the decoder must not be told what these new codes
+mean - it will learn as it does the decoding.
+
+The encoder that we will implement will not use binary encoding
+i.e. codes are fixed size and are represented by an integer. A real
+implementation would start of by using, for example, a five bit code
+and then increase the code length as needed. By implementing this
+simpler form you will understand the principles of the algorithm and
+you can easily extend it to use variable size codes.
+
+Before you start to implement this encoder and decoder you should do
+some reading on the LZW algorithm so that you have a basic
+undertanding of the process. The devil is as always in the detail and
+we will see how these are handled as we implement the encoder. 
+
+\section{The table}
+
+The encoder and decoder have to agree on an initial alphabet (and in
+the general case, the code size). We will here use a very small
+alphabet that consists of the smaller cap letters and the space
+character. Given this we construct an initial encoder/decoder table
+that is represented as a list of character sequnces and codes. 
+
+\begin{verbatim}
+-module(lzw).
+
+-compile(export_all).
+
+-define(Alphabet, "abcdefghijklmnopqrstuvwxyz ").
+
+table() ->   
+    N = length(?Alphabet),
+    Strings = lists:map(fun(Char) -> [Char] end, ?Alphabet),
+    Map = lists:zip(Strings, lists:seq(1,N,1)),
+    {N+1, Map}.
+\end{verbatim}
+
+The only sequences we know of in the beginning are the sequences
+consistng of single characters. We have $28$ characters in total so
+our table will look like follows:
+
+\begin{verbatim}
+ {28, [{"a",1},  {"b",2},  {"c",3}, ...]}
+\end{verbatim}
+
+The number of sequences in the table is imprortant to keep track of
+sicne we will add new codes as we encode our text. Have in mind that
+the encoder and decoder will both know the state of the initial table.
+
+
+\section{The encoder}
+
+So let's start the encoding of a sequence of charaters. If the
+sequence is empty we're done but the common case os of course if we
+have at east oe charcter. We use the first character to initiate the
+encoder. We pick up the encoding table, that of course holds a code
+for the single character word. We then call the {\tt encode/4}
+function that is given: the text, the word, the code of this word and
+the coding table.
+
+\begin{verbatim}
+encode([]) ->
+    [];
+encode([Char|Rest]) ->
+    Table = table(),
+    Word = [Char],
+    {found, Code} = encode_word(Word, Table),
+    encode(Rest, Word, Code, Table).
+\end{verbatim}
+
+The function {\tt encode/4} is where all the actoion takes place. The
+base case is simple, if there is not more characters in the text then
+we're done. If we have a character in the text we add this to the
+word we have read sofar and check if this extended word can be found
+in the table. If we find a coding of the extended worl we're happy but we
+might be even happier if we find an even longer world. This is
+where we continue with the extended word and its code. 
+
+\begin{verbatim}
+encode([], _Sofar, Code, _Table) ->
+    [Code];
+encode([Char|Rest], Sofar, Code, Table) ->
+    Extended = [Char|Sofar],
+    case encode_word(Extended, Table) of
+	 {found, Ext} ->
+	     encode(Rest, Extended, Ext, Table);
+	 {notfound, Updated} ->
+            Word = [Char],
+	    {found, Cw} = encode_word(Word, Table),
+	    [Code | encode(Rest, Word, Cw, Updated)]
+    end.
+\end{verbatim}
+
+If a code is not found for our extended word we will return a list
+starting with the code of the word we had found sofar. We will then continue
+the encoding 
+
+
+
+
+
+
+\end{document}
+

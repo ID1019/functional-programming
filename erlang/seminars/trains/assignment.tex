@@ -1,0 +1,532 @@
+\documentclass[a4paper,11pt]{article}
+
+%\usepackage[charter]{mathdesign}
+%\usepackage[T1]{fontenc}
+%\usepackage[scaled=0.88]{beramono}
+\usepackage[dvips]{graphicx}
+\usepackage[dvips]{color}
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{pifont}
+\usepackage{pstricks}
+\usepackage{pst-node}
+\usepackage{pst-tree}
+\usepackage{wrapfig}
+\usepackage{picinpar}
+\usepackage{ifthen}
+\usepackage[latin1]{inputenc}
+
+\definecolor{MyUrlColor}{rgb}{1.0,0.5,0.03}
+\definecolor{MyLinkColor}{rgb}{0.1,0.2,0.5}
+\definecolor{MyCiteColor}{rgb}{0.05,0.5,0.15}
+
+\usepackage[dvips,%
+            breaklinks=true,
+            bookmarksnumbered=true,
+            colorlinks=true,
+            linkcolor=MyLinkColor,
+            pagecolor=MyLinkColor,
+            citecolor=MyCiteColor,
+            urlcolor=MyUrlColor,
+            citebordercolor={.05 .5 0.15},
+            pagebordercolor={.05 .5 0.15},
+            linkbordercolor={.1 .2 .5},
+            urlbordercolor={1 .5 .03},
+            pdftitle={Train Shunting},
+            pdfauthor={Christian Schulte},
+            pdfsubject={Exercise functional programming skills},
+            ]{hyperref}
+
+\newcommand{\nnsection}[1]{
+\section*{#1}
+\addcontentsline{toc}{section}{#1}
+}
+
+\begin{document}
+
+\begin{center}
+\vspace{20pt}
+\textbf{\large Train Shunting}\\
+\vspace{10pt}
+\textbf{Christian Schulte}\\
+\vspace{10pt}
+\today{}
+\end{center}
+
+
+\nnsection{Problem Description}
+
+You are in charge of shunting (Swedish: växla) wagons of a train.  In
+the following we assume that each wagon is self driving and that the
+train has no explicit engine.
+
+The description for your shunting task is given by two sequences of
+wagons: the given train and the desired train. Your task is to
+rearrange the given train with help of your shunting station such that
+the desired train is obtained. You are not only supposed to rearrange
+the train but also to compute a sequence of shunting moves (which are
+called just ``moves'' from now on).
+
+
+The shunting station is shown in Figure~\ref{fig:station}. It has a
+``main'' track and two shunting tracks ``one'' and ``two''.  A
+situation in the shunting station is called \emph{state}. A
+\emph{move} describes how wagons move from one track to another.
+
+\begin{figure}[h]
+\begin{center}
+\psset{xunit=.6,yunit=.4}
+\begin{pspicture}(10,5)
+\pspolygon(0,3)(4,3)(6,5)(10,5)(10,4)(6,4)(4.5,2.5)(6,1)%
+(10,1)(10,0)(6,0)(4,2)(0,2)
+\rput(2,2.5){main}
+\rput(8,4.5){one}
+\rput(8,0.5){two}
+\end{pspicture}
+\end{center}
+\caption{Train shunting station.}
+\label{fig:station}
+\end{figure}
+
+\paragraph{Goal.}
+
+Our ultimate goal in this lab is to find a short sequence
+of moves that turn a train on the track ``main'' into another
+configuration of the train on ``main''.
+
+Before we attempt this goal we will fix the modeling of our
+problem and develop some list processing support.
+
+\paragraph{Lab Purpose.}
+
+This lab exercises several important issues.  How are problems modeled
+by data structures such as lists and tuples.  How are lists
+processed. This ranges from simple to more complicated patterns of
+recursion over lists. This lab is of course also geared at getting you
+started with Erlang and functional programming in general.
+
+And last, but not least, we hope that you have \emph{some fun} solving
+this little puzzle.
+
+\nnsection{Modeling}
+
+\paragraph{Trains, Wagons, and States.}
+
+Wagons are modeled as atoms and trains on tracks as lists of atoms. A
+train has no duplicate wagons (that is, \verb+[a,b]+ is a train,
+whereas \verb+[a,a]+ is not).
+
+A complete description of the state of a shunting station
+consists of three lists: a list describing the train on track
+``main'', and two lists describing tracks ``one'' and ``two''. An
+entire state is represented as a tuple with three elements, where
+the first element represents the train on track ``main'', the
+second the train on ``one'', and the third on track ``two''.
+
+\newcommand{\wagon}[3]{
+\rput(#1,#2){
+\psframebox[fillstyle=solid,fillcolor=lightgray,linecolor=white]{\small
+    $\strut$ #3}}}
+ 
+\begin{figure}[h]
+\begin{center}
+\psset{xunit=.6,yunit=.4}
+\begin{pspicture}(10,5)
+\pspolygon(0,3)(4,3)(6,5)(10,5)(10,4)(6,4)(4.5,2.5)(6,1)%
+(10,1)(10,0)(6,0)(4,2)(0,2)
+\wagon{2.5}{2.5}{a}
+\wagon{3.5}{2.5}{b}
+\wagon{6.5}{0.5}{c}
+\wagon{6.5}{4.5}{d}
+\end{pspicture}
+\end{center}
+\caption{Example state displayed.}
+\label{fig:ex-state}
+\end{figure}
+
+
+The state \verb+{[a,b],[c],[d]}+
+is visualized in Figure~\ref{fig:ex-state}.
+
+\paragraph{Moves.}
+
+A move is a binary tuple. The first element of a move is either
+\verb+one+ or \verb+two+. The second element of a move is an
+integer. For example, \verb+{one,2}+, \verb+{two,2}+, and
+\verb+{one,-3}+ are all moves.
+
+\paragraph{Applying a Move to a State.}
+
+Moves describe how one state is transformed into another:
+\begin{itemize}
+\item If the move is \verb+{one,N}+ and \verb+N+ is greater than
+  zero, then the \verb+N+ right-most wagons are moved from track
+  ``main'' to track ``one''.
+
+  If there are more than \verb+N+ wagons on track ``main'', the
+  other wagons remain.
+
+\item If the move is \verb+{one,N}+ and \verb+N+ is less than zero,
+  then the \verb+N+ left-most wagons are moved from track ``one''
+  to track ``main''.
+
+  If there are more than \verb+N+ wagons on track ``one'', the
+  other wagons remain.
+\item The move \verb+{one,0}+ has no effect.
+\end{itemize}
+
+The same holds true for moves with first element \verb+two+
+concerning track ``two''.
+
+\begin{figure}[h]
+\begin{center}
+\psset{xunit=.6,yunit=.4}
+\begin{tabular}{c@{\qquad}c}
+\begin{pspicture}(10,5)
+\pspolygon(0,3)(4,3)(6,5)(10,5)(10,4)(6,4)(4.5,2.5)(6,1)%
+(10,1)(10,0)(6,0)(4,2)(0,2)
+\wagon{2.5}{2.5}{a}
+\wagon{3.5}{2.5}{b}
+\wagon{6.5}{4.5}{c}
+\wagon{6.5}{0.5}{d}
+\end{pspicture}&
+\begin{pspicture}(10,5)
+\pspolygon(0,3)(4,3)(6,5)(10,5)(10,4)(6,4)(4.5,2.5)(6,1)%
+(10,1)(10,0)(6,0)(4,2)(0,2)
+\wagon{3.5}{2.5}{a}
+\wagon{6.5}{4.5}{b}
+\wagon{7.5}{4.5}{c}
+\wagon{6.5}{0.5}{d}
+\end{pspicture}\\
+(a) & (b)\\
+\\
+\begin{pspicture}(10,5)
+\pspolygon(0,3)(4,3)(6,5)(10,5)(10,4)(6,4)(4.5,2.5)(6,1)%
+(10,1)(10,0)(6,0)(4,2)(0,2)
+\wagon{6.5}{0.5}{a}
+\wagon{6.5}{4.5}{b}
+\wagon{7.5}{4.5}{c}
+\wagon{7.5}{0.5}{d}
+\end{pspicture}&
+\begin{pspicture}(10,5)
+\pspolygon(0,3)(4,3)(6,5)(10,5)(10,4)(6,4)(4.5,2.5)(6,1)%
+(10,1)(10,0)(6,0)(4,2)(0,2)
+\wagon{2.5}{2.5}{b}
+\wagon{3.5}{2.5}{c}
+\wagon{6.5}{0.5}{a}
+\wagon{7.5}{0.5}{d}
+\end{pspicture}\\
+(c) & (d)\\
+\end{tabular}
+\end{center}
+\caption{Moves applied to states.}
+\label{fig:ex-moves}
+\end{figure}
+
+\paragraph{Example.}
+
+Figure~\ref{fig:ex-moves} shows examples of moves applied to
+states, where (a)~is the initial state, (b)~after application of
+\verb+{one,1}+, (c)~after application of \verb+{two,1}+, and finally
+(d)~after application of \verb+{one,-2}+.
+
+\section{Some List Processing}
+
+Before we actually start, we will develop some list-processing
+routines that you will need later.
+\begin{enumerate}
+
+\item \verb+take(Xs,N)+ returns the list containing the first \verb+N+
+  elements of \verb+Xs+.
+
+\item \verb+drop(Xs,N)+ returns the list \verb+Xs+ without its first
+  \verb+N+ elements.
+
+\item \verb+append(Xs,Ys)+ returns the list \verb+Xs+ with the elements
+  of \verb+Ys+ appended.
+  
+\item \verb+member(Xs,Y)+ tests whether \verb+Y+ is an element of \verb+Xs+.
+
+\item \verb+position(Xs,Y)+ returns the first position of \verb+Y+ in
+  the list \verb+Xs+. You can assume that \verb+Y+ is an element of
+  \verb+Xs+.
+
+  For example, \verb+position([a,b,c],b)+ returns \verb+2+.
+\end{enumerate}
+
+Please put all together in one file \verb+list.erl+ and add an
+appropriate module declaration into that file: add a module
+declaration and export the functions listed above.
+
+\section{Applying a Single Move}
+
+The first task is writing a binary function \verb+single+ that
+takes a move and an input state. It returns a
+new state computed from the state with the move applied.
+
+For example, \verb+single({one,1},{[a,b],[],[]})+ returns
+\verb+{[a],[b],[]}+.
+
+\verb+single+ should be used later in this assignment whenever a
+move is to be performed on a state.
+
+\paragraph{Structure.}
+
+Now we are in position to develop \verb+single+. Approach the
+task as follows:
+\begin{itemize}
+  
+\item Your program should decide by pattern-matching which track
+  is involved and what the different elements of a state are.
+  
+\item For a track, you have to decide whether wagons are moved
+  \emph{on} or \emph{from} the track (that is, is \verb+N+  positive
+  or negative).
+  
+\item Taking wagons from the end of a train can be done by using
+  \verb+length+ and \verb+drop+; taking wagons from the beginning of a
+  train can be done by using \verb+take+; adding wagons to a track
+  can be done by \verb+append+.
+
+\item Take into account that moves are allowed where no wagons
+  are moved at all!
+\end{itemize}
+
+Please store your function in a module called \verb+moves+.
+
+\section{Applying Several Moves}
+
+The next task is writing a function \verb+move+ that takes an
+input state and a list of moves. It results in a list of
+states. If the list of moves has $n$ elements, the resulting list
+of states has $n+1$ elements. Its first element is the initial
+state and its last element is the final resulting state.
+
+For example,
+\begin{verbatim}
+   move([{one,1},{two,1},{one,-1}],
+        {[a,b],[],[]}).
+\end{verbatim}
+returns the list of states
+\begin{verbatim}
+   [{[a,b],[],[]}, {[a],[b],[]}, 
+    {[],[b],[a]}, {[b],[],[a]}]
+\end{verbatim}
+
+
+\paragraph{Structure.}
+
+Now we are in a position to develop \verb+move+. Approach the
+task as follows:
+\begin{itemize}
+
+\item Recursively apply each move in turn.
+  
+\item When no moves are to be applied, our specification says
+  that the initial state is to be returned (base-case).
+  
+\item For each move, use \verb+single+.
+\end{itemize}
+
+Please put the function \verb+move+ also in the module \verb+moves+
+(and hence in a file \verb+moves.erl+).  Do not forget to convince
+yourself that your solution works!
+
+
+\section{Finding Moves}
+
+Develop a procedure \verb+find+ that takes two trains \verb+Xs+
+and \verb+Ys+ as input and returns a list of moves, such that the
+moves transform the state \verb+{Xs,[],[]}+ into
+\verb+{Ys,[],[]}+.
+
+In the following, we require that \verb+Xs+ and \verb+Ys+ contain the
+same elements (wagons) and that each wagon is unique (in other
+words, \verb+Xs+ and \verb+Ys+ are permutations of each other).
+
+Approach the problem as follows. The problem is solved
+recursively and each recursive step will move one wagon in the
+position as required by \verb+Ys+.
+
+The base-case is simple. If there are no wagons, no moves are
+needed.
+
+Otherwise, we take the first wagon \verb+Y+ from \verb+Ys+ (the
+desired train). Our goal is to find a list of moves that takes
+the wagon \verb+Y+ in front position on the main track. This is
+done by the following moves:
+\begin{enumerate}
+  
+\item Split the train \verb+Xs+ into the wagons \verb+Hs+ (for head) and
+  \verb+Ts+ (for tail), where \verb+Hs+ are the wagons before \verb+Y+
+  in \verb+Xs+, and \verb+Ts+ are the wagons after \verb+Y+ in \verb+Xs+.
+
+  Write a procedure \verb+split+ that takes a list of wagons
+  \verb+Xs+ and the wagon \verb+Y+ and returns the pair \verb+{Hs,Ts}+.
+
+  For example, 
+\begin{verbatim}
+   split([a,b,c],a) = {[],[b,c]}
+   split([a,b,c],b) = {[a],[c]}
+\end{verbatim}
+  
+  Use the functions \verb+position+, \verb+take+, and \verb+drop+.
+
+\item Move \verb+Y+ and the following wagons (that is \verb+Ts+) on track
+  ``one''.
+  
+\item Move the remaining wagons (that is, \verb+Hs+) on track
+  ``two''.
+  
+\item Move all wagons on ``one'' to ``main'' (this includes \verb+Y+,
+  which goes as needed to the front of ``main'').
+  
+\item Move all wagons on ``two'' to ``main''.
+\end{enumerate}
+
+After having moved one wagon in the right position, we only need
+to consider the remaining wagons of both \verb+Xs+ and \verb+Ys+
+(of course in the new order as they are now on the main track!).
+
+Please store your functions in the module \verb+shunt+ (and file
+\verb+shunt.erl+).
+
+
+\paragraph{Example.}
+Given the input train \verb+[a,b]+ and the output train \verb+[b,a]+, the
+list of moves computed by \verb+find+ is:
+\begin{verbatim}
+   [{one,1},{two,1},{one,-1},{two,-1} 
+    {one,1},{two,0},{one,-1},{two,0}]
+\end{verbatim}
+
+
+
+
+\section{Finding Less Moves}
+
+Develop a function \verb+few+ that behaves as \verb+find+ but
+that takes for each recursive application into account whether
+the next wagon is already in the right position. If so, no moves
+are needed.
+
+Proceed by modifying (only very few modifications are needed)
+your program for \verb+find+.
+
+Please store \verb+few+ also in the module \verb+shunt+.
+
+\paragraph{Example.}
+Given the input train \verb+[c,a,b]+ and the output train
+\verb+[c,b,a]+, the list of moves computed by \verb+few+ is:
+\begin{verbatim}
+   [{one,1},{two,1},{one,-1},{two,-1}]
+\end{verbatim}
+
+
+
+\section{Move Compression}
+
+The list of moves computed by \verb+few+ is still awkward and
+can be easily optimized according to the following rules:
+\begin{enumerate}
+\item Replace \verb+{one,N}+ directly followed by \verb+{one,M}+ with
+  \verb-{one,N+M}-.
+\item Replace \verb+{two,N}+ directly followed by \verb+{two,M}+ with
+  \verb-{two,N+M}-.
+\item Remove \verb+{one,0}+.
+\item Remove \verb+{two,0}+.
+\end{enumerate}
+
+These optimizations are \emph{correct} in the sense that the
+shorter list of moves will compute the same final state.
+
+This task is actually tricky: think for example of 
+\begin{verbatim}
+   [{two,-1},{one,1},{one,-1},{two,1}]
+\end{verbatim}
+Repeatedly applying the rules from above actually results in no
+moves at all. By application of Rule~1 we obtain
+\verb+[{two,-1},{one,0},{two,1}]+;
+by Rule~3 
+\verb+[{two,-1},{two,1}]+;
+by Rule~2
+\verb+[{two,0}]+;
+and finally by Rule~4
+\verb+[]+.
+
+Develop a function \verb+compress+ that takes a list of moves and
+returns a compressed list of moves. Compression must be complete,
+that is, none of the above rules should be applicable to the
+returned list of moves.
+
+Approach this task as follows. Develop a procedure
+\verb+rules+ that applies rules recursively. Then repeat
+application of \verb+rules+ until the list of moves does not
+change. Thus, \verb+compress+ is implemented as follows:
+\begin{verbatim}
+compress(Ms) ->
+    Ns = rules(Ms),
+    if Ns == Ms -> Ms;
+       true     -> compress(Ns)
+    end.
+\end{verbatim}
+
+Please store your program also in the module \verb+shunt+.
+
+
+
+\section{Finding Really Few Moves}
+
+\emph{This assignment is voluntary.} This means you don't have to
+do it, however we strongly encourage you to do it. And actually
+it is fun!
+
+The problem with both \verb+find+ and \verb+few+ is that they
+always push back the wagons from ``one'' and ``two'' to ``main'',
+even though there might be some opportunity to actively use track
+``two'' to push wagons from track ``one'' into position and vice
+versa. In the following, we are going to take advantage of this.
+
+Develop a procedure \verb+fewer+, that takes four arguments:
+\verb+Ms+ as the wagons on ``main'', \verb+Os+ as the wagons on ``one'',
+\verb+Ts+ as the wagons on ``two'', and \verb+Ys+ as the desired train.
+
+\verb+fewer+ works recursively and as before, each recursive
+invocation will bring the first wagon \verb+Y+ of \verb+Ys+ into the right
+position. What is new, is that this wagon might be on either
+track:
+\begin{itemize}
+\item If \verb+Y+ is a member of \verb+Ms+, bring it in the right
+  position as done previously. Leave the other wagons on track
+  ``one'' and ``two''.
+\item If \verb+Y+ is a member of \verb+Os+ (it is on track ``one''), move
+  the wagons in front first to ``main'' and then to ``two''. Then
+  move \verb+Y+ into position. Otherwise, leave the wagons on ``one''
+  and ``two'' unchanged.
+
+  This adds one more wagon in the right position on ``main''.
+\item Do the same for ``two''.
+\end{itemize}
+
+Each recursive application of \verb+fewer+ has of course to
+supply the wagons on all three tracks correctly!
+
+Initially, \verb+fewer+ is applied such that the tracks ``one''
+and ``two'' are the empty list. For example,
+\begin{verbatim}
+   fewer([a,b],[],[],[b a])
+\end{verbatim}
+returns
+\begin{verbatim}
+   [{one,1},{two,1},{one,-1},{two,0},{one,0},{two,-1}]
+\end{verbatim}
+
+
+
+\nnsection{Acknowledgments}
+
+The idea and the initial problem formulation is taken from an
+assignment at the 8th Prolog Programming Competition organized by Bart
+Demoen and Phuong-Lan Nguyen.
+
+\end{document}

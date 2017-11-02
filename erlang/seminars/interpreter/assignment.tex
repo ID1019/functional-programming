@@ -1,0 +1,491 @@
+\documentclass[a4paper,11pt]{article}
+
+
+\usepackage[latin1]{inputenc}
+
+\newcommand{\nnsection}[1]{
+\section*{#1}
+\addcontentsline{toc}{section}{#1}
+}
+\usepackage{syntax}
+
+\begin{document}
+
+\begin{center}\vspace{20pt}
+\textbf{\large A meta-interpreter}\\
+\vspace{10pt}
+\textbf{Johan Montelius}\\ 
+\vspace{10pt}
+\textbf{\today}
+\end{center}
+
+\nnsection{Introduction}
+
+In this assignment you will implement an interpreter for a small
+functional language. The language could be the functional subset of
+Erlang but it does not match exactly how Erlang is defined (but maybe
+it should). The exercise will hopefully give you a better
+understanding of how a functional programming language is defined and
+how powerful a functional programming language can be as tool; the
+size of our interpreter is surprisingly small.
+
+\section{The overall picture}
+
+Before staring the implementation you need to get an overall picture
+of the goal and what is actually needed. Never start coding one piece
+in a jigsaw puzzle if you don't know what the final picture should look
+like or how the piece should fit in.
+
+\subsection{a meta-interpreter}
+
+An interpreter, in computer engineering terminology, is a program that
+takes a program as input and executes the statements of the program to
+produce a result. Some programming systems use only a interpreter to
+execute programs but most systems today use a compiler to produce
+machine code that is then executed either directly or in a
+virtual machine. The advantage of an interpreter is that we do not
+have to wait for a compilation phase, the disadvantage is that the
+interpreter is much slower (typically a factor ten to one hundred).
+Do some reading and find out if the programming languages that you
+know uses a compiler or an interpreter.
+
+A meta-interpreter, also called self-interpreter, is an interpreter
+that is implemented in the language that it interprets. The reason for
+this not obvious but if you have a compiled system and need an
+interpreter of the same language, why not implement it in the language
+itself - this is probably the language you know best. We will develop
+an interpreter for a subset of the Erlang language. Since it is not the
+complete language it is not a true meta-interpreter but it's close.
+
+
+\subsection{expressions}
+
+Our target programming language is a limited functional language and
+in its first incarnation it will be limited to simple expressions; We
+will not have any function calls nor any program with function
+definitions (you might not even call this much of language but it will
+be a good starting point). This is an example of a {\em sequence} in
+the language:
+
+\begin{figure}[h]
+\begin{verbatim}
+    X = foo, Y = nil, {Z,_} = {bar,grk}, {X,{Z,Y}}.
+\end{verbatim} 
+\caption{a simple sequence}
+\label{fig:sequence}
+\end{figure}
+ 
+A {\em sequence} consist of a, possibly empty, sequence of pattern
+matching expression followed by a single expression. This is a bit
+more restrictive compared to Erlang sequences but it does not limit
+the expressiveness of our language. Simple expressions will for now be
+limited to {\em terms}. If we use a BNF grammar we can describe a
+sequence in the following way:
+
+\begin{figure}[h]
+\begin{grammar}
+<sequence> ::= <expression> \alt <match> ',' <sequence>
+
+<match> ::= <pattern> '=' <expression> 
+
+<expression> ::= <atom> \alt <variable> \alt <cons> 
+
+<cons> ::= '\{' <expression> ',' <expression> '\}'
+\end{grammar}
+\end{figure}
+
+\subsection{terms, data structures and patterns}
+
+Expressions of the form that we have just described are also referred
+to as {\em terms}. We will later see examples of expression that are
+more complicated and we will talk about expressions in general and
+{\em term expressions} but for now we will simply call them {\em terms}.
+
+It is important that we are clear on the terminology when we discuss
+our language. There is a difference between {\em terms}, {\em
+  patterns} and {\em data structures}. In the sequence previously
+shown, the following constructs are terms: \verb+foo+, \verb+nil+,
+\verb+{bar,nil}+ and, \verb+{X,{Y,Z}}+. Terms are syntactical
+constructs that, {\em when evaluated}, will result in {\em data
+  structures}; data structures are thus something that we handle
+during execution, the terms are only recipes for how these structures
+should be constructed.
+
+If we {\em evaluate} the sequence above we will obtain the data
+structure \textit{ \{foo , \{bar , nil\}\}}. We will in this
+text use {\it italics} when we refer to the data structures and
+\verb+teletype+ when we talk about the terms.
+
+For now, terms are restricted to atoms, variables and the binary
+compound {\em cons} structure. Once we understand how to handle this
+subset it's fairly easy to extend the language.
+
+The patterns in the sequence are: \verb+X+, \verb+Y+ and,
+\verb+{Z,_}+. The syntax we use for patterns, is the same as the one
+that we use for terms but we are also allowed to use an underscore
+(\verb+_+) to represent a {\em don't-care} variable. This variable
+acts as a placeholder for a data structure that we have no interest
+in.
+
+\begin{figure}[h]
+\begin{grammar}
+
+<pattern> ::= <atom>
+\alt <variable>
+\alt '_'  
+\alt <cons-pattern> 
+
+<cons-pattern> ::= '\{' <pattern> ',' <pattern> '\}'
+\end{grammar}
+\end{figure}
+
+The reason why we can use the same syntax for terms and patterns
+without confusion is that it is clear from the grammatical rules of the
+language if we refer to a pattern or a term. 
+
+\subsection{evaluation}
+
+Our interpreter will take a sequence and evaluate the pattern matching expressions one
+after the other; the result of the last expression is the result of
+the whole sequence. When the evaluation starts the interpreter will
+have en empty {\em environment} i.e. it knows of no variable
+bindings. Each pattern matching expression will add variable binding
+to the environment and the following expressions are then evaluated in
+the new environment.
+ 
+If we evaluate the sequence in figure \ref{fig:sequence} we gradually
+build an environment, first we add the binding {\em X/foo}, then {\em
+  Y/nil} and then {\em Z/bar}. The final expression is thus evaluated
+in the following environment: {\em \{X/foo, Y/nil, Z/bar\}}. In this
+environment the term \verb+{X,{Z,Y}}+ is evaluated to the data
+structure {\em \{foo,\{bar,nil\}\}}.
+
+\subsection{the architecture}
+
+In order to implement our interpreter we need to solve the following
+problems: we need to represent expressions and we need to implement an
+environment. Once we have these pieces in place we can start to define
+the rules for the interpreter.
+
+Before you proceed, you should think this problem through. What do
+sequences look like; assume that we will only handle sequences as the
+one shown above? What are the elements of a pattern
+matching expression, what is on the right side and what is on the left
+side? How should we represent a term and does it have to be different
+from the representation of a pattern? How should data structures be
+represented?
+
+Read this section through one more time, then start to sketch on your
+representation. Write it down and then later compare it to the
+representation proposed in this exercise. 
+
+\section{The implementation}
+
+We will build the interpreter starting with the environment, that will be implemented in a separate module. 
+Then we will handle evaluation of expressions, pattern matching and finally a sequence of expressions. 
+
+\subsection{the environment}
+
+Implementing an environment will be the simplest task that we have; an
+environment is simply a mapping from variables to data structures. If
+we assume that environments will be small, we can represent an
+environment as a list of key-value tuples. The environment {\em
+  \{X/foo, Y/bar\}} could be represented as:
+\verb+[{'X', foo}, {'Y', bar}]+ . The variables are represented by
+atoms, and we have here chosen to name them {\tt 'X'} and {\tt 'Y'}
+but we could as well have chosen other atoms ({\tt x}, {\tt
+  variable\_x}) or integers ({\tt 1} and {\tt 2}), the important thing
+is that they all have unique names.
+
+In a module {\tt env}, you should now define the following functions:
+
+\begin{itemize}
+\item {\tt new()} : return an empty environment
+
+\item {\tt add(Id, Str, Env)} : return an environment where the a
+  binding of the variable {\tt Id} to the structure {\tt Str} has been
+  added to the environment {\tt Env}.
+
+\item {\tt lookup(Id, Env)} : return either {\tt \{Id, Str\}}, if the
+  variable {\tt Id} was bound, or {\tt false}
+
+\end{itemize}
+
+These are all operations we need from the environment module. Test the
+environment by calling the functions from the Erlang shell to see that
+it produces the expected results. The following
+call should return {\tt \{foo,  42\}}:
+
+\begin{verbatim}
+   env:lookup(foo, env:add(foo, 42, env:new())).
+\end{verbatim}
+
+\subsection{terms and patterns}
+
+If we only needed to represent terms consisting of atoms and
+cons-cells, things would be trivial. The term {\tt \{a, b\}} could
+simply be represented by the Erlang term {\tt \{a, b\}}.  The problem
+is that we also need to represent variables. We will of
+course not be able to represent a variable in our target language with
+a variable in Erlang; we have to find a way to represent variables and
+make sure that we can separate them from atoms.
+
+One solution is to represent atoms with the tuple {\tt \{atm, A\}} and
+variables with the tuple {\tt \{var, V\}}. The good things is then
+that we only have to make sure that the identifiers of variables are
+all different and that the identifiers of atoms are all different. An
+atom could of course have the same identifier as a variable with out
+causing any problems; the atom {\tt \{atm, 123\}} is different from
+the variable {\tt \{var, 123\}}.
+
+A cons cell could be represented by a tuple {\tt \{cons, Head,
+  Tail\}}. We could of course have chosen to represent cons cells as
+Erlang cons cells but we want to make a distinction between the
+representation of terms in our target language and terms in Erlang (our
+target language now happens to be Erlang look-alike but that is of
+course not always the situation).
+
+As an exercise you can write down the representation of the term:
+
+\begin{verbatim}
+     {a, {X, b}}
+\end{verbatim}
+
+You will have to choose identifiers for the atoms {\tt a}, {\tt b}
+(why not {\tt a}, {\tt b}) and the variable {\tt X} (why
+not {\tt x}).
+
+The representation of patterns will be exactly the same as for terms
+with the only difference that we need to represent the special {\em
+  don't-care} pattern. We choose the atom {\tt ignore} which will be
+exactly what we will do when we encounter the symbol.
+
+\subsection{expressions}
+
+In our simple language an expression is simply a term
+expression. Expressions should be evaluated to data structures and the
+question is of course how these data structures should be represented.
+
+The nice thing with a meta-interpreter is that the data structures of
+the interpreted language could be mapped directly to the data
+structures of the implementation language. An atom will thus be
+represented by an Erlang atom, and a cons structure of the Erlang tuple
+ i.e. {\tt \{a, b\}}. 
+
+Create a module called {\tt eager} (for reasons that will be given
+later) and implement a function {\tt eval\_expr/2} that takes an
+expression and an environment and returns either {\tt \{ok, S\}},
+where {\tt S} is a data structure, or {\tt error}. An error is
+returned if the expression can not be evaluated. This should be a
+quite simple task. The following skeleton code will get you started:
+
+\begin{verbatim}
+eval_expr({atm, Id}, _) ->
+    {ok, Id};
+eval_expr({var, Id}, Env) ->
+    case ... of
+        false ->
+            error;
+        ... ->
+            {ok, ..}
+    end;
+eval_expr({cons, ..., ...}, Env) ->
+    case ... of
+        error ->
+            ...;
+        {ok, ...} ->
+            case ... of
+                error ->
+                    error;
+                {ok, ...} -> 
+                    {ok, {...,...}}
+            end
+    end.
+\end{verbatim}
+
+Here are some examples that you should be able to handle.
+
+\begin{itemize}
+ \item {\tt eval\_expr(\{atm, a\}, [])} : returns {\tt \{ok, a\}}
+ \item {\tt eval\_expr(\{var, x\},  [\{x, a\}])} : returns {\tt \{ok,  a\}}
+ \item {\tt eval\_expr(\{var, x\},  [])} : returns {\tt error}
+ \item {\tt eval\_expr(\{cons, \{var, x\}, \{atm, b\}\},  [\{x, a\}])} : returns {\tt \{a, b\}} 
+\end{itemize}
+
+
+Note that {\tt eval\_expr/2} returns a data structure if successful
+i.e. {\em a}, {\em foo}, or {\em \{a, b\}}. When evaluating a
+pattern matching expressions we will first evaluate the right hand
+side, resulting in a data structure, and then perform the matching
+procedure. The last test is an effect of representing the binary
+tuples in our source program {\tt \{a, b\}}, with the internal
+representation {\tt \{cons, \{atom, a\}, \{atom, b\}\}} that when
+evaluated will return the datastructure {\it \{a,b\}}.
+
+\subsection{pattern matching}
+
+A pattern matching will take a pattern, a data structure and an
+environment and return either {\tt \{ok, Env\}}, where {\tt Env} is an
+extended environment, or the atom {\tt fail}. 
+
+Implement a function {\tt eval\_match/3} that implements
+the pattern matching. Some examples will give you an idea of what
+we're looking for.
+
+\begin{itemize}
+ \item {\tt eval\_match(\{atm, a\}, a, [])} : returns {\tt \{ok, []\}}
+ \item {\tt eval\_match(\{var, x\}, a, [])} : returns {\tt \{ok, [\{x, a\}]\}}
+ \item {\tt eval\_match(\{var, x\}, a, [\{x, a\}])} : returns {\tt \{ok, [\{x, a\}]\}}
+ \item {\tt eval\_match(\{var, x\}, a, [\{x, b\}])} : returns {\tt fail}
+\end{itemize}
+
+Solving the cases where the pattern is an atom or variable is quite
+straight forward, especially since we already have the environment
+module. The slightly more problematic case is when the pattern is a
+cons structure. The following skeleton code should lead you in the
+right direction.
+
+\begin{verbatim}
+eval_match(ignore, ..., ...) ->
+    {ok, ...};
+eval_match({atm, Id}, .., ...) ->    
+    {ok, ...};
+eval_match({var, Id}, ..., ...) -> 
+    case ... of
+        false ->
+            {ok, ...};
+        {Id, Str} ->
+            {ok, ...};
+        {Id, _} ->
+            fail
+    end;
+\end{verbatim}
+\begin{verbatim}
+eval_match({cons, ..., ...}, ..., Env) -> 
+    case eval_match(..., ..., ...) of
+        fail ->
+            fail;
+        {ok, ...} ->
+            eval_match(..., ..., ...)
+    end;
+eval_match(_, _, _) -> 
+    fail.
+\end{verbatim}
+
+Complete the implementation and try the following calls:
+
+\begin{itemize}
+ \item {\tt eval\_match(\{var, x\}, a, [])}
+ \item {\tt eval\_match(\{cons, \{var, x\}, \{var, x\}\}, \{a,a\}, [])}
+ \item {\tt eval\_match(\{cons, \{var, x\}, \{var, x\}\}, \{a,b\}, [])}
+\end{itemize}
+
+\subsection{sequences}
+
+We now have all the pieces of the puzzle to implement the evaluation
+of a sequence. We represent a sequence as list, the first elements
+will of course be pattern matching expressions but the last element is
+of course a regular expression. The evaluation starts with an empty
+environment that is extended as we proceed down the list.
+
+Each pattern matching expressions is evaluated in two steps, first the
+expression on the right hand side is evaluated returning a data
+structure. The pattern on the left hand side is then match to the data
+structure resulting in an extended environment. Here is some skeleton
+code that Will get you started.
+
+\begin{verbatim}
+eval_seq([Exp], Env) ->
+    ...;
+eval_seq([{match, Ptr, Exp}|Seq], Env) ->
+    case ... of
+        error -> 
+            ...;
+        {ok, Str}  ->
+            case ... of
+                fail ->
+                    error;
+                {ok, ...} ->
+                    ...
+            end
+    end.
+\end{verbatim}
+
+When you have everything in place you should define a function {\tt
+  eval/1}, that takes a sequence and returns either {\tt \{ok, Str\}}
+or {\tt error}. You should then be able to run the following query:
+
+\begin{verbatim}
+ Seq = [{match, {var, x}, {atm,a}},
+        {match, {var, y}, {cons, {var, x}, {atm, b}}},
+        {match, {cons, ignore, {var, z}}, {var, y}},
+        {var, z}],
+ eval(Seq).
+\end{verbatim}
+
+The query is the representation of the following expression:
+
+\begin{verbatim}
+   X = a, Y = {X,b}, {_,Z} = Y, Z.
+\end{verbatim}
+
+
+\section{The assignment}
+
+We now have an interpreter that can handle sequences of expressions
+but the expressions are rather simple. You should now extend the
+language and the interpreter to handle {\em case expressions}. You
+should describe the complete language using BNF syntax as has been
+done in the introduction above. You should then explain how case
+expressions are represented ad how the interpreter should be extended to
+handle them.
+
+\subsection{structure of report}
+
+The report should be self contained i.e. it should include the whole
+language, how all expressions and data structures are represented and
+how the interpreter is implemented. It should not be a description, not a tutorial like
+this text, and the target should be a fellow student that knows as
+much Erlang as you do but does not know what a meta-interpreter is
+nor how a limited functional programming language could be defined.
+
+\subsection{the interpreter}
+
+Think things through before starting to program. The important steps
+are first of all what the language should look like and then how the
+case expressions should be represented. Identify the elements of a
+case expression; an expression to be evaluated and a sequence of {\em
+  clauses} - how would you represent clauses? Once you have the
+representation the implementation will be quite simple, only adding
+21 lines of code. The only problem you might face is that {\tt case}
+is a reserved word and you will have to use another atom ({\tt
+  switch}) in the representation.
+
+Give an example of a sequence that you now can interpret that includes
+a case expression.
+
+\subsection{\LaTeX{} support}
+
+When describing the BNF grammar it is very convenient to use the \LaTeX
+package {\tt syntax}. Include \verb+\usepackage{syntax}+ in the
+beginning of your document and then use the following code to describe
+the grammar:
+
+\begin{verbatim}
+\begin{grammar}
+<expression> ::= <atom>
+\alt <variable>
+\alt <cons> 
+
+<cons> ::= '\{' <expression> ',' <expression> '\}'
+\end{grammar}
+\end{verbatim}
+
+Code is included using the {\tt verbatim} environment, but make sure
+that you do not have any tab characters in the code (these will only
+be interpreted as a single space character and the indentation will be
+wrong). There are packages, for example the {\tt listings} package,
+that does a better job in type setting code but {\tt verbatim} will do
+fine.
+
+\end{document}

@@ -1,0 +1,143 @@
+\documentclass[a4paper,11pt]{article}
+
+
+\usepackage[latin1]{inputenc}
+
+\usepackage{amsmath}
+
+
+\newcommand{\nnsection}[1]{
+\section*{#1}
+\addcontentsline{toc}{section}{#1}
+}
+
+\begin{document}
+
+\begin{center}
+\vspace{20pt}
+\textbf{\large Erlang Concurrency}\\
+\vspace{10pt}
+\textbf{Johan Montelius}\\
+\vspace{10pt}
+\today{}
+\end{center}
+
+
+\nnsection{Concurrency}
+
+Erlang was designed for concurrent programming. You will quickly learn
+how to divide your program into communicating processes and thereby
+give it far better structure. Try the following:
+
+\begin{verbatim}
+-module(wait).
+-export([hello/0]).
+
+hello() ->
+    receive
+      X -> io:format("aaa! surprise, a message: ~s~n", [X])
+    end.
+\end{verbatim}
+
+\noindent The {\tt io:format} procedure will output the string to the stdout and
+replace the control characters (characters preceded by a tilde) with
+the elements in the list. The {\tt ~s} means that the next element in
+the list should be a string, {\tt ~n} simply outputs a newline. Load
+the above module and execute the command:
+
+\begin{verbatim}
+   P = spawn(wait, hello, []).
+\end{verbatim}
+
+\noindent The variable {\tt P} is now bound to the {\em process identifier} of
+spawned process. The process was created and called the procedure {\tt
+  hello/0} (this is how we name a function with zero arguments). It is
+now suspended waiting for incoming messages. In the same Erlang shell
+execute the command:
+
+\begin{verbatim}
+   P ! "hello".
+\end{verbatim}
+
+\noindent This will send a message, in this case a string ``hello'', to the
+process that now wakes up and continues the execution.
+
+To make life easier one often register the process identifiers under
+names that can be access by all processes. If two processes should
+communicate they must know the process identifier. Either a process is
+given the identifier to the other process when it is created, in a
+message or, through the registered name of the process. Try this in a
+shell (first type {\tt f()} to make the shell forget the previous
+binding to P):
+
+\begin{verbatim}
+   P = spawn(wait, hello, []).
+\end{verbatim}
+
+\noindent Now register the process identifier under the name ``foo''.
+
+\begin{verbatim}
+   register(foo, P).
+\end{verbatim}
+
+\noindent And then send the process a message.
+
+\begin{verbatim}
+   foo ! "hello".
+\end{verbatim}
+
+
+\nnsection{Tic-Tac-Toe}
+
+\noindent In the example above the only thing we sent was a string but
+we can send arbitrary complex data structures. The {\tt receive}
+statement can have several clauses that try to match incoming
+messages. Only if a match is found will a clause be used. Try this:
+
+\begin{verbatim}
+-module(tic).
+-export([first/0]).
+
+first() ->
+    receive
+      {tic, X} -> 
+          io:format("tic: ~w~n", [X]),
+          second()
+    end.
+
+second() ->
+    receive
+      {tac, X} -> 
+          io:format("tac: ~w~n", [X]),
+          last();
+      {toe, X} -> 
+          io:format("toe: ~w~n", [X]),
+          last()
+    end.
+
+last() ->
+    receive 
+      X ->
+          io:format("end: ~w~n", [X])
+    end.
+\end{verbatim}
+
+
+\noindent Then in a shell execute the following commands:
+
+\begin{verbatim}
+
+P = spawn(tic, first, []).
+
+P ! {toe, bar}.
+
+P ! {tac, gurka}.
+
+P ! {tic, foo}.
+
+\end{verbatim}
+
+\noindent In what order where they received by the process. Note how messages
+are queued and how the process selects in what order to process them.
+
+\end{document}
