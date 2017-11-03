@@ -1,0 +1,35 @@
+\ifdefined\HANDOUT
+  \documentclass[18pt,handout,aspectratio=169]{beamer}
+\else
+  \documentclass[18pt,aspectratio=169]{beamer}
+\fi
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+
+\usepackage{calc}
+\usepackage{bytefield}
+
+\usepackage{listings}
+\lstset{language=Erlang} 
+
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{automata}
+\usetikzlibrary{topaths}
+\usetikzlibrary{calc}
+ 
+\usepackage{syntax}
+\grammarindent=2cm
+
+
+\newcommand\semester{VT17}
+
+\usetheme{Warsaw}
+
+\setbeamertemplate{footline}[frame number]
+
+\input{../include/macros}
+
+

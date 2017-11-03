@@ -411,11 +411,11 @@ $$\lambda z \rightarrow  (z + (y + 5))$$
   \pause
 
   \begin{code}
-   fun(X) -> 2 + X end
+   fn x -> 2 + X end
   \end{code}
 
   \begin{code}
-    (fun(Y) -> 2 + Y end)(4)
+    (fn y-> 2 + y end).(4)
   \end{code}
 \end{frame}
 
@@ -425,7 +425,7 @@ $$\lambda z \rightarrow  (z + (y + 5))$$
   \pause
 
   \begin{code}
-    X = 2, Y = X + 3, Y + Y
+    x = 2;  y = x + 3;  y + y
   \end{code}
 \end{frame}
 
@@ -436,7 +436,9 @@ $$\lambda z \rightarrow  (z + (y + 5))$$
   \pause
 
   \begin{code}
-    inc(X) -> X + 1.
+    def inc(x) do
+       x + 1
+    end 
   \end{code}
 
 \end{frame}
@@ -447,14 +449,16 @@ $$\lambda z \rightarrow  (z + (y + 5))$$
   \pause
 
   \begin{code}
-    add(X, Y) -> X + Y.
+    def add(x, y) do
+       x + y
+    end
   \end{code}
 
 \end{frame}
 
 \begin{frame}{literals}
  \begin{itemize}
-  \pause \item {atoms:} {\tt a, b, foo, bar}
+  \pause \item {atoms:} {\tt :a, :b, .foo, :bar}
   \pause \item {integer:} {\tt 1,23, 3456789012345678901233456}
   \pause \item {bool:} {\tt true, false}
   \pause \item {more:} there are more but this is enough for now
@@ -464,8 +468,8 @@ $$\lambda z \rightarrow  (z + (y + 5))$$
 
 \begin{frame}{compound structures}
  \begin{itemize}
-  \pause \item {tuples:} {\tt \{\}, \{foo, bar\}, \{a, 42, true\}}
-  \pause \item {lists:} [], [1|[]], [1,2,3,4]  (more on this later)
+  \pause \item {tuples:} {\tt \{\}, \{:foo, :bar\}, \{:a, 42, true\}}
+  \pause \item {lists:} [], [1|[]], [1,:a,3,4]  (more on this later)
  \end{itemize}
 \end{frame}
 
