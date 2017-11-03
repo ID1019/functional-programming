@@ -1,0 +1,32 @@
+### Vim ### 
+*.swp
+
+### LaTex ###
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.pdf
+
+### Elixir ###
+/_build
+/cover
+/deps
+/doc
+/.fetch
+erl_crash.dump
+*.ez
+*.beam
+
+### Elixir Patch ###
+### Erlang ###
+.eunit
+deps
+*.o
+*.plt
+ebin/*.beam
+rel/example_project
+.concrete/DEV_MODE
+.rebar
+
+
