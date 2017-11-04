@@ -1,7 +1,7 @@
 defmodule Huffman do
 
   # The sample text must conatain alla characters that we want to
-  # encode.
+  # encode
 
   def sample() do
     'the quick brown fox jumps over the lazy dog
@@ -17,21 +17,21 @@ defmodule Huffman do
 
   def test() do
     sample = sample()
-    tree(sample)
-    # encode = encode_table(tree)
-    # decode = decode_table(tree)
-    # text = text()
-    # seq = encode(text, encode)
-    # text = decode(seq, decode)
+    tree = tree(sample)
+    encode = encode_table(tree)
+    decode = decode_table(tree)
+    text = text()
+    seq = encode(text, encode)
+    decode(seq, decode)
   end
 
 
   # Building the Huffman tree, first get the frequencies and then
-  # build teh tree.
+  # build teh tree
 
   def tree(sample) do
     freq(sample)
-    |> huffman
+    |> huffman()
   end
 
   def freq(sample), do: freq(sample, [])
@@ -47,11 +47,11 @@ defmodule Huffman do
   end
 
 
-  # Now we build the tree.
+  # Now we build the tree
 
   def huffman(freq) do
     Enum.sort(freq, fn ({_, x}, {_, y}) -> x < y end)
-    |> huffman_tree
+    |> huffman_tree()
   end
 
   def huffman_tree([{tree, _}]), do: tree
@@ -67,55 +67,64 @@ defmodule Huffman do
     [{b, bf} | insert({a, af}, rest)]
   end
 
-# %% Build the encode table
 
-# encode_table(Tree) ->  
-#     codes(Tree, []). 
-# %%  codes_better(Tree, [], []).
+# Build the encode table
 
-# codes({A,B}, Sofar) -> 
-#     As = codes(A, [0|Sofar]), 
-#     Bs = codes(B, [1|Sofar]), 
-#     As ++ Bs; 
-# codes(A, Code) -> 
-#     [{A, lists:reverse(Code)}].
+def encode_table(tree) do
+  codes(tree, [])
+  # codes_better(tree, [], [])
+end
 
+def codes({a, b}, sofar) do
+  as = codes(a, [0 | sofar])
+  bs = codes(b, [1 | sofar])
+  as ++ bs; 
+end
+def codes(a, code) do
+  [{a, Enum.reverse(code)}]
+end
 
-# codes_better({A,B}, Sofar, Acc) ->
-#     Left = codes_better(A, [0|Sofar], Acc), 
-#     codes_better(B, [1|Sofar], Left);
-# codes_better(A, Code, Acc) -> 
-#     [{A, lists:reverse(Code)} | Acc].
-
-# %% The encoder      
-
-# encode([], _Table) -> []; 
-# encode([C|Rest], Table) -> 
-#     {C, Code} = lists:keyfind(C, 1, Table), 
-#     Code ++ encode(Rest, Table).
+def codes_better({a, b}, sofar, acc) do
+  left = codes_better(a, [0 | sofar], acc) 
+  codes_better(b, [1 | sofar], left)
+end
+def codes_better(a, code, acc) do
+  [{a, Enum.reverse(code)} | acc]
+end
 
 
-# %%% The decoder using the list of codes
+# The encoder      
 
-# decode_table(Tree) ->
-#     codes(Tree, []).
+def encode([], _), do: []
+def encode([char | rest], table) do
+  {_, code} = List.keyfind(table, char, 0)
+  code ++ encode(rest, table)
+end
 
-# decode([], _Table) ->
-#      [];
-# decode(Seq, Table) ->
-#      {Char, Rest} = decode_char(Seq, 1, Table),
-#      [Char|decode(Rest, Table)].
 
-# decode_char(Seq, N, Table) ->
-#      {Code, Rest} = lists:split(N, Seq),
-#      case lists:keyfind(Code, 2, Table) of
-#        {Char, Code} ->
-#              {Char, Rest};
-#        false ->
-#              decode_char(Seq, N+1, Table)
-#       end.
+# The decoder using the list of codes
 
-# %%% The decoder using the tree.
+def decode_table(tree), do: codes(tree, [])
+
+def decode([], _), do: []
+def decode(seq, table) do
+  {char, rest} = decode_char(seq, 1, table)
+  [char | decode(rest, table)]
+end
+
+def decode_char(seq, n, table) do
+  {code, rest} = Enum.split(seq, n)
+
+  case List.keyfind(table, code, 1) do
+    {char, _} ->
+      {char, rest};
+    nil ->
+      decode_char(seq, n + 1, table)
+  end
+end
+
+
+# The decoder using the tree.
 
 # %% decode_table(Tree) ->
 # %%     Tree.
@@ -132,7 +141,8 @@ defmodule Huffman do
 # %% decode(Seq, Char, Tree) ->
 # %%     [Char | decode(Seq, Tree, Tree)].
     
-# %%% Get a suitable chunk of text to encode.
+
+# Get a suitable chunk of text to encode.
 
 # kallocain(N,  Coding) ->
 #     {ok, Fd} = file:open("kallocain.txt", [read, binary]),
