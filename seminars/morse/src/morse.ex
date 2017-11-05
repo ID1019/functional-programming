@@ -9,10 +9,10 @@ defmodule Morse do
   end
 
   def decode([], _, _), do: []
-  def decode([?-  | signal], {:node, _, long, _}, table), do: decode(signal, long, table)
+  def decode([?-  | signal], {:node, _, long, _}, table),  do: decode(signal, long, table)
   def decode([?.  | signal], {:node, _, _, short}, table), do: decode(signal, short, table)
-  def decode([?\s | signal], {:node, :na, _, _}, table), do: decode(signal, table, table)
-  def decode([_ | signal], {:node, char, _, _}, table), do: [char | decode(signal, table, table)]
+  def decode([?\s | signal], {:node, :na, _, _}, table),   do: decode(signal, table, table)
+  def decode([_   | signal], {:node, char, _, _}, table),  do: [char | decode(signal, table, table)]
 
   def decode_table do
     {:node, :na,
