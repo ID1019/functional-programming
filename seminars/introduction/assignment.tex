@@ -34,7 +34,7 @@ In this tutorial we will write input to the Elixir shell as follow:
 \begin{verbatim}
  >  x + 2
 \end{verbatim}
-You will actullay see a number {\tt iex(1)>] etc, but we will simply
+You will actually see a number {\tt iex(1)>] etc, but we will simply
   show a single {\tt >}.
 
 \section{Simple arithmetic}
@@ -73,15 +73,15 @@ Try this:
 \section{A first program}
 
 Open up a file {\em test.ex} and create a module called {\em Test}. In
-this module we define a function called {\tt double} that takes one
-argument and returns the double of that argument. 
+this module we define a function called {\tt double/1} that takes one
+argument and returns the double of that argument.
 
 \begin{verbatim}
 defmodule Test do
 
-   def double(N) do
+ def double(N) do
         :
-   end   
+ end   
 
 end
 \end{verbatim}
@@ -92,7 +92,7 @@ In a regular shell you can now compile this program using the stand alone compil
 $ elixirc test.ex
 \end{verbatim}
 
-You can also compiel and load the program from within th eElixir shell.
+You can also compile and load the program from within the elixir shell.
 
 \begin{verbatim}
 $ c("test.ex")
@@ -145,12 +145,12 @@ There are alternative ways of writing this, we could use a {\em case
 
 \begin{verbatim}
  def product(m, n) do
-   case  m do
-       0 -> 
-           ...
-       _ -> 
-           ...
-   end
+  case  m do
+    0 -> 
+        ...
+    _ -> 
+        ...
+  end
 end
 \end{verbatim}
 
@@ -160,18 +160,17 @@ after the other.
 
 \begin{verbatim}
  def product(0, _) do 0 end
-
  def product(m, n) do 
-     product(.., ..)
+   product(.., ..)
  end
 \end{verbatim}
 
 This should be read: if we call product, and the first argument
 matches {\em 0}, then the result is {\em 0}. If we can not use the
-first cluase then we try the second.
+first clause then we try the second.
 
 Sometimes the code becomes easier to understand, especially if we have
-many conditions that should be tested. Remenber though that the
+many conditions that should be tested. Remember though that the
 clauses of a function need to be after each other. You can not spread
 the clauses around in a program.
 
@@ -182,10 +181,10 @@ $x^y$. Use only the addition and subtraction and the function {\tt
 
 \begin{verbatim}
  def exp(x,y) do 
-    case ...   do
+   case ...   do
 
  
-    end
+   end
  end
 \end{verbatim}
 
@@ -281,18 +280,18 @@ calls the function {\em isort/2} using the right arguments.
 \begin{verbatim}
 
  def isort(l) do 
-     isort(l, ...)
+   isort(l, ...)
  end
 
  def isort(x, l) do
-    case ...  do
-      [] -> 
-         ...
-      [x|t] ->
-         ...
-      [h|t] ->
-         ...
-    end
+   case ...  do
+     [] -> 
+        ...
+     [x|t] ->
+        ...
+     [h|t] ->
+        ...
+   end
  end
 \end{verbatim}
 
@@ -319,32 +318,32 @@ becomes a bit messy.
 
 \begin{verbatim}
  def msort(..) do
-    case ..  do
-       .. -> 
-          ...
-       .. ->
-          {.., ..} = msplit(.., .., ..)
-          merge(msort(..), msort(..))
-    end
+   case ..  do
+     .. -> 
+       ...
+     .. ->
+       {.., ..} = msplit(.., .., ..)
+       merge(msort(..), msort(..))
+   end
  end
 
  def merg(.., ..) do ...
  def merg(.., ..) do ...
  def merg(.., ..) do
-     if ... 
-       merge(.., ..)
-     else 
-       merge(.., ..)
-    end
+   if ... 
+     merge(.., ..)
+   else 
+     merge(.., ..)
+   end
  end
 
  def msplit(.., .., ..) do
-    case ..  do
-       .. -> 
-          {.., ..}
-       ..  ->
-          msplit(..., ..., ...)
-    end
+   case ..  do
+      .. -> 
+        {.., ..}
+      ..  ->
+        msplit(..., ..., ...)
+   end
  end
 \end{verbatim}
 
@@ -362,32 +361,31 @@ list and all larger in one list. When you're appending the final
 result, remember to put the pivot element in the middle.
 
 \begin{verbatim}
-def qsort(...) do ... end
+ def qsort(...) do ... end
 
-def qsort([p|l]) do 
+ def qsort([p|l]) do 
    {..., ...} = qsplit(p, l, [], [])
    small = ...
    large = ...
    append(small, [p|large])
-end
+ end
 
 
-def qsplit(_, [], small, large) do ....  end
-
-def qsplit(p, [h|t], small, large) do
-     if ... 
+ def qsplit(_, [], small, large) do ....  end
+ def qsplit(p, [h|t], small, large) do
+   if ...  do
         ...
-     else
+   else
         ...
-     end
-end
+   end
+ end
 
-def append(.., ..) do
+ def append(.., ..) do
    case .. do
      [] -> ..
      [h|t] -> ...
    end
-end
+ end
 
 \end{verbatim}
 
@@ -421,7 +419,7 @@ the lists the accumulated list is the reversed list.
  end
 \end{verbatim}
 
-Ok, so what is so smart by doing this? This is your assignment, you
+OK, so what is so smart by doing this? This is your assignment, you
 should do some performance analysis of these two functions and
 describe what is happening. To have some data lead you in the right
 direction and to back up your findings you should start by doing some
@@ -466,12 +464,49 @@ to it.
 \end{verbatim}
 
 
-\section{Binary coding}
 
-As the next exercise, you should implement a function that takes an
-integer and return its binary representation coded as a list of ones
-and zeroes. The binary form of $13$ is for example {\em [1,1,0,1]}. 
+\section{More challenges}
 
+You should now be up and running to take on some new challenges. When
+you try these challenges, first try to express your algorithm using
+recursion. Think about the simplest case and have this as your base
+case. Then formulate a rule that will take you from a more complex form
+one step closer to the base case.
+
+\subsection{Integer to binary}
+
+Implement a function that takes an integer and return its binary
+representation coded as a list of ones and zeroes. The binary form of
+$13$ is for example {\em [1,1,0,1]}. Converting $0$ should be trivial
+so the base case should be simple. In the recursive case we can
+calculate the binary representation of {\em div(n,2)} and the append
+it to either a $0$ or $1$ depending on if the number is even or odd.
+
+\begin{verbatim}
+ def to_binary(0) do ...  end
+ def to_binary(n) do
+
+   end
+ end
+\end{verbatim}
+
+\subsection{Binary to integer}
+
+Now try the revers and implement a function that takes a binary
+representation of a number and returns an integer. To solve this it is
+a lot easier to use an accumulator that holds the number of what we
+have seen so far.
+
+\begin{verbatim}
+ def to_integer(x) do
+   to_integer(x, ..)
+ end
+  
+ def to_integer([], n) do  ..  end
+ def to_integer([x|r], n) do
+   to_integer(.. , ....)
+ end
+\end{verbatim}
 
 
 \section{Fibonacci}
@@ -493,7 +528,7 @@ def bench() ->
          t = time(n, fn() -> fib(l) end),
          :io.format("n: ~4w  fib(n) calculated in: ~8w us~n", [l, t])
        end
-    Enum.each(nench, ls).
+    Enum.each(bench, ls).
 \end{verbatim}
 
 Find an arithmetic expression that almost describes the computation
