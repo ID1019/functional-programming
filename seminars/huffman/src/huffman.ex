@@ -122,5 +122,24 @@ defmodule Huffman do
         decode_char(seq, n + 1, table)
     end
   end
+
+
+  ## The decoder using the tree
+
+  # def decode_table(tree), do: tree
+
+  # def decode(seq, tree), do: decode(seq, tree, tree)
+  # def decode([], char, _), do: [char]
+  # def decode([0 | seq], {left, _}, tree) do
+  #   decode(seq, left, tree)
+  # end
+  # def decode([1 | seq], {_, right}, tree) do
+  #   decode(seq, right, tree)
+  # end
+  # def decode(seq, char, tree) do
+  #   [char | decode(seq, tree, tree)]
+  # end
+
+
   
 end
