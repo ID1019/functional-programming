@@ -141,5 +141,82 @@ defmodule Huffman do
   # end
 
 
-  
+  # Get a suitable chunk of text to encode
+
+  def kallocain(n, coding) do
+    {:ok, file} = File.open("kallocain.txt", [:read])
+    binary = IO.read(file, n)
+    File.close(file)
+
+    length = byte_size(binary)
+    character_decode(binary, length, coding)
+  end
+
+
+  # latin1 will force to read one byte at a time
+
+  # utf8 will read the content character by character where a character
+  # might be two bytes (or more). The characters: å, ä and ö are two bytes.
+
+  # utf16 will read the content two bytes at a time (possibly more).
+
+  # utf24 is a faked coding scheme that will simply read three bytes at a time.
+
+  def character_decode(binary, length, :latin1) do
+    {:binary.bin_to_list(binary), length}
+  end
+  def character_decode(binary, length, :utf8) do
+    {:unicode.characters_to_list(binary, :utf8), length}
+  end
+  def character_decode(binary, length, :utf16) do
+    case :unicode.characters_to_list(binary, :utf16) do
+      {:incomplete, list, rest} ->
+        {list, length - byte_size(rest)};
+      list ->
+        {list, length}
+    end
+  end
+
+
+  # This is the benchmark
+
+  def bench(n, coding) do
+    {sample, _} = kallocain(n, coding)
+
+    {{text, b}, t1} = time(fn() -> kallocain(n, coding) end)
+
+    c = length(text)
+
+    {tree, t2} = time(fn() -> tree(sample) end)
+
+    {encode, t3} = time(fn() -> encode_table(tree) end)
+
+    s = length(encode)
+
+    {decode, _} = time(fn() -> decode_table(tree) end)
+
+    {encoded, t5} = time(fn() -> encode(text, encode) end)
+
+    e = div(length(encoded), 8)
+
+    r = Float.round(e/b, 3)
+
+    {_, t6} = time(fn() -> decode(encoded, decode) end)
+
+    IO.puts(' read in #{t1} ms')
+    IO.puts(' text of #{c} characters')
+    IO.puts(' tree built in #{t2} ms')
+    IO.puts(' table of size #{s} in #{t3} ms')
+    IO.puts(' encoded in #{t5} ms')
+    IO.puts(' decoded in #{t6} ms')
+    IO.puts(' source #{b} bytes, encoded #{e} bytes, compression #{r}')
+  end
+
+  def time(func) do
+    initial = Time.utc_now()
+    result = func.()
+    final = Time.utc_now()
+    {result, Time.diff(final, initial, :microsecond) / 1000}
+  end
+
 end
