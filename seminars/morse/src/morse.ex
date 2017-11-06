@@ -1,4 +1,7 @@
 defmodule Morse do
+
+  # Some test samples to decode
+
   def base, do: '.- .-.. .-.. ..-- -.-- --- ..- .-. ..-- -... .- ... . ..-- .- .-. . ..-- -... . .-.. --- -. --. ..-- - --- ..-- ..- ... '
 
   def rolled, do: '.... - - .--. ... ---... .----- .----- .-- .-- .-- .-.-.- -.-- --- ..- - ..- -... . .-.-.- -.-. --- -- .----- .-- .- - -.-. .... ..--.. ...- .----. -.. .--.-- ..... .---- .-- ....- .-- ----. .--.-- ..... --... --. .--.-- ..... ---.. -.-. .--.-- ..... .---- '
@@ -14,7 +17,46 @@ defmodule Morse do
   def decode([?\s | signal], {:node, :na, _, _}, table),   do: decode(signal, table, table)
   def decode([_   | signal], {:node, char, _, _}, table),  do: [char | decode(signal, table, table)]
 
-  def decode_table do
+  def encode(text) do
+    table = encode_table()
+    encode(text, [], table)
+  end
+
+  defp encode([], all, _), do: unpack(all, [])
+  defp encode([char | rest], sofar, table) do
+    code = lookup(char, table)
+    encode(rest, [code | sofar], table)
+  end
+
+  defp unpack([], done), do: done
+  defp unpack([code | rest], sofar), do: unpack(rest, code ++ [?\s | sofar])
+
+  # Naive lookup
+
+  #defp encode_table, do: codes()
+
+  #defp lookup(char, table) do
+  #  List.keyfind(table, char, 0)
+  #  |> elem(1)
+  #end
+
+  # Constant lookup
+
+  defp encode_table do
+    codes()
+    |> fill(0)
+    |> List.to_tuple
+  end
+
+  defp lookup(char, table), do: elem(table, char)
+
+  defp fill([], _), do: []
+  defp fill([{n, code} | codes], n), do: [code | fill(codes, n + 1)]
+  defp fill(codes, n), do: [:na | fill(codes, n + 1)]
+
+  # Decoding tree
+
+  defp decode_table do
     {:node, :na,
       {:node, 116,
         {:node, 109,
@@ -52,5 +94,54 @@ defmodule Morse do
           {:node, 115,
             {:node, 118, {:node, 51, nil, nil}, nil},
             {:node, 104, {:node, 52, nil, nil}, {:node, 53, nil, nil}}}}}}
+  end
+
+  defp codes do
+    [{32, '..--'},
+     {37,'.--.--'},
+     {44,'--..--'},
+     {45,'-....-'},
+     {46,'.-.-.-'},
+     {47,'.-----'},
+     {48,'-----'},
+     {49,'.----'},
+     {50,'..---'},
+     {51,'...--'},
+     {52,'....-'},
+     {53,'.....'},
+     {54,'-....'},
+     {55,'--...'},
+     {56,'---..'},
+     {57,'----.'},
+     {58,'---...'},
+     {61,'.----.'},
+     {63,'..--..'},
+     {64,'.--.-.'},
+     {97,'.-'},
+     {98,'-...'},
+     {99,'-.-.'},
+     {100,'-..'},
+     {101,'.'},
+     {102,'..-.'},
+     {103,'--.'},
+     {104,'....'},
+     {105,'..'},
+     {106,'.---'},
+     {107,'-.-'},
+     {108,'.-..'},
+     {109,'--'},
+     {110,'-.'},
+     {111,'---'},
+     {112,'.--.'},
+     {113,'--.-'},
+     {114,'.-.'},
+     {115,'...'},
+     {116,'-'},
+     {117,'..-'},
+     {118,'...-'},
+     {119,'.--'},
+     {120,'-..-'},
+     {121,'-.--'},
+     {122,'--..'}]
   end
 end
