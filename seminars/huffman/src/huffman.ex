@@ -11,11 +11,9 @@ defmodule Huffman do
     represent english but it is probably not that far off'
   end
 
-  def text() do
-    'this is something that we should encode'
-  end
+  def text, do: 'this is something that we should encode'
 
-  def test() do
+  def test do
     sample = sample()
     tree = tree(sample)
     encode = encode_table(tree)
@@ -30,8 +28,8 @@ defmodule Huffman do
   # build teh tree
 
   def tree(sample) do
-    freq(sample)
-    |> huffman()
+    freq = freq(sample)
+    huffman(freq)
   end
 
   def freq(sample), do: freq(sample, [])
@@ -39,19 +37,15 @@ defmodule Huffman do
   def freq([char | rest], freq), do: freq(rest, update(char, freq))
 
   def update(char, []), do: [{char, 1}]
-  def update(char, [{char, n} | freq]) do
-    [{char, n + 1} | freq]
-  end
-  def update(char, [elem | freq]) do
-    [elem | update(char, freq)]
-  end
+  def update(char, [{char, n} | freq]), do: [{char, n + 1} | freq]
+  def update(char, [elem | freq]), do: [elem | update(char, freq)]
 
 
   # Now we build the tree
 
   def huffman(freq) do
-    Enum.sort(freq, fn ({_, x}, {_, y}) -> x < y end)
-    |> huffman_tree()
+    sorted = Enum.sort(freq, fn ({_, x}, {_, y}) -> x < y end)
+    huffman_tree(sorted)
   end
 
   def huffman_tree([{tree, _}]), do: tree
@@ -183,25 +177,25 @@ defmodule Huffman do
   def bench(n, coding) do
     {sample, _} = kallocain(n, coding)
 
-    {{text, b}, t1} = time(fn() -> kallocain(n, coding) end)
+    {{text, b}, t1} = time(fn -> kallocain(n, coding) end)
 
     c = length(text)
 
-    {tree, t2} = time(fn() -> tree(sample) end)
+    {tree, t2} = time(fn -> tree(sample) end)
 
-    {encode, t3} = time(fn() -> encode_table(tree) end)
+    {encode, t3} = time(fn -> encode_table(tree) end)
 
     s = length(encode)
 
-    {decode, _} = time(fn() -> decode_table(tree) end)
+    {decode, _} = time(fn -> decode_table(tree) end)
 
-    {encoded, t5} = time(fn() -> encode(text, encode) end)
+    {encoded, t5} = time(fn -> encode(text, encode) end)
 
     e = div(length(encoded), 8)
 
-    r = Float.round(e/b, 3)
+    r = Float.round(e / b, 3)
 
-    {_, t6} = time(fn() -> decode(encoded, decode) end)
+    {_, t6} = time(fn -> decode(encoded, decode) end)
 
     IO.puts(' read in #{t1} ms')
     IO.puts(' text of #{c} characters')
