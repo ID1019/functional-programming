@@ -34,8 +34,8 @@ In this tutorial we will write input to the Elixir shell as follow:
 \begin{verbatim}
  >  x + 2
 \end{verbatim}
-You will actually see a number {\tt iex(1)>] etc, but we will simply
-  show a single {\tt >}.
+You will actually see a number {\tt iex(1)>} etc, but we will simply
+show a single {\tt >}.
 
 \section{Simple arithmetic}
 
@@ -79,7 +79,7 @@ argument and returns the double of that argument.
 \begin{verbatim}
 defmodule Test do
 
- def double(N) do
+ def double(n) do
         :
  end   
 
@@ -118,6 +118,13 @@ Now in the same module define the following functions:
 
 \item a function that calculates the area of a circle given the radius
 \end{itemize} 
+
+Sooner or later you will have to think about which programming
+environment that you are going to use. We will not write very large
+programs in the course but you will need to be able to quickly
+re-compile programs and shift between the editor and the Elixir
+shell. There are many environments to choos from and you are of course
+free to use whichever you find best.
 
 \section{Recursive definitions}
 
@@ -222,6 +229,9 @@ know by heart.
 
 >[z] = [1,2,3].
 \end{verbatim}
+
+In the above examples, what is the value of the variables after the
+pattern matching expressions?
 
 \subsection{Simple functions on list}
 
@@ -473,7 +483,7 @@ recursion. Think about the simplest case and have this as your base
 case. Then formulate a rule that will take you from a more complex form
 one step closer to the base case.
 
-\subsection{Integer to binary}
+\subsection{integer to binary}
 
 Implement a function that takes an integer and return its binary
 representation coded as a list of ones and zeroes. The binary form of
@@ -485,12 +495,33 @@ it to either a $0$ or $1$ depending on if the number is even or odd.
 \begin{verbatim}
  def to_binary(0) do ...  end
  def to_binary(n) do
-
+     apped( ..., ...)
    end
  end
 \end{verbatim}
 
-\subsection{Binary to integer}
+This could be written in a better way by using an accumulator. The
+accumulator will hold the binary sequence that we have determined so
+far. We start with a empty list, $[]$ and add binary digits as we go.
+
+\begin{verbatim}
+ def to_better(n) do to_better(n,[]) end
+
+ def to_better(0, b) do b end
+ def to_better(n, b) do
+    to_better(div(n/2), [rem(n,2) | b])
+ end
+\end{verbatim}
+
+Why is this better than the previous one? Can you notice the difference?  Try the following:
+
+\begin{verbatim}
+ > Test.time(1000, fn() -> Test.to_binary(12348987980980980980987) end)
+\end{verbatim}
+
+Now try the better version - any difference? Why?
+
+\subsection{binary to integer}
 
 Now try the revers and implement a function that takes a binary
 representation of a number and returns an integer. To solve this it is
