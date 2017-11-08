@@ -14,7 +14,7 @@ this text will not explain the algorithm but how to implement it.
 
 ## Huffman overview
 
-Huffman coding can divided into two parts, one part is how to construct
+Huffman coding can be divided into two parts, one part is how to construct
 the coding tables and the other, much simpler, is how to encode or
 decode a text using the tables.
 
