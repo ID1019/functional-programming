@@ -1,4 +1,5 @@
-DIRS = 	introduction \
+DIRS =	huffman \
+	introduction \
 	lambda \
 	mandel \
 	morse
