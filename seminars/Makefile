@@ -1,4 +1,7 @@
-DIRS = 	introduction 
+DIRS = 	introduction \
+	lambda \
+	mandel \
+	morse
 
 
 
