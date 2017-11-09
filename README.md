@@ -9,7 +9,7 @@ The seminars that we will use each year will be a subset of the
 exercises. During the seminars we will dicuss how to best solve
 problems and pros and cons of alternative solutions
 
--[The seminars for spring 2018] (Seminars2018.md)
+- [The seminars for spring 2018] (Seminars2018.md)
 
 
 ### Exercises
