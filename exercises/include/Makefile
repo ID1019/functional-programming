@@ -6,7 +6,7 @@ all : assignment.pdf
 
 
 %.pdf : %.tex 
-	$(LATEXMK) -pdf -pdflatex=$(PDFLATEX) $<
+	$(LATEXMK) -pdf -pdflatex=$(PDFLATEX) -shell-escape $<
 
 clean:
 	$(LATEXMK) -c
