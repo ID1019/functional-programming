@@ -18,11 +18,11 @@ defmodule TwoThreeTree do
   def insertf(k, v, {:two, k1, {:leaf, k1, _}=l1, {:leaf, k2, _}=l2}) do
     cond do
       k <= k1 ->  
-	      {:three, k, k1, {:leaf, k, v}, l1, l2}
-	    k <= k2 -> 
-	      {:three, k1, k, l1, {:leaf, k, v}, l2}
+        {:three, k, k1, {:leaf, k, v}, l1, l2}
+      k <= k2 -> 
+        {:three, k1, k, l1, {:leaf, k, v}, l2}
       true ->
-	      {:three, k1, k2, l1, l2, {:leaf, k, v}}
+        {:three, k1, k2, l1, l2, {:leaf, k, v}}
     end
   end
   def insertf(k, v, {:three, k1, k2, {:leaf, k1, _}=l1, {:leaf, k2, _}=l2, {:leaf, k3, _}=l3}) do
@@ -87,9 +87,9 @@ defmodule TwoThreeTree do
     d = depth(t)
     cond do
       d <= 10 ->
-	      debug(n - 1)
-	    true ->
-	      {d, path}
+        debug(n - 1)
+      true ->
+        {d, path}
     end
   end
 
@@ -128,11 +128,11 @@ defmodule TwoThreeTree do
 
   def insert(k, v, root) do
     case insertf(k, v, root) do
-	    {:four, q1, q2, q3, t1, t2, t3, t4} ->
-	      ## Special case for the root of the tree, never want to end up with a four node.
-	      {:two, q2, {:two, q1, t1, t2}, {:two, q3, t3, t4}}
-	    updated ->
-	      updated
+      {:four, q1, q2, q3, t1, t2, t3, t4} ->
+        ## Special case for the root of the tree, never want to end up with a four node.
+        {:two, q2, {:two, q1, t1, t2}, {:two, q3, t3, t4}}
+      updated ->
+        updated
     end
   end
 end
