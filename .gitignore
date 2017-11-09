@@ -1,6 +1,10 @@
 ### Vim ### 
 *.swp
 
+### Emacs ###
+*~
+
+
 ### LaTex ###
 *.aux
 *.fdb_latexmk
