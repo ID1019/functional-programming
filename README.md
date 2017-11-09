@@ -19,13 +19,13 @@ knack of it they are quite easy and vill hopefully give you some
 deeper knowledge about functionbal and concuurent programing besides
 learning Elixir.
 
-- [exercices/introduction/README.md] Introduction
-- [exercices/huffman/README.md] Huffmancoding 
-- [exercices/mandel/README.md ] The Mandelbrot set
-- [exercices/morse/README.md ] Morse coding 
-- [exercices/README.md ] LZW
-- [exercices/README.md ] Meta Interpreter
-- [exercices/README.md ] Eager, lazy and lambdas
-- [exercices/README.md ] Distributed
-- [exercices/README.md ] Dining Philosophers
-- [exercices/README.md ] Web Server
+- [Introduction] (exercices/introduction/README.md)
+- [Huffmancoding ] (exercices/huffman/README.md)
+- [The Mandelbrot set] (exercices/mandel/README.md )
+- [Morse coding ] (exercices/morse/README.md )
+- [LZW] (exercices/README.md )
+- [Meta Interpreter] (exercices/README.md )
+- [Eager, lazy and lambdas] (exercices/README.md )
+- [Distributed] (exercices/README.md )
+- [Dining Philosophers] (exercices/README.md )
+- [Web Server] (exercices/README.md )
