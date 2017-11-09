@@ -9,7 +9,7 @@ The seminars that we will use each year will be a subset of the
 exercises. During the seminars we will dicuss how to best solve
 problems and pros and cons of alternative solutions
 
--[Seminars2018.md] The seminars for spring 2018
+-[The seminars for spring 2018] (Seminars2018.md)
 
 
 ### Exercises
@@ -19,13 +19,13 @@ knack of it they are quite easy and vill hopefully give you some
 deeper knowledge about functionbal and concuurent programing besides
 learning Elixir.
 
-- [Introduction] (exercices/introduction)
-- [Huffmancoding ] (exercices/huffman)
-- [The Mandelbrot set] (exercices/mandel)
-- [Morse coding ] (exercices/morse)
-- [LZW] (exercices)
-- [Meta Interpreter] (exercices)
-- [Eager, lazy and lambdas] (exercices)
-- [Distributed] (exercices)
-- [Dining Philosophers] (exercices)
-- [Web Server] (exercices)
+- [Introduction] (exercises/introduction)
+- [Huffmancoding ] (exercises/huffman)
+- [The Mandelbrot set] (exercises/mandel)
+- [Morse coding ] (exercises/morse)
+- [LZW] (exercises)
+- [Meta Interpreter] (exercises)
+- [Eager, lazy and lambdas] (exercises)
+- [Distributed] (exercises)
+- [Dining Philosophers] (exercises)
+- [Web Server] (exercises)
