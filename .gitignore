@@ -8,6 +8,12 @@
 *.log
 *.pdf
 *.synctex.gz
+*.snm
+*.toc
+*.vrb
+*.nav
+*.out
+_minted-assignment/
 
 ### Elixir ###
 /_build
