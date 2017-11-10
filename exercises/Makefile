@@ -2,7 +2,8 @@ DIRS =	huffman \
 	introduction \
 	lambda \
 	mandel \
-	morse
+	morse \
+	twothree
 
 
 
