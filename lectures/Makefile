@@ -1,7 +1,12 @@
 PDFLATEX = pdflatex
 
 DIRS = 	overview \
-	introduction 
+	introduction \
+	trees \
+	complexity \
+	higher
+
+
 
 
 
