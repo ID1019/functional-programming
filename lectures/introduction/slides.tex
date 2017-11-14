@@ -411,11 +411,13 @@ $$\lambda z \rightarrow  (z + (y + 5))$$
   \pause
 
   \begin{code}
-   fn x -> 2 + X end
+   fn x -> 2 + x end
   \end{code}
-
+  \pause
+  $(\lambda y \rightarrow 2 + y) 4$
+  \pause  
   \begin{code}
-    (fn y-> 2 + y end).(4)
+    (fn y -> 2 + y end).(4)
   \end{code}
 \end{frame}
 
@@ -427,6 +429,33 @@ $$\lambda z \rightarrow  (z + (y + 5))$$
   \begin{code}
     x = 2;  y = x + 3;  y + y
   \end{code}
+
+
+\end{frame}
+
+\begin{frame}{difference Erlang/Elixir}
+
+  \begin{code}
+    x = 2; x = 3; x + x
+  \end{code}
+
+  \vspace{10pt}\pause
+  $\LET x = 2, x = 3 \IN x + x $
+
+  \vspace{10pt}\pause
+  $(\lambda x \rightarrow ( \lambda x \rightarrow x + x) 3 ) 2$  
+
+  \vspace{10pt}\pause
+  $( \lambda z \rightarrow z + z) 3$
+
+  \vspace{10pt}\pause
+  $3 + 3$  
+  
+
+
+  \vspace{30pt}\pause
+  Erlang: not allowed, interpreted as {\tt 2 = 3, ...}
+  
 \end{frame}
 
 
@@ -458,7 +487,7 @@ $$\lambda z \rightarrow  (z + (y + 5))$$
 
 \begin{frame}{literals}
  \begin{itemize}
-  \pause \item {atoms:} {\tt :a, :b, .foo, :bar}
+  \pause \item {atoms:} {\tt :a, :b, :foo, :bar}
   \pause \item {integer:} {\tt 1,23, 3456789012345678901233456}
   \pause \item {bool:} {\tt true, false}
   \pause \item {more:} there are more but this is enough for now
