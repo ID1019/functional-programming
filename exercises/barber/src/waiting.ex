@@ -1,7 +1,7 @@
 defmodule Waiting do
 
   def start(max) do
-    {:ok, spwan_link(fn -> init(max) end)}
+    {:ok, spawn_link(fn -> init(max) end)}
   end
 
   defp init(max), do: waiting(max, [])
