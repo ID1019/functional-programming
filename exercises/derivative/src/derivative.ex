@@ -1,5 +1,11 @@
 defmodule Derivative do
 
+  @type constant() :: {:const, number()} | {:const, atom()}
+  @type literal() :: constant() | {:var, atom()}
+  @type expr() :: {:exp, constant(), literal(), integer()} | {:mul, constant(), literal()} | literal()
+
+  @spec deriv(expr(), atom()) :: expr()
+
   def test() do
     test = {:add, {:mul, {:const, 4}, {:exp, {:var, :x}, {:const, 2}}}, {:add, {:mul, {:const, 3}, {:var, :x}}, {:const, 42}}}
     der = deriv(test, :x)
