@@ -4,7 +4,7 @@ defmodule Sorting do
 
   #Returns a lise where x has been inserted into the first place where it is smaller then the next integer.
   defp insert(x, []), do: [x]
-  defp insert(x, [head | tail]) when x < head, do: [x] ++ [head] ++ tail
+  defp insert(x, [head | tail]) when x < head, do: [x, head | tail]
   defp insert(x, [head | tail]), do: [head | insert(x, tail)]
 
   def iSort([], sortedList), do: sortedList
@@ -17,7 +17,7 @@ defmodule Sorting do
 
   #------- Merge Sort ---------
 
-  #Split a list in two equal sized lists using Enum
+  #Split a list into two equal sized lists using Enum
   defp splitL(l) do
     half = round((length(l) / 2))
     Enum.chunk(l, half, half, [])
