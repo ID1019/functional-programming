@@ -5,7 +5,7 @@ defmodule Sorting do
   #Returns a lise where x has been inserted into the first place where it is smaller then the next integer.
   defp insert(x, []), do: [x]
   defp insert(x, [head | tail]) when x < head, do: [x] ++ [head] ++ tail
-  defp insert(x, [head | tail]), do: [head] ++ insert(x, tail)
+  defp insert(x, [head | tail]), do: [head | insert(x, tail)]
 
   def iSort([], sortedList), do: sortedList
   def iSort([head | tail], sortedList), do: iSort(tail, insert(head, sortedList))
@@ -31,9 +31,9 @@ defmodule Sorting do
   #Compare the first value in each list, we append the smaller to mergedList.
   defp listMerge([h1 | t1], [h2 | t2], mergedList) do
     if(h1 < h2) do
-      listMerge(t1, [h2] ++ t2, mergedList ++ [h1])
+      listMerge(t1, [h2 | t2], mergedList ++ [h1])
     else
-      listMerge([h1] ++ t1, t2, mergedList ++ [h2])
+      listMerge([h1 | t1], t2, mergedList ++ [h2])
     end
   end
 
