@@ -3,7 +3,7 @@ defmodule Bst do
   def tree(), do: nil
 
   def insert(nil, key, value) do
-    {:node, key, value, nil, nil}
+    {:node, key, value, nil, nil} ## empty tree
   end
   def insert({:node, key, _, a, b}, key, value) do
     {:node, key, value, a, b}
