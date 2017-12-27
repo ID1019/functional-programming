@@ -93,7 +93,42 @@ defmodule Avl do
         {:ok, {:node, rk, rv, -1, q, b}}
     end
   end
+  defp insrt({:node, rk, rv, +1, a, b}, kk, kv) when kk > rk do
+    case insrt(b, kk, kv) do
+      {:inc, q} ->
+        {:inc, {:node, rk, rv, +2, a, q}}
+      {:ok, q} ->
+        {:ok, {:node, rk, rv, +1, a, q}}
+    end
+  end
 
-  
+  ## left - single rotate
+  def rotate({:node, xk, xv, -2, {:node, yk, yv, -1, a, b}, c}) do
+    {:node, yk, yv, 0, a, {:node, xk, xv, 0, b, c}}	    
+  end
+  ## right - single rotate
+  def rotate({:node, xk, xv, +2, a, {:node, yk, yv, +1, b, b}}) do
+    {:node, yk, yv, 0, {:node, xk, xv, 0, a, b}, c}
+  end
+  ## left - double rotate 
+  defp rotate({:node, xk, xv, -2, {:node, yk, yv, +1, a, {:node, zk, zv, 0, b, c}}, d}) do
+    {:node, zk, zv, 0, {:node, yk, yv, 0, a, b}, {:node, xk, xv, 0, c, d}}
+  end
+  defp rotate({:node, xk, xv, -2, {:node, yk, yv, +1, a, {:node, zk, zv, -1, b, c}}, d}) do
+    {:node, zk, zv, 0, {:node, yk, yv, 0, a, b}, {:node, xk, xv, +1, c, d}}
+  end
+  defp rotate({:node, xk, xv, -2, {:node, yk, yv, +1, a, {:node, zk, zv, +1, b, c}}, d}) do
+    {:node, zk, zv, 0, {:node, yk, yv, -1, a, b}, {:node, xk, xv, 0, c, d}}
+  end
+  ## right - double rotate
+  defp rotate({:node, xk, xv, +2, a, {:node, yk, yv, -1, {:node, zk, zv, 0, b, c}, d}}) do
+    {:node, zk, zv, 0, {:node, xk, xv, 0, a, b}, {:node, yk, yv, 0, c, d}};
+  end
+  defp rotate({:node, xk, xv, +2, a, {:node, yk, yv, -1, {:node, zk, zv, +1, b, c}, d}}) do
+    {:node, zk, zv, 0, {:node, xk, xv, -1, a, b}, {:node, yk, yv, 0, c, d}};
+  end
+  defp rotate({:node, xk, xv, +2, a, {:node, yk, yv, -1, {:node, zk, zv, -1, b, c}, d}}) do
+    {:node, zk, zv, 0, {:node, xk, xv, 0, a, b}, {:node, yk, yv, +1, c, d}}.
+  end
 
 end
