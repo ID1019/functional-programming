@@ -1,33 +1,44 @@
 defmodule World do
 
-  @Background {0, 0, 0}
-  @Depth 2
-  @Ambient {0.3, 0.3, 0.3}
+  defstruct objects: []
 
-  defstruct objects: [], lights: [], background: @Background, depth: @Depth, ambient: @Ambient
-
-  def world(objects, lights) do
-    struct(User, objects: objects, lights: lights)
+  def world(objects) do
+    struct(World, objects: objects)
   end
 
-  def world(objects, lights, opt) do
-    depth = case List.keyfind(opt, :depth, 0) do
-      {:depth, d} -> d
-      :false -> @Depth
-    end
-    background = case List.keyfind(opt, :background, 0) do
-      {:background, b} -> b
-      :false -> @Background
-    end
-    ambient = case List.keyfind(opt, :ambient, 0) do
-      {:ambient, a} -> a
-      :false -> @Ambient
-    end
+  # @background {0, 0, 0}
+  # @depth 2
+  # @ambient {0.3, 0.3, 0.3}
 
-    struct(User, objects: objects, lights: lights, background: b, depth: d, ambient: a)
-  end
+  # defstruct objects: [], lights: [], background: @background, depth: @depth, ambient: @ambient
 
-  def background() do
-    
-  end
+  # def world(objects, lights) do
+  #   struct(World, objects: objects, lights: lights)
+  # end
+
+  # def world(objects, lights, opt) do
+  #   depth = case List.keyfind(opt, :depth, 0) do
+  #     {:depth, d} -> d
+  #     :false -> @depth
+  #   end
+  #   background = case List.keyfind(opt, :background, 0) do
+  #     {:background, b} -> b
+  #     :false -> @background
+  #   end
+  #   ambient = case List.keyfind(opt, :ambient, 0) do
+  #     {:ambient, a} -> a
+  #     :false -> @ambient
+  #   end
+
+  #   struct(World, objects: objects, lights: lights, background: background, depth: depth, ambient: ambient)
+  # end
+
+  # def background(world), do: world.background
+
+  # def ambient(world), do: world.ambient
+
+  # def lights(world), do: world.lights
+
+  # def objects(world), do: world.objects
+
 end
