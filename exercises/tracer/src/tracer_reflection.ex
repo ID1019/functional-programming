@@ -1,4 +1,4 @@
-defmodule TracerLight do
+defmodule TracerReflection do
 
   @delta 0.001
 
@@ -11,10 +11,15 @@ defmodule TracerLight do
 
   defp trace(x, y, camera, world) do
     ray = Camera.ray(x, y, camera)
-    trace(ray, world)
+    depth = World.depth(world)
+    trace(ray, depth, world)
   end
 
-  defp trace(ray, world) do
+  defp trace(_ray, 0, world)  do
+    World.background(world)
+  end
+
+  defp trace(ray, depth, world) do
     objects = World.objects(world) 
     case intersect(ray, objects) do
       {:inf, _} ->
@@ -26,7 +31,9 @@ defmodule TracerLight do
         normal = Sphere.normal(i, obj)
         visible = visible(i, World.lights(world), objects)
         illumination = Light.combine(i, normal,  visible)
-        Light.illuminate(obj, illumination, world)
+        r = Ray.ray(i, reflection(l, normal))
+        reflection = trace(r, depth - 1, world)
+        Light.illuminate(obj, reflection, illumination, world)
     end
   end
 
@@ -61,6 +68,10 @@ defmodule TracerLight do
             end
         end
       end)
+  end
+
+  defp reflection(l, n) do
+    Vector.sub(l, Vector.smul(n, 2 * Vector.dot(l, n)))
   end
 
 end

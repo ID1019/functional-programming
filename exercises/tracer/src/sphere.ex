@@ -37,5 +37,7 @@ defmodule Sphere do
   end
 
   def color(sphere), do: sphere.color
+
+  def brilliance(sphere), do: sphere.brilliance
   
 end
