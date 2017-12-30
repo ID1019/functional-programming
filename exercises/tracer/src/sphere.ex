@@ -39,5 +39,9 @@ defmodule Sphere do
   def color(sphere), do: sphere.color
 
   def brilliance(sphere), do: sphere.brilliance
+
+  def refraction(sphere), do: sphere.refraction
+
+  def transparency(sphere), do: sphere.transparency
   
 end

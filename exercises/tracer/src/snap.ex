@@ -56,4 +56,38 @@ defmodule Snap do
     PPM.write("snap3.ppm", image)
   end
 
+  def snap(4) do
+    camera = Camera.normal({1920, 1080})
+
+    obj1 = Sphere.sphere(140, {0, 0, 700}, [{:color, {1, 1, 1}}, {:brilliance, 0.4}])
+    obj2 = Sphere.sphere(50, {200, 0, 600}, [{:color, {1, 1, 1}}, {:brilliance, 0.8}])
+    obj3 = Sphere.sphere(50, {-80, 0, 400}, [{:color, {1, 1, 1}}, {:brilliance, 0.5}])
+
+    light1 = Light.light({-1000, -1000, 700}, {1.0, 0.0, 0.0})
+    light2 = Light.light({800, 800, 0}, {0.1, 1.0, 0.0})
+    light3 = Light.light({800, -800, 0}, {0.0, 0.0, 1.0})
+
+    world = World.world([obj1, obj2, obj3], [light1, light2, light3], [{:depth, 3}, {:background, {0.0, 0.0, 0.0}}, {:ambient, {0.1, 0.1, 0.1}}])
+
+    image = TracerReflection.tracer(camera, world)
+    PPM.write("snap4.ppm", image)
+  end
+
+  def snap(5) do
+    camera = Camera.normal({3200, 1800})
+
+    obj1 = Sphere.sphere(140, {0, 0, 700}, [{:color, {1.0, 0.5, 0}}, {:brilliance, 0.4}])
+    obj2 = Sphere.sphere(50, {200, 0, 600}, [{:color, {0, 0.8, 0.2}}, {:brilliance, 0.4}])
+    obj3 = Sphere.sphere(50, {-80, 0, 400}, [{:color, {0.1, 0.1, 1.0}}, {:brilliance, 0.8}])
+
+    light1 = Light.light({-1000, -1000, 700}, {1.0, 0.3, 0.3})
+    light2 = Light.light({800, 800, 0}, {0.3, 1.0, 0.3})
+    light3 = Light.light({800, -800, 0}, {0.3, 0.3, 1.0})
+
+    world = World.world([obj1, obj2, obj3], [light1, light2, light3], [{:depth, 3}, {:background, {0.0, 0.0, 0.0}}, {:ambient, {0.1, 0.1, 0.1}}])
+
+    image = TracerReflection.tracer(camera, world)
+    PPM.write("snap5.ppm", image)
+  end
+
 end
