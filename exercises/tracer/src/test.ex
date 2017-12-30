@@ -8,7 +8,7 @@ defmodule Test do
     obj3 = Sphere.sphere(50, {-80, 0, 400})
 
     image = Tracer.tracer(camera, [obj1, obj2, obj3])
-    PPM.write("test0.ppm", image)
+    PPM.write("test.ppm", image)
   end
-  
+
 end
