@@ -1,44 +1,38 @@
 defmodule World do
 
-  defstruct objects: []
+  @background {0, 0, 0}
+  @depth 2
+  @ambient {0.3, 0.3, 0.3}
 
-  def world(objects) do
-    struct(World, objects: objects)
+  defstruct objects: [], lights: [], background: @background, depth: @depth, ambient: @ambient
+
+  def world(objects, lights) do
+    struct(World, objects: objects, lights: lights)
   end
 
-  # @background {0, 0, 0}
-  # @depth 2
-  # @ambient {0.3, 0.3, 0.3}
+  def world(objects, lights, opt) do
+    depth = case List.keyfind(opt, :depth, 0) do
+      {:depth, d} -> d
+      nil -> @depth
+    end
+    background = case List.keyfind(opt, :background, 0) do
+      {:background, b} -> b
+      nil -> @background
+    end
+    ambient = case List.keyfind(opt, :ambient, 0) do
+      {:ambient, a} -> a
+      nil -> @ambient
+    end
 
-  # defstruct objects: [], lights: [], background: @background, depth: @depth, ambient: @ambient
+    struct(World, objects: objects, lights: lights, background: background, depth: depth, ambient: ambient)
+  end
 
-  # def world(objects, lights) do
-  #   struct(World, objects: objects, lights: lights)
-  # end
+  def background(world), do: world.background
 
-  # def world(objects, lights, opt) do
-  #   depth = case List.keyfind(opt, :depth, 0) do
-  #     {:depth, d} -> d
-  #     :false -> @depth
-  #   end
-  #   background = case List.keyfind(opt, :background, 0) do
-  #     {:background, b} -> b
-  #     :false -> @background
-  #   end
-  #   ambient = case List.keyfind(opt, :ambient, 0) do
-  #     {:ambient, a} -> a
-  #     :false -> @ambient
-  #   end
+  def ambient(world), do: world.ambient
 
-  #   struct(World, objects: objects, lights: lights, background: background, depth: depth, ambient: ambient)
-  # end
+  def lights(world), do: world.lights
 
-  # def background(world), do: world.background
-
-  # def ambient(world), do: world.ambient
-
-  # def lights(world), do: world.lights
-
-  # def objects(world), do: world.objects
+  def objects(world), do: world.objects
 
 end

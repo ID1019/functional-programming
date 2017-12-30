@@ -6,6 +6,10 @@ defmodule Ray do
     struct(Ray, origin: origin, direction: direction)
   end
 
+  def vector(ray, length) do
+    Vector.add(ray.origin, Vector.smul(ray.direction, length))
+  end
+
   def origin(ray), do: ray.origin
 
   def direction(ray), do: ray.direction
