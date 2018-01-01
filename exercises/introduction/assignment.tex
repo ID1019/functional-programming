@@ -253,7 +253,9 @@ result of evaluating the function.
 \begin{itemize}
 \item duplicate(l): return a list where all elements are duplicated
 \item add(x,l): add the element {\em x} to the list {\em l} if it is not in the list
-\item unique(l): return a list of unique elements in the list  {\em l}, that is {\tt [:a,:b,:d]} are the unique elements in the list {\tt [:a,:b,:a,:d,:a,:b,:b,:a]}
+\item remove(x,l): remove all occurrences of x in l 
+\item unique(l): return a list of unique elements in the list {\em l},
+  that is {\tt [:a,:b,:d]} are the unique elements in the list {\tt [:a,:b,:a,:d,:a,:b,:b,:a]}
 \item pack(l): return a list containing lists of equal elements, {\tt
   [:a,:a,:b,:c,:b,:a,:c,]} should return {\tt [[:a,:a,:a], [b],[:c,:c]]}
 \item reverse(l): return a list where the order of elements is reversed
@@ -337,8 +339,8 @@ becomes a bit messy.
    end
  end
 
- def merg(.., ..) do ...
- def merg(.., ..) do ...
+ def merg(.., ..) do ... end
+ def merg(.., ..) do ... end
  def merg(.., ..) do
    if ... 
      merge(.., ..)
