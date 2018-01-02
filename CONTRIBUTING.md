@@ -8,6 +8,8 @@
 * [How to create an issue](#how-to-create-an-issue)
 * [Coding style and conventions](#coding-style-and-conventions)
 
+---
+
 ## General guidelines
 This repository contains the code for a course in *functional and concurrent programming* at KTH, Royal Institute of Technology. The course originally used Erlang as programming languge but it has switched to [Elixir](http://elixir-lang.github.io/) since spring term 2018. The assignment files and the lecture slides are written in [LaTex](https://www.latex-project.org/). GitHub-flavoured Markdown and Makefile are also used.
 
@@ -20,6 +22,8 @@ If you find any mistake, bug or error and you do not know how to fix it, you can
 Two general rules for any contribution:
 1) Communication is fundamental: get in contact with the mantainers of this repository and explain the intentions and reasons behind your work. Get feedback on how the others see your work. **If you do not know something, simply ask!**.
 2) Keep the code clean, modular and observe general rules for writing good code. More information about coding style in the [specific section](#coding-style-and-conventions) below.
+
+---
 
 ## How to contribute to the codebase
 
@@ -45,13 +49,17 @@ The repository is sprinkled with Makefiles used for LaTex compilation among othe
 * Be expressive in the name of the branch: use prefixes `feature/`and `bugfix/` based on needs.
 * Try to mantain a clean and uniform style. Check section [below](#coding-style-and-conventions)!
 
+---
+
 ## How to create an issue
 
 If you find a bug, an error, or you want simply to suggest an improvement to the code or structure of the repository you can **file an issue**. You find the Issue panel on the top part of the repository view. When you create an issue, keep in mind the following points:
-* Write a clear and concise title: what is the goal (fix bug or improvement), what is the general goal?
-* Be clear about where the problem is located: specify folders and files.
+* Write a **clear and concise title**: what is the goal (fix bug or improvement), what is the general goal?
+* Be clear about **where the problem is located**: specify folders and files.
 * If the issue is about a bug you can use the following pattern: expected behaviour - actual behaviour - steps to reproduce the behaviour
-* If available include error messages, stack traces, images, screenshots. Copy-pasting the code or error message is often preferred over a screenshot since it allows to easily copy the text.
-* Use [GitHub-flavoured Markdown](https://guides.github.com/features/mastering-markdown/) to write better issues. 
+* If available **include error messages, stack traces, images, screenshots**. Copy-pasting the code or error message is often preferred over a screenshot since it allows to easily copy the text.
+* Use [**GitHub-flavoured Markdown**](https://guides.github.com/features/mastering-markdown/) to write better issues.
+
+---
 
 ## Coding style and conventions
