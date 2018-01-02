@@ -63,3 +63,213 @@ If you find a bug, an error, or you want simply to suggest an improvement to the
 ---
 
 ## Coding style and conventions
+
+### Coding style in Elixir
+When writing Elixir code try to keep a modular and clean coding style. Check the other files in the repository as examples.
+Here you will find some basic coding conventions we decided to adopt. We are following the [styleguide by Christopher Adams](https://github.com/christopheradams/elixir_style_guide) which you can consult for more extensive examples.
+
+#### Naming
+
+* Use `snake_case` for atoms, functions and variables.
+
+  ```elixir
+  :some_atom
+
+  some_var = 5
+
+  def some_function do
+    ...
+  end
+  ```
+
+* Use `snake_case` file names for `CamelCase` module names.
+
+  ```elixir
+  # file is called some_module.ex
+
+  defmodule SomeModule do
+  end
+  ```
+  
+#### Source Code Layout
+
+* Use two **spaces** per indentation level.
+  No hard tabs.
+
+  ```elixir
+  def some_function do
+    do_something
+  end
+  ```
+
+* Use Unix-style line endings (\*BSD/Solaris/Linux/OSX users are covered by
+  default, Windows users have to be extra careful).
+  
+* Use spaces around operators, after commas, colons and semicolons.
+  Do not put spaces around matched pairs like brackets, parentheses, etc.
+  Whitespace might be (mostly) irrelevant to the Elixir runtime, but its proper
+  use is the key to writing easily readable code.
+
+  ```elixir
+  sum = 1 + 2
+  {a, b} = {2, 3}
+  [first | rest] = [1, 2, 3]
+  Enum.map(["one", <<"two">>, "three"], fn num -> IO.puts(num) end)
+  ```
+
+* Do not use spaces after non-word operators that only take one argument; or
+  around the range operator.
+
+  ```elixir
+  0 - 1 == -1
+  ^pinned = some_func()
+  5 in 1..10
+  ```
+
+* Use blank lines between `def`s to break up a function into logical
+  paragraphs.
+
+  ```elixir
+  def some_function(some_data) do
+    some_data |> other_function() |> List.first()
+  end
+
+  def some_function do
+    result
+  end
+
+  def some_other_function do
+    another_result
+  end
+
+  def a_longer_function do
+    one
+    two
+
+    three
+    four
+  end
+  ```
+
+* Run single-line `def`s that match for the same function together, but separate
+  multiline `def`s with a blank line.
+
+  ```elixir
+  def some_function(nil), do: {:error, "No Value"}
+  def some_function([]), do: :ok
+
+  def some_function([first | rest]) do
+    some_function(rest)
+  end
+  ```
+
+* If you have more than one multiline `def`, do not use single-line `def`s.
+ 
+  ```elixir
+  def some_function(nil) do
+    {:error, "No Value"}
+  end
+
+  def some_function([]) do
+    :ok
+  end
+
+  def some_function([first | rest]) do
+    some_function(rest)
+  end
+
+  def some_function([first | rest], opts) do
+    some_function(rest, opts)
+  end
+  ```
+
+* If a list, map, or struct spans multiple lines, put each element, as well as
+  the opening and closing brackets, on its own line.
+  Indent each element one level, but not the brackets.
+  When assigning a list, map, or struct, keep the opening bracket on the same
+  line as the assignment.
+ 
+  ```elixir
+  list = [
+    :first_item,
+    :second_item,
+    :next_item,
+    :final_item
+  ]
+  ```
+  
+* Avoid trailing whitespace.
+  
+* End each file with a newline.
+
+#### Syntax
+
+* Use parentheses when a `def` has arguments, and omit them when it doesn't.
+
+  ```elixir
+  def some_function(arg1, arg2) do
+    # body omitted
+  end
+
+  def some_function do
+    # body omitted
+  end
+  ```
+
+* Use `true` as the last condition of the `cond` special form when you need a
+  clause that always matches.
+
+  ```elixir
+  cond do
+    1 + 2 == 5 ->
+      "Nope"
+
+    1 + 3 == 5 ->
+      "Uh, uh"
+
+    true ->
+      "OK"
+  end
+  ```
+
+* Never put a space between a function name and the opening parenthesis.
+
+  ```elixir
+  f(3 + 2)
+  ```
+
+* Use parentheses in function calls, especially inside a pipeline.
+
+  ```elixir
+  f(3)
+
+  2 |> rem(3) |> g
+  ```
+
+* Always use the special syntax for keyword lists.
+
+  ```elixir
+  some_value = [a: "baz", b: "qux"]
+  ```
+  
+  #### Comments
+
+* Write expressive code and try to convey your program's intention through
+  control-flow, structure and naming.
+
+* Place comments above the line they comment on. Use one space between the leading `#` character of the comment and the text of the comment.
+
+  ```elixir
+  # comment
+  String.first(some_string)
+  ```
+
+* Comments longer than a word are capitalized, and sentences use punctuation.
+  Use [one space][Sentence Spacing] after periods.
+ 
+  ```elixir
+  # Capitalization example
+  # Use punctuation for complete sentences.
+  ```
+
+
