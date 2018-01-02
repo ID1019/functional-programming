@@ -47,4 +47,11 @@ The repository is sprinkled with Makefiles used for LaTex compilation among othe
 
 ## How to create an issue
 
+If you find a bug, an error, or you want simply to suggest an improvement to the code or structure of the repository you can **file an issue**. You find the Issue panel on the top part of the repository view. When you create an issue, keep in mind the following points:
+* Write a clear and concise title: what is the goal (fix bug or improvement), what is the general goal?
+* Be clear about where the problem is located: specify folders and files.
+* If the issue is about a bug you can use the following pattern: expected behaviour - actual behaviour - steps to reproduce the behaviour
+* If available include error messages, stack traces, images, screenshots. Copy-pasting the code or error message is often preferred over a screenshot since it allows to easily copy the text.
+* Use [GitHub-flavoured Markdown](https://guides.github.com/features/mastering-markdown/) to write better issues. 
+
 ## Coding style and conventions
