@@ -359,9 +359,15 @@ $$\lambda z \rightarrow  (z + (y + 5))$$
 
 \begin{frame}{this is ok}
   \begin{itemize}  
-   \pause \item $\lambda x \rightarrow  \LET y = x + 2 , z = y + 5 \IN z + z $
+   \pause \item $\lambda x \rightarrow  \LET y = x + 2 , z = y + 5 \IN z + z $ \pause
    \pause \item $\lambda x \rightarrow  ((\lambda y \rightarrow (\lambda z \rightarrow z + z)(y + 5)) (x + 2))$  
-  \end{itemize}
+ \end{itemize}
+
+ \pause \vspace{20pt} So is this, 
+  \begin{itemize}  
+   \pause \item $\lambda x \rightarrow  \LET y = x + 2 , y = y + 5 \IN y + y $ \pause
+   \pause \item $\lambda x \rightarrow  ((\lambda y \rightarrow (\lambda y \rightarrow y + y)(y + 5)) (x + 2))$  
+  \end{itemize} 
 \end{frame}
 
 
@@ -408,17 +414,28 @@ $$\lambda z \rightarrow  (z + (y + 5))$$
 
 \begin{frame}{lambda expression}
   $\lambda x \rightarrow 2 + x$
-  \pause
-
+  \pause \hspace{40pt}
   \begin{code}
    fn x -> 2 + x end
   \end{code}
-  \pause
+
+ 
+  \pause  \vspace{20pt}
   $(\lambda y \rightarrow 2 + y) 4$
-  \pause  
+  \pause  \hspace{40pt}
   \begin{code}
     (fn y -> 2 + y end).(4)
   \end{code}
+
+
+  \pause  \vspace{20pt}
+  $\lambda x \rightarrow  \LET y = x + 2 , y = y + 5 \IN y + y$ \pause
+
+  \hspace{40pt}
+  \begin{code}
+    fn x -> y = x + 2; y = y + 5; y + y end
+  \end{code}
+  
 \end{frame}
 
 
