@@ -64,9 +64,10 @@ If you find a bug, an error, or you want simply to suggest an improvement to the
 
 ## Coding style and conventions
 
-### Coding style in Elixir
 When writing Elixir code try to keep a modular and clean coding style. Check the other files in the repository as examples.
 Here you will find some basic coding conventions we decided to adopt. We are following the [styleguide by Christopher Adams](https://github.com/christopheradams/elixir_style_guide) which you can consult for more extensive examples.
+
+*In some cases these conventions are not adopted in the repository for pedagogical reasons. For example we avoid some forms of decalring functions in the exercises that occour early in the course since students may not be accoustomed at all with the language.*
 
 #### Naming
 
