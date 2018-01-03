@@ -52,21 +52,21 @@ answer.
 This description of an operational semantics for our small functional
 programming language will serve our purposes in that we will be able
 to talk and reason about program execution. We will also be able to
-use it when we implement an interpreter for the langauge.
+use it when we implement an interpreter for the language.
 
 
 \section{The language}
 
-Our language is a very small functional programming language. We will
-in the beginning only have a handful of data types and program
-constructions but will the extend the language to look more like a
-proper language. To start with our language will only consist of the
-constructs to express a sequence of pattern matching expressions
-followed by a single expression.
+Our language is a very small functional programming language that
+should behave similar to Elixir. We will in the beginning only have a
+handful of data types and program constructions but will the extend
+the language to look more like a proper language. To start with our
+language will only consist of the constructs to express a sequence of
+pattern matching expressions followed by a single expression.
 
 \begin{figure}[ht]
 \center
-{\tt X = foo, Y = nil, \{Z,_\} = \{bar,grk\}, \{X,\{Z,Y\}\}.}
+{\tt x = :foo, y = :nil, \{z,_\} = \{:bar,:grk\}, \{x,\{z,y\}\}.}
 \caption{a simple sequence}
 \label{fig:seq1}
 \end{figure}
@@ -91,11 +91,11 @@ binary construct that holds two expressions.
 
 
 If this was the whole language we would only be able to write
-expressions like {\tt {foo, {X, zot}}}. This would not be that
+expressions like {\tt {:foo, {x, :zot}}}. This would not be that
 interesting so we add the the description of a {\em sequence}.
 
 \begin{grammar}
-<sequence> ::= <expression> \alt <match> ',' <sequence>
+<sequence> ::= <expression> \alt <match> ';' <sequence>
 
 <match> ::= <pattern> '=' <expression> 
 \end{grammar}
@@ -134,7 +134,7 @@ language and the atoms in the domain. You might wonder if they are not
 the same but there is a difference between expressions in our language
 and elements in our domain. Think about the written number ``12'' or
 in Roman ``XII'' and the number twelve. We will have expression that
-look like {\tt \{foo, \{bar, zot\}\}} and data structures that we
+look like {\tt \{:foo, \{:bar, :zot\}\}} and data structures that we
 write {\em c(foo, c(bar, zot))}. If everything works out fine, the
 {\em evaluation} of an expression will return the corresponding data
 structure.
@@ -152,7 +152,7 @@ a variable (and we will typically use $v$ or $x$, $y$ etc when we talk
 about variables) and $t$ is a data structure. An environment that
 binds X to a and Y to b would then be written:
 
-$$\{X/a, Y/b\}$$
+$$\{x/a, y/b\}$$
 
 
 \section{The evaluation function}
@@ -186,7 +186,7 @@ expression consisting of a simple atom.
 
 $$\frac{a \equiv s}{E\sigma(a) \rightarrow s}$$  
 
-This mean that if we have an atom, for example {\tt foo} then this is
+This mean that if we have an atom, for example {\tt :foo} then this is
 evaluated to the corresponding data structure {\em foo}. The
 environment $\sigma$, is in this case not relevant. 
 
@@ -195,7 +195,7 @@ environment for a binding of the variable.
 
    $$\frac{v/s \in \sigma}{E\sigma(v) \rightarrow s}$$
 
-The rule for a compound expression {\tt \{foo, bar\}} is straight
+The rule for a compound expression {\tt \{:foo, :bar\}} is straight
 forward Given that we can evaluate its two components we will of
 course be able to evaluate the compound expression.
 
@@ -212,7 +212,7 @@ important since we will later use it in our case statement.
 
 We will start with one rule that might seam to be a bit redundant but
 it will save us some problems when we have to write up rules for
-failure. A pattern matching given a failed environment will result a i
+failure. A pattern matching given a failed environment will result in
 a failure.
 
 $$\frac{}{P\;{\rm fail}\;(e, s) \rightarrow {\rm fail}}$$ 
@@ -230,49 +230,47 @@ corresponding data structure then we fail.
 
 $$\frac{a \not\equiv s}{P\sigma(a, s) \rightarrow {\rm fail}}$$ 
 
-If we have a variable as a pattern then we have some options; either
-the variable is bound to a structure in the environment or there is no
-binding. If we have a binding the hope is of course that the variable
-is bound to, we will have the same alternatives as for the matching of
-atoms.
+If we have a unbound variable as a pattern then the variable is bound to a
+structure in the environment. 
 
-$$\frac{v/s \in \sigma}{P\sigma(v, s) \rightarrow \sigma}$$
+$$\frac{v/t \not\in \sigma}{P\sigma(v, s) \rightarrow \lbrace v/s \rbrace \cup \sigma \rbrace) }$$ 
 
-$$\frac{v/t \in \sigma  \qquad s \not= t}{P\sigma(v, s) \rightarrow {\rm fail}}$$
+If the variable is bound to the equivalent structure we proceed
+without extending the environment but if it is bound to something else
+we fail.
 
-If we do not have a binding of the variable we add a new binding to
-the environment. We express the prerequisite as $v/t \not\in \sigma$,
-meaning that for no data structure $t$ is there a bindings $v/t$ in
-$\sigma$.
+$$\frac{v/s \in \sigma}{P\sigma(v, s) \rightarrow \lbrace \sigma \rbrace) }$$
 
-$$\frac{v/t \not\in \sigma}{P\sigma(v, s) \rightarrow \lbrace v/s \rbrace \cup \sigma}$$ 
+$$\frac{v/t \in \sigma \wedge t \not\equiv s}{P\sigma(v, s) \rightarrow \lbrace {\rm fail} \rbrace) }$$ 
 
 Matching a cons expression is quite simple but note what the rules
 says about the environment. We need to do the pattern matching of the
-expression $e_1$ and the data structure $s_1$ in $\sigma$ but the
-o matching of $e_2$ and $s_2$ in $\sigma'$. We thus gain information in
+expression $e_1$ and the data structure $s_1$ in $\sigma$ but the o
+matching of $e_2$ and $s_2$ in $\sigma'$. We thus gain information in
 the first matching that must be consisting with the second matching.
 
-$$\frac{P\sigma(p_1, s_1) \rightarrow \sigma' \wedge P\sigma'(p_2, s_2) \rightarrow \theta}{P\sigma(\lbrace p_1, p_2 \rbrace  = \lbrace s_1, s_2 \rbrace) \rightarrow \theta}$$
+$$\frac{P\sigma(p_1, s_1) \rightarrow \sigma' \wedge P\sigma'(p_2, s_2) \rightarrow \theta}{P\sigma(\lbrace p_1, p_2 \rbrace  , \lbrace s_1, s_2 \rbrace) \rightarrow \theta}$$
 
 As an exercise you should do the pattern matching of the expression
-{\tt \{X, \{X, b\}\}} and the data structure {\em c(a, c(a, b))}. Note
-how we first add {\em X/a} as a binding and then use this binding when
-we match {\tt \{X, b\}} and {\em c(a,b)}.
+{\tt \{x, \{x, :c\}\}} and the data structure {\em c(a, c(b, c))}. Note
+how we first add {\em x/a} as a binding and then {\em shadow} this binding when
+we match {\tt \{x, :c\}} and {\em c(b,c)}.
 
 The remaining alternative, the case where we have a cons expression and
 we try to match this to an data structure that is not a compound data
 structure, will of course lead to a failure.
 
-$$\frac{s \not = c(s_1, s_2)}{P\sigma(\lbrace p_1, p_2 \rbrace = s) \rightarrow {\rm fail}}$$
+$$\frac{s \not = c(s_1, s_2)}{P\sigma(\lbrace p_1, p_2 \rbrace, s) \rightarrow {\rm fail}}$$
 
 That it is as far as pattern matching goes. Try to do some matching by
 hand and explain which rules you apply. Try these:
 
 \begin{itemize}
-\item {\tt \{X, b\}} = {\em c(a, b)}, 
-\item {\tt \{X, X\}} = {\em c(a, a)}, 
-\item {\tt \{b, a\}} = {\em c(a, b)}, 
+  
+\item $P{}(\lbrace :b, :a \rbrace, \lbrace a, b \rbrace)$  
+\item $P{}(\lbrace x, :b \rbrace, \lbrace a, b \rbrace)$
+\item $P{}(\lbrace x, x \rbrace, \lbrace a, a \rbrace)$
+\item $P{}(\lbrace x, x \rbrace, \lbrace a, b \rbrace)$
 \end{itemize}
 
 
@@ -284,15 +282,28 @@ single expression. The pattern matching expressions will, if they
 succeed, add more bindings to the environment as we proceed and the
 final expression is then evaluated given this environment.
 
-The rule is quite straight forward, we first evaluate the expression,
-$e$, of the pattern matching expression, the evaluate the matching
-giving us an updated environment, $\sigma'$, that is used to evaluate
-the remaining sequence.
+In order to describe this we introduce a new rule, a rule that
+describes how a new scope is created.
+
+$$\frac{\sigma' = \sigma \setminus \lbrace v/t \quad | \quad v/t \in \sigma \quad \wedge \quad  v \quad {\rm in} \quad p\rbrace}{S(\sigma, p) \rightarrow \sigma'}$$
+
+The new environment will not have any bindings for the variables that
+occur in the pattern. If we have a variable {\tt x} in $\sigma$ it
+will simply be {\em shadowed} by the pattern matching expression.
+This is quite differently from how things are handled in 
+Erlang.
+
+The rule that describes the evaluation of a sequence is now quite
+straight forward. We first evaluate the expression, $e$, of the
+pattern matching expression, then evaluate the matching giving us an
+updated environment, $\theta$, that is used to evaluate the remaining
+sequence. 
 
 $$\frac{   
-E\sigma(e) \rightarrow t
-\qquad P\sigma(p, t) \rightarrow \sigma'
-\qquad E\sigma'({\rm sequence}) \rightarrow s
+  E\sigma(e) \rightarrow t
+  \qquad \sigma' = S(\sigma, p)
+  \qquad P\sigma'(p, t) \rightarrow \theta
+  \qquad E\theta({\rm sequence}) \rightarrow s
 }{E\sigma(p = e, {\rm sequence}) \rightarrow s}$$ 
 
 A sequence consist of one or more patter matching expressions
@@ -323,7 +334,7 @@ expression in Erlang.
 \begin{grammar}
      <expression> ::=  <case expression> | ...  
 
-     <case expression> ::= 'case' <expression> 'of' <clauses>  'end' 
+     <case expression> ::= 'case' <expression> 'do' <clauses>  'end' 
 
      <clauses> ::=   <clause> | <clause> ';' <clauses>
 
@@ -335,22 +346,36 @@ capturing our intended meaning. We will use a new set of rules, $C$,
 that will describe how the right clause is selected. 
 
 
-$$\frac{E\sigma(e) \rightarrow t \qquad C\sigma(t, {\rm clauses}) \rightarrow s }{E\sigma({\tt case}\ e \ {\tt of}\ {\rm clauses} \ {\tt end}) \rightarrow s}$$
+$$\frac{E\sigma(e) \rightarrow t \qquad C\sigma(t, {\rm clauses}) \rightarrow s }{E\sigma({\tt case}\ e \ {\tt do}\ {\rm clauses} \ {\tt end}) \rightarrow s}$$
 
 The right clause is selected by trying to match the pattern of the
 first clause with the data structure obtained by evaluating the
 expression. If the pattern matching succeeds we will continue to
-evaluate the sequence of the clause, in the extended environment.
+evaluate the sequence of the clause, in the extended environment. Note
+that we also here create new scopes for the variables in the pattern.
 
-$$\frac{P\sigma(p, s) \rightarrow \sigma' \qquad \sigma' \not = {\rm fail} \qquad E\sigma'({\rm sequence}) \rightarrow s}{
+$$\frac{
+  \sigma' = S(\sigma, p) \qquad
+  P\sigma'(p, s) \rightarrow \theta \qquad
+  \theta \not = {\rm fail} \qquad
+  E\theta({\rm sequence}) \rightarrow s}{
 C\sigma(s, p \;{\rm -\textgreater}\;    {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
+
+This rule could of course also be used even if {\em clauses} is empty
+i.e. we match the last or only clause in a sequence.
 
 If the pattern matching fails we will simply try the next clause in
 the sequence of clauses.
 
-$$\frac{P\sigma(p, s) \rightarrow {\rm fail} \qquad
+$$\frac{
+  \sigma' = S(\sigma, p) \qquad
+  P\sigma'(p, s) \rightarrow {\rm fail} \qquad
   C\sigma(s, {\rm clauses}) \rightarrow s}{
 C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
+
+If no pattern matches the evaluation will simply terminate
+unsuccessfully. In real life this would mean that we receive a {\em
+  CaseClauseError} or similarly.
 
 We now have everything we need to handle case expressions in our
 language, this is starting to look like something.
@@ -372,54 +397,41 @@ We want to know which variables in the function expression that are
 that has a match expression in the sequence.
 
 \begin{verbatim}
-F = fun(X) -> Y = 5, X + Y end
+fn (x) -> y = 5; x + y + z end
 \end{verbatim}
 
-Is {\tt Y} a {\em free} variable in the expression? You should of
-course answer no, since the variable {\tt Y} is introduced, and gets
-its binding in, the match expression {\tt Y = 5}. If you would
+Which variables are {\em free} in this expression? The variable {\tt
+  x} is not free since it is in the {\em scope} of the function
+parameter. Nor is the local variable {\tt y} free since it is in the
+scope of the pattern matching expression. If you would
 translate this to lambda calculus the expression would look like
 follows:
 
-$$ \lambda x \rightarrow {\rm let} \quad y = 5 \quad {\rm in} \quad x + y $$
+$$ \lambda x \rightarrow {\rm let} \quad y = 5 \quad {\rm in} \quad x + y + z$$
 
+The variable {\tt z} is however free and in order to make use of this
+function expression one would have to do it in an environment where
+{\tt z} has a value. A function and the needed environment,
+i.e. values for all free variables, is called a {\em closure}. We need
+to introduce new constructs in our language to create closures and
+apply them to arguments.
 
-Now look at the following sequence:
-
-\begin{verbatim}
-Y = 3, F = fun(X) -> Y = 5, X + Y end
-\end{verbatim}
-
-Where is {\tt Y} introduced? Is {\tt Y} free in the function
-expression? Is this sequence equivalent to:
-
-\begin{verbatim}
-Y = 3, F = fun(X) -> Z = 5, X + Z end
-\end{verbatim}
-
-Erlang does not have any explicit construct to represent the scope of
-the variable so to handle this we will treat {\tt Y} as a free
-variable in the function expression. If {\tt Y} has a binding in the
-surrounding environment this binding is used, if {\tt Y} does not exist
-in the surrounding environment {\tt Y} is introduced in the local match
-expression. Note that this confusion would not arise if the syntax had
-an explicit construct to determine the scope of variables.
 
 \subsection{function expression and application}
 
 So we introduce two new constructs in our language, one to express a
 function and one to apply a function to a sequence of
-arguments. Different from Erlang we don't allow patterns in function
+arguments. Different from Elixir we don't allow patterns in function
 parameters; this is only to make the rules of the evaluation easier to
 describe.
 
-A function consist of the keyword {\tt fun} followed by a, possibly
+A function consist of the keyword {\tt fn} followed by a, possibly
 empty, sequence of parameters (all unique variables). After the arrow
 we have a regular sequence as we have defined before and everything is
 finished by the keyword {\tt end}.
 
 \begin{grammar}
-<function> ::= 'fun' '(' <parameters> ')' '-\textgreater' <sequence> 'end'
+<function> ::= 'fn' '(' <parameters> ')' '-\textgreater' <sequence> 'end'
 
 <parameters> ::= ' ' | <variables> 
 
@@ -428,10 +440,12 @@ finished by the keyword {\tt end}.
 
 A function application is simply any expression (that hopefully will
 be evaluated to a {\em closure} and a sequence of arguments enclosed
-in parentheses. The arguments can of course be arbitrary expressions.
+in parentheses. We here follow the Elixir syntax that requires a
+'.' between the name less function and the sequence of arguments.
+The arguments can of course be arbitrary expressions.
 
 \begin{grammar}
-<expression> ::=  <expression>'(' <arguments> ') | \ldots 
+<expression> ::=  <expression>'.(' <arguments> ') | \ldots 
 
 <arguments> ::= '  ' | <expressions> 
 
@@ -442,14 +456,14 @@ in parentheses. The arguments can of course be arbitrary expressions.
 
 The next thing we need to do is to extend our set of data
 structures. When we evaluate a function expression we will construct
-something called a {\em closure}. A closure is a triplet: the parameters
-of the function, the sequence to evaluate and an environment. The
-environment is constructed by taking the bindings of all free
-variables in the sequence, not including the variables that are bound
-by the parameters.
+the closure. The closure is a triplet: the parameters of the function,
+the sequence to evaluate and an environment. The environment is
+constructed by taking the bindings of all free variables in the
+sequence, not including the variables that are bound by the
+parameters.
 
 $$\frac{ \theta = \{ v/s \mid  v/s \in \sigma \wedge v {\rm\ free\  in\ sequence}\}}{
-E\sigma({\rm fun}({\rm parameters})\; {\rm -\textgreater}\; {\rm sequence}\; end) \rightarrow  \quad <{\rm parameters}:{\rm sequence}:\theta>}$$
+E\sigma({\rm fn}({\rm parameters})\; {\rm -\textgreater}\; {\rm sequence}\; end )\rightarrow \quad <{\rm parameters}:{\rm sequence}:\theta>}$$
 
 \subsection{applying a closure}
 
@@ -458,13 +472,13 @@ of arguments. We first need to evaluate the arguments and then add a
 set of bindings to the environment of the closure. We then evaluate
 the sequence in the updated environment.
 
-$$\frac{E\sigma(e) \rightarrow v_1, \ldots:{\rm seq}:\theta \qquad E\sigma(e_i) \rightarrow s_i \qquad E\{v_1/s_1, \ldots\}\cup\theta({\rm seq}) \rightarrow s}{
-E\sigma(e(e_1, \ldots)) \rightarrow s}$$ 
+$$\frac{E\sigma(e) \rightarrow <v_1, \ldots:{\rm seq}:\theta > \qquad E\sigma(e_i) \rightarrow s_i \qquad E\{v_1/s_1, \ldots\}\cup\theta({\rm seq}) \rightarrow s}{
+E\sigma(e.(e_1, \ldots)) \rightarrow s}$$ 
 
-Note that the closure that we get, $v_1, \ldots:{\rm seq}:\theta$
+Note that the closure that we get, $<v_1, \ldots:{\rm seq}:\theta>$
 consist of a sequence of variables $v_1, \ldots$, that are all
-distinct. This is why we can simply add the bindings
-$v_i/s_i$ to $\theta$, there will not be any duplicate bindings.
+distinct. This is why we can simply add the bindings $v_i/s_i$ to
+$\theta$, there will not be any duplicate bindings.
 
 Looks complicated but it's quite straight forward. Go through the
 evaluation of sequence \ref{fig:seq2}. If everything works out fine
@@ -472,7 +486,7 @@ the result should be {\em c(foo, bar)}.
 
 \begin{figure}[ht]
 \center
-{\tt X = foo, F = fun(Y) -> {X,Y} end,  F(bar)}
+{\tt x = :foo; f = fn (y) -> {x,y} end;  f.(:bar)}
 \caption{a sequence with a function}
 \label{fig:seq2}
 \end{figure}

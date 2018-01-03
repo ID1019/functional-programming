@@ -1,0 +1,337 @@
+\input{../include/preamble}
+
+\title[ID1019 Evaluation]{Evaluation}
+
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{semantics}
+
+We will define a small subset of the Erlang language and describe the
+{\em operational semantics}.
+
+
+\pause \vspace{40pt}Warning - this is not exactly how Erlang works ... but it could have been.
+
+\end{frame}
+
+
+\begin{frame}{expressions}
+
+\begin{grammar}
+<atom> ::= :a | :b | :c | \ldots
+
+<variable> ::= x | y | z | \ldots
+
+<literal> ::= <atom>
+
+<expression> ::= <literal> | <variable> |  '\{' <expression> ',' <expression> '\}'
+\end{grammar}
+
+
+\pause \vspace{20pt} Examples: {\tt \{:a,:b\}} , {\tt \{x,y\}} , {\tt \{:a, \{:b, z\}\}}
+
+\pause \vspace{20pt} Simple expressions are also referred to as {\em terms}.
+\end{frame}
+
+\begin{frame}{patterns}
+
+  A {\em pattern} is a syntactical construct that uses almost the same
+  syntax as terms.
+
+  \pause
+  \vspace{20pt}
+
+\begin{grammar}
+<pattern> ::= <literal> 
+      \alt <variable> 
+      \alt '\_' 
+      \alt '\{' <pattern> ',' <pattern> '\}'
+\end{grammar}
+
+ \pause \vspace{20pt}
+  The \_ symbol can be read as ``don't care''.
+
+\end{frame}
+
+
+
+
+
+\begin{frame}{sequence}
+
+\begin{grammar}
+  <match> ::=  <pattern> '=' <expression>
+\end{grammar}
+
+\pause
+\begin{grammar}
+  <sequence> ::=  <expression> \alt <match> ';' <sequence>
+\end{grammar}
+
+\pause\vspace{20pt}
+
+examples:
+ \begin{itemize}
+   \pause \item {\tt x = :a; \{:b, x\}}
+   \pause \item {\tt x = :a; y = \{:b, x\}; \{:a, y\}}
+ \end{itemize}
+
+\end{frame}
+
+\begin{frame}{evaluation}
+
+A sequence is evaluated given an {\em environment}, written $\sigma$ (sigma).
+
+\pause\vspace{20pt}
+The environment holds a set of variable substitutions (bindings):
+$v/s \in \sigma$, $v$ is a variable and $s$ is a structure.
+
+\pause\vspace{20pt} 
+An evaluation of a sequence $e$ given an environment
+$\sigma$ is written $E\sigma(e)$. 
+
+\pause\vspace{20pt}
+We write:
+\vspace{20pt}
+$$\frac{{\rm prerequisite}}{E\sigma({\rm expression}) \rightarrow {\rm result}}$$
+
+\vspace{20pt}
+where {\em result} is a {\em data structure}.
+
+\end{frame}
+
+\begin{frame}{data structures}
+ 
+  We have a small domain, consisting only of atoms and a binary compound
+  structures.
+  \pause
+  \vspace{20pt}
+
+  \begin{tabular}{r l l}
+   {\em Atoms} & = & \{a, b, c, \ldots\} \\
+   {\em Structures} & = & {\em Atoms} $\cup$ \{ \{a, b\} \textbar a $\in$ {\em Structures}  $\wedge$  b $\in$ {\em Structures} \}
+  \end{tabular}
+
+  \pause \vspace{20pt}
+
+  {\em These are the data structures that will be the result of our evaluation.}
+
+  \pause \vspace{10pt}
+
+  \begin{itemize}
+     \pause \item {\em a}
+     \pause \item {\em \{a, \{b, c\}\}}
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{equivalence relation}
+
+We have a one-to-one mapping from pattern- and term-atoms, to atoms in the set of data structures.
+
+\pause \vspace{20pt}
+
+For every term atom {\tt a}, there is a corresponding atom structure $s$.
+
+\pause \vspace{20pt}
+
+{\em For every digit \texttt{1,2,3} (or \texttt{I, II, III}) there is a corresponding number $1,2,3$.}
+
+\vspace{20pt}
+We write ${\rm a} \equiv s$.
+
+\end{frame}
+
+
+\begin{frame}{evaluation of expressions}
+
+We have the following rules for evaluation of expressions:
+
+\vspace{10pt}\pause $$\frac{a \equiv s}{E\sigma(a) \rightarrow s}$$
+
+\vspace{10pt}\pause $$\frac{v/s \in \sigma}{E\sigma(v) \rightarrow s}$$
+
+\vspace{10pt}\pause $$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow c(s_1, s_2)}$$
+
+ 
+\vspace{20pt}\pause What if we have $E\sigma(v)$ and $\ v/s \not\in \sigma$?
+
+\pause $$\frac{ v/s \not\in \sigma}{E\sigma(v) \rightarrow  \perp}$$  
+
+\end{frame}
+
+\begin{frame}{evaluation of expressions}
+
+ assume: $\sigma = \lbrace x/\lbrace a, b\rbrace\rbrace$ 
+
+  \begin{eval}
+    \pause $E\sigma({\tt :c})$ & $\rightarrow $ \pause $c$\\
+    \pause $E\sigma(x)$ & $\rightarrow $ \pause $\lbrace a, b \rbrace$
+  \end{eval}
+
+  \vspace{20pt}\pause assume: $\sigma = \lbrace x/a, y/b \rbrace$ 
+
+  \pause \begin{eval}
+    $E\sigma(\lbrace x, y\rbrace)$  &\pause $\rightarrow \lbrace a , b \rbrace$
+  \end{eval}
+\end{frame}
+
+\begin{frame}{pattern matching}
+
+The result of evaluating a {\em pattern matching} is a an
+environment.  We write: $$P\sigma(p,s) \rightarrow \theta$$ where
+$\theta$ (theta) is the set of variable bindings we obtain.
+
+\pause\vspace{10pt}
+$$\frac{a \equiv s}{P\sigma(a, s) \rightarrow \sigma}$$ 
+
+
+\pause\vspace{10pt}
+$$\frac{v/t \not\in \sigma}{P\sigma(v, s) \rightarrow \lbrace v/s \rbrace \cup \sigma}$$ 
+
+
+\pause\vspace{10pt}
+$$\frac{}{P\sigma(\_, s) \rightarrow \sigma}$$ 
+
+\pause
+{\em Note that the second argument of the pattern matching is a data structure.}
+
+
+\end{frame} 
+
+\begin{frame}{matching failure}
+
+\pause\vspace{20pt} What do we do with $P\sigma(a,s)$ when $a \not\equiv s$?
+
+\pause\vspace{20pt}
+
+$$\frac{a \not\equiv s}{P\sigma(a, s) \rightarrow {\rm fail}}$$ 
+
+\pause\vspace{20pt}
+
+$$\frac{
+v/t \in \sigma \qquad  t \not\equiv s
+}{P\sigma(p, s) \rightarrow {\rm fail}}$$ 
+
+
+{\em A failure is not the same as $\perp$.}
+\end{frame}
+
+\begin{frame}{matching compound strcutures}
+
+If the pattern is a compound pattern, \pause the components of the pattern are matched to their corresponding sub structures.
+
+\pause\vspace{10pt}
+
+$$\frac{P\sigma(p_1, s_1) \rightarrow \sigma' \wedge P\sigma'(p_2, s_2) \rightarrow \theta}{P\sigma(\lbrace p_1, p_2 \rbrace  , \lbrace s_1, s_2 \rbrace) \rightarrow \theta}$$
+
+
+\pause \vspace{10pt}
+Note that the second part is evaluated in $\sigma'$. 
+
+\pause \vspace{10pt}Example: \{x,\{y,x\}\} = $\{a, \{b,c\}\}$
+
+\vspace{20pt}{\em Match a compund pattern with anyting but a compound structure will fail.}
+
+\end{frame}
+
+\begin{frame}{examples}
+
+assume: $\sigma = \lbrace y/b\rbrace$
+
+\begin{itemize}
+  \pause\item $P\sigma(x , a) \rightarrow $\pause $\ \lbrace x/a \rbrace  \cup \sigma$
+  \pause\item $P\sigma(y , b) \rightarrow $\pause $\ \sigma$
+  \pause\item $P\sigma(y , a) \rightarrow $\pause  $\ \mathrm{fail}$
+  \pause\item $P\sigma(\lbrace y, y\rbrace , \lbrace a, b \rbrace) \rightarrow $\pause $\ \mathrm{fail}$
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{pattern matching}
+
+\pause Pattern matching can {\em fail}. 
+
+\pause\vspace{20pt}{\em fail} is different from $\perp$
+
+We will use failing to guide the program execution, more on this later.
+
+\end{frame}
+
+\begin{frame}{evaluation of sequences}
+
+  \pause  A new {\em scope} is created by removing variable bindings from an environmet.
+
+  \vspace{10pt}\pause
+
+$$\frac{\sigma' = \sigma \setminus \lbrace v/t \quad | \quad v/t \in \sigma \quad \wedge \quad  v \quad {\rm in} \quad p\rbrace}{S(\sigma, p) \rightarrow \sigma'}$$
+  
+\vspace{10pt}\pause
+
+A sequence is evaluated one pattern matching expression after the other. 
+
+$$\frac{   
+  E\sigma(e) \rightarrow t
+  \qquad \sigma' = S(\sigma, p)
+  \qquad P\sigma'(p, t) \rightarrow \theta
+  \qquad E\theta({\rm sequence}) \rightarrow s
+}{E\sigma(p = e, {\rm sequence}) \rightarrow s}$$ 
+
+
+\end{frame}
+
+\begin{frame}{example}
+
+   {\tt x = :a, y = :b, \{x,y\}}
+
+\end{frame}
+
+
+
+\begin{frame}{Where are we now}
+
+We have defined the semantics of a programming language (not a
+complete language) by defining how expressions are evaluated.
+
+\vspace{20pt} 
+
+\pause Important topics:
+
+\vspace{10pt} 
+
+\begin{itemize}
+ \pause \item set of data structures: atoms and compound structures
+ \pause \item environment: that binds variables to data structures
+ \pause \item expressions: term expressions, pattern matching expressions and sequences
+ \pause \item evaluation: from expressions to data structures $E\sigma(e) \rightarrow s$
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Why}
+
+\vspace{40pt}\hspace{80pt}Why do we do this?
+
+\end{frame}
+
+
+\begin{frame}{more}
+What is missing:
+\pause
+\begin{itemize}
+  \item evaluation of {\em case} (and {\em if} expressions)
+  \item evaluation of function applications
+\end{itemize}
+\end{frame}
+
+\end{document}
