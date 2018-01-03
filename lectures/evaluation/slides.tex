@@ -15,11 +15,11 @@
 
 \begin{frame}{semantics}
 
-We will define a small subset of the Erlang language and describe the
+We will define a small subset of the Elixir language and describe the
 {\em operational semantics}.
 
 
-\pause \vspace{40pt}Warning - this is not exactly how Erlang works ... but it could have been.
+\pause \vspace{40pt}Warning - this is not exactly how Elixir works ... but it could have been.
 
 \end{frame}
 
@@ -61,9 +61,6 @@ We will define a small subset of the Erlang language and describe the
   The \_ symbol can be read as ``don't care''.
 
 \end{frame}
-
-
-
 
 
 \begin{frame}{sequence}
@@ -287,7 +284,8 @@ $$\frac{
   \qquad E\theta({\rm sequence}) \rightarrow s
 }{E\sigma(p = e, {\rm sequence}) \rightarrow s}$$ 
 
-
+\vfill
+{\em Erlang and Elixir differ in how this rule is defined.}
 \end{frame}
 
 \begin{frame}{example}

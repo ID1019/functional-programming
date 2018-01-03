@@ -32,7 +32,7 @@
 
   \begin{tabular}{r l l}
    {\em Atoms} & = & \{a, b, c, \ldots\} \\
-   {\em Structures} & = & {\em Atoms} $\cup$ \{ \{a, b\} \textbar a $\in$ {\em Structures}  $\wedge$  a $\in$ {\em Structures} \}
+   {\em Structures} & = & {\em Atoms} $\cup$ \{ \{a, b\} \textbar a $\in$ {\em Structures}  $\wedge$  b $\in$ {\em Structures} \}
   \end{tabular}
 
   \pause
@@ -43,9 +43,9 @@
 \begin{frame}{expressions}
 
 \begin{grammar}
-<atom> ::= a | b | c | \ldots
+<atom> ::= :a | :b | :c | \ldots
 
-<variable> ::= X | Y | Z | \ldots
+<variable> ::= x | y | z | \ldots
 
 <literal> ::= <atom>
 
@@ -72,14 +72,11 @@ $v/s \in \sigma$, $v$ is a variable and $s$ is a structure.
 
 \begin{frame}{evaluation of expressions}
 
- \begin{itemize}
-   \pause \item $E\sigma(a) \rightarrow s$ if $a \equiv s$
+\vspace{10pt}\pause $$\frac{a \equiv s}{E\sigma(a) \rightarrow s}$$
 
-   \pause \item $E\sigma(v) \rightarrow s$ if $v/s \in \sigma$
+\vspace{10pt}\pause $$\frac{v/s \in \sigma}{E\sigma(v) \rightarrow s}$$
 
-   \pause \item $E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow \lbrace E\sigma(e_1), E\sigma(e_2) \rbrace$
-
- \end{itemize}
+\vspace{10pt}\pause $$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow c(s_1, s_2)}$$
 
 \pause\vspace{20pt}{\em Evaluation can result in $\perp$, if a variable is unbound.}
 
@@ -93,7 +90,7 @@ $v/s \in \sigma$, $v$ is a variable and $s$ is a structure.
   \pause \item $P\sigma(\_,s) \rightarrow \sigma$  
   \pause \item $P\sigma(v, s) \rightarrow \sigma$  if \pause $ v/s \in \sigma $
   \pause \item $P\sigma(v, s) \rightarrow \lbrace v/s \rbrace \cup \sigma$ if \pause $ v/t \not\in \sigma$
-  \pause \item $P\sigma(\lbrace p_1, p_2 \rbrace, \lbrace s_1, s_2 \rbrace) \rightarrow \theta$ if
+   \pause \item $P\sigma(\lbrace p_1, p_2 \rbrace, \lbrace s_1, s_2 \rbrace) \rightarrow \theta$ if
    \begin{itemize}
      \pause \item  $P\sigma(p_1, s_1) \rightarrow \sigma' \wedge P\sigma'(p_2, s_2) \rightarrow \theta$
    \end{itemize}
@@ -107,26 +104,28 @@ Pattern matching can {\em fail}.
 
 \begin{frame}{evaluation of sequences}
 
-\begin{itemize}
-  \pause \item $E\sigma(p = e, {\rm sequence}) \rightarrow E\sigma'({\rm sequence})$ 
-     \begin{itemize} 
-       \pause \item if $E\sigma(e) \rightarrow s$
-       \pause \item and $P\sigma(p, s) \rightarrow \sigma'$
-     \end{itemize}
-\end{itemize}
+$$\frac{\sigma' = \sigma \setminus \lbrace v/t \quad | \quad v/t \in \sigma \quad \wedge \quad  v \quad {\rm in} \quad p\rbrace}{S(\sigma, p) \rightarrow \sigma'}$$
+
+\pause\vspace{20pt}
+
+
+$$\frac{   
+  E\sigma(e) \rightarrow t
+  \qquad \sigma' = S(\sigma, p)
+  \qquad P\sigma'(p, t) \rightarrow \theta
+  \qquad E\theta({\rm sequence}) \rightarrow s
+}{E\sigma(p = e, {\rm sequence}) \rightarrow s}$$ 
+
 
 \pause\vspace{20pt}{\em First evaluate the pattern matching expression, if it succeeds then continue with the new environment.}
 \end{frame}
 
-%%--------------
-
-
 \begin{frame}[fragile]{case expression}
 
 \begin{verbatim}
-   case  X  of 
-       a ->  foo;
-       b ->  bar
+   case  x  do
+       :a ->  :foo
+       :b ->  :bar
    end
 \end{verbatim}
 
@@ -137,7 +136,7 @@ Pattern matching can {\em fail}.
 \begin{grammar}
      <expression> ::=  <case expression> | ...  
 
-     <case expression> ::= 'case' <expression> 'of' <clauses>  'end' 
+     <case expression> ::= 'case' <expression> 'do' <clauses>  'end' 
 
      <clauses> ::=   <clause> | <clause> ';' <clauses>
 
@@ -146,14 +145,10 @@ Pattern matching can {\em fail}.
 \end{frame}
 
 \begin{frame}{evaluation of case expression}
- 
-  \begin{itemize}
-  \item $E\sigma({\tt case}\ e \ {\tt of}\ {\rm clauses} \ {\tt end}) \rightarrow C\sigma(s, {\rm clauses})$  \pause 
-    \begin{itemize}
-    \item if $E\sigma(e) \rightarrow s$
-    \end{itemize}
-       
-  \end{itemize}
+
+
+$$\frac{E\sigma(e) \rightarrow t \qquad C\sigma(t, {\rm clauses}) \rightarrow s }{E\sigma({\tt case}\ e \ {\tt do}\ {\rm clauses} \ {\tt end}) \rightarrow s}$$
+  
 
 
  \vspace{20pt}\pause $C\sigma(s, {\rm clauses})$ will select one of
@@ -163,21 +158,24 @@ Pattern matching can {\em fail}.
 
 \begin{frame}{selection of a clause}
 
-  \begin{itemize}
-     \pause \item $C\sigma(s, p \rightarrow  {\rm sequence} ; {\rm clauses}) \rightarrow E\sigma'({\rm sequence})$ 
-     \begin{itemize}      
-        \pause\item if $P\sigma(p, s) \rightarrow \sigma'$
-        \pause\item otherwise \ldots
-     \end{itemize}
-     \pause \item $C\sigma(s, {\rm clause} ; {\rm clauses}) \rightarrow C\sigma(s, {\rm clauses})$
-  \end{itemize}
+$$\frac{
+  \sigma' = S(\sigma, p) \qquad
+  P\sigma'(p, s) \rightarrow \theta \qquad
+  \theta \not = {\rm fail} \qquad
+  E\theta({\rm sequence}) \rightarrow s}{
+C\sigma(s, p \;{\rm -\textgreater}\;    {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
 
-Similar for the last clause of the clauses. 
+\pause \vspace{10pt}
 
-\pause \vspace{20pt}
-If no successful clause is found, the evaluation is undefined and returns $\perp$.
+$$\frac{
+  \sigma' = S(\sigma, p) \qquad
+  P\sigma'(p, s) \rightarrow {\rm fail} \qquad
+  C\sigma(s, {\rm clauses}) \rightarrow s}{
+C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
+
 
 \end{frame}
+
 \begin{frame}{example}
 
 \begin{eval}
@@ -238,36 +236,37 @@ pattern matching expressions in the clause {\tt <pattern> -> <sequence>} if the 
 
 \begin{frame}{free variables}
 
-{\tt X = a, \{Y,Z\} = \{X,b\}, \{X,Y,Z\}}
+{\tt x = :a, \{y,z\} = \{x,:b\}, \{x,y,z\}}
 
 \pause\vspace{20pt}
 
-{\tt \{Y,Z\} = \{X,b\}, \{X,Y,Z\}}
+{\tt \{y,z\} = \{x,:b\}, \{x,y,z\}}
 
 
 \pause\vspace{20pt}
 
 
-{\tt X = \{a,b\}, case X of \{a,Z\} -> Z end}
-
+{\tt x = \{:a,:b\}, case x do \{:a,z\} -> z end}
 
 \end{frame}
-
 
 
 \begin{frame}[fragile]{free variables}
 
 \vspace{20pt}
 
-\hspace{20pt}\begin{verbatim}
-   X = {a,b},
-   Y = case X of
-         {a, Z} -> {c, Z}
+\hspace{20pt}
+\begin{verbatim}
+   x = {:a,:b},
+   y = case x do
+         {:a, z} -> {:c, z}
        end,
-   {Y, Z}
+   {y, z}
 \end{verbatim}
 
-\vspace{20pt}{\em This is not allowed, \texttt{Z} in  \texttt{\{Y,Z\}} is a free variable. However .... \pause this is allowed in Erlang (but it should not be).}
+\vspace{20pt}{\em This is not allowed in our language, \texttt{Z} in
+  \texttt{\{Y,Z\}} is a free variable. However .... \pause this is
+  allowed in Elixir and Erlang (but it should not be).}
 
 \end{frame}
 
@@ -282,7 +281,7 @@ We could do without named  function definitions  but it's convenient to include 
 
 Assume we have a {\em program}, $P$, that is a set of named function definitions on the form:
 
-  $${\rm name}(v_1, ...) \rightarrow  {\rm sequence}$$
+  $${\rm name}(v_1, ...) {\rm do}  {\rm sequence}  {\rm end}$$
 
 where $v_1, ...$ is a sequence of unique variables called the {\em parameters} of the function. 
 
@@ -302,7 +301,7 @@ We extend the definition of expressions, to include function application:
 
 <arguments> ::= <expression> | <expression> ',' <arguments>
 
-<fun> ::= <atom>
+<fun> ::=  foo | bar | zot | \ldots
 \end{grammar}
 
 \pause {\em We will later extend the definition of functions but let us keep things simple for now.}
@@ -331,71 +330,16 @@ Assume we have a program $P$ that consist of a set of named functions.
 \begin{frame}[fragile]{example}
 
 \begin{verbatim}
-append(X,Y) ->
-    case X of 
-       nil -> Y; 
-       {H, T} -> {H, append(T, Y)} 
+def append(X,Y) do
+    case x do
+       :nil -> Y; 
+       {h, t} -> {h, append(t, y)} 
     end
+end
 \end{verbatim}
 
 \pause\vspace{20pt}
-evaluate $E\lbrace\rbrace( ${\tt append(\{a,\{b,nil\}\}, \{c,nil\})}$ )$
-
-\end{frame}
-
-\begin{frame}{example}
-
-\begin{eval} 
-\pause $E\lbrace\rbrace( ${\tt append(\{a,\{b,nil\}\}, \{c,nil\})}$ ) \rightarrow$\\
-\pause\hspace{10pt} $\sigma_1 = \lbrace X/\lbrace a, \lbrace b, {\rm nil}\rbrace\rbrace, Y/\lbrace c, {\rm nil}\rbrace \rbrace$\\
-\end{eval}
-
-\vspace{10pt}
-
-\begin{eval} 
-\pause $E\sigma_1($ {\tt case X of nil -> Y; \{H,T\} -> \{H,append(T,Y)\} end} $) \rightarrow$\\
-\pause\hspace{10pt}  $\sigma_2 = \lbrace H/a, T/\lbrace b, {\rm nil}\rbrace, X/\lbrace, a, \lbrace b, {\rm nil}\rbrace\rbrace, Y/\lbrace c, {\rm nil}\rbrace \rbrace$\\
-\end{eval}
-
-\vspace{10pt}
-
-\begin{eval} 
-\pause $E\sigma_2($ {\tt \{H, append(T, Y)\}} $) \rightarrow$\\
-\pause $\lbrace E\sigma_2($ {\tt  H} $), E\sigma_2($ {\tt append(T, Y)} $) \rightarrow$\\
-\pause $\lbrace a, \ E\sigma_2($ {\tt  append(T, Y)} $) \rbrace \rightarrow$\\
-\pause\hspace{10pt} $\sigma_3 = \lbrace X/ \lbrace b, {\rm nil}\rbrace, Y/\lbrace c, {\rm nil}\rbrace \rbrace$\\
-\end{eval}
-
-\vspace{10pt}
-
-\begin{eval} 
-\pause $\lbrace a ,\  E\sigma_3(${\tt case X of nil -> Y; \{H,T\} -> \{H,append(T,Y)\} end} $)\rbrace \rightarrow$\\
-\end{eval}
-
-\end{frame}
-
-
-\begin{frame}{example}
-
-\begin{eval} 
-\pause $\lbrace a,\ E\sigma_3(${\tt case X of nil -> Y; \{H,T\} -> \{H,append(T,Y)\} end} $)\rbrace \rightarrow$\\
-\pause\hspace{10pt} $\sigma_4 = \lbrace H/b, T/{\rm nil}, X/\lbrace b, {\rm nil}\rbrace, Y/\lbrace c, {\rm nil}\rbrace \rbrace$\\ 
-\end{eval}
-
-\vspace{10pt}
-
-\begin{eval} 
-\pause $\lbrace a,\ E\sigma_4($ {\tt \{H, append(T,Y)\}} $) \rbrace \rightarrow$\\
-\pause $\lbrace a,\ \lbrace b, \ E\sigma_4($ {\tt append(T,Y)} $)\rbrace \rbrace \rightarrow$\\
-\pause\hspace{10pt} $\sigma_5 = \lbrace X/{\rm nil}, Y/\lbrace c, {\rm nil}\rbrace \rbrace$\\ 
-\end{eval}
-
-\vspace{10pt}
-
-\begin{eval} 
-\pause $\lbrace a,\ \lbrace b, \ E\sigma_5($ {\tt Y} $)\rbrace \rbrace \rightarrow$\\
-\pause $\lbrace a,\ \lbrace b, \ \lbrace c, \ {\rm nil}\rbrace\rbrace$\\
-\end{eval}
+evaluate $E\lbrace\rbrace( ${\tt append(\{:a,\{:b,:nil\}\}, \{:c,:nil\})}$ )$
 
 \end{frame}
 
