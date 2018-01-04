@@ -12,7 +12,7 @@ DIRS = 	overview \
 
 
 
-WWW =  ~/afs/public_html/courses/id1019/lectures
+WWW =  ./www
 
 TRACER = ppm.erl test1.ppm vector.erl camera.erl objects.erl tracer.erl test.erl world.erl lights.erl tracer1.erl tracer2.erl tracer3.erl test.erl
 
@@ -29,8 +29,8 @@ link:
         done
 
 install: 
-	for d in $(DIRS); \
-             do rsync -u ./$$d/handout-nup.pdf $(WWW)/$$d.pdf;\
+	for d in $(DIRS); do \
+             rsync -u ./$$d/handout-nup.pdf $(WWW)/$$d.pdf;\
         done
 
 

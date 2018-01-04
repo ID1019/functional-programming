@@ -7,7 +7,7 @@ DIRS =	huffman \
 
 
 
-WWW =  ~/afs/public_html/courses/id1019/seminars
+WWW =  ./www
 
 
 all:
@@ -16,9 +16,10 @@ all:
         done
 
 install: 
-	for d in $(DIRS); \
-             do rsync -u ./$$d/assignment.pdf $(WWW)/$$d/$$d.pdf;\
-        done
+	for d in $(DIRS); do \
+	    mkdir -p $(WWW)/$$d;\
+	    rsync -u  ./$$d/assignment.pdf $(WWW)/$$d/$$d.pdf;\
+	done
 
 
 clean : 
