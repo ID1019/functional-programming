@@ -123,11 +123,13 @@ and expressions.
 \section{The domain}
 
 The {\em domain} is the set of data structures that will be the result
-of our computation. It is the set of all {\em atoms} and {\em
+of our computation. It is the set of all {\em Atoms} and {\em
   compound} data structures that we can generate from elements in the
 domain.
 
-$${\rm domain} = \{a,b,c, ...\} \cup \{c(d_1, d_2) | d_i \in {\rm domain}\}$$
+$${\rm Atoms} =  \{a,b,c, ...\}$$
+
+$${\rm Structures} = {\rm Atoms} \cup \{c(d_1, d_2) | d_i \in {\rm Structures}\}$$
 
 There is of course a equivalence relation between our atoms in the
 language and the atoms in the domain. You might wonder if they are not
@@ -457,13 +459,22 @@ The arguments can of course be arbitrary expressions.
 The next thing we need to do is to extend our set of data
 structures. When we evaluate a function expression we will construct
 the closure. The closure is a triplet: the parameters of the function,
-the sequence to evaluate and an environment. The environment is
-constructed by taking the bindings of all free variables in the
-sequence, not including the variables that are bound by the
-parameters.
+the sequence to evaluate and an environment.
+
+$${\rm Closures} = \{\langle p:s:e \rangle \quad | \quad p \in {\rm Par} \wedge s \in {\rm Seq} \wedge e \in {\rm Env}\}$$
+
+$${\rm Structures} = {\rm Closures} \cup ..$$
+
+We have not formally defined what the set of paramters, sequences nor
+environmens are but the informal description will work for our
+purposes.
+
+The environment of a closure is constructed by taking the bindings of
+all free variables in the sequence, not including the variables that
+are bound by the parameters.
 
 $$\frac{ \theta = \{ v/s \mid  v/s \in \sigma \wedge v {\rm\ free\  in\ sequence}\}}{
-E\sigma({\rm fn}({\rm parameters})\; {\rm -\textgreater}\; {\rm sequence}\; end )\rightarrow \quad <{\rm parameters}:{\rm sequence}:\theta>}$$
+E\sigma({\rm fn}({\rm parameters})\; {\rm -\textgreater}\; {\rm sequence}\; end )\rightarrow \quad \langle{\rm parameters}:{\rm sequence}:\theta\rangle}$$
 
 \subsection{applying a closure}
 
@@ -472,10 +483,9 @@ of arguments. We first need to evaluate the arguments and then add a
 set of bindings to the environment of the closure. We then evaluate
 the sequence in the updated environment.
 
-$$\frac{E\sigma(e) \rightarrow <v_1, \ldots:{\rm seq}:\theta > \qquad E\sigma(e_i) \rightarrow s_i \qquad E\{v_1/s_1, \ldots\}\cup\theta({\rm seq}) \rightarrow s}{
-E\sigma(e.(e_1, \ldots)) \rightarrow s}$$ 
+$$\frac{E\sigma(e) \rightarrow \langle v_1, \ldots:{\rm seq}:\theta \rangle \qquad E\sigma(e_i) \rightarrow s_i \qquad E\{v_1/s_1, \ldots\}\cup\theta({\rm seq}) \rightarrow s}{E\sigma(e.(e_1, \ldots)) \rightarrow s}$$ 
 
-Note that the closure that we get, $<v_1, \ldots:{\rm seq}:\theta>$
+Note that the closure that we get, $\langle v_1, \ldots:{\rm seq}:\theta \rangle$
 consist of a sequence of variables $v_1, \ldots$, that are all
 distinct. This is why we can simply add the bindings $v_i/s_i$ to
 $\theta$, there will not be any duplicate bindings.
@@ -498,8 +508,6 @@ language is very useful when one wants to implement an interpreter
 for the language. If we can only come up with a scheme to represent
 expressions, data structures and environments then the rules will give
 us a recursive interpreter with very little effort.
-
-
 
 
 
