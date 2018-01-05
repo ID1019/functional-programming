@@ -13,7 +13,7 @@
 \titlepage
 \end{frame}
 
-\begin{frame}{let's play some cards}
+\begin{frame}[fragile]{let's play some cards}
 
 \begin{columns}
 
@@ -24,13 +24,23 @@
  \pause
 
  \begin{column}{0.8\linewidth}
+  Properties of a card:
   \begin{itemize}
-   \item ${\rm suit} \in \{{\rm :spade}, {\rm :heart}, {\rm :diamond}, {\rm :club}\}$
+   \item ${\rm Suit} \in \{{\rm spade}, {\rm heart}, {\rm diamond}, {\rm club}\}$
    \pause
-   \item ${\rm value} \in \{2,3,\ldots 14\}$
+   \item ${\rm Value} \in \{2,3,\ldots 14\}$
    \pause 
-   \item ${\rm card}$ = \{:card, suit, value\}
+   \item ${\rm Card} \in  \{\langle {\rm s}, {\rm v} \rangle | \quad {\rm s} \in {\rm Suit} \wedge {\rm v} \in {\rm Value} \}$
   \end{itemize}
+
+  \vspace{10pt}  \pause
+  In Elixir:
+  \begin{verbatim}
+  @type suite :: :spade | :heart | :diamond | :club
+  @type value :: 2..14
+  @type card :: {:card, suite, value}
+  \end{verbatim}
+
  \end{column}
 \end{columns}
 
@@ -40,27 +50,27 @@
 
 \pause
 \begin{verbatim}
-lt({:card, s, v1}, {:card, s, v2})  do   v1 < v2 end
+def lt({:card, S, V1}, {:card, S, V2})  do  V1 < V2 end
 \end{verbatim}
 \pause
 \begin{verbatim}
-lt({:card, :club, _}, _) do  true end
+def lt({:card, :club, _}, _) do  true end
 \end{verbatim}
 \pause
 \begin{verbatim}
-lt({:card, :diamond, _}, {:card, :heart, _}) do true end
+def lt({:card, diamond, _}, {:card, heart, _}) do true
 \end{verbatim}
 \pause
 \begin{verbatim}
-lt({:card, :diamond, _}, {:card, :spade, _}) do true end
+def lt({:card, diamond, _}, {:card, spade, _}) do true
 \end{verbatim}
 \pause
 \begin{verbatim}
-lt({:card, :heart, _}, {:card, :spade, _}) do true end
+def lt({:card, heart, _}, {:card, spade, _}) do   true
 \end{verbatim}
 \pause
 \begin{verbatim}
-lt({:card, _, _}, {:card, _, _}) do false end
+def lt({:card, _, _}, {:card, _, _}) dd  false
 \end{verbatim}
 
 \end{frame}
@@ -69,17 +79,20 @@ lt({:card, _, _}, {:card, _, _}) do false end
 
 \begin{columns}
 
- \begin{column}{0.5\linewidth}
+ \begin{column}{0.4\linewidth}
+\begin{verbatim}
+@spec sort([card]) :: [card]
+\end{verbatim}
 \begin{verbatim}
 def sort([]) do [] end
 \end{verbatim}
 \pause
 \begin{verbatim}
-def sort(cards) do 
-   {c1, c2} = split(cards)
-   s1 = sort(c1)
-   s2 = sort(c2)
-   merge(s1, s2)
+def sort(deck) do
+  {d1, d2} = split(deck)
+  s1 = sort(d1)
+  s2 = sort(d2)
+  merge(s1, s2)
 end
 \end{verbatim}
  \end{column}
@@ -88,15 +101,16 @@ end
 
  \begin{column}{0.5\linewidth}
 \begin{verbatim}
-def split([]) do
-   {[], []}
-end
+@spec split([card]) :: {[card],[card]}
 \end{verbatim}
 \pause
 \begin{verbatim}
-def split([c|s]) do
-    {h1, h2} = split(s)
-    {..., ...}
+def split([]) do {[], []} end
+\end{verbatim}
+\begin{verbatim}
+def split([c|rest]) do 
+  {s1, s2} = split(rest)
+  { ..., ...}
 end
 \end{verbatim}
  \end{column}
@@ -108,40 +122,41 @@ end
 
 \begin{columns}
 
- \begin{column}{0.5\linewidth}
+ \begin{column}{0.4\linewidth}
 \begin{verbatim}
-def split([]) do
-   {[], []}
+def split([]) do 
+  {[], []} 
 end
 \end{verbatim}
 \pause
 \begin{verbatim}
-def split([c|s]) do
-    {h1, h2} = split(s),
-    {..., ...}
+def split([c|rest]) do 
+  {s1, s2} = split(rest)
+  { ..., ...}
 end
 \end{verbatim}
  \end{column}
  
  \pause
 
- \begin{column}{0.5\linewidth}
+ \begin{column}{0.6\linewidth}
 \begin{verbatim}
-def split(deck) do 
-   split(deck, [], [])
-end
+def split(deck) do split(deck, [], []) end 
 \end{verbatim}
+\pause
+\begin{verbatim}
+@spec split([card], [card], [card]) :: 
+   {[card],[card]}
+\end{verbatim}   
+\pause   
 
-\pause
 \begin{verbatim}
-def split([], d1, d2) do
-   {d1, d2}
-end
+def split([], d1, d2) do  {d1, d2} end
 \end{verbatim}
 \pause
 \begin{verbatim}
-def split([c|s], d1, d2) do
-   split(s, ..., ...)
+def split([c|rest], d1, d2) do
+   split(rest, ..., ...)
 end
 \end{verbatim}
  \end{column}
@@ -152,18 +167,22 @@ end
 \begin{frame}[fragile]{sorting cards}
 
 \begin{verbatim}
-def merge([], s2) do  ... end
-def merge(s1, []) do  ... end
+@spec merge([card], [card]) :: [card]
 \end{verbatim}
 \pause
 \begin{verbatim}
-def merge([c1|s1], [c2|s2]) do 
-   case lt(c1, c2) of
-     true ->
-        [c1 | merge(s1, [c2|s2])]
-     false ->
-        [c2 | merge([c1|s1], s2)]
-   end
+def merge([], s2) do ... end
+def merge(s1, []) do ... end
+\end{verbatim}
+\pause
+\begin{verbatim}
+def merge([c1|r1]=s1, [c2|r2]=s2) do
+  case lt(c1, c2) do
+    true ->
+      [c1| merge(r1, s2)]
+    false ->
+      [c2| merge(s1, r2)]     
+  end
 end
 \end{verbatim}
 
@@ -171,12 +190,11 @@ end
 
 \begin{frame}{what to do}
 
-\pause Implement function that sorts names of people.
+\vspace{10pt}\pause Implement function that sorts names of people.
 
-\pause Implement function that sorts a frequency table.
+\vspace{10pt}\pause Implement function that sorts a frequency table.
 
-\pause Implement function that sorts ....
-
+\vspace{10pt}\pause Implement function that sorts ....
 
 \end{frame}
 
@@ -189,7 +207,7 @@ Have we seen this before?
    \begin{column}{.5\linewidth}
      \begin{block}{sum/1}
        \begin{verbatim}
-def sum([]) do 0 end
+def sum([]) do  0 end
 def sum([h|t]) do
     add(h,sum(t))
 end
@@ -202,7 +220,7 @@ end
      \begin{block}{prod/1}
        \begin{verbatim}
 def prod([]) do 1 end
-def prod([h|t]) do
+def prod([h|t]) ->
    mul(h,prod(t))
 end
        \end{verbatim}
@@ -216,7 +234,6 @@ end
 \end{frame}
 
 
-
 \begin{frame}[fragile]{good to have}
 
 We would like to to this:
@@ -227,14 +244,12 @@ We would like to to this:
    \begin{column}{.5\linewidth}
      \begin{block}{foldr/3}
        \begin{verbatim}
-def foldr([], acc, op) do
-   acc
-end
+def foldr(op, acc, []) do acc end
        \end{verbatim}
 \pause
        \begin{verbatim}
-def foldr([h|t], acc, op) do
-   op.(h, foldr(t, acc, op))
+def foldr(op, acc, [h|t]) do
+   op.(h, foldr(op, acc, t))
 end
       \end{verbatim}
        \vfill
@@ -244,18 +259,18 @@ end
    \begin{column}{.5\linewidth}
      \begin{block}{sum/1}
        \begin{verbatim}
-def sum(l) do 
-   add = ...,
-   foldr(l, 0, add)
+def sum(l) do
+  add = ... 
+  foldr(add, ..., l)
 end
        \end{verbatim}
      \end{block}
 \pause     
    \begin{block}{prod/1}
        \begin{verbatim}
-def prod(l) do 
-   mul = ...,
-   foldr(l, 1, mul)
+def prod(l) do
+  mul = ... 
+  foldr(mul, ..., L)
 end
        \end{verbatim}
      \end{block}
@@ -275,7 +290,7 @@ We introduce a new data structure: a closure
 
   \begin{tabular}{r l l}
    {\em Atoms} & = & \{a, b, c, \ldots\} \\
-   {\em Closures} & = & \{f:e | f $\in $ Functions $\wedge$  e $\in $ Environment \}\\
+   {\em Closures} & = & \{<p:s:e> | p $\in $ Parameters $\wedge$ s $\in $ Sequence $\wedge$  e $\in $ Environment \}\\
    {\em Structures} & = & {\em Closures} $\cup$ {\em Atoms} $\cup$ \{ \{a, b\} \textbar a $\in$ {\em Structures}  $\wedge$  b $\in$ {\em Structures} \}
   \end{tabular}
 
@@ -283,11 +298,11 @@ We introduce a new data structure: a closure
 A {\em closure} is a function and an environment.
 
 \pause\vspace{10pt}
-We have not really defined what a {\em function} is nor an {\em environment} but let's forget this for a while.
+We have not really defined what {\em Parameters}, {\em Sequence} nor an {\em Environment} but let's forget this for a while.
 
 \end{frame}
 
-\begin{frame}[fragile]{function expressions}
+\begin{frame}[fragile]{syntax for function expressions}
 
 \begin{code}
    <function> &::= 'fn' '(' <parameters> ')' '->' <sequence> 'end'\\
@@ -296,7 +311,7 @@ We have not really defined what a {\em function} is nor an {\em environment} but
 \end{code}
 \pause
 \begin{code}
-   <application> &::= <expression> '.' '(' <arguments> ')'\\
+   <application> &::= <expression> '.(' <arguments> ')'\\
    <arguments> &::= '  ' | <expressions> \\
    <expressions> &::= <expression> |  <expression> ',' <expressions>\\
 \end{code}
@@ -311,47 +326,32 @@ We have not really defined what a {\em function} is nor an {\em environment} but
 
 \pause\vspace{10pt}
 We will write:
-\pause\vspace{40pt}\hspace{60pt}\verb!x = 2; f = fn(y) -> {x,y} end; f.(4) !
+\pause\vspace{40pt}\hspace{60pt}\verb!x = 2; f = fn (y) -> x + y end; f.(4) !
 
 \end{frame}
 
 
-\begin{frame}[fragile]{evaluation of a function}
+\begin{frame}[fragile]{evaluation of a function expression}
 
-  \begin{itemize}
-   \pause\item $E\sigma({\rm f})  \rightarrow  {\rm function}:\theta$ if
-    \begin{itemize} 
-           \pause\item $\mathrm{function}$ is the corresponding function of $f$
-           \pause\item $\theta = \{ v/s \mid  v/s \in \sigma \wedge v {\rm\ free\  in\ f}\}$
-    \end{itemize} 
-  \end{itemize} 
+$$\frac{ \theta = \{ v/s \mid  v/s \in \sigma \wedge v {\rm\ free\  in\ sequence}\}}{
+E\sigma({\rm fn}({\rm parameters})\; {\rm ->}\; {\rm sequence}\; end )\rightarrow \quad \langle{\rm parameters}:{\rm sequence}:\theta\rangle}$$
 
-\pause\vspace{20pt}
-
+\vspace{20pt}\pause
 \begin{verbatim}
-  x = 2; y = 3; z = 4; c = fn(v) -> v + y end; ...
+   x = 2; f = fn (y) -> x + y end; f.(4)
 \end{verbatim}
 
-{\em What is C?}
-
-
 \end{frame}
 
-\begin{frame}[fragile]{evaluation of an application}
 
-  \begin{itemize}
-   \pause\item $E\sigma(e(e_1, \ldots)) \rightarrow E\{v_1/s_1, \ldots\}\cup\theta({\rm sequence} )$ if
-    \begin{itemize}        
-           \pause\item $E\sigma(e) \rightarrow f:\theta$
-           \pause\item ${\rm f} = {\rm fun}(v_1, \ldots) \rightarrow  {\rm sequence}$ 
-           \pause\item $E\sigma(e_i) \rightarrow s_i$ 
-    \end{itemize} 
-  \end{itemize}
+\begin{frame}[fragile]{evaluation of a function application}
 
-\pause\vspace{20pt}
+$$\frac{E\sigma(e) \rightarrow <v_1, \ldots:{\rm seq}:\theta > \qquad E\sigma(e_i) \rightarrow s_i \qquad E\{v_1/s_1, \ldots\}\cup\theta({\rm seq}) \rightarrow s}{
+E\sigma(e.(e_1, \ldots)) \rightarrow s}$$ 
 
+\vspace{20pt}\pause
 \begin{verbatim}
-   y = 3; f = fn(v) -> v + y end; f.(4)
+   x = 2; f = fn (y) -> x + y end; f.(4)
 \end{verbatim}
 
 \end{frame}
@@ -360,14 +360,14 @@ We will write:
 
 \begin{verbatim}
 def foo(x) do
-      y = 3
-      fn(v) do v + y + x end
+  y = 3
+  fn (v) -> v + y  + x 
 end
 \end{verbatim}
 \pause\vspace{20pt}
 
 \begin{verbatim}
-   f = foo(2); y = 7; f.(1)
+   f = foo(2); x = 5;  y = 7; f.(1)
 \end{verbatim}
 \end{frame}
 
@@ -377,17 +377,17 @@ end
      \begin{block}{sum/1}
        \begin{verbatim}
 def sum(l) do
-  add = fn(x,y) do x + y end
-  foldr(l, 0, add)
+  add = fn (x,y) -> x + y end
+  foldr(add, 0, l)
 end
        \end{verbatim}
      \end{block}
    \pause
      \begin{block}{prod/1}
        \begin{verbatim}
-def prod(l) do 
-  mul = fn(x,a) -> x * a end
-  foldr(l, 1, mul)
+def prod(l) do
+  mul = fun(x,a) -> x * a end
+  foldr(mul, 1, l)
 end
        \end{verbatim}
 \vfill
@@ -402,20 +402,20 @@ end
 \pause\vspace{20pt}
 
 \begin{verbatim}
-def gurka(l) do 
-    d = fn(_, a) -> a + 1 end
-    foldr(l, 0, f)
+def gurka(l) do
+  f = fn (_, a) -> a + 1 end
+  foldr(f, 0, l)
 end
 \end{verbatim}
 
 \pause\vspace{20pt}
-\pause How about tomat/1 doing?
+\pause How about tomat/1?
 
 \pause\vspace{10pt}
 \begin{verbatim}
 def tomat(l) do 
-    f = fn(h, a) ->  a ++ [h] end
-    foldr(l, [], f)
+  f = fn (h, a) ->  a ++ [h] end
+  foldr(f, [], l)
 end
 \end{verbatim}
 \end{frame}
@@ -423,20 +423,18 @@ end
 \begin{frame}[fragile]{example}
      \begin{block}{foldr/3}
        \begin{verbatim}
-foldr([], acc, op) do  acc end
-foldr([h|t], acc, op) do
-   op.(h, foldr(t, acc, op))
+def foldr(op, acc, []) do acc end
+def foldr(op, acc, [h|t]) ->
+   op.(h, foldr(op, acc, t))
 end
        \end{verbatim}
-       \vfill
      \end{block}
 \pause
-
      \begin{block}{foldl/3}
        \begin{verbatim}
-def foldl([], acc, op) do  acc end
-def foldl([h|t], acc, op) do
-   foldl(t, op.(h, acc), op)
+def foldl(op, acc, []) do acc end
+foldl(op, acc, [h|t]) do
+  foldl(op, op.(h, acc), t)
 end
        \end{verbatim}
      \end{block}
@@ -447,16 +445,16 @@ end
 
 \pause\vspace{10pt}
 \begin{verbatim}
-def tomat(l) -> 
-    f = fn(h, a) ->  a ++ [h] end
-    foldr(l, [], f)
+def tomat(l) do
+  f = fn (h, a) ->  a ++ [h] end
+  foldr(f, [], l)
 end
 \end{verbatim}
 \pause 
 \begin{verbatim}
-def morot(l) do 
-    f = fn(h, a) -> [h|a] end
-    foldl(l, [], f)
+def morot(L) do
+  f = fn (h, a) ->  [h|a] end
+  foldl(f, [], l)
 end
 \end{verbatim}
 \end{frame}
@@ -474,16 +472,16 @@ Which one should you use, {\em fold-left} or {\em fold-right}?
 \vspace{20pt}
 
 \begin{verbatim}
-def appendl(l) do
-    f = fn(e,a) -> a ++ e end,
-    foldl(l, [], f)
+def append_left(l) ->
+  f = fn (e,a) -> a ++ e end
+  foldl(f, [], l)
 end
 \end{verbatim}
 
 \begin{verbatim}
-def appendr(l) do
-    f = fn(e,a) -> e ++ a end
-    foldr(L, [], F)
+def append_right(l) do
+  f = fun(e,a) -> e ++ a end
+  foldr(f, [], l)
 end
 \end{verbatim}
 
@@ -496,29 +494,21 @@ end
 In the {\tt List} module. 
 
 \begin{itemize}
-\item {\tt foldl(list, acc, fun)} : folds from the left 
-\item {\tt foldl(list, acc, fun)} : folds from the left
+\item {\tt foldr(list, a, f)}: fold from right  {\tt f.(x1, .. f.(xn, a)..) }
+\item {\tt foldl(list, a, f)}: fold from left  {\tt f.(xn, .. f.(x1, a)..) }
 \end{itemize}
 
-\pause
-
+\vspace{10pt}\pause
 In the {\tt Enum} module. 
-
 \begin{itemize}
-\item {\tt filter(enum, fun)}: return a list of all elements x, for which fun.(x) evaluates to true
-\item {\tt map(enum, fun)}: return the list of fun.(x) for each element x in enum
-\item {\tt sort(enum, fun)}: sort the enum given that the function is 'less than or equal'
+\item {\tt map(enum, f)}: return the list of {\tt f.(x)} for each element {\tt x} in the enumeration
+\pause 
+\item {\tt filter(enum, f)}: return a list of all elements {\tt x}, for which {\tt f.(x)} evaluates to true
+\pause
+\item {\tt split_with(enum, f)}: partition the enumeration based on the result of  {\tt f.(x)}
+\pause
+\item {\tt sort(enum, f)}: sort the list given that the function {\t f} is less than or equal
 \end{itemize}
-
-\end{frame}
-
-\begin{frame}[fragile]{Elixir shorthand}
-
-\hspace{40pt}  {\tt fn(x,y) -> x + y + 5end}
-
-\vspace{40pt}  \pause
-
-\hspace{40pt}  {\tt \&(\&1 + \&2 + 5)}
 
 \end{frame}
 
@@ -527,15 +517,19 @@ In the {\tt Enum} module.
 
 \pause\vspace{20pt}
 
-\verb+inf = infinity()+\pause \verb+, [0|inf1] = inf()+\pause \verb+, [1|inf2] = inf1.()+
+\verb+inf = infinity()+\pause \verb+, [0|inf1] = inf.()+\pause \verb+, [1|inf2] = inf1.()+
 
 \pause
 \begin{verbatim}
-def infinity() do fun() -> infinity(0) end end
+def infinity() do 
+  fn() -> infinity(0) end 
+end
 \end{verbatim}
 \pause
 \begin{verbatim}
-def infinity(n) do [...|...] end
+def infinity(n) -> 
+  [...|...] 
+end
 \end{verbatim}
 
 \end{frame}
@@ -543,29 +537,35 @@ def infinity(n) do [...|...] end
 
 \begin{frame}[fragile]{the list of fibonacci }
 
-A function that returns an infitie list of Fibonacci numbers.
+A function that returns an infinite list of Fibonacci numbers.
 
 \pause\vspace{20pt}
 
 \begin{verbatim}
-def fib() do fun() -> fib(1,1) end
+def fib() do 
+  fn() -> fib(1,1) end 
+end
 \end{verbatim}
 \pause
 \begin{verbatim}
-def fib(f1, f2) do [f1 | fn() -> fib(f2, f1+f2) end] end
-\end{verbatim}
-
-\pause\vspace{20pt}
-
-\begin{verbatim}
-> f0 = fib()
-
-> [n0 | f1] = f0.()
-
-> [n1 | f2] = f1.()
+def fib(f1, f2) do
+  [f1 | fn() -> fib(f2, f1+f2) end]
+end
 \end{verbatim}
 
 \end{frame}
+
+\begin{frame}{Enumerable}
+
+
+\end{frame}
+
+
+\begin{frame}{Streams}
+
+
+\end{frame}
+
 
 \begin{frame}{Higher order}
 
@@ -587,40 +587,18 @@ Higher order functions takes a higher order ...
 Are functions considered to be ``first-class citizen''?
 \end{frame}
 
-
-\begin{frame}{not really}
-
-\vspace{40pt}Not really - look at this.
-
-\end{frame}
-
-\begin{frame}{set comprehension}
-
-In mathematics, {\em set comprehension}:
-
-$$l = \lbrace 1,2,3,4,5,6,7,8 \rbrace ,  k = \lbrace 2*x | x \in l \wedge x < 5 \rbrace$$
-
-\pause In functional programming, {\em list comprehension}:
-
-\pause 
-\vspace{20pt}\hspace{40pt} {\tt l = [1,2,3,4,5,6,7,8]; k = for n <- l, do: x*2 end}
-
-\pause 
-\vspace{20pt}\hspace{40pt} {\tt .. k = for n <- l, rem(n,2) == 0 do: n end}
-\end{frame}
-
-
-\begin{frame}[fragile]{quick sort}
-
+\begin{frame}[fragile]{not}
+    
+  \vspace{20pt}Not really - look at this.
+    
 \begin{verbatim}
-  def qsort([]) do [] end
-  def qsort([p|l]) do
-    lower = for x <- l, x < p, do: x 
-    higher = for x <- l, x >= p, do: x 
-    qsort(lower) ++ [p | qsort(higher)]
-  end
+ f = fn() -> :ok end
+ g = fn() -> :ok end
+ case f do
+   ^g -> :equal
+   _ -> :no
+ end
 \end{verbatim}
-
 
 \end{frame}
 
@@ -632,8 +610,7 @@ $$l = \lbrace 1,2,3,4,5,6,7,8 \rbrace ,  k = \lbrace 2*x | x \in l \wedge x < 5 
 \begin{itemize}
 \pause\item {closure}: a function and an environment
 \pause\item {generic algorithms}: separate the recursive pattern from the data it operates over
-\pause\item {continuations}: powerful technique to handle incomplete information
-\pause\item {list comprehension}: very compact syntax for the construction of lists
+\pause\item {conntinuations}: powerful technique to handle incomplete information
 \end{itemize}
 
 
