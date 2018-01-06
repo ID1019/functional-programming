@@ -29,7 +29,7 @@ defmodule Huffman do
 
   def tree(sample) do
     freq = freq(sample)
-    huffman(freq)
+    #huffman(freq)
   end
 
   def freq(sample), do: freq(sample, [])
