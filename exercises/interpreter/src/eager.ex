@@ -1,16 +1,17 @@
 defmodule Eager do
 
-
   @type atm :: {:atm, atom()}
   @type var :: {:var, atom()}
   @type ignore :: :ignore
-  @type cons :: {:cons, str, str}
+
   @type lambda :: {:lambda, [var], [var], seq}
 
-  @type pattern :: atm | var | ignore | cons | lambda
-  @type match :: {:match, pattern, expr}
+  @type cons(e) :: {:cons, e, e}
+  @type expr :: atm | var | lambda | call | switch | cons(expr)
+  
+  @type pattern :: atm | var | ignore | cons(pattern)
 
-  @type expr :: atm | var | cons | lambda | call | switch
+  @type match :: {:match, pattern, expr}
   @type seq :: [expr] | [match | seq]
 
   @type call :: {:call, atom(), [expr]}  
@@ -56,6 +57,8 @@ defmodule Eager do
       :error -> 
 	    :error;
       {:ok, str}  ->
+	vars = extract_vars(ptr, [])
+	env = Env.remove(vars, env)
 	case eval_match(ptr, str, env) do
 	  :fail ->
 	    :error;
@@ -70,13 +73,13 @@ defmodule Eager do
   """
   @spec eval_expr(expr, env, prgm) :: {:ok, str} | :error
 
-  def eval_expr({:atm, Id}, _, _) do
-    {:ok, Id}
+  def eval_expr({:atm, id}, _, _) do
+    {:ok, id}
   end
 
-  def eval_expr({:var, Id}, env, _) do
-    case Env.lookup(Id, env) do
-      :false ->
+  def eval_expr({:var, id}, env, _) do
+    case Env.lookup(id, env) do
+      nil ->
 	:error;
       {_, str} ->
 	{:ok, str}
@@ -138,7 +141,7 @@ defmodule Eager do
 	:error
       args  ->
 	case Prgm.lookup(id, prg) do
-	  false->
+	  nil ->
 	    :error
 	  {_, prm, seq} ->
 	    new = Env.args(prm, args)
@@ -159,7 +162,7 @@ defmodule Eager do
 
  def eval_match({:var, id}, str, env) do
    case Env.lookup(id, env) do
-     false ->
+     nil ->
        {:ok, Env.add(id, str, env)}
      {_, ^str} ->
        {:ok, env}
@@ -227,6 +230,16 @@ defmodule Eager do
 	end
     end
   end
+
+  @spec extract_vars(pattern, [var]) :: [var] 
+  
+  def extract_vars({:atm, _}, vars) do vars end
+  def extract_vars(:ignore, vars) do vars end  
+  def extract_vars({:var, var}, vars) do [var|vars] end
+  def extract_vars({:cons, head, tail}, vars) do
+    extract_vars(tail, extract_vars(head, vars))
+  end
+
   
 end
 

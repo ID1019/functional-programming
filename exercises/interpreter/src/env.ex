@@ -8,13 +8,19 @@ defmodule Env do
     [{id, str}|env]
   end
 
-  def args(prm, args) do
-    List.zip([prm, args])
-
+  def remove(ids, env) do
+    List.foldr(ids, env,
+      fn (id, env) ->
+	List.keydelete(env, id, 0)
+      end)
   end
 
-  def args(prm, args, Env) do
-    List.zip(prm, args) ++ Env
+  def args(prm, args) do
+    List.zip([prm, args])
+  end
+
+  def args(prm, args, env) do
+    List.zip([prm, args]) ++ env
   end
 
   def lookup(id, env) do
@@ -22,20 +28,19 @@ defmodule Env do
   end
 	
   def closure(ids, env) do
-    List.foldr(fn (id, acc) -> 
-      case acc do
-	:error ->
-	  :error
-	cls -> case lookup(id, env) do
-		 {id, Value} ->
-		   [{id, Value}|cls]
-		 false ->
-		   :error
-	       end
-      end
-    end,
-      [],
-      ids)
+    List.foldr(ids, [],
+      fn (id, acc) -> 
+	case acc do
+	  :error ->
+	    :error
+	  cls -> case lookup(id, env) do
+		   {id, value} ->
+		     [{id, value}|cls]
+		   nil ->
+		     :error
+		 end
+	end
+      end)
   end
 
 end

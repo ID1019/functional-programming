@@ -1,7 +1,7 @@
 defmodule Prgm do
 
-  def lookup(Id, Prg) do
-    List.keyfind(Id, Prg, 1)
+  def lookup(id, prg) do
+    List.keyfind(prg, id, 0)
   end
 
 end
