@@ -5,11 +5,10 @@ defmodule Test do
     test(Eager, n)
   end
 
-
   def test(module, 1) do
     seq = [{:atm, :a}]
     prgm = []
-    :io.format("eval expression ~w~n   should result in {ok, a}~n", [seq])
+    IO.write("should result in {:ok, :a}\n")
     apply(module, :eval, [seq, prgm])
   end
 
@@ -18,7 +17,7 @@ defmodule Test do
 	   {:cons, {:var, :x}, {:atm,:b}}
 	  ]
     prgm = []
-    :io.format("eval expression ~w~n   should result in {:ok, [:a|:b]}~n", [seq])
+    IO.write("should result in {:ok, [:a|:b]}\n")
     apply(module, :eval, [seq, prgm])
   end
 
@@ -29,78 +28,86 @@ defmodule Test do
 	   {:var, :z}
 	  ]
     prgm = []
-    :io.format("eval expression ~w~n   should result in {:ok, :b}~n", [seq])
+    IO.write("should result in {:ok, :b}\n")
     apply(module, :eval, [seq, prgm])
   end
 
   def test(module, 4) do
     seq = [{:match, {:var, :x}, {:atm, :a}},
-	   {:switch, {:var, :x},
+	   {:case, {:var, :x},
 	    [{:clause, {:atm, :b}, [{:atm, :ops}]},
 	     {:clause, {:atm, :a}, [{:atm, :yes}]}
 	    ]}
 	  ]
     prgm = []
-    :io.format("eval expression ~w~n   should result in {:ok, :yes}~n", [seq])
+    IO.write("should result in {:ok, :yes}\n")
     apply(module, :eval, [seq, prgm])
   end
 
   def test(module, 5) do
     seq = [{:match, {:var, :x}, {:cons, {:atm, :a}, {:atm, []}}},
-	   {:switch, {:var, :x},
+	   {:case, {:var, :x},
   	       [{:clause, {:atm, []}, [{:atm, :ops}]},
 		{:clause, {:cons, {:var, :hd}, {:var, :tl}}, [{:var, :hd}]}
 	    ]}
 	  ]
     prgm = []
-    :io.format("testing switch expression, should result in {ok, a}~n", [])
+    IO.write("testing case expression, should result in {:ok, :a}\n")
     apply(module, :eval, [seq, prgm])
   end
 
   def test(module, 6) do
-    seq = [{:call, :append, [{:atm, []}, {:atm, []}]}
-          ]
-    prgm = prg()
-    :io.format("testing function application, should result in {ok, []}~n", [])
+    seq = [{:match, {:var, :x}, {:atm, :a}},
+	   {:match, {:var, :f}, {:lambda, [:y], [:x], [{:cons, {:var, :x}, {:var, :y}}]}},
+	   {:apply, {:var, :f}, [{:atm, :b}]}
+      ]
+    prgm = []
+    IO.write("testing lambda expression, should result in {:ok, [:a|:b]}\n")
     apply(module, :eval, [seq, prgm])
   end
   
   def test(module, 7) do
+    seq = [{:call, :append, [{:atm, []}, {:atm, []}]}
+          ]
+    prgm = prg()
+    IO.write("testing function application, should result in {:ok, []}\n")
+    apply(module, :eval, [seq, prgm])
+  end
+  
+  def test(module, 8) do
     seq = [{:match, {:var, :x}, {:cons, {:atm, :a}, {:cons, {:atm, :b}, {:atm, []}}}},
 	   {:match, {:var, :y}, {:cons, {:atm, :c}, {:cons, {:atm, :d}, {:atm, []}}}},
 	   {:call, :append, [{:var, :x}, {:var, :y}]}
 	  ]
     prgm = prg()
-    :io.format("testing recursive function, should result in {ok, [a,:b,:c,d]}~n", [])
-    apply(module, :eval, [seq, prgm])
-  end
-
-
-
-  def test(module, 8) do
-    seq = [{:match, {:var, :x}, {:cons, {:atm, :a}, {:cons, {:atm, :b}, {:atm, []}}}},
-	   {:call, :nreverse, [{:var, :x}]}
-	  ]
-    prgm =  prg()
-    :io.format("nreverse of [a,b], should result in {ok, [:b,:a]}~n", [])
+    IO.write("testing recursive function, should result in {:ok, [:a,:b,:c,:d]}\n")
     apply(module, :eval, [seq, prgm])
   end
 
   def test(module, 9) do
+    seq = [{:match, {:var, :x}, {:cons, {:atm, :a}, {:cons, {:atm, :b}, {:atm, []}}}},
+	   {:call, :nreverse, [{:var, :x}]}
+	  ]
+    prgm =  prg()
+    IO.write("nreverse of [a,b], should result in {:ok, [:b,:a]}\n")
+    apply(module, :eval, [seq, prgm])
+  end
+
+  def test(module, 10) do
     seq = [{:match, {:var, :x}, {:cons, {:atm, :a}, {:cons, {:atm, :b}, {:atm, []}}}},
 	   {:match, {:var, :y}, {:atm, []}},
 	   {:match, {:var, :f}, {:lambda, [:p], [:y], [{:cons, {:var, :p}, {:var,:y}}]}},
 	   {:call, :map, [{:var, :f}, {:var, :x}]}
 	  ]
     prgm =  prg()
-    :io.format("higher order,  y = [], f = fn (p) -> [p|y] end, map(f,[:a,:b]), should result in {:ok, [[:a] [:b]]}~n", [])
+    IO.write("higher order, x = [:a,:b]; y = []; f = fn(p) -> [p|y] end; map(f,(x), should result in {:ok, [[:a] [:b]]}\n")
     apply(module, :eval, [seq, prgm])
   end
   
 
   def prg() do [
     {:nreverse, [:x], 
-     [{:switch, {:var, :x}, 
+     [{:case, {:var, :x}, 
        [{:clause, {:atm, []}, [{:atm, []}]},
         {:clause, {:cons, {:var, :hd}, {:var, :tl}},
 	 [{:call, :append, 
@@ -110,7 +117,7 @@ defmodule Test do
        ]}]},
 
     {:append, [:x, :y],
-     [{:switch, {:var, :x}, 
+     [{:case, {:var, :x}, 
        [{:clause, {:atm, []}, 
          [{:var, :y}]},
         {:clause, {:cons, {:var, :hd}, {:var, :tl}}, 
@@ -118,7 +125,7 @@ defmodule Test do
       }]},
 
     {:map, [:f,:x], 
-     [{:switch, {:var, :x}, 
+     [{:case, {:var, :x}, 
        [{:clause, {:atm, []}, 
          [{:atm, []}]},
         {:clause, {:cons, {:var, :hd}, {:var, :tl}}, 

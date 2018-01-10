@@ -7,7 +7,7 @@ defmodule Eager do
   @type lambda :: {:lambda, [var], [var], seq}
 
   @type cons(e) :: {:cons, e, e}
-  @type expr :: atm | var | lambda | call | switch | cons(expr)
+  @type expr :: atm | var | lambda | call | case | cons(expr)
   
   @type pattern :: atm | var | ignore | cons(pattern)
 
@@ -16,20 +16,17 @@ defmodule Eager do
 
   @type call :: {:call, atom(), [expr]}  
   @type clause :: {:clause, pattern, seq} 
-  @type switch :: {:switch, expr, [clause]}
+  @type case :: {:case, expr, [clause]}
 
   # Expressions are evaluated to structures
-  
   @type closure :: {:closure, [var], seq, env}
   @type str :: atom() | [str] | closure
 
   # An environment is a key-value of variable to structure
-
   @type env :: [{var, str}]
 
-  # A program is a list of named lambda expressions. 
-
-  @type prgm :: [{atom(), :lambda}]
+  # A program is a list of named functions
+  @type prgm :: [{atom(), [var], seq}]
 
   @doc """
   Evaluate a sequence given a program.
@@ -55,13 +52,13 @@ defmodule Eager do
   def eval_seq([{:match, ptr, exp}|seq], env, prg) do
     case eval_expr(exp, env, prg) do
       :error -> 
-	    :error;
+	    :error
       {:ok, str}  ->
-	vars = extract_vars(ptr, [])
+	vars = extract_vars(ptr)
 	env = Env.remove(vars, env)
 	case eval_match(ptr, str, env) do
 	  :fail ->
-	    :error;
+	    :error
 	  {:ok, env} ->
 	    eval_seq(seq, env, prg)
 	end
@@ -80,7 +77,7 @@ defmodule Eager do
   def eval_expr({:var, id}, env, _) do
     case Env.lookup(id, env) do
       nil ->
-	:error;
+	:error
       {_, str} ->
 	{:ok, str}
     end
@@ -93,14 +90,14 @@ defmodule Eager do
 	{:ok, hs} ->
 	    case eval_expr(te, env, prg) do
 		:error ->
-		    :error;
+		    :error
 		{:ok, ts} -> 
 		    {:ok, [hs|ts]}
 	    end
     end
   end
 
-  def eval_expr({:switch, expr, cls}, env, prg) do
+  def eval_expr({:case, expr, cls}, env, prg) do
     case eval_expr(expr, env, prg) do
       :error ->
 	:error
@@ -110,8 +107,6 @@ defmodule Eager do
   end
 
   def eval_expr({:lambda, par, free, seq}, env, _prg) do
-    ## We represent a fun-expression as a list of parameter
-    ## identifiers, a list of free identifiers and a sequence.
     case Env.closure(free, env) do
       :error ->
 	:error
@@ -120,37 +115,37 @@ defmodule Eager do
     end
   end
 
- def eval_expr({:apply, expr, args}, env, prg) do
+  def eval_expr({:apply, expr, args}, env, prg) do
     case eval_expr(expr, env, prg) do 
+      :error ->
+	:error
       {:ok, {:closure, par, seq, closure}} ->
 	case eval_args(args, env, prg) do
 	  :error ->
-	    :error
-	  evaluated_args ->
-	    new = Env.args(par, evaluated_args, closure)
-	    eval_seq(seq, new, prg)
+	    :foo
+	  strs  ->
+	    env = Env.args(par, strs, closure)
+	    eval_seq(seq, env, prg)
 	end
-      :error ->
-	:error
     end
   end
   
- def eval_expr({:call, id, exprs}, env, prg) when is_atom(id) do
-    case eval_args(exprs, env, prg) do
-      :error ->
-	:error
-      args  ->
-	case Prgm.lookup(id, prg) do
-	  nil ->
-	    :error
-	  {_, prm, seq} ->
-	    new = Env.args(prm, args)
-	    eval_seq(seq, new, prg)
-	end
-    end
+ def eval_expr({:call, id, args}, env, prg) when is_atom(id) do
+   case List.keyfind(prg, id, 0) do
+     nil ->
+       :error
+     {_, par, seq} ->
+       case eval_args(args, env, prg) do
+	 :error ->
+	   :error
+	 strs  ->
+	   env = Env.args(par, strs, [])
+	   eval_seq(seq, env, prg)
+       end
+   end
  end
 
-
+ 
  @doc """
  Evaluate a match expression given an environment and a program. 
  """
@@ -199,6 +194,8 @@ defmodule Eager do
   end
 
   def eval_cls( [{:clause, ptr, seq} | cls], str, env, prg) do
+    vars = extract_vars(ptr)
+    env = Env.remove(vars, env)
     case eval_match(ptr, str, env) do
       :fail ->
 	eval_cls(cls, str, env, prg)
@@ -213,7 +210,7 @@ defmodule Eager do
   a list of the resulting structures is returned.
   """
 
-  @spec eval_args([expr], env, prgm) :: [str] | :fail
+  @spec eval_args([expr], env, prgm) :: [str] | :error
 
   def eval_args([], _, _) do
     []
@@ -225,12 +222,20 @@ defmodule Eager do
 	:error
       {:ok, str} ->
 	case eval_args(exprs, env, prg) do
-	  :error -> :error
-	  strs -> [str| strs]
+	  :error ->
+	    :error
+	  strs ->
+	    [str| strs]
 	end
     end
   end
 
+  @spec extract_vars(pattern) :: [var]
+
+  def extract_vars(pattern) do
+    extract_vars(pattern, [])
+  end
+  
   @spec extract_vars(pattern, [var]) :: [var] 
   
   def extract_vars({:atm, _}, vars) do vars end

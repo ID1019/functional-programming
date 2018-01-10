@@ -78,17 +78,12 @@ this language using a BNF grammar.
 We assume that we have two lexical constructs, {\em atoms} and {\em
   variables} that consist of all words written in with an initial
 lowercase, atoms, and initial uppercase letters, variables.  We also
-have one compound expression called a {\em cons}. This is a simple
-binary construct that holds two expressions.
-
+have one compound expression called a {\em cons}, a simple binary
+construct that holds two expressions.
 
 \begin{grammar}
-<expression> ::= <atom> \alt <variable> \alt <cons> 
-
-<cons> ::= '\{' <expression> ',' <expression> '\}'
+<expression> ::= <atom> \alt <variable> \alt '\{' <expression> ',' <expression> '\}'
 \end{grammar}
-
-
 
 If this was the whole language we would only be able to write
 expressions like {\tt {:foo, {x, :zot}}}. This would not be that
@@ -110,9 +105,7 @@ be called {\em don't care}.
 <pattern> ::= <atom>
 \alt <variable>
 \alt '_'  
-\alt <cons-pattern> 
-
-<cons-pattern> ::= '\{' <pattern> ',' <pattern> '\}'
+\alt '\{' <pattern> ',' <pattern> '\}' 
 \end{grammar}
 
 An expression is just a syntactical construct, the grammar presented
