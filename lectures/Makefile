@@ -3,6 +3,7 @@ PDFLATEX = pdflatex
 DIRS = 	overview \
 	introduction \
 	evaluation \
+	recursion \
 	functions \
 	trees \
 	complexity \

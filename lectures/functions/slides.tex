@@ -55,7 +55,7 @@
 
 <match> ::=  <pattern> '=' <expression>
 
-<sequence> ::=  <expression> | <match> ',' <sequence>
+<sequence> ::=  <expression> | <match> ';' <sequence>
 \end{grammar}
 
 \end{frame}
@@ -76,38 +76,59 @@ $v/s \in \sigma$, $v$ is a variable and $s$ is a structure.
 
 \vspace{10pt}\pause $$\frac{v/s \in \sigma}{E\sigma(v) \rightarrow s}$$
 
-\vspace{10pt}\pause $$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow c(s_1, s_2)}$$
+\vspace{10pt}\pause $$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow {s_1, s_2}}$$
 
 \pause\vspace{20pt}{\em Evaluation can result in $\perp$, if a variable is unbound.}
 
 \end{frame}
 
-
 \begin{frame}{pattern matching}
 
-\begin{itemize}
-  \pause \item $P\sigma(a, s) \rightarrow \sigma$  if  $a \equiv s$
-  \pause \item $P\sigma(\_,s) \rightarrow \sigma$  
-  \pause \item $P\sigma(v, s) \rightarrow \sigma$  if \pause $ v/s \in \sigma $
-  \pause \item $P\sigma(v, s) \rightarrow \lbrace v/s \rbrace \cup \sigma$ if \pause $ v/t \not\in \sigma$
-   \pause \item $P\sigma(\lbrace p_1, p_2 \rbrace, \lbrace s_1, s_2 \rbrace) \rightarrow \theta$ if
-   \begin{itemize}
-     \pause \item  $P\sigma(p_1, s_1) \rightarrow \sigma' \wedge P\sigma'(p_2, s_2) \rightarrow \theta$
-   \end{itemize}
+  $$\frac{a \not\equiv s}{P\sigma(a, s) \rightarrow {\rm fail}}$$
 
-\end{itemize}
+  \vspace{20pt}\pause
+  $$\frac{}{P\;{\rm fail}\;(e, s) \rightarrow {\rm fail}}$$
 
-\pause\vspace{20pt}
-Pattern matching can {\em fail}. 
+  \vspace{20pt}\pause
+
+  $$\frac{a \equiv s}{P\sigma(a, s) \rightarrow \sigma}$$
+
+  \vspace{20pt}\pause
+
+  $$\frac{}{P\sigma(\_,s) \rightarrow \sigma}$$
+
+\end{frame}
+
+\begin{frame}{pattern matching}
+  
+  \vspace{20pt} \pause
+
+  $$\frac{v/t \not\in \sigma}{P\sigma(v, s) \rightarrow \lbrace v/s \rbrace \cup \sigma}$$
+
+  \vspace{20pt}\pause
+  
+  $$\frac{v/s \in \sigma}{P\sigma(v, s) \rightarrow \sigma}$$
+
+  \vspace{20pt}\pause
+  
+  $$\frac{v/t \in \sigma \wedge t \not\equiv s}{P\sigma(v, s) \rightarrow {\rm fail} }$$ 
+\end{frame}
+
+\begin{frame}{pattern matching}
+  
+ $$\frac{P\sigma(p_1, s_1) \rightarrow \sigma' \wedge P\sigma'(p_2, s_2) \rightarrow \theta}{P\sigma(\lbrace p_1, p_2 \rbrace  , \lbrace s_1, s_2 \rbrace) \rightarrow \theta}$$
 
 \end{frame}
 
 \begin{frame}{evaluation of sequences}
 
+  Remove variable that should be shadowed:
+
+  \pause\vspace{10pt}
+  
 $$\frac{\sigma' = \sigma \setminus \lbrace v/t \quad | \quad v/t \in \sigma \quad \wedge \quad  v \quad {\rm in} \quad p\rbrace}{S(\sigma, p) \rightarrow \sigma'}$$
 
 \pause\vspace{20pt}
-
 
 $$\frac{   
   E\sigma(e) \rightarrow t
@@ -179,29 +200,29 @@ C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence} ; {\rm clauses}) \rightarro
 \begin{frame}{example}
 
 \begin{eval}
-  \pause$E\lbrace X/\lbrace a,b\rbrace\rbrace(${\tt case X of a -> a; \{\_,Y\} -> Y end}$) \rightarrow$ 
+  \pause$E\lbrace x/\lbrace a,b\rbrace\rbrace(${\tt case x of :a -> :a; \{\_,y\} -> y end}$) \rightarrow$ 
 \end{eval}
 
 \begin{eval}
-   \hspace{40pt}\pause$E\lbrace X/\lbrace a,b\rbrace\rbrace(${\tt X}$) \rightarrow \lbrace a,b\rbrace$
+   \hspace{40pt}\pause$E\lbrace X/\lbrace a,b\rbrace\rbrace(${\tt x}$) \rightarrow \lbrace a,b\rbrace$
 \end{eval}
 
 \begin{eval}
-   \pause $C\lbrace X/\lbrace a,b\rbrace\rbrace(\lbrace a,b\rbrace, ${\tt \ a -> a; \{\_,Y\} -> Y}$) \rightarrow$ 
+   \pause $C\lbrace X/\lbrace a,b\rbrace\rbrace(\lbrace a,b\rbrace, ${\tt \ :a -> :a; \{\_,y\} -> y}$) \rightarrow$ 
 \end{eval}
 \begin{eval}
-   \hspace{40pt}\pause $P\lbrace X/\lbrace a,b\rbrace\rbrace( a, \lbrace a,b\rbrace) \rightarrow \mathrm{fail}$
-\end{eval}
-
-\begin{eval}
-   \pause $C\lbrace X/\lbrace a,b\rbrace\rbrace(\lbrace a,b\rbrace, ${\tt \  \{\_,Y\} -> Y}$) \rightarrow$ 
-\end{eval}
-\begin{eval}
-   \hspace{40pt}\pause $P\lbrace X/\lbrace a,b\rbrace\rbrace(\{\_, Y\}, \lbrace a,b\rbrace) \rightarrow $ \pause $\lbrace Y/b,\  X/\lbrace a,b\rbrace\rbrace$
+   \hspace{40pt}\pause $P\lbrace x/\lbrace a,b\rbrace\rbrace\rbrace( ${\tt :a}$, \lbrace a,b\rbrace) \rightarrow \mathrm{fail}$
 \end{eval}
 
 \begin{eval}
-  \pause$E\lbrace Y/b, X/\lbrace a,b\rbrace\rbrace(${\tt Y}$) \rightarrow $
+   \pause $C\lbrace x/\lbrace a,b\rbrace\rbrace(\lbrace a,b\rbrace, ${\tt \  \{\_,y\} -> y}$) \rightarrow$ 
+\end{eval}
+\begin{eval}
+   \hspace{40pt}\pause $P\lbrace x/\lbrace a,b\rbrace\rbrace(${\tt \{\_,y\}}$, \lbrace a,b\rbrace) \rightarrow $ \pause $\lbrace y/b,\  x/\lbrace a,b\rbrace\rbrace$
+\end{eval}
+
+\begin{eval}
+  \pause$E\lbrace y/b, x/\lbrace a,b\rbrace\rbrace(${\tt y}$) \rightarrow $
 \end{eval}
 \begin{eval}
   \pause$b$
@@ -236,20 +257,17 @@ pattern matching expressions in the clause {\tt <pattern> -> <sequence>} if the 
 
 \begin{frame}{free variables}
 
-{\tt x = :a, \{y,z\} = \{x,:b\}, \{x,y,z\}}
+{\tt x = :a; \{y,z\} = \{x,:b\}; \{x,y,z\}}
 
 \pause\vspace{20pt}
 
-{\tt \{y,z\} = \{x,:b\}, \{x,y,z\}}
-
+{\tt \{y,z\} = \{x,:b\}; \{x,y,z\}}
 
 \pause\vspace{20pt}
 
-
-{\tt x = \{:a,:b\}, case x do \{:a,z\} -> z end}
+{\tt x = \{:a,:b\}; case x do \{:a,z\} -> z end}
 
 \end{frame}
-
 
 \begin{frame}[fragile]{free variables}
 
@@ -257,7 +275,7 @@ pattern matching expressions in the clause {\tt <pattern> -> <sequence>} if the 
 
 \hspace{20pt}
 \begin{verbatim}
-   x = {:a,:b},
+   x = {:a,:b};
    y = case x do
          {:a, z} -> {:c, z}
        end,
@@ -269,80 +287,7 @@ pattern matching expressions in the clause {\tt <pattern> -> <sequence>} if the 
   allowed in Elixir and Erlang (but it should not be).}
 
 \end{frame}
-
-
  
-
-\begin{frame}{function definitions}
-
-We could do without named  function definitions  but it's convenient to include them in our language. 
-
-\vspace{20pt}
-
-Assume we have a {\em program}, $P$, that is a set of named function definitions on the form:
-
-  $${\rm name}(v_1, ...) {\rm do}  {\rm sequence}  {\rm end}$$
-
-where $v_1, ...$ is a sequence of unique variables called the {\em parameters} of the function. 
-
-\pause \vspace{20pt}
-
-Any free variable in sequence of the definition must occur in the parameters.
-
-\end{frame}
-
-\begin{frame}{function application}
-
-We extend the definition of expressions, to include function application:
-
-\pause
-\begin{grammar}
-<expression> ::= <fun> '(' <arguments> ') | \ldots
-
-<arguments> ::= <expression> | <expression> ',' <arguments>
-
-<fun> ::=  foo | bar | zot | \ldots
-\end{grammar}
-
-\pause {\em We will later extend the definition of functions but let us keep things simple for now.}
-
-\end{frame}
-
-
-\begin{frame}{evaluation of function application}
-
-Assume we have a program $P$ that consist of a set of named functions. 
-
- \begin{itemize} 
-  \pause\item $E\sigma({\rm name}(e_1, \ldots)) \rightarrow E\{v_1/s_1, \ldots\}({\rm sequence} )$ 
-   \begin{itemize}        
-           \pause\item if $E\sigma(e_i) \rightarrow s_i$ and 
-           \pause\item ${\rm name}(v_1, \ldots) \rightarrow  {\rm sequence}  \in P$ 
-    \end{itemize} 
- \end{itemize} 
-
-\pause\vspace{20pt}
-
-{\em Note that the sequence is evaluated in an environment independent of $\sigma$.}
-
-\end{frame}
-
-\begin{frame}[fragile]{example}
-
-\begin{verbatim}
-def append(X,Y) do
-    case x do
-       :nil -> Y; 
-       {h, t} -> {h, append(t, y)} 
-    end
-end
-\end{verbatim}
-
-\pause\vspace{20pt}
-evaluate $E\lbrace\rbrace( ${\tt append(\{:a,\{:b,:nil\}\}, \{:c,:nil\})}$ )$
-
-\end{frame}
-
 
 \begin{frame}{much ado about nothing}
 

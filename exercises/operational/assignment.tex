@@ -122,7 +122,7 @@ domain.
 
 $${\rm Atoms} =  \{a,b,c, ...\}$$
 
-$${\rm Structures} = {\rm Atoms} \cup \{c(d_1, d_2) | d_i \in {\rm Structures}\}$$
+$${\rm Structures} = {\rm Atoms} \cup \{\{d_1, d_2\} | d_i \in {\rm Structures}\}$$
 
 There is of course a equivalence relation between our atoms in the
 language and the atoms in the domain. You might wonder if they are not
@@ -130,7 +130,7 @@ the same but there is a difference between expressions in our language
 and elements in our domain. Think about the written number ``12'' or
 in Roman ``XII'' and the number twelve. We will have expression that
 look like {\tt \{:foo, \{:bar, :zot\}\}} and data structures that we
-write {\em c(foo, c(bar, zot))}. If everything works out fine, the
+write {\em \{foo, \{bar, zot\}\}}. If everything works out fine, the
 {\em evaluation} of an expression will return the corresponding data
 structure.
 
@@ -194,7 +194,7 @@ The rule for a compound expression {\tt \{:foo, :bar\}} is straight
 forward Given that we can evaluate its two components we will of
 course be able to evaluate the compound expression.
 
-$$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow c(s_1, s_2)}$$
+$$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow {s_1, s_2}}$$
 
 \subsection{a pattern matching expression}
 
@@ -228,15 +228,15 @@ $$\frac{a \not\equiv s}{P\sigma(a, s) \rightarrow {\rm fail}}$$
 If we have a unbound variable as a pattern then the variable is bound to a
 structure in the environment. 
 
-$$\frac{v/t \not\in \sigma}{P\sigma(v, s) \rightarrow \lbrace v/s \rbrace \cup \sigma \rbrace) }$$ 
+$$\frac{v/t \not\in \sigma}{P\sigma(v, s) \rightarrow \lbrace v/s \rbrace \cup \sigma }$$ 
 
 If the variable is bound to the equivalent structure we proceed
 without extending the environment but if it is bound to something else
 we fail.
 
-$$\frac{v/s \in \sigma}{P\sigma(v, s) \rightarrow \lbrace \sigma \rbrace) }$$
+$$\frac{v/s \in \sigma}{P\sigma(v, s) \rightarrow \sigma  }$$
 
-$$\frac{v/t \in \sigma \wedge t \not\equiv s}{P\sigma(v, s) \rightarrow \lbrace {\rm fail} \rbrace) }$$ 
+$$\frac{v/t \in \sigma \wedge t \not\equiv s}{P\sigma(v, s) \rightarrow  {\rm fail} }$$ 
 
 Matching a cons expression is quite simple but note what the rules
 says about the environment. We need to do the pattern matching of the
@@ -247,15 +247,15 @@ the first matching that must be consisting with the second matching.
 $$\frac{P\sigma(p_1, s_1) \rightarrow \sigma' \wedge P\sigma'(p_2, s_2) \rightarrow \theta}{P\sigma(\lbrace p_1, p_2 \rbrace  , \lbrace s_1, s_2 \rbrace) \rightarrow \theta}$$
 
 As an exercise you should do the pattern matching of the expression
-{\tt \{x, \{x, :c\}\}} and the data structure {\em c(a, c(b, c))}. Note
+{\tt \{x, \{x, :c\}\}} and the data structure {\em \{a, \{b, c\}\}}. Note
 how we first add {\em x/a} as a binding and then {\em shadow} this binding when
-we match {\tt \{x, :c\}} and {\em c(b,c)}.
+we match {\tt \{x, :c\}} and {\em \{b,c\}}.
 
 The remaining alternative, the case where we have a cons expression and
 we try to match this to an data structure that is not a compound data
 structure, will of course lead to a failure.
 
-$$\frac{s \not = c(s_1, s_2)}{P\sigma(\lbrace p_1, p_2 \rbrace, s) \rightarrow {\rm fail}}$$
+$$\frac{s \not = \{s_1, s_2\}}{P\sigma(\lbrace p_1, p_2 \rbrace, s) \rightarrow {\rm fail}}$$
 
 That it is as far as pattern matching goes. Try to do some matching by
 hand and explain which rules you apply. Try these:
@@ -310,8 +310,8 @@ the final expression.
 That is it, we now have all the rules to evaluate a sequence on the
 form shown in fig:\ref{fig:seq1}. Make sure that you understand
 the rules and how they are applied by evaluating the sequence by
-hand. If you get it right the result will be {\em c(foo, c(bar,
-  nil))}. When you get it right you're ready to continue.
+hand. If you get it right the result will be {\em \{foo, \{bar,
+  nil\}\}}. When you get it right you're ready to continue.
 
 
 \section{Adding a case expression}
@@ -485,7 +485,7 @@ $\theta$, there will not be any duplicate bindings.
 
 Looks complicated but it's quite straight forward. Go through the
 evaluation of sequence \ref{fig:seq2}. If everything works out fine
-the result should be {\em c(foo, bar)}.
+the result should be {\em \{foo, bar\}}.
 
 \begin{figure}[ht]
 \center
