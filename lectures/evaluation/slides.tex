@@ -26,6 +26,10 @@ We will define a small subset of the Elixir language and describe the
 
 \begin{frame}{expressions}
 
+  The language is described using a BNF notation.
+  \pause
+  \vspace{10pt}
+  
 \begin{grammar}
 <atom> ::= :a | :b | :c | \ldots
 
@@ -36,10 +40,10 @@ We will define a small subset of the Elixir language and describe the
 <expression> ::= <literal> | <variable> |  '\{' <expression> ',' <expression> '\}'
 \end{grammar}
 
-
 \pause \vspace{20pt} Examples: {\tt \{:a,:b\}} , {\tt \{x,y\}} , {\tt \{:a, \{:b, z\}\}}
 
 \pause \vspace{20pt} Simple expressions are also referred to as {\em terms}.
+
 \end{frame}
 
 \begin{frame}{patterns}
@@ -86,6 +90,44 @@ examples:
 
 \begin{frame}{evaluation}
 
+  When we {\em evaluate} sequences, the result will be a structure.
+  \pause\vspace{10pt}
+
+$${\rm Atoms} =  \{a,b,c, ...\}$$
+
+$${\rm Structures} = \{\perp\} \cup {\rm Atoms} \cup \{\{s_1, s_2\} | s_i \in {\rm Structures}\}$$
+
+\pause \vspace{20pt}
+The symbol $\perp$ is called ``bottoms'' and represents a failed evaluation.
+
+\end{frame}
+
+\begin{frame}{injective mapping}
+
+\pause \vspace{20pt}
+For every atom {\tt a}, there is a corresponding structure $s$.
+
+\vspace{10pt}
+\hspace{40pt}We write ${\rm a} \equiv s$.
+
+\pause \vspace{10pt}
+\hspace{40pt} {\tt :foo} $\equiv foo$
+
+\hspace{40pt} {\tt :gurka} $\equiv gurka$
+
+
+\pause \vspace{20pt}
+
+{\em For every digit \texttt{1,2,3} (or \texttt{I, II, III}) there is a corresponding number $1,2,3$.}
+
+\pause \vspace{20pt}
+{\em Our language could have structures that do not have corresponding terms.}
+
+\end{frame}
+
+
+\begin{frame}{evaluation}
+
 A sequence is evaluated given an {\em environment}, written $\sigma$ (sigma).
 
 \pause\vspace{20pt}
@@ -102,50 +144,7 @@ We write:
 $$\frac{{\rm prerequisite}}{E\sigma({\rm expression}) \rightarrow {\rm result}}$$
 
 \vspace{20pt}
-where {\em result} is a {\em data structure}.
-
-\end{frame}
-
-\begin{frame}{data structures}
- 
-  We have a small domain, consisting only of atoms and a binary compound
-  structures.
-  \pause
-  \vspace{20pt}
-
-  \begin{tabular}{r l l}
-   {\em Atoms} & = & \{a, b, c, \ldots\} \\
-   {\em Structures} & = & {\em Atoms} $\cup$ \{ \{a, b\} \textbar a $\in$ {\em Structures}  $\wedge$  b $\in$ {\em Structures} \}
-  \end{tabular}
-
-  \pause \vspace{20pt}
-
-  {\em These are the data structures that will be the result of our evaluation.}
-
-  \pause \vspace{10pt}
-
-  \begin{itemize}
-     \pause \item {\em a}
-     \pause \item {\em \{a, \{b, c\}\}}
-  \end{itemize}
-
-\end{frame}
-
-
-\begin{frame}{equivalence relation}
-
-We have a one-to-one mapping from pattern- and term-atoms, to atoms in the set of data structures.
-
-\pause \vspace{20pt}
-
-For every term atom {\tt a}, there is a corresponding atom structure $s$.
-
-\pause \vspace{20pt}
-
-{\em For every digit \texttt{1,2,3} (or \texttt{I, II, III}) there is a corresponding number $1,2,3$.}
-
-\vspace{20pt}
-We write ${\rm a} \equiv s$.
+where {\em result} is a {\em structure}.
 
 \end{frame}
 
@@ -154,16 +153,19 @@ We write ${\rm a} \equiv s$.
 
 We have the following rules for evaluation of expressions:
 
-\vspace{10pt}\pause $$\frac{a \equiv s}{E\sigma(a) \rightarrow s}$$
+\vspace{10pt}\pause Evaluation of an atom: $$\frac{a \equiv s}{E\sigma(a) \rightarrow s}$$
 
-\vspace{10pt}\pause $$\frac{v/s \in \sigma}{E\sigma(v) \rightarrow s}$$
+\vspace{10pt}\pause Evaluation of a variable: $$\frac{v/s \in \sigma}{E\sigma(v) \rightarrow s}$$
 
-\vspace{10pt}\pause $$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow c(s_1, s_2)}$$
-
+\vspace{10pt}\pause Evaluation of a compund structure: $$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow \{s_1, s_2\}}$$
  
-\vspace{20pt}\pause What if we have $E\sigma(v)$ and $\ v/s \not\in \sigma$?
+\end{frame}
 
-\pause $$\frac{ v/s \not\in \sigma}{E\sigma(v) \rightarrow  \perp}$$  
+\begin{frame}{evaluation of expressions}
+
+  \vspace{20pt} What if we have $E\sigma(v)$ and $\ v/s \not\in \sigma$? 
+
+  \pause $$\frac{ v/s \not\in \sigma}{E\sigma(v) \rightarrow  \perp}$$  
 
 \end{frame}
 
@@ -172,37 +174,33 @@ We have the following rules for evaluation of expressions:
  assume: $\sigma = \lbrace x/\lbrace a, b\rbrace\rbrace$ 
 
   \begin{eval}
-    \pause $E\sigma({\tt :c})$ & $\rightarrow $ \pause $c$\\
-    \pause $E\sigma(x)$ & $\rightarrow $ \pause $\lbrace a, b \rbrace$
+    \pause $E\sigma({\texttt :c})$ & $\rightarrow $ \pause $c$\\
+    \pause $E\sigma({\texttt x})$ & $\rightarrow $ \pause $\lbrace a, b \rbrace$
   \end{eval}
 
   \vspace{20pt}\pause assume: $\sigma = \lbrace x/a, y/b \rbrace$ 
 
   \pause \begin{eval}
-    $E\sigma(\lbrace x, y\rbrace)$  &\pause $\rightarrow \lbrace a , b \rbrace$
+    $E\sigma({\texttt \{ x, y\}})$  &\pause $\rightarrow \lbrace a , b \rbrace$
   \end{eval}
 \end{frame}
 
 \begin{frame}{pattern matching}
 
-The result of evaluating a {\em pattern matching} is a an
-environment.  We write: $$P\sigma(p,s) \rightarrow \theta$$ where
-$\theta$ (theta) is the set of variable bindings we obtain.
+  The result of evaluating a {\em pattern matching} is a an extended
+  environment. \pause We write: $$P\sigma(p,s) \rightarrow \theta$$
+  where $\theta$ (theta) is the extended environment.
 
-\pause\vspace{10pt}
+\pause\vspace{10pt} Match an atom and a structure:
 $$\frac{a \equiv s}{P\sigma(a, s) \rightarrow \sigma}$$ 
 
 
-\pause\vspace{10pt}
+\pause\vspace{10pt} Match a variable and a structure:
 $$\frac{v/t \not\in \sigma}{P\sigma(v, s) \rightarrow \lbrace v/s \rbrace \cup \sigma}$$ 
 
 
-\pause\vspace{10pt}
+\pause\vspace{10pt} Match {\tt ignore} and a structure:
 $$\frac{}{P\sigma(\_, s) \rightarrow \sigma}$$ 
-
-\pause
-{\em Note that the second argument of the pattern matching is a data structure.}
-
 
 \end{frame} 
 
@@ -212,16 +210,16 @@ $$\frac{}{P\sigma(\_, s) \rightarrow \sigma}$$
 
 \pause\vspace{20pt}
 
-$$\frac{a \not\equiv s}{P\sigma(a, s) \rightarrow {\rm fail}}$$ 
+$$\frac{a \not\equiv s}{P\sigma(a, s) \rightarrow {\mathrm fail}}$$ 
 
 \pause\vspace{20pt}
 
 $$\frac{
 v/t \in \sigma \qquad  t \not\equiv s
-}{P\sigma(p, s) \rightarrow {\rm fail}}$$ 
+}{P\sigma(v, s) \rightarrow {\rm fail}}$$ 
 
 
-{\em A failure is not the same as $\perp$.}
+{\em A fail is not the same as $\perp$.}
 \end{frame}
 
 \begin{frame}{matching compound strcutures}
@@ -247,10 +245,10 @@ Note that the second part is evaluated in $\sigma'$.
 assume: $\sigma = \lbrace y/b\rbrace$
 
 \begin{itemize}
-  \pause\item $P\sigma(x , a) \rightarrow $\pause $\ \lbrace x/a \rbrace  \cup \sigma$
-  \pause\item $P\sigma(y , b) \rightarrow $\pause $\ \sigma$
-  \pause\item $P\sigma(y , a) \rightarrow $\pause  $\ \mathrm{fail}$
-  \pause\item $P\sigma(\lbrace y, y\rbrace , \lbrace a, b \rbrace) \rightarrow $\pause $\ \mathrm{fail}$
+  \pause\item $P\sigma({\texttt x} , a) \rightarrow $\pause $\ \lbrace x/a \rbrace  \cup \sigma$
+  \pause\item $P\sigma({\texttt y} , b) \rightarrow $\pause $\ \sigma$
+  \pause\item $P\sigma({\texttt y} , a) \rightarrow $\pause  $\ \mathrm{fail}$
+  \pause\item $P\sigma({\texttt \{ y, y\}} , \lbrace a, b \rbrace) \rightarrow $\pause $\ \mathrm{fail}$
 \end{itemize}
 
 \end{frame}
@@ -294,8 +292,6 @@ $$\frac{
 
 \end{frame}
 
-
-
 \begin{frame}{Where are we now}
 
 We have defined the semantics of a programming language (not a
@@ -331,5 +327,168 @@ What is missing:
   \item evaluation of function applications
 \end{itemize}
 \end{frame}
+
+\begin{frame}[fragile]{case expression}
+
+\begin{verbatim}
+   case  x  do
+       :a ->  :foo
+       :b ->  :bar
+   end
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{case expression}
+
+\begin{grammar}
+     <expression> ::=  <case expression> | ...  
+
+     <case expression> ::= 'case' <expression> 'do' <clauses>  'end' 
+
+     <clauses> ::=   <clause> | <clause> ';' <clauses>
+
+     <clause> ::=  <pattern> '->' <sequence>
+\end{grammar}
+\end{frame}
+
+\begin{frame}{evaluation of case expression}
+
+
+$$\frac{E\sigma(e) \rightarrow t \qquad C\sigma(t, {\rm clauses}) \rightarrow s }{E\sigma({\tt case}\ e \ {\tt do}\ {\rm clauses} \ {\tt end}) \rightarrow s}$$
+  
+
+
+ \vspace{20pt}\pause $C\sigma(s, {\rm clauses})$ will select one of
+ the clauses based on the patterns of the clauses and then continue the
+ evaluation of the sequence of the selected clause.
+\end{frame}
+
+\begin{frame}{selection of a clause}
+
+$$\frac{
+  \sigma' = S(\sigma, p) \qquad
+  P\sigma'(p, s) \rightarrow \theta \qquad
+  \theta \not = {\rm fail} \qquad
+  E\theta({\rm sequence}) \rightarrow s}{
+C\sigma(s, p \;{\rm -\textgreater}\;    {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
+
+\pause \vspace{10pt}
+
+$$\frac{
+  \sigma' = S(\sigma, p) \qquad
+  P\sigma'(p, s) \rightarrow {\rm fail} \qquad
+  C\sigma(s, {\rm clauses}) \rightarrow s}{
+C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
+
+
+\end{frame}
+
+\begin{frame}{example}
+
+\begin{eval}
+  \pause$E\lbrace x/\lbrace a,b\rbrace\rbrace(${\tt case x of :a -> :a; \{\_,y\} -> y end}$) \rightarrow$ 
+\end{eval}
+
+\begin{eval}
+   \hspace{40pt}\pause$E\lbrace X/\lbrace a,b\rbrace\rbrace(${\tt x}$) \rightarrow \lbrace a,b\rbrace$
+\end{eval}
+
+\begin{eval}
+   \pause $C\lbrace X/\lbrace a,b\rbrace\rbrace(\lbrace a,b\rbrace, ${\tt \ :a -> :a; \{\_,y\} -> y}$) \rightarrow$ 
+\end{eval}
+\begin{eval}
+   \hspace{40pt}\pause $P\lbrace x/\lbrace a,b\rbrace\rbrace\rbrace( ${\tt :a}$, \lbrace a,b\rbrace) \rightarrow \mathrm{fail}$
+\end{eval}
+
+\begin{eval}
+   \pause $C\lbrace x/\lbrace a,b\rbrace\rbrace(\lbrace a,b\rbrace, ${\tt \  \{\_,y\} -> y}$) \rightarrow$ 
+\end{eval}
+\begin{eval}
+   \hspace{40pt}\pause $P\lbrace x/\lbrace a,b\rbrace\rbrace(${\tt \{\_,y\}}$, \lbrace a,b\rbrace) \rightarrow $ \pause $\lbrace y/b,\  x/\lbrace a,b\rbrace\rbrace$
+\end{eval}
+
+\begin{eval}
+  \pause$E\lbrace y/b, x/\lbrace a,b\rbrace\rbrace(${\tt y}$) \rightarrow $
+\end{eval}
+\begin{eval}
+  \pause$b$
+\end{eval}
+  
+\end{frame}
+
+
+\begin{frame}{free variables}
+
+Are all syntactical correct sequences also valid sequences?
+
+\pause\vspace{20pt}
+
+A sequence must not contain any {\em free variables}.
+
+\pause\vspace{10pt}
+
+A free variable in a {\tt <sequence>} is bound by the
+pattern matching expressions in the sequence {\tt <patter> =
+<expression>, <sequence>} if the variable occurs in the {\tt
+<pattern>}.
+
+\pause\vspace{10pt}
+
+A free variable in a {\tt <sequence>} is bound by the pattern matching
+expressions in the clause {\tt <pattern> -> <sequence>} if the
+variable occurs in the {\tt <pattern>}.
+
+
+\end{frame}
+
+\begin{frame}{free variables}
+
+{\tt x = :a; \{y,z\} = \{x,:b\}; \{x,y,z\}}
+
+\pause\vspace{20pt}
+
+{\tt \{y,z\} = \{x,:b\}; \{x,y,z\}}
+
+\pause\vspace{20pt}
+
+{\tt x = \{:a,:b\}; case x do \{:a,z\} -> z end}
+
+\end{frame}
+
+\begin{frame}{much ado about nothing}
+
+A lot of work for something that simple - why bother, it could not have
+been done differently.
+\end{frame}
+
+
+\begin{frame}[fragile]{variable scope}
+
+\vspace{20pt}
+
+\hspace{20pt}
+\begin{verbatim}
+   x = {:a,:b};
+   y = case x do
+         {:a, z} -> {:c, z}
+       end;
+   {y, z}
+\end{verbatim}
+
+\vspace{20pt}{\em This is not allowed in our language, \texttt{Z} in
+  \texttt{\{Y,Z\}} is a free variable. However .... \pause this is
+  allowed in Elixir and Erlang (but it should not be).}
+
+\end{frame}
+ 
+\begin{frame}{what's missing}
+
+\vspace{20pt}\hspace{20pt} Handle lambda expressions, closures and function application.
+  
+\end{frame}
+
+
+
 
 \end{document}

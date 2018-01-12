@@ -4,7 +4,6 @@ DIRS = 	overview \
 	introduction \
 	evaluation \
 	recursion \
-	functions \
 	trees \
 	complexity \
 	higher
