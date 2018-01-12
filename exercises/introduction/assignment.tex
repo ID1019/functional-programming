@@ -279,8 +279,7 @@ Start by defining a function {\em insert(element, list)}, that inserts
 the element at the right place in the list. Think of the two mayor
 cases, what to do if the list is empty and what to do if the list
 contains at least one element. Assume that the elements are integers
-and can be compared using the regular {\em <} operator.
-
+and can be compared using the regular $<$ operator.
 
 Once you have {\em insert/2} working, implement the sorting function
 {\em isort(List, Sorted)}; again what should you do if the list is
@@ -299,7 +298,7 @@ calls the function {\em isort/2} using the right arguments.
    case ...  do
      [] -> 
         ...
-     [x|t] ->
+     [h|t] when h < x ->
         ...
      [h|t] ->
         ...
@@ -308,7 +307,7 @@ calls the function {\em isort/2} using the right arguments.
 \end{verbatim}
 
 Try also to rewrite the {\em isort} function using the clause syntax;
-same same but different.
+same-same but different.
 
 
 \subsection{merge sort}
@@ -329,12 +328,12 @@ will look like. Here we do use the clause syntax when defining {\em
 becomes a bit messy.
 
 \begin{verbatim}
- def msort(..) do
+ def msort(l) do
    case ..  do
      .. -> 
        ...
      .. ->
-       {.., ..} = msplit(.., .., ..)
+       {.., ..} = msplit(l, [], [])
        merge(msort(..), msort(..))
    end
  end
