@@ -1,5 +1,6 @@
 DIRS =	huffman \
-	introduction \
+	derivative \
+        introduction \
 	interpreter \
 	lambda \
 	mandel \
