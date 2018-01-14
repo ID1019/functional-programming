@@ -1,10 +1,9 @@
 defmodule Morse do
 
-  # Some test samples to decode
+  # Some test samples to decode.
+  def base(), do: '.- .-.. .-.. ..-- -.-- --- ..- .-. ..-- -... .- ... . ..-- .- .-. . ..-- -... . .-.. --- -. --. ..-- - --- ..-- ..- ... '
 
-  def base, do: '.- .-.. .-.. ..-- -.-- --- ..- .-. ..-- -... .- ... . ..-- .- .-. . ..-- -... . .-.. --- -. --. ..-- - --- ..-- ..- ... '
-
-  def rolled, do: '.... - - .--. ... ---... .----- .----- .-- .-- .-- .-.-.- -.-- --- ..- - ..- -... . .-.-.- -.-. --- -- .----- .-- .- - -.-. .... ..--.. ...- .----. -.. .--.-- ..... .---- .-- ....- .-- ----. .--.-- ..... --... --. .--.-- ..... ---.. -.-. .--.-- ..... .---- '
+  def rolled(), do: '.... - - .--. ... ---... .----- .----- .-- .-- .-- .-.-.- -.-- --- ..- - ..- -... . .-.-.- -.-. --- -- .----- .-- .- - -.-. .... ..--.. ...- .----. -.. .--.-- ..... .---- .-- ....- .-- ----. .--.-- ..... --... --. .--.-- ..... ---.. -.-. .--.-- ..... .---- '
 
   def decode(signal) do
     table = decode_table()
@@ -12,16 +11,23 @@ defmodule Morse do
   end
 
   def decode([], _, _), do: []
-  def decode([?-  | signal], {:node, _, long, _}, table),  do: decode(signal, long, table)
-  def decode([?.  | signal], {:node, _, _, short}, table), do: decode(signal, short, table)
-  def decode([?\s | signal], {:node, :na, _, _}, table),   do: decode(signal, table, table)
-  def decode([_   | signal], {:node, char, _, _}, table),  do: [char | decode(signal, table, table)]
+  def decode([?- | signal], {:node, _, long, _}, table) do
+    decode(signal, long, table)
+  end
+  def decode([?. | signal], {:node, _, _, short}, table) do
+    decode(signal, short, table)
+  end
+  def decode([?\s | signal], {:node, :na, _, _}, table) do
+    decode(signal, table, table)
+  end
+  def decode([_ | signal], {:node, char, _, _}, table) do
+    [char | decode(signal, table, table)]
+  end
 
   def encode(text) do
     table = encode_table()
     encode(text, [], table)
   end
-
   defp encode([], all, _), do: unpack(all, [])
   defp encode([char | rest], sofar, table) do
     code = lookup(char, table)
@@ -29,33 +35,33 @@ defmodule Morse do
   end
 
   defp unpack([], done), do: done
-  defp unpack([code | rest], sofar), do: unpack(rest, code ++ [?\s | sofar])
+  defp unpack([code | rest], sofar) do
+    unpack(rest, code ++ [?\s | sofar])
+  end
 
-  # Naive lookup
+  # Lookup for a character in the encoding table.
+  # Option 1: simple keyfind
+  # defp encode_table, do: codes()
 
-  #defp encode_table, do: codes()
+  # defp lookup(char, table) do
+  #   encoding = List.keyfind(table, char, 0)
+  #   elem(encoding, 1)
+  # end
 
-  #defp lookup(char, table) do
-  #  List.keyfind(table, char, 0)
-  #  |> elem(1)
-  #end
-
-  # Constant lookup
-
-  defp encode_table do
+  # Lookup for a character in the encoding table.
+  # Option 2: constant time
+  defp encode_table() do
     codes()
     |> fill(0)
     |> List.to_tuple
   end
-
   defp lookup(char, table), do: elem(table, char)
 
   defp fill([], _), do: []
   defp fill([{n, code} | codes], n), do: [code | fill(codes, n + 1)]
   defp fill(codes, n), do: [:na | fill(codes, n + 1)]
 
-  # Decoding tree
-
+  # Morse decoding tree.
   defp decode_table do
     {:node, :na,
       {:node, 116,
@@ -96,6 +102,7 @@ defmodule Morse do
             {:node, 104, {:node, 52, nil, nil}, {:node, 53, nil, nil}}}}}}
   end
 
+  # Morse representation of common characters.
   defp codes do
     [{32, '..--'},
      {37,'.--.--'},
