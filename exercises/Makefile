@@ -1,11 +1,14 @@
 DIRS =	huffman \
 	derivative \
+        concurrency \
         introduction \
 	interpreter \
 	lambda \
 	mandel \
 	morse \
 	operational \
+	philosophers \
+	avl \
 	twothree
 
 

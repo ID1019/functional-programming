@@ -1,0 +1,440 @@
+\input{../include/preamble}
+
+\title[ID1019 Maps and Structs]{Maps and Structs}
+
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+
+\begin{frame}[fragile]{Java vs Elixir}
+
+  \pause
+  \begin{columns}
+    \begin{column}{0.6\textwidth}
+\begin{verbatim}
+public static int fib(int n) {
+
+    if ( n == 0 )
+      return 0;
+
+    int n2 = 0, n1 = 1;
+    int ni = n1;
+
+    for(int i = 1; i < n; i++) { 
+        ni = n1 + n2;  
+        n2 = n1;
+        n1 = ni; 
+     }
+     return ni;
+};
+\end{verbatim}      
+    \end{column}
+    \begin{column}{0.4\textwidth}
+\begin{verbatim}
+def fib(0) do  0 end
+def fib(1) do  1 end
+def fib(n) do
+  fib(n-1) + fib(n-2)
+end
+\end{verbatim}
+    \end{column}
+  \end{columns}
+
+
+\end{frame} 
+
+\begin{frame}[fragile]{Elixir type specification}
+
+\pause\vspace{10pt}
+\begin{verbatim}
+ @spec fib(integer()) :: integer()
+
+ def fib(0) do  0 end
+ def fib(1) do  1 end
+ def fib(n) do
+   fib(n-1) + fib(n-2)
+ end
+\end{verbatim}
+
+\vspace{20pt}\pause The compiler does not care about type specifications!
+
+\vspace{10pt}\pause Compiles ok:
+\begin{verbatim}
+        :
+     fib(:bananas)
+        :
+\end{verbatim}
+
+\end{frame}
+
+
+
+\begin{frame}{types in Erlang}
+
+What types do we have:
+\pause\vspace{10pt}
+Singletons, the types of individual data structures:
+\begin{itemize}
+\item  1, 2 or 42
+\item ':foo', ':bar' or ':atom'
+\item  \{:foo, 42\}
+\end{itemize}
+\pause\vspace{10pt}
+Unions of singletons, what we normally refer to as ``types'':
+\begin{itemize}
+\item integer(): any integer value 
+\item float(): any floating point value 
+\item atom(): any atom 
+\item pid(): a process identifier
+\item reference(): a reference
+\item fun(): a function 
+\item .. and many more
+\end{itemize}
+
+{\em Could also be witten without the ``()''. }
+\end{frame}
+
+\begin{frame}{types in Elixir}
+Types for compound data structures:
+\pause\vspace{10pt}
+\begin{itemize}
+\item  tuples: {\tt \{\}}, {\tt \{atom(), integer()\}}, ....
+\item  lists: {\tt [integer()]}, {\tt [\{atom(), integer()\}]}, {\tt []}... \pause
+\end{itemize}
+
+\begin{itemize}
+\item  tuple(): a tuple of any size \pause
+\item  list(): a proper list of any type ({\tt [any()]} \pause
+\item  list(integer()) : a proper list of integers \pause
+\end{itemize} \pause
+
+\end{frame}
+
+
+\begin{frame}[fragile]{type declarations}
+
+  \pause\vspace{10pt}
+
+  Cards are represented as {\tt \{:card, suit, value\}}, where the
+  suit is represented using the atoms {\tt :spade}, {\tt :heart}, {\tt
+    :diamond} and {\tt :clubs}.
+
+\vspace{10pt}
+How do we specify the type for {\em suit/1}:
+
+\begin{verbatim}
+suit({:card, suit, _}) do suit end
+\end{verbatim}
+\pause\vspace{10pt}
+\begin{verbatim}
+@spec suit(tuple()) :: atom()
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{defining types}
+
+We would like to define our own type that specifies what a card looks like.
+
+\begin{verbatim}
+ @type value() :: 1..13 
+\end{verbatim}
+\pause
+
+\begin{verbatim}
+ @type suit() :: :spade | :heart | :diamond | :clubs 
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+ @type card() :: {:card, suit(), value()}
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+ @spec suit(card()) :: suit() 
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{defining types}
+
+\pause
+\begin{verbatim}
+ @type boolean() :: true | false
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+ @type byte() :: 1..255 
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+ @type number() :: integer() | float() 
+\end{verbatim}
+\pause
+The type {\tt any()}, defines the union of all types.
+
+\end{frame}
+
+
+\begin{frame}[fragile]{defining types}
+
+The type list(T) is the type of lists containing elements of type T.
+\pause
+
+\begin{verbatim}
+ @type list(T) :: [] | [T|list(T)].
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+ @type string() :: list(char()).
+\end{verbatim}
+
+Define the type of a deck of cards.
+\pause
+\begin{verbatim}
+ @type deck() :: list(card()).
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}{program annotation}
+
+Type specifiers are used for:
+\begin{itemize}
+\item documentation of intended usage
+\pause
+\item automatic detection of type errors
+\end{itemize}
+
+\pause\vspace{10pt}
+{\em the compiler does not check types}
+
+\pause\vspace{10pt}
+Dialyzer:
+
+\begin{itemize}
+\item checks that given specifications agree with call patterns
+\item detects exceptions and dead code 
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}{dynamically typed}
+
+Elixir is a {\em dynamically typed} language: types are checked and handled at run time.
+
+{\em other dynamically typed languages: PHP, Python, Erlang, Lisp, Prolog}
+
+\vspace{20pt}
+
+Java is a {statically typed} language: types are checked and handled at compile time.
+
+{\em other statically typed languages: C/C++, Haskell, Scala, Rust}
+
+\end{frame}
+
+\begin{frame}[fragile]{statically typed}
+
+  The advantage of a statically typed language:
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+\begin{verbatim}
+typedef struct person {
+  int id;
+  char name[20];
+  char email[20];
+} person;
+
+void hello(person *who) {
+  printf("Hello %s\n", who->name);
+}
+\end{verbatim}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+\begin{verbatim}
+@type person() :: {:person, 
+                       integer(), 
+                       binary(), 
+                       binary()}
+      
+def hello({:person, _, name, _}) do
+   IO.write("Hello #{name}\n")
+end
+\end{verbatim}
+    \end{column}
+  \end{columns}
+
+  \vspace{20pt}
+\pause {\em In a statically typed langauge, the compiled code of 
+    {\tt hello()} takes the structure {\tt person} for granted.}
+    
+\end{frame}
+
+\begin{frame}[fragile]{type inference}
+
+  A statically typed language does not imply that the programmer has
+  to specify all types explicitly - the compiler can infer the types (
+  Haskell, Rust, ..).
+
+  \vspace{10pt}\pause
+\begin{verbatim}
+fib 0 = 0
+fib 1 = 1
+fib n = fib (n-1) + fib (n-2)
+\end{verbatim}
+  
+
+\end{frame}
+
+\begin{frame}{dynamically vs statically}
+
+The pros and cons of dynamically typed languages:
+
+\begin{itemize}
+\item pro: quick to write code
+\item pro: compiling an easier task
+\item con: induces an overhead at run-time
+\item con: errors detected first at run-time (and maybe very late)
+\end{itemize}
+
+\pause
+{\em So why is Elixir dynamically typed?}
+
+\pause
+{\em Easier to handle dynamic code updates in distributed systems.}
+
+\end{frame}
+
+\begin{frame}{Type systems}
+
+\begin{itemize}
+\item Elixir is a dynamically typed programming language. \pause
+\item External tools (Dialyzer) can check for type errors.  \pause
+\item Type specification, if correct, helps in understanding the code.  \pause
+\item Dynamically vs statically typed systems - pros and cons.  \pause
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{problem}
+
+\begin{verbatim}
+ {:car, "Volvo", 
+        {:model, "XC60", 2018}, 
+        {:engine, "A4", 4, 2000, 140}, 
+        {:perf, 4.6, 8.8}}
+\end{verbatim}
+
+\vspace{20pt} \pause
+  
+\begin{verbatim}
+def car_brand_model( {:car, brand, {:model, model, _}, _ , _}) do 
+  "#{brand} #{model}"
+end\
+\end{verbatim}
+\end{frame}
+
+
+\begin{frame}[fragile]{key-value list}
+
+\begin{verbatim}
+ {:car, "Volvo", 
+        [{:model, "XC60"},{:year 2018}, {:engine, "A4"}, 
+         {:cyl, 4}, {:vol, 2000}, {:power 140}, 
+         {:fuel, 4.6}, {:acc 8.8}]}
+\end{verbatim}
+  
+\vspace{20pt} \pause
+
+\begin{verbatim}
+def car_brand_model( {:car, brand, prop} ) do
+    case model = List.keyfind(prop, :model, 0) do
+      nil -> 
+         brand
+      {:model, model} ->
+           "#{brand} #{model}"
+    end
+end
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{key-value list}
+
+\vspace{20pt}\pause{\em What is the asymptotic time complexity of {\tt keyfind/3}?}
+
+
+\vspace{40pt}\pause{\em alternative syntax: {\tt [model: "XC60", year: 2018, ...]}}
+  
+\end{frame}
+
+
+\begin{frame}{maps}
+
+  An efficient implementation of a key-value store with a syntax for pattern matching. 
+
+  \vspace{10pt}\pause
+
+  \begin{itemize}
+  \item {\tt \%\{\}} : an empty map \pause
+  \item {\tt myCar = \%\{:brand => "Volvo", :model => "XC60", :year= 2008\}} : define properties \pause
+  \item {\tt \%\{:model => model\} = myCar} : pattern matching \pause
+  \item {\tt newCar = \%\{myCar | :year => 2018} : map as template for new map
+  \end{itemize}
+  
+
+  \vspace{20pt}\pause{\em Still no compiler support to detect errors.}
+\end{frame}
+
+\begin{frame}[fragile]{introducing Structs}
+
+\begin{verbatim}
+defmodule Car do
+
+  defstruct brand: "",  year: 0,  model: "",  cyl: 0,   power: 0 
+
+  def brand_model(%Car{brand: brand, model: model}) do
+    "#{brand} #{model}"
+  end
+
+  def year(car = %Car{}) do
+    car.year
+  end
+
+end
+\end{verbatim}
+
+  \vspace{20pt}\pause {\em Requesting a proerty that is not defined is detected at compile time.}
+  
+\end{frame}
+
+\begin{frame}{Summary}
+
+  \begin{itemize}
+  \item dynamically and statically typed systems: pros and cons
+  \item tuples: simple but gives us some problems
+  \item key-value lists: what problems do we solve, what remains
+  \item Maps: pattern matching and more efficient
+  \item Structs: towards the advantage of a statically typed system
+  \end{itemize}
+  
+\end{frame}
+
+
+
+\end{document}
+
+

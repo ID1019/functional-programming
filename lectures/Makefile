@@ -6,7 +6,9 @@ DIRS = 	overview \
 	recursion \
 	trees \
 	complexity \
-	higher
+	higher \
+        types
+
 
 
 
