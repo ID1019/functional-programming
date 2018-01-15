@@ -10,15 +10,17 @@ defmodule Semaphore do
   def semaphore(n) do
     receive do
       {:request, from} ->
-        send from, :granted
+        send(from, :granted)
         semaphore(n - 1)
+
       :release ->
         semaphore(n + 1)
     end
   end
 
   def request(semaphore) do
-    send semaphore, {:request, self()}
+    send(semaphore, {:request, self()})
+
     receive do
       :granted ->
         :ok
@@ -27,19 +29,21 @@ defmodule Semaphore do
 
   # Remove deadlock
   def request(semaphore) do
-    send semaphore, {:request, self()}
+    send(semaphore, {:request, self()})
+
     receive do
       :granted ->
         :ok
-    after 1000 ->
-       :abort
+    after
+      1000 ->
+        :abort
     end
   end
 
   # Return resource before getting it
   def request(semaphore) do
     ref = make_ref()
-    send semaphore, {:request, ref, self()}
+    send(semaphore, {:request, ref, self()})
     wait(semaphore, ref)
   end
 
@@ -47,11 +51,13 @@ defmodule Semaphore do
     receive do
       {:granted, ^ref} ->
         :ok
+
       {:granted, _} ->
         wait(semaphore, ref)
-    after 1000 ->
-      send semaphore, :release
-      :abort
+    after
+      1000 ->
+        send(semaphore, :release)
+        :abort
     end
   end
 

@@ -5,7 +5,7 @@ defmodule Monitor do
     receive do
       {:request, from} ->
         updated = critical(state)
-        send from, :ok
+        send(from, :ok)
         monitor(updated)
     end
   end
@@ -15,9 +15,9 @@ defmodule Monitor do
     receive do
       {:request, fun, from} ->
         updated = fun.(state)
-        send from, :ok
+        send(from, :ok)
         monitor(updated)
     end
   end
-  
+
 end
