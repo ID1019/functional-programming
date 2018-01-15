@@ -1,34 +1,72 @@
 \documentclass[a4paper,11pt]{article}
 
+% Packages for page layout
+\usepackage[utf8]{inputenc}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
 
-\usepackage[latin1]{inputenc}
+% Minted for syntax highlighting
+\usepackage{minted}
+\usemintedstyle{tango}
 
-\newcommand{\nnsection}[1]{
-\section*{#1}
-\addcontentsline{toc}{section}{#1}
-}
+% Custom paragraph indentation
+\setlength{\parindent}{0em}
+\setlength{\parskip}{1em}
+  
+% Headers/footers styling
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+
+% Footer
+\lfoot{ID1019}
+\cfoot{KTH}
+\rfoot{\thepage \hspace{1pt} / \pageref{LastPage}}
+
+
+% SECTIONS
+%
+% * Introduction
+% * Morse codes
+% * The decoder
+% * The encoder
+% * The Morse codes
+
 
 \begin{document}
 
-\begin{center}
-\vspace{20pt}
-\textbf{\large Morse Coding}\\
-\vspace{10pt}
-\textbf{Johan Montelius}\\
-\vspace{10pt}
-\today{}
-\end{center}
+% ================================================== %
+% == Title == %
+% ================================================== %
+
+\title{
+    \textbf{Morse Encoding}\\
+    \large{Programming II - Elixir Version}
+}
+\author{Johan Montelius}
+\date{Spring Term 2018}
+\maketitle
+\thispagestyle{fancy}
 
 
-\nnsection{Getting Started}
+% ================================================== %
+% == Introduction == %
+% ================================================== %
+
+\section*{Introduction}
 
 Morse codes were used in the days of telegraphs and manual radio
 communication. It is similar in the idea to Huffman coding in that it
 uses fewer symbols for frequent occurring characters and more symbols
 for the infrequent ones. You task is to write a decoder for Morse
-signals and decode two secret messages. 
+signals and decode two secret messages.   
 
-\section{Morse Codes}
+
+% ================================================== %
+% == Morse codes == %
+% ================================================== %
+
+\section{Morse codes}
 
 There are several standards for Morse codes and we will here use a
 slightly extended version since we also want to code some special
@@ -51,15 +89,20 @@ again. In a Morse tree we can finish anywhere along the path to a
 leaf. We thus have characters in every node of the tree (apart from the
 root).
 
-\section{The Decoder}
+
+% ================================================== %
+% == The decoder == %
+% ================================================== %
+
+\section{The decoder}
 
 The Morse codes that we will use are given in the decoding table in
 the Appendix. As you see we have represented the table as a tree were
 each node is on the form:
 
-\begin{verbatim}
-   {:node, character, left, right}
-\end{verbatim}
+\begin{minted}{elixir}
+{:node, character, left, right}
+\end{minted}
 
 An empty tree is represented by the {\tt nil} value and the root holds
 dummy value instead of a character; if everything works fine we
@@ -73,7 +116,7 @@ start from the root again.
 Implement a function {\tt decode(signal, table)} that takes a {\em
   signal} and the decoding table and returns a decoded message. The
 signal is in the form of a string with dots and dashes ``.-
-. .-.. .-.. ---'' (i.e. a list with ascii characters $45$, $46$ and
+. .-.. .-.. ---'' (i.e. a list with ASCII characters $45$, $46$ and
 $32$ (dash, dot and space)).
 
 Decode the secret messages below. If you cut and paste the code, make
@@ -82,17 +125,17 @@ should only contain the dash, dot and space characters.
 
 \begin{verbatim}
   '.- .-.. .-.. ..-- -.-- --- ..- .-. ..-- 
-   -... .- ... . ..-- .- .-. . ..-- 
-   -... . .-.. --- -. --. ..-- - --- ..-- ..- ... '
+    -... .- ... . ..-- .- .-. . ..-- 
+    -... . .-.. --- -. --. ..-- - --- ..-- ..- ... '
 \end{verbatim}
 
 \begin{verbatim}
   '.... - - .--. ... ---... .----- .----- .-- .-- 
-   .-- .-.-.- -.-- --- ..- - ..- -... . .-.-.- -.-. 
-   --- -- .----- .-- .- - -.-. .... ..--.. ...- .----. 
-   -.. .--.-- ..... .---- .-- ....- .-- ----. .--.-- 
-   ..... --... --. .--.-- ..... ---.. -.-. .--.-- 
-   ..... .---- '
+    .-- .-.-.- -.-- --- ..- - ..- -... . .-.-.- -.-. 
+    --- -- .----- .-- .- - -.-. .... ..--.. ...- .----. 
+    -.. .--.-- ..... .---- .-- ....- .-- ----. .--.-- 
+    ..... --... --. .--.-- ..... ---.. -.-. .--.-- 
+    ..... .---- '
 \end{verbatim}
 
 If you by accident have two spaces between to characters this might be
@@ -103,7 +146,12 @@ you hear a space. Then you simply do nothing and just start from the
 root again. The rule can be made general so that any unknown character
 will simply make the decoder start from the root.
 
-\section{The Encoder}
+
+% ================================================== %
+% == The encoder == %
+% ================================================== %
+
+\section{The encoder}
 
 To encode messages we simply need the table that gives us codes for
 each character. You could of course extract this from the decode tree
@@ -118,21 +166,18 @@ We first define two functions, one that will create a encoding table
 and one that will do look-up operations. We assume that {\tt codes/1}
 returns a list of tuples {\tt\{char, code\}}.
 
-\begin{verbatim}
-def encode_table, do: codes()
-
-def lookup(char, table) do
-  List.keyfind(table, char, 0)
-  |> elem(1)
+\begin{minted}{elixir}
+defp lookup(char, table) do
+  encoding = List.keyfind(table, char, 0)
+  elem(encoding, 1)
 end
-\end{verbatim}
-
+\end{minted}
 
 We can now implement the encoder and this can now be free from any
 knowledge of how the table is represented. Try to encode a message and
 the use the decoder to see that you got it right.
 
-\begin{verbatim}
+\begin{minted}{elixir}
 def encode(text) do
   table = encode_table()
   encode(text, [], table)
@@ -143,7 +188,7 @@ def encode([char | message], table) do
   code = lookup(char, table),
   append(code, encode(message, table))
 end
-\end{verbatim}
+\end{minted}
 
 Every time we need the code of a character we will have
 to look it up in a list which of course is unnecessarily expensive.  We
@@ -176,44 +221,49 @@ then the value $v$ is the {\em i'th} element in the lists. If the {\em
   j'th} element in the list does not have a mapping, the element
 should be {\tt :na}.
 
-\begin{verbatim}
+\begin{minted}{elixir}
 fill([{1, a}, {2, b}, {6, c}])
-\end{verbatim}
+\end{minted}
 
 should return:
 
-\begin{verbatim}
- [:na, a, b, :na, :na, :na, c]
-\end{verbatim}
+\begin{minted}{elixir}
+[:na, a, b, :na, :na, :na, c]
+\end{minted}
 
 If you do it right you can now create a tuple that will give you the
 right encoding.
 
-\begin{verbatim}
-def encode_tuple do
+\begin{minted}{elixir}
+defp encode_table() do
   codes()
-  |> fill
+  |> fill(0)
   |> List.to_tuple
 end
-\end{verbatim}
+\end{minted}
 
 Doing the look-up operation in now simply doing a call to {\tt
   elem/2}.
-
-\begin{verbatim}
+  
+\begin{minted}{elixir}
 def lookup(char, table), do: elem(table, char)
-\end{verbatim}
+\end{minted}
 
 If you do some benchmarks, you will see that you have managed to
 speed things up considerably. One thing to ponder is if you have
 changed the run-time complexity of the encoder.
 
-\newpage
-\nnsection{The Morse Codes}
+\pagebreak
 
-\begin{verbatim}
 
-def decode_table do
+% ================================================== %
+% == The Morse codes  == %
+% ================================================== %
+
+\section{The Morse codes}
+
+\begin{minted}{elixir}
+defp decode_table do
   {:node, :na,
     {:node, 116,
       {:node, 109,
@@ -252,31 +302,59 @@ def decode_table do
           {:node, 118, {:node, 51, nil, nil}, nil},
           {:node, 104, {:node, 52, nil, nil}, {:node, 53, nil, nil}}}}}}
 end
-\end{verbatim}
+\end{minted}
 
-\newpage
-\begin{verbatim}
+\pagebreak
 
-def codes do
-  [{32, '..--'}, {37,'.--.--'}, {44,'--..--'},
-   {45,'-....-'}, {46,'.-.-.-'}, {47,'.-----'},
-   {48,'-----'}, {49,'.----'}, {50,'..---'},
-   {51,'...--'}, {52,'....-'}, {53,'.....'},
-   {54,'-....'}, {55,'--...'}, {56,'---..'},
-   {57,'----.'}, {58,'---...'}, {61,'.----.'},
-   {63,'..--..'}, {64,'.--.-.'}, {97,'.-'},
-   {98,'-...'}, {99,'-.-.'}, {100,'-..'},
-   {101,'.'}, {102,'..-.'}, {103,'--.'},
-   {104,'....'}, {105,'..'}, {106,'.---'},
-   {107,'-.-'}, {108,'.-..'}, {109,'--'},
-   {110,'-.'}, {111,'---'}, {112,'.--.'},
-   {113,'--.-'}, {114,'.-.'}, {115,'...'},
-   {116,'-'}, {117,'..-'}, {118,'...-'},
-   {119,'.--'}, {120,'-..-'}, {121,'-.--'},
-   {122,'--..'}]
+\begin{minted}{elixir}
+defp codes do
+  [{32, '..--'},
+    {37,'.--.--'},
+    {44,'--..--'},
+    {45,'-....-'},
+    {46,'.-.-.-'},
+    {47,'.-----'},
+    {48,'-----'},
+    {49,'.----'},
+    {50,'..---'},
+    {51,'...--'},
+    {52,'....-'},
+    {53,'.....'},
+    {54,'-....'},
+    {55,'--...'},
+    {56,'---..'},
+    {57,'----.'},
+    {58,'---...'},
+    {61,'.----.'},
+    {63,'..--..'},
+    {64,'.--.-.'},
+    {97,'.-'},
+    {98,'-...'},
+    {99,'-.-.'},
+    {100,'-..'},
+    {101,'.'},
+    {102,'..-.'},
+    {103,'--.'},
+    {104,'....'},
+    {105,'..'},
+    {106,'.---'},
+    {107,'-.-'},
+    {108,'.-..'},
+    {109,'--'},
+    {110,'-.'},
+    {111,'---'},
+    {112,'.--.'},
+    {113,'--.-'},
+    {114,'.-.'},
+    {115,'...'},
+    {116,'-'},
+    {117,'..-'},
+    {118,'...-'},
+    {119,'.--'},
+    {120,'-..-'},
+    {121,'-.--'},
+    {122,'--..'}]
 end
-\end{verbatim}
-
+\end{minted}
 
 \end{document}
-

@@ -7,12 +7,13 @@ defmodule Tic do
         second()
     end
   end
-  
+
   defp second do
     receive do
       {:tac, x} ->
         IO.puts("tac: #{x}")
         last()
+
       {:toe, x} ->
         IO.puts("toe: #{x}")
         last()
@@ -25,5 +26,4 @@ defmodule Tic do
         IO.puts("end: #{x}")
     end
   end
-
 end

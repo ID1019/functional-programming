@@ -25,11 +25,7 @@
 
 % Finite state machines
 \usepackage{tikz}
-\usetikzlibrary{arrows}
-\usetikzlibrary{automata}
-\usetikzlibrary{topaths}
-\usetikzlibrary{calc}
-\usetikzlibrary{shapes.geometric}
+\usetikzlibrary{arrows, automata, topaths, calc, shapes.geometric}
 
 
 % SECTIONS
@@ -515,7 +511,5 @@ defp sequence(0, _), do: []
 defp sequence(i, t), do: [:rand.uniform(t) | sequence(i - 1, t)]
 \end{minted}
 
-
 \end{document}
-    
     

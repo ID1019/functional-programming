@@ -1,15 +1,17 @@
 defmodule Dinner do
 
+  # Start a dinner.
   def start(n) do
     seed = 1234
     dinner = spawn(fn -> init(n, seed) end)
     Process.register(dinner, :dinner)
   end
 
-  def stop, do: send :dinner, :abort
+  # Stop a dinner.
+  def stop, do: send(:dinner, :abort)
 
   defp init(n, seed) do
-    c1 = Chopstick.start()    
+    c1 = Chopstick.start()
     c2 = Chopstick.start()
     c3 = Chopstick.start()
     c4 = Chopstick.start()
@@ -26,12 +28,15 @@ defmodule Dinner do
   defp wait(0, chopsticks) do
     Enum.each(chopsticks, fn(c) -> Chopstick.quit(c) end)
   end
+
   defp wait(n, chopsticks) do
     receive do
       :done ->
         wait(n - 1, chopsticks)
+
       :abort ->
         Process.exit(self(), :kill)
     end
   end
+
 end

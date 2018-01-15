@@ -4,6 +4,7 @@ defmodule Philosopher do
   @eat 50
   @delay 200
 
+  # Create a new philosopher process.
   def start(hunger, strength, left, right, name, ctrl, seed) do
     spawn_link(fn -> init(hunger, strength, left, right, name, ctrl, seed) end)
   end
@@ -15,15 +16,16 @@ defmodule Philosopher do
     dreaming(hunger, strength, left, right, name, ctrl, gui)
   end
 
+  # Philosopher is in a dreaming state.
   defp dreaming(0, strength, _left, _right, name, ctrl, gui) do
     IO.puts("#{name} is happy, strength is still #{strength}!")
-    # send gui, :stop
-    send ctrl, :done
+    # send(gui, :stop)
+    send(ctrl, :done)
   end
   defp dreaming(hunger, 0, _left, _right, name, ctrl, gui) do
     IO.puts("#{name} is starved to death, hunger is down to #{hunger}!")
-    # send gui, :stop
-    send ctrl, :done
+    # send(gui, :stop)
+    send(ctrl, :done)
   end
   defp dreaming(hunger, strength, left, right, name, ctrl, gui) do
     IO.puts("#{name} is dreaming...")
@@ -31,23 +33,26 @@ defmodule Philosopher do
     waiting(hunger, strength, left, right, name, ctrl, gui)
   end
 
+  # Philosopher is waiting for chopsticks.
   defp waiting(hunger, strength, left, right, name, ctrl, gui) do
-    # send gui, :waiting
+    # send(gui, :waiting)
     IO.puts("#{name} is waiting, #{hunger} to go!")
 
     case Chopstick.request(left) do
       :ok ->
         delay(@delay)
+
         case Chopstick.request(right) do
           :ok ->
             IO.puts("#{name} received both sticks!")
             eating(hunger, strength, left, right, name, ctrl, gui)
-        end 
+        end
     end
   end
 
+  # Philosopher is eating.
   defp eating(hunger, strength, left, right, name, ctrl, gui) do
-    # send, gui :enter
+    # send(gui, :enter)
     IO.puts("#{name} is eating...")
 
     delay(@eat)
@@ -55,7 +60,7 @@ defmodule Philosopher do
     Chopstick.return(left)
     Chopstick.return(right)
 
-    # send gui, :leave
+    # send(gui, :leave)
     dreaming(hunger - 1, strength, left, right, name, ctrl, gui)
   end
 

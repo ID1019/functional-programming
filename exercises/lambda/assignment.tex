@@ -1,26 +1,32 @@
 \documentclass[a4paper,11pt]{article}
 
-\usepackage[latin1]{inputenc}
+% Packages for page layout
+\usepackage[utf8]{inputenc}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
 
-\newcommand{\nnsection}[1]{
-\section*{#1}
-\addcontentsline{toc}{section}{#1}
-}
+% Minted for syntax highlighting
+\usepackage{minted}
+\usemintedstyle{tango}
 
+% Represent abstract language syntax
 \usepackage{syntax}
 
+% Custom paragraph indentation
+\setlength{\parindent}{0em}
+\setlength{\parskip}{1em}
+  
+% Headers/footers styling
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
 
-\begin{document}
+% Footer
+\lfoot{ID1019}
+\cfoot{KTH}
+\rfoot{\thepage \hspace{1pt} / \pageref{LastPage}}
 
-\begin{center}
-\vspace{20pt}
-\textbf{\large Elixir, functional programming and\\ the Lambda calculus.}\\
-\vspace{10pt}
-\textbf{Johan Montelius}\\
-\vspace{10pt}
-\today{}
-\end{center}
-
+% Custom commands declarations
 \newcommand{\lamc}[0]{$\lambda$-calculus}
 \newcommand{\lama}[0]{$\lambda$-abstraction}
 \newcommand{\lame}[0]{$\lambda$-expression}
@@ -28,7 +34,37 @@
 \newcommand{\betar}[0]{$\beta$-reduction}
 \newcommand{\etac}[0]{$\eta$-conversion}
 
-\nnsection{Introduction}
+
+% SECTIONS
+%
+% * Introduction
+% * λ-calculus
+% * Functional programming
+% * Church numerals
+% * Summary
+
+
+\begin{document}
+
+% ================================================== %
+% == Title  == %
+% ================================================== %
+
+\title{
+    \textbf{Elixir, functional programming and\\ the Lambda calculus.}\\
+    \large{Programming II - Elixir Version}
+}
+\author{Johan Montelius}
+\date{Spring Term 2018}
+\maketitle
+\thispagestyle{fancy}
+
+
+% ================================================== %
+% == Introduction  == %
+% ================================================== %
+
+\section*{Introduction}
 
 In this tutorial you're going to explore lambda calculus and how it
 relates to functional programming. We're going to look at some
@@ -64,7 +100,12 @@ programming paradigm has also influenced traditional imperative
 languages so we now have so called {\em lambda expressions} even in C++.
 
 Since the \lamc\ has been so influential in the development of
-programming languages it fun to know what it is all about.
+programming languages it fun to know what it is all about. 
+
+
+% ================================================== %
+% == λ-calculus == %
+% ================================================== %
 
 \section{\lamc}
 
@@ -72,6 +113,7 @@ We will start by explaining the rules of \lamc\ by using the basic
 arithmetic operations as an example. This is a bit of cheating since we
 then don't really explain how the basic arithmetic operations are
 defined but it's a good start in understanding \lamc.
+
 
 \subsection{\lama}
 
@@ -95,7 +137,7 @@ thing without names.
 The function above, would in \lamc\ be written as
 follows:$$\lambda x \rightarrow 2x + 5$$The traditional way of writing
 this is $\lambda x.2x+5$ but we will use an arrow instead since it
-will then map very natural to the Elixir syntax. 
+will then map very natural to the Elixir syntax.
 
 The expression $\lambda x \rightarrow 2x + 5$ is a called a {\em
   \lama}, we're abstracting a parameter $x$ from an {\em
@@ -108,6 +150,7 @@ one expression and we apply it to the the expression $2$. Parentheses
 can often be omitted (application is left associative and expressions
 extends as far right as possible) but we keep them here to make it
 clear what we mean.
+
 
 \subsection{\alphac}
 
@@ -134,6 +177,7 @@ In general we are not allowed to do a conversion that binds an
 otherwise free variable. We can define this in a more formal way but
 this is just an overview of \lamc.
 
+
 \subsection{\betar}
 
 A \betar\ is what we do when we apply a \lama\ to an argument. We will
@@ -154,6 +198,7 @@ name clashes. If we first transform the abstraction to
 $\lambda x \rightarrow (\lambda z \rightarrow z + x)$ we have no
 problem substituting $[x/y]$.
 
+
 \subsection{\etac}
 
 There is only one more rule that we need and this is \etac\
@@ -167,6 +212,7 @@ course the same thing as $\lambda y \rightarrow y + 3$.  Applying the
 first abstraction to $5$ will result in the expression
 $(\lambda y \rightarrow y + 3) 5$ so we might as well apply
 $\lambda y \rightarrow y + 3$ to $5$ in the first place.
+
 
 \subsection{that's all}
 
@@ -184,6 +230,11 @@ magic, we don't really need numbers nor primitive arithmetic
 operations; we only used them to introduce the rules of \lamc (more on
 this later).
 
+
+% ================================================== %
+% == Functional programming == %
+% ================================================== %
+
 \section{Functional programming}
 
 To see how functional programming relates to \lamc\ we will show how
@@ -195,36 +246,34 @@ The connection between Elixir and \lamc\ is easy to see if we show how
 Elixir writes anonymous functions. The \lama\
 $\lambda x \rightarrow x + 3$ is in Elixir written:
 
-\vspace{10pt}
-\begin{center}{\tt fn(x) ->  x  + 3 end}
-\end{center}
-\vspace{10pt}
+\begin{minted}{elixir}
+fn(x) ->  x  + 3 end
+\end{minted}
 
 The $\lambda$ notation is replaced by {\tt fn}, the parameters are
 enclosed by parenthesis and the expression is terminated by {\tt
   end}. When we apply a function to an argument the only difference
 from the \lamc\ is that we enclose the arguments in parenthesis.
 
-\vspace{10pt}
-\begin{center}{\tt fn(x) ->  x  + 3 end.(5)}
-\end{center}
-\vspace{10pt}
+\begin{minted}{elixir}
+fn(x) ->  x  + 3 end.(5)
+\end{minted}
 
 If you have not done so all ready, start up a Elixir shell and
 experiment with functional expressions. Try this:
 
-\begin{verbatim}
+\begin{minted}{elixir}
 > add3 = fn(x) -> x + 3 end
- :
+  ...
 > add3.(5)
- :
-\end{verbatim}
+  ...
+\end{minted}
 
 There is however more to it than just different syntax. The most
 important difference is the order in which things are evaluated.
 
 
-\subsection{order of evaluation}
+\subsection{Order of evaluation}
 
 The \lamc\ does not define in what order the rules should be applied. The
 interesting thing is that it, with some exceptions, does not matter. If we
@@ -293,7 +342,8 @@ space requirements. Changes made by the system should only improve
 things i.e. never go into an infinite loop if the evaluation order of
 the programming language would not go into a loop.
 
-\subsection{more than one argument}
+
+\subsection{More than one argument}
 
 One limitation with the \lamc\ syntax is that it only allows one
 parameter to a function. This might seem like a serious deficiency but
@@ -325,41 +375,38 @@ first argument to get a specialized function in return. This is not
 possible in Elixir, but if it was, one would be able to write something
 like the following:
 
-\vspace{10pt}
-\begin{center}{\tt f = fn(x, y) ->  x  + y end; f3 = f.(3); f3.(5)}
-\end{center}
-\vspace{10pt}
+\begin{minted}{elixir}
+f = fn(x, y) ->  x  + y end; f3 = f.(3); f3.(5)
+\end{minted}
 
-Here, {\tt F} is function that takes two arguments but {\tt F3} is a
+Here, {\tt f} is function that takes two arguments but {\tt f3} is a
 specialization that will add {\tt 3} when it is applied to a second
 argument. If we want to do something like this in Elixir we would have
 to do it by hand. Try this in an Elixir shell:
 
-\vspace{10pt}
-\begin{center}{\tt f = fn(x) -> fn(y) ->  x  + y end end; f3 = f.(3); f3.(5)}
-\end{center}
-\vspace{10pt}
+\begin{minted}{elixir}
+f = fn(x) -> fn(y) ->  x  + y end end; f3 = f.(3); f3.(5)
+\end{minted}
 
-\subsection{let-expressions}   
+
+\subsection{Let-expressions}   
 
 If you have done some Elixir programming you have of course seen how
 an Elixir function consists of a {\em head} and a {\em body}, where the
 body is a sequence of expressions. We can for example write the
 following function in Elixir.
 
-\vspace{10pt}
-\begin{center}{\tt fn(x) ->  y = x+4; y + y end}
-\end{center}
-\vspace{10pt}
+\begin{minted}{elixir}
+fn(x) ->  y = x+4; y + y end
+\end{minted}
 
 How is this translated into \lamc? There is nothing called a sequence
 in \lamc\ so we have to rewrite it in terms of regular language
 constructs. We rewrite the abstraction as follows:
 
-\vspace{10pt}
-\begin{center}{\tt fn(x) -> (fn(y) -> y + y end).(x+4) end}
-\end{center}
-\vspace{10pt}
+\begin{minted}{elixir}
+fn(x) -> (fn(y) -> y + y end).(x+4) end
+\end{minted}
 
 We now have an function of one argument that will apply the
 function {\tt fn(y) -> y + y end} to the argument {\tt x+4}.  We
@@ -371,17 +418,23 @@ The shorter form is often referred to as a {\em let-expression} and is
 read as {\em let the variable \ldots hold the value \ldots in the
   expression \ldots}. We find this construct in many functional
 programming languages, this is for example how it is written in Lisp:
-\begin{center}{\tt  (lambda (x) (let (y (+ x 4))  (+ y y) ))}
-\end{center}
+
+\begin{minted}{lisp}
+(lambda (x) (let (y (+ x 4))  (+ y y) ))
+\end{minted}
+
 and in Haskell we would write it as follows:
-\begin{center}{\tt  (\textbackslash x  -> let  y = x + 4  in  y + y)}
-\end{center}
+
+\begin{minted}{haskell}
+(\ x  -> let  y = x + 4  in  y + y)
+\end{minted}
 
 There are limitations on what we allow in let-expressions. One
 thing we cannot write in Elixir is the following:
 
-\begin{center}{\tt fn(x) -> l = [x|l];  l end}
-\end{center}
+\begin{minted}{elixir}
+fn(x) -> l = [x | l];  l end
+\end{minted}
 
 If we would try to turn this into a form of a \lame\ we will have a
 problem with the infinite list {\tt l}. In some functional
@@ -389,16 +442,18 @@ programming languages however, this is perfectly fine. Both Scheme and
 Haskell allow let-expressions to have recursive definitions. In Scheme
 we can write:
 
-\begin{center}{\tt  (lambda (x) (letrec ((l (cons x (delay l)))) l))}
-\end{center}
+\begin{minted}{scheme}
+(lambda (x) (letrec ((l (cons x (delay l)))) l))
+\end{minted}
 
 We then have to explicitly state that we should not evaluate the
 variable $l$ when declaring $l$. We can later force the evaluation if
 we want to go through the list of infinite numbers. In Haskell, it is
-so common to use infinite structures that it is provided by default. 
+so common to use infinite structures that it is provided by default.
 
-\begin{center}{\tt  (\textbackslash x  -> let  l = x:l  in  l)}
-\end{center}
+\begin{minted}{haskell}
+(\ x  -> let  l = x:l  in  l)
+\end{minted}
 
 Haskell is as we mentioned a language that uses lazy-evaluation so it
 is more natural to work with infinite structures. Working with
@@ -406,19 +461,23 @@ infinite structures is quite fun and you can write very nice program
 (that are mind-boggling) but in Elixir it is not allowed (or rather we
 have to construct them manually).
 
-\subsection{recursion}
+
+\subsection{Recursion}
 
 One thing that we have avoided so-far is how to express recursion. In
 Elixir, or any programming language, defining a recursive function is
 as simple as writing {\tt append}.
 
-\begin{verbatim}
-def append(a, n)  do
-  case a do
-    [] -> b
-    [h|t] -> [h|append(t,b)]
-  end    
-\end{verbatim}
+\begin{minted}{elixir}
+def append(x, y) do
+  case x do
+    [] -> 
+      y
+    [h | t] ->
+      [h | append(t, y)]
+  end
+end
+\end{minted}
 
 How do we define a recursive function if we don't have named
 functions? We could do it in Scheme since we there have the {\tt
@@ -426,18 +485,15 @@ functions? We could do it in Scheme since we there have the {\tt
 lambda expression and then use this local variable in a recursive
 call.
 
-\vspace{10pt}
-
-\begin{verbatim}
- (lambda (a b) 
+\begin{minted}{scheme}
+(lambda (a b) 
       (letrec ((app (lambda (x y) 
-                           (if (equal? x '()) 
-                                   y 
-                                   (cons (car x) (app (cdr x) y))
-                           )))) 
-               (app a b))
-\end{verbatim}
-\vspace{10pt}
+                            (if (equal? x '()) 
+                                    y 
+                                    (cons (car x) (app (cdr x) y))
+                            )))) 
+                (app a b))
+\end{minted}
 
 If we can not do this in plain \lamc\ then we have a problem. We need
 to be able to express recursive functions or programs would have to be
@@ -445,17 +501,17 @@ infinite in size which is not very practical. Can we do a trick and
 define recursive functions without having to extend the \lamc? Have a
 look at this:
 
-\begin{verbatim}
-def append(a, b) ->
-  app = fn(x, y, f) -> 
-          case x of 
-            [] -> Y
-            [h|t] -> [h | f.(t,y,f) ]
-          end
-        end,
-   app.(a, b, app)
+\begin{minted}{elixir}
+def append(a, b) do
+  app = fn x, y, f ->
+    case x do
+      [] -> y
+      [h | t] -> [h | f.(t, y, f)]
+    end
+  end
+  app.(a, b, app)
 end
-\end{verbatim}
+\end{minted}
 
 Hmm, we're defining a local function, {\tt app}, that takes three
 arguments, two lists and a mysterious third argument {\tt f}. We then
@@ -480,7 +536,8 @@ recursive definition you can try to implement the Fibonacci
 function. Take a look at the implementation of {\tt append/2} and try
 to do something similar.
 
-\subsection{named functions}
+
+\subsection{Named functions}
 
 Even though it is possible to define recursive functions without
 having to use names it is a whole lot more practical to use names.
@@ -495,14 +552,12 @@ strange if you approach functional programming from an imperative
 programming language but now you know the basics of \lamc\ and will
 after some practice take it for natural.
 
-\section{Church numerals}
 
-In the beginning we noted that we were cheating a bit by using common
-arithmetic operations. We said that we did this in order to more
-easily introduce \lamc\ but that it was not strictly needed. Since you
-of course wonder how we could do without basic data structures as
-number and simple arithmetic operations as addition we will now
-explain the mystery of {\em Church numerals}.
+% ================================================== %
+% == Church numerals == %
+% ================================================== %
+
+\section{Church numerals}
 
 If we only have \lame s we could not express very much but we could
 express something. We could express the following interesting
@@ -540,44 +595,46 @@ into an integer. Create a file {\tt church.ex} and get your Elixir
 system ready, you will have to do a lot of experimenting to understand
 what is going on.
 
-\begin{verbatim}
+\begin{minted}{elixir}
 defmodule Church do
 
   def to_church(0) do
-    fn(_, y) -> y end
+    fn(_), y -> y end
   end
   def to_church(n) do
-    fn(f, x) -> f.( (to_church(n-1)).(f, x) ) end
+    fn(f, x) -> f.(to_church(n - 1).(f, x)) end
   end
-
+  
   def to_integer(church) do
-    church.(fn(x) -> 1 + x end , 0)
+    church.(fn(x) -> 1 + x end, 0)
   end
-\end{verbatim}
+  
+end
+\end{minted}
 
 Note how simple it is to implement the function that turns a Church
 numeral into an integer. We simply ask that numeral to apply the
 function {\tt fn(x) -> 1 + x end} as many times as it is supposed to
 do on the number {\tt 0}. Compile the file and try this in the Elixir shell:
 
-\begin{verbatim}
-> four = Church.to_church(4).
- :
-> Church.to_integer(four).
- :
-\end{verbatim}
+\begin{minted}{elixir}
+> four = Church.to_church(4)
+  ...
+> Church.to_integer(four)
+  ...
+\end{minted}
 
 Now we can define the function {\tt succ(n)} that will take a numeral
 and return a numeral that is the {\em successor} i.e. one more. We
 can do this simply by returning a function that takes two arguments, a
 function {\tt f} and some value {\tt x}, and uses {\tt n} to apply {\tt f}
-{\tt n} times before applying {\tt f} again on the result. 
+{\tt n} times before applying {\tt f} again on the result.
 
-\begin{verbatim}
-  def succ(n) do
-    fn(f, x) -> f.( n.(f, x) ) end
-  end
-\end{verbatim}
+\begin{minted}{elixir}
+def succ(n) do
+  fn(f, x) -> f.(n.(f, x)) end
+end
+\end{minted}
 
 Compile and see what the successor of {\tt four} is; does it work?
 
@@ -585,17 +642,17 @@ We can write addition as outlined in the \lame\ above and the product
 is almost as simple. Do some experiment with these functions to see
 that they actually do what they are supposed to do.
 
-\begin{verbatim}
-  def add(n, m) do
-    fn(f, x) -> n.(f, m.(f,x)) end
-  end
-\end{verbatim}
+\begin{minted}{elixir}
+def add(n, m) do
+  fn(f, x) -> n.(f, m.(f, x)) end
+end
+\end{minted}
 
-\begin{verbatim}
-  def mul(n, m) do
-    fn(f, x) -> n.( fn(y) -> m.(f, y) end, x) end
-  end
-\end{verbatim}
+\begin{minted}{elixir}
+def mul(n, m) do
+  fn(f, x) -> n.(fn(y) -> m.(f, y) end, x) end
+end
+\end{minted}
 
 If you think this was easy you can try to figure out how to write the
 {\em predecessor} function. The predecessor should of course do the
@@ -615,18 +672,18 @@ When defining {\tt pred(n)} we must of course make use of {\tt n}
 somehow. The trick is to apply {\tt n} to two functions where the
 first function is a function that returns a function. When we are done
 with {\tt n} we will take the result, which is a function, and apply it
-to the identity function; I know this does not make sense. 
+to the identity function; I know this does not make sense.
 
-\begin{verbatim}
-  def pred(n) do
-    fn(f, x) ->
-      ( n.(                                    # n is a Church numeral
-         fn(g) -> fn(h) -> h.(g.(f)) end end,  #  apply this function n times 
-         fn(_) -> x end)                       #  to this function 
-      ).(fn(u) -> u end)                       # apply it to thee identity function
-    end
+\begin{minted}{elixir}
+def pred(n) do
+  fn(f, x) ->
+    ( n.(  # n is a Church numeral
+        fn(g) -> fn(h) -> h.(g.(f)) end end,  # apply this function n times 
+        fn(_) -> x end)  # to this function 
+    ).(fn(u) -> u end)  # apply it to thee identity function
   end
-\end{verbatim}
+end
+\end{minted}
 
 Assume we call {\tt pred(four)} where {\tt four} is the Church numeral
 for $4$. Then we will return a function, that as expected takes two
@@ -637,70 +694,74 @@ First we will call {\tt four}, with a strange looking function and a
 function that ignores its argument. Let's apply this functions once,
 what do we get?
 
-\begin{verbatim}
-    fn(h) -> h.( (fn(_) -> 0 end).(i)) end 
-\end{verbatim}
+\begin{minted}{elixir}
+fn(h) -> h.((fn(_) -> 0 end).(i)) end
+\end{minted}
 
 We have taken the function that ignores its first argument and
 substituted it for $g$. We now apply this function to {\tt f} and get
 the function.
 
-\begin{verbatim}
-    fn(h) -> h.(0) end
-\end{verbatim}
+\begin{minted}{elixir}
+fn(h) -> h.(0) end
+\end{minted}
 
 So after one recursion we have replaced the function that ignores its
 argument with a function that applies it once.  We have three more
 recursions before we're ready. The next recursion will give us
 something that looks like follows:
 
-\begin{verbatim}
-    fn(h) -> h.( (fn(h') -> h'.(0) end).(i)) end 
-\end{verbatim}
+\begin{minted}{elixir}
+fn(h) -> h.((fn(h1) -> h1.(0) end).(i)) end
+\end{minted}
 
 This can of course be written:
-  
-\begin{verbatim}
-    fn(h) -> h.( i.(0) ) end     
-\end{verbatim}
- 
+
+\begin{minted}{elixir}
+fn(h) -> h.(i.(0)) end
+\end{minted}
+
 Hmmm, let's give it another shot:
 
-\begin{verbatim}
-   fun(H) -> H( fun(H1) -> H1( I(0) ) end end (I)) end 
-\end{verbatim}
-or
-\begin{verbatim}  
-   fn(h) -> h.(i.(i.(0)) ) end 
+\begin{minted}{elixir}
+fn(h) -> h(fn(h1) -> h1.(i.(0)) end).(i) end
+\end{minted}
 
-\end{verbatim}
-
-OK, a last time:
-\begin{verbatim}
-    fn(h) -> h( fn(h') -> h'.(i.(i.(0))) end).(i) end 
-\end{verbatim}
 or
-\begin{verbatim}  
-    fn(h) -> h.(i.(i.(i.(0)))) end 
-\end{verbatim}
+
+\begin{minted}{elixir}
+fn(h) -> h.(i.(i.(0))) end
+\end{minted}
+
+OK, one last time:
+
+\begin{minted}{elixir}
+fn(h) -> h(fn(h1) -> h1.(i.(i.(0))) end).(i) end
+\end{minted}
+
+or
+
+\begin{minted}{elixir}
+fn(h) -> h.(i.(i.(i.(0)))) end 
+\end{minted}
 
 And now we take this function and apply it to the identity function
 {\tt fn(u) -> u end}. The result is:
 
-\begin{verbatim}
-    i(i(i(0)))
-\end{verbatim}
+\begin{minted}{elixir}
+i(i(i(0)))
+\end{minted}
 
 This is of course exactly what we would like to see from {\tt
   pred(four).(i,0)}. You should give it a try
 and see that it works. We try the following:
 
-\begin{verbatim}
- > three = Church.pred(four).
- :
- > Church.to_integer(three).
- :
-\end{verbatim}
+\begin{minted}{elixir}
+> three = Church.pred(four)
+  ...
+> Church.to_integer(three)
+  ...
+\end{minted}
 
 I you think this was complicated you're right! Church never figured
 out how to express the predecessor function. It one of his students,
@@ -743,7 +804,7 @@ more insight into Church numerals you can try the following challenges:
   call them something like {\tt church_and/2} etc since {\tt and},
   {\tt or} and {\tt not} are the predefined Boolean operators.
 
-\item is_zero : implement a function that returns true if the argument
+\item is\_zero : implement a function that returns true if the argument
   is zero, otherwise false. This is tricky but think like this: if $n$
   is a numeral, you can apply it to a function and an argument. If $n$ is
   zero it will not apply the function and will thus return the
@@ -776,19 +837,19 @@ function, I told you it was simple. Now let's use {\tt if_then_else/3}
 to implement subtraction is a new way. Fill in the blanks in this code
 (let's call it {\tt manos/2}) and give it a try:
 
-\begin{verbatim}
-  def manos(m, n) do
-    if_then_else(is_zero(n), m, manos(m, pred(n)))
-  end
-\end{verbatim}
+\begin{minted}{elixir}
+def manos(m, n) do
+  if_then_else(is_zero(n), m, manos(m, pred(n)))
+end
+\end{minted}
 
 Could not be easier, give it a try (define the Church numerals {\tt
   four} and {\tt three} first):
-
-\begin{verbatim}
- > Church.manus(four, three).
-   :
-\end{verbatim}
+  
+\begin{minted}{elixir}
+> Church.manus(four, three)
+  ...
+\end{minted}
 
 Hmm, something is not quite right - what is going on and why? In what
 order do we evaluate the function?  Can we rewrite the {\tt
@@ -805,6 +866,11 @@ a language construct that implements the if-then-else behavior that we
 are looking for. In Elixir we have {\em case expressions} and {\em if
   expressions} that gives us the functionality that we would not
 otherwise get.
+
+
+% ================================================== %
+% == Summary  == %
+% ================================================== %
 
 \section{Summary}
 
@@ -825,3 +891,4 @@ paradigm. Learn the paradigm and you will easily learn any functional
 programming language.
 
 \end{document}
+  
