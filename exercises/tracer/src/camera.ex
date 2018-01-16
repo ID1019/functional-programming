@@ -16,7 +16,7 @@ defmodule Camera do
   end
 
   def size(camera), do: camera.size
-    
+
   def ray(x, y, camera) do
     origin = camera.pos
     x_pos = Vector.smul(camera.right, x)
@@ -25,5 +25,5 @@ defmodule Camera do
     dir = Vector.normalize(pixle)
     Ray.ray(origin, dir)
   end
-  
+
 end

@@ -14,19 +14,24 @@ defmodule Objects do
     cond do
       t2 < 0 ->
         :no
+
       true ->
         t = :math.sqrt(t2)
         d1 = a - t
         d2 = a + t
+
         cond do
-          (d1 > 0.0) and (d2 > 0.0) -> 
-		        {:ok, min(d1, d2)}
-		      (d1 > 0.0) -> 
-		        {:ok, d1}
-		      (d2 > 0.0) -> 
-		        {:ok, d2}
-		      true ->
-		        :no
+          d1 > 0.0 and d2 > 0.0 ->
+            {:ok, min(d1, d2)}
+
+          d1 > 0.0 ->
+            {:ok, d1}
+
+          d2 > 0.0 ->
+            {:ok, d2}
+
+          true ->
+            :no
         end
     end
   end

@@ -10,8 +10,4 @@ defmodule Ray do
     Vector.add(ray.origin, Vector.smul(ray.direction, length))
   end
 
-  def origin(ray), do: ray.origin
-
-  def direction(ray), do: ray.direction
-
 end

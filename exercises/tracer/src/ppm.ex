@@ -13,16 +13,16 @@ defmodule PPM do
   end
 
   defp rows(rows, fd) do
-    Enum.each(rows, fn(r) -> 
-        colors = row(r)
-        IO.write(fd, colors)
-      end)
+    Enum.each(rows, fn r ->
+      colors = row(r)
+      IO.write(fd, colors)
+    end)
   end
 
   defp row(row) do
     List.foldr(row, [], fn({r, g, b}, a) ->
-        [trunc(r * 255), trunc(g * 255), trunc(b * 255) | a]
-      end)
+      [trunc(r * 255), trunc(g * 255), trunc(b * 255) | a]
+    end)
   end
-  
+
 end
