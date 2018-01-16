@@ -1,5 +1,10 @@
 defmodule PPM do
 
+  # write(Name, Image) The image is a list of rows, each row a list of
+  # tuples {R,G,B} where the values are flots from 0 to 1. The image
+  # is written using PMM format P6 and color depth 0-255. This means that
+  # each tuple is written as three bytes.
+
   def write(name, image) do
     height = length(image)
     width = length(List.first(image))
