@@ -65,7 +65,7 @@ $$(\sqrt[3]{3 + 5^4})$$
   \begin{itemize}
    \pause \item $(3 + 5) * (6 - 3)$
    \pause \item $(3 + 5) * 3$
-   \pause \item $(9 * 15)$
+   \pause \item $(9 + 15)$
    \pause \item $24$
   \end{itemize}   
  \end{column}
@@ -239,7 +239,7 @@ But, things could go wrong.
 
 \pause\vspace{60pt}
 
-{\em We can write $\lambda x \rightarrow ( \lambda x -> (x*x))$, which does complicate things.}
+{\em We can write $\lambda x \rightarrow ( \lambda x \rightarrow (x*x))$, which does complicate things.}
 
 \end{frame}
 
@@ -251,7 +251,7 @@ A substitution $[x/\langle F \rangle]\langle E \rangle$ is possible if
 $\langle F \rangle$ does not have any free variables ...
 \pause
 
-\vspace{5pt}\hspace{40pt} that become bound in $[x/\langle F \rangle]\langle E \rangle$.
+\vspace{5pt}\hspace{40pt} ... that become bound in $[x/\langle F \rangle]\langle E \rangle$.
 
 \pause\vspace{20pt}
 
@@ -431,7 +431,7 @@ $$\lambda z \rightarrow  (z + (y + 5))$$
   \pause  \vspace{20pt}
   $\lambda x \rightarrow  \LET y = x + 2 , y = y + 5 \IN y + y$ \pause
 
-  \hspace{40pt}
+  \vspace{10pt}\hspace{40pt}
   \begin{code}
     fn x -> y = x + 2; y = y + 5; y + y end
   \end{code}
