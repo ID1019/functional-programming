@@ -9,7 +9,7 @@ defmodule Test do
   # Option 1: if-else
   def product(m, n) do
     if m == 0 do
-      n
+      0
     else
       product(m - 1, n) + n
     end
@@ -20,7 +20,7 @@ defmodule Test do
   def product_case(m, n) do
     case m do
       0 ->
-        n
+        0
       _ ->
         product_case(m - 1, n) + n
     end
@@ -31,7 +31,7 @@ defmodule Test do
   def product_cond(m, n) do
     cond do
       m == 0 ->
-        n
+        0
       true ->
         product_cond(m - 1, n) + n
     end
@@ -103,7 +103,7 @@ defmodule Test do
       seq = Enum.to_list(1..l)
       tn = time(n, fn -> nreverse(seq) end)
       tr = time(n, fn -> reverse(seq) end)
-      :io.format("length: ~10w  nrev: ~8w µs    rev: ~8w µs~n", [l, tn, tr])
+      :io.format("length: ~10w  nrev: ~8w us    rev: ~8w us~n", [l, tn, tr])
     end
 
     # We use the library function Enum.each that will call
