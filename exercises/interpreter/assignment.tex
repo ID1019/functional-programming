@@ -1,25 +1,61 @@
 \documentclass[a4paper,11pt]{article}
 
+% Packages for page layout
+\usepackage[utf8]{inputenc}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
 
-\usepackage[latin1]{inputenc}
+% Minted for syntax highlighting
+\usepackage{minted}
+\usemintedstyle{tango}
 
-\newcommand{\nnsection}[1]{
-\section*{#1}
-\addcontentsline{toc}{section}{#1}
-}
+% Custom paragraph indentation
+\setlength{\parindent}{0em}
+\setlength{\parskip}{1em}
+ 
+% Headers/footers styling
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+
+% Footer
+\lfoot{ID1019}
+\cfoot{KTH}
+\rfoot{\thepage \hspace{1pt} / \pageref{LastPage}}
+
+% Syntax-free grammar
 \usepackage{syntax}
+
+
+% SECTIONS
+%
+% * Introduction
+% * The overall picture
+% * The implementation
+% * Extensions
+
 
 \begin{document}
 
-\begin{center}\vspace{20pt}
-\textbf{\large A meta-interpreter}\\
-\vspace{10pt}
-\textbf{Johan Montelius}\\ 
-\vspace{10pt}
-\textbf{\today}
-\end{center}
+% ================================================== %
+% == Title == %
+% ================================================== %
 
-\nnsection{Introduction}
+\title{
+    \textbf{A Meta-Interpreter}\\
+    \large{Programming II - Elixir Version}
+}
+\author{Johan Montelius}
+\date{Spring Term 2018}
+\maketitle
+\thispagestyle{fancy}
+
+
+% ================================================== %
+% == Introduction == %
+% ================================================== %
+
+\section*{Introduction}
 
 In this assignment you will implement an interpreter for a small
 functional language. The language could be the functional subset of
@@ -27,7 +63,12 @@ Elixir but it does not match exactly how Elixir is defined (but maybe
 it should). The exercise will hopefully give you a better
 understanding of how a functional programming language is defined and
 how powerful a functional programming language can be as tool; the
-size of our interpreter is surprisingly small.
+size of our interpreter is surprisingly small. 
+
+
+% ================================================== %
+% == The overall picture == %
+% ================================================== %
 
 \section{The overall picture}
 
@@ -36,8 +77,7 @@ of the goal and what is actually needed. Never start coding one piece
 in a jigsaw puzzle if you don't know what the final picture should look
 like or how the piece should fit in.
 
-\subsection{a meta-interpreter}
-
+\subsection{A meta-interpreter}
 An interpreter, in computer engineering terminology, is a program that
 takes a program as input and executes the statements of the program to
 produce a result. Some programming systems use only a interpreter to
@@ -54,12 +94,10 @@ that is implemented in the language that it interprets. The reason for
 this not obvious but if you have a compiled system and need an
 interpreter of the same language, why not implement it in the language
 itself - this is probably the language you know best. We will develop
-an interpreter for a subset of the Erlang language. Since it is not the
+an interpreter for a subset of the Elixir language. Since it is not the
 complete language it is not a true meta-interpreter but it's close.
 
-
-\subsection{expressions}
-
+\subsection{Expressions}
 Our target programming language is a limited functional language and
 in its first incarnation it will be limited to simple expressions; We
 will not have any function calls nor any program with function
@@ -68,9 +106,9 @@ be a good starting point). This is an example of a {\em sequence} in
 the language:
 
 \begin{figure}[h]
-\begin{verbatim}
-    x = _foo; y = :nil; {z,_} = {:bar,:grk}; {x,{z,y}}
-\end{verbatim} 
+\begin{minted}{elixir}
+x = _foo; y = :nil; {z, _} = {:bar, :grk}; {x, {z, y}}
+\end{minted}
 \caption{a simple sequence}
 \label{fig:sequence}
 \end{figure}
@@ -89,12 +127,10 @@ sequence in the following way:
 <match> ::= <pattern> '=' <expression> 
 
 <expression> ::= <atom> \alt <variable> \alt '\{' <expression> ',' <expression> '\}'
-
 \end{grammar}
 \end{figure}
 
-\subsection{terms, data structures and patterns}
-
+\subsection{Terms, data structures and patterns}
 Expressions of the form that we have just described are also referred
 to as {\em terms}. We will later see examples of expression that are
 more complicated and we will talk about expressions in general and
@@ -104,14 +140,14 @@ It is important that we are clear on the terminology when we discuss
 our language. There is a difference between {\em terms}, {\em
   patterns} and {\em data structures}. In the sequence previously
 shown, the following constructs are terms: \verb+:foo+, \verb+:nil+,
-\verb+{:bar,:nil}+ and, \verb+{x,{y,z}}+. Terms are syntactical
+\verb+{:bar, :nil}+ and, \verb+{x, {y, z}}+. Terms are syntactical
 constructs that, {\em when evaluated}, will result in {\em data
   structures}; data structures are thus something that we handle
 during execution, the terms are only recipes for how these structures
 should be constructed.
 
 If we {\em evaluate} the sequence above we will obtain the data
-structure \textit{ \{:foo , \{:bar , :nil\}\}}. We will in this
+structure \textit{ \{:foo, \{:bar, :nil\}\}}. We will in this
 text use {\it italics} when we refer to the data structures and
 \verb+teletype+ when we talk about the terms.
 
@@ -120,7 +156,7 @@ compound {\em cons} structure. Once we understand how to handle this
 subset it's fairly easy to extend the language.
 
 The patterns in the sequence are: \verb+x+, \verb+y+ and,
-\verb+{z,_}+. The syntax we use for patterns, is the same as the one
+\verb+{z, _}+. The syntax we use for patterns, is the same as the one
 that we use for terms but we are also allowed to use an underscore
 (\verb+_+) to represent a {\em don't-care} variable. This variable
 acts as a placeholder for a data structure that we have no interest
@@ -128,7 +164,6 @@ in.
 
 \begin{figure}[h]
 \begin{grammar}
-
 <pattern> ::= <atom>
 \alt <variable>
 \alt '_'  
@@ -140,8 +175,7 @@ The reason why we can use the same syntax for terms and patterns
 without confusion is that it is clear from the grammatical rules of the
 language if we refer to a pattern or a term. 
 
-\subsection{evaluation}
-
+\subsection{Evaluation}
 Our interpreter will take a sequence and evaluate the pattern matching
 expressions one after the other; the result of the last expression is
 the result of the whole sequence. When the evaluation starts the
@@ -154,11 +188,10 @@ If we evaluate the sequence in figure \ref{fig:sequence} we gradually
 build an environment, first we add the binding {\em x/foo}, then {\em
   y/nil} and then {\em z/bar}. The final expression is thus evaluated
 in the following environment: {\em \{x/foo, y/nil, z/bar\}}. In this
-environment the term \verb+{x,{z,y}}+ is evaluated to the data
-structure {\em \{foo,\{bar,nil\}\}}.
+environment the term \verb+{x, {z, y}}+ is evaluated to the data
+structure {\em \{foo, \{bar, nil\}\}}.
 
-\subsection{the architecture}
-
+\subsection{The architecture}
 In order to implement our interpreter we need to solve the following
 problems: we need to represent expressions and we need to implement an
 environment. Once we have these pieces in place we can start to define
@@ -176,6 +209,10 @@ Read this section through one more time, then start to sketch on your
 representation. Write it down and then later compare it to the
 representation proposed in this exercise. 
 
+% ================================================== %
+% == The implementation == %
+% ================================================== %
+
 \section{The implementation}
 
 We will build the interpreter starting with the environment, that will
@@ -183,15 +220,14 @@ be implemented in a separate module. Then we will handle evaluation
 of expressions, pattern matching and finally a sequence of
 expressions.
 
-\subsection{the environment}
-
+\subsection{The environment}
 Implementing an environment will be the simplest task that we have; an
 environment is simply a mapping from variables to data structures. If
 we assume that environments will be small, we can represent an
 environment as a list of key-value tuples. The environment {\em
   \{x/foo, y/bar\}} could be represented as:
 \verb+[{:x, :foo}, {:y, :bar}]+ . The variables are represented by
-atoms, and we have here chosen to name them {\tt :X} and {\tt :y} but
+atoms, and we have here chosen to name them {\tt :x} and {\tt :y} but
 we could as well have chosen other atoms ({\tt x12}, {\tt
   :variable\_x}) or integers ({\tt 1} and {\tt 2}), the important
 thing is that they all have unique names.
@@ -208,21 +244,20 @@ In a module {\tt Env}, you should now define the following functions:
 \item {\tt lookup(id, env)} : return either {\tt \{id, str\}}, if the
   variable {\tt id} was bound, or {\tt nil}
 
-\item {\tt remove(ids, env)} : returns an environmant where all
-  bindings for variabels in the list {\tt ids} have been removed
-
+\item {\tt remove(ids, env)} : returns an environment where all
+  bindings for variables in the list {\tt ids} have been removed
 \end{itemize}
 
 These are all operations we need from the environment module. Test the
-environment by calling the functions from the Erlang shell to see that
+environment by calling the functions from the Elixir shell to see that
 it produces the expected results. The following
 call should return {\tt \{:foo,  42\}}:
 
-\begin{verbatim}
-   Env.lookup(:foo, Env.add(:foo, 42, env:new())).
-\end{verbatim}
+\begin{minted}{elixir}
+Env.lookup(:foo, Env.add(:foo, 42, Env.new()))
+\end{minted}
 
-\subsection{terms and patterns}
+\subsection{Terms and patterns}
 
 If we only needed to represent terms consisting of atoms and
 cons-cells, things would be trivial. The term {\tt \{:a, :b\}} could
@@ -240,8 +275,8 @@ atom could of course have the same identifier as a variable with out
 causing any problems; the atom {\tt \{:atm, 123\}} is different from
 the variable {\tt \{:var, 123\}}.
 
-A cons cell could be represented by a tuple {\tt \{:cons, Head,
-  Tail\}}. We could of course have chosen to represent cons cells as
+A cons cell could be represented by a tuple {\tt \{:cons, head,
+  tail\}}. We could of course have chosen to represent cons cells as
 Elixir cons cells but we want to make a distinction between the
 representation of terms in our target language and terms in Elixir (our
 target language now happens to be Elixir look-alike but that is of
@@ -249,9 +284,9 @@ course not always the situation).
 
 As an exercise you can write down the representation of the term:
 
-\begin{verbatim}
-     {:a, {x, :b}}
-\end{verbatim}
+\begin{minted}{elixir}
+{:a, {x, :b}}
+\end{minted}
 
 You will have to choose identifiers for the atoms {\tt :a}, {\tt :b}
 (why not {\tt :a}, {\tt :b}) and the variable {\tt x} (why
@@ -262,8 +297,7 @@ with the only difference that we need to represent the special {\em
   don't-care} pattern. We choose the atom {\tt :ignore} which will be
 exactly what we will do when we encounter the symbol.
 
-\subsection{expressions}
-
+\subsection{Expressions}
 In our simple language an expression is simply a term
 expression. Expressions should be evaluated to data structures and the
 question is of course how these data structures should be represented.
@@ -281,34 +315,32 @@ where {\tt str} is a data structure, or {\tt :error}. An error is
 returned if the expression can not be evaluated. This should be a
 quite simple task. The following skeleton code will get you started:
 
-\begin{verbatim}
-def eval_expr({:atm, id}, ...) do
-   ....
-end
+\begin{minted}{elixir}
+def eval_expr({:atm, id}, ...) do ... end
 
 def eval_expr({:var, id}, env) do
-  case ....  do
+  case ... do
     nil ->
-      ....
+      ...
     {_, str} ->
-      ....
+      ...
   end
 end
 
 def eval_expr({:cons, ..., ...}, ...) do
   case eval_expr(..., ...) do
     :error ->
-      ....
+      ...
     {:ok, ...} ->
       case eval_expr(..., ...) do
         :error ->
           ...
-        {:ok, ts} -> 
+        {:ok, ts} ->
           ...
       end
   end
 end
-\end{verbatim}
+\end{minted}
 
 Here are some examples that you should be able to handle.
 
@@ -319,16 +351,14 @@ Here are some examples that you should be able to handle.
  \item {\tt eval\_expr(\{:cons, \{:var, :x\}, \{:atm, :b\}\},  [\{:x, :a\}])} : returns {\tt \{:a, :b\}} 
 \end{itemize}
 
-
 Note that {\tt eval\_expr/2} returns a data structure if successful
 i.e. {\em :a}, {\em :foo}, or {\em \{:a, :b\}}.  The last test is an
 effect of representing the binary tuples in our source program {\tt
   \{a, b\}}, with the internal representation {\tt \{:cons, \{:atm,
   :a\}, \{:atm, :b\}\}} that when evaluated will return the
-datastructure {\it \{:a,:b\}}.
+data structure {\it \{:a, :b\}}.
 
-\subsection{pattern matching}
-
+\subsection{Pattern matching}
 A pattern matching will take a pattern, a data structure and an
 environment and return either {\tt \{:ok, env\}}, where {\tt env} is an
 extended environment, or the atom {\tt :fail}. 
@@ -350,32 +380,33 @@ straight forward, especially since we already have the environment
 module. The slightly more problematic case is when the pattern is a
 cons structure. Note that we first would add a binding for {\tt :x} to
 {\tt :a} and then try to match {\tt :x} with {\tt :b}. This will of
-course fail, teh variable {\em x} can not have two values.
-
+course fail, the variable {\em x} can not have two values.
 
 The following skeleton code should lead you in the right direction. We
-start with the simple cases, we can ignnore the case where the atoms
+start with the simple cases, we can ignore the case where the atoms
 do not match for now.
 
-\begin{verbatim}
+\begin{minted}{elixir}
 def eval_match(:ignore, ..., ...) do
   {:ok, ...}
 end
 
 def eval_match({:atm, id}, ..., ...) do
- {:ok, ...}
+  {:ok, ...}
 end
-\end{verbatim}
+\end{minted}
 
 Matching a variable is only slightly more complicated, we check if it
 has a value and if not we add it to the environment. This skeleton
 code uses a special construct that you might not have seen before, the
 {\tt \^str} variable. This is to indicate that we do not want a new
-variable {\tt str} but rather use the existing variable. 
+variable {\tt str} but rather use the existing variable.
 
-\begin{verbatim}
+\pagebreak
+
+\begin{minted}{elixir}
 def eval_match({:var, id}, str, env) do
-  case ....  do
+  case ... do
     nil ->
       {:ok, ...}
     {_, ^str} ->
@@ -384,37 +415,36 @@ def eval_match({:var, id}, str, env) do
       :fail
   end
 end
-\end{verbatim}
+\end{minted}
 
 Now the complicated (not so complicated) case where we match a cons
 pattern with a cons structure. This is where we must make sure that a
-variabel binding in one branch is transfered to the pattern matching
+variable binding in one branch is transferred to the pattern matching
 of the other branch.
 
-\begin{verbatim}
+\begin{minted}{elixir}
 def eval_match({:cons, hp, tp}, ..., env) do
   case eval_match(..., ..., ...) do
-   :fail ->
+    :fail ->
       ...
     ... ->
       eval_match(..., ..., ...)
   end
 end
-\end{verbatim}
+\end{minted}
 
 And last but not least, if we can not match the pattern to the data
 structure we fail.
 
-\begin{verbatim}
+\begin{minted}{elixir}
 def eval_match(_, _, _) do
-   :fail
+  :fail
 end
-\end{verbatim}
+\end{minted}
 
-Complete the implementation and try the examples give before. 
+Complete the implementation and try the examples give before.
 
-\subsection{sequences}
-
+\subsection{Sequences}
 We now have all the pieces of the puzzle to implement the evaluation
 of a sequence. We represent a sequence as list, the first elements
 will of course be pattern matching expressions but the last element is
@@ -430,66 +460,71 @@ It is important to understand how the environment is extended. We
 first need to remove all bindings of variables that occur in the
 pattern. The evaluation of the following sequence should result in {\em \{c, b\}}.
 
-\begin{verbatim}
-  x = a; y = b; x = :c; {x, y}
-\end{verbatim}
+\begin{minted}{elixir}
+x = a; y = b; x = :c; {x, y}
+\end{minted}
 
 Here is some skeleton code that Will get you started. You need to
 implement the function {\tt extract_vars/1} that returns a list of all
 variables in the pattern.
 
-\begin{verbatim}
-
+\begin{minted}{elixir}
 def eval_seq([exp], env) do
   eval_expr(..., ...)
 end
-    
-def eval_seq([{:match, ..., ...}|...], ...) do
+
+def eval_seq([{:match, ..., ...} | ...], ...) do
   case eval_expr(..., ...) do
-    ... -> 
+    ... ->
       ...
-    ...  ->
+    ... ->
       vars = extract_vars(...)
       env = Env.remove(vars, ...)
+
       case eval_match(..., ..., ...) do
         :fail ->
           :error
         {:ok, env} ->
-           eval_seq(..., ...)
+          eval_seq(..., ...)
       end
   end
 end
-\end{verbatim}
+\end{minted}
 
 When you have everything in place you should define a function {\tt
-  eval/1}, that takes a sequence and returns either {\tt \{ok, Str\}}
+  eval/1}, that takes a sequence and returns either {\tt \{:ok, str\}}
 or {\tt :error}. You should then be able to run the following query:
 
-\begin{verbatim}
- seq = [{:match, {:var, :x}, {:atm,:a}},
+\begin{minted}{elixir}
+seq = [{:match, {:var, :x}, {:atm,:a}},
         {:match, {:var, :y}, {:cons, {:var, :x}, {:atm, :b}}},
         {:match, {:cons, :ignore, {:var, :z}}, {:var, :y}},
         {:var, z}]
- eval(seq)
-\end{verbatim}
+
+Eager.eval(seq)
+\end{minted}
 
 The query is the representation of the following expression:
 
-\begin{verbatim}
-   x = :a; y = {x,:b}; {_,z} = y; z
-\end{verbatim}
+\begin{minted}{elixir}
+x = :a; y = {x, :b}; {_, z} = y; z
+\end{minted}
+
+
+% ================================================== %
+% == Extensions  == %
+% ================================================== %
 
 \section{Extensions}
 
 We now have an interpreter that can handle sequences of expressions
 but the expressions are rather simple. You should now extend the
 language and the interpreter to handle: {\em case expressions}, {\em
-  lambda expressions} and named funcions. In each case you need to
+  lambda expressions} and named functions. In each case you need to
 think about how expressions are represented before thinking about how
 the {\tt eval_expr/2} function is extended.
 
-\subsection{case expressions}
-
+\subsection{Case expressions}
 A case expression consists of an expression and a list of clauses
 where each clause is a pattern and a sequence. We of course need to be
 able to tell a case expression from any other expression so why not
@@ -499,118 +534,121 @@ element. A clause is simply a tuple with the key word {\tt :clause}.
 Now we extend the evaluation with a clause that can handle the case
 expressions.
 
-\begin{verbatim}
+\begin{minted}{elixir}
 def eval_expr({:case, expr, cls}, ...) do
-  case ....  do
+  case eval_expr(..., ...) do
     ... ->
       ...
     ... ->
       eval_cls(..., ..., ...)
   end
 end
-\end{verbatim}
+\end{minted}
 
 The function {\tt eval_cls/1} will take a list of
-clauses, a data structure and an evironment. It will select the right
+clauses, a data structure and an environment. It will select the right
 clause and continue the execution.
 
-\begin{verbatim}
-def eval_cls([], _, _) do
+\begin{minted}{elixir}
+def eval_cls([], _, _, _) do
   :error
 end
 
-def eval_cls( [{:clause, ptr, seq} | cls], ..., ...) do
+def eval_cls([{:clause, ptr, seq} | cls], ..., ...) do
+  ...
+  ...
   case ... do
     :fail ->
       eval_cls(..., ..., ...)
+
     {:ok, env} ->
       eval_seq(..., ...)
   end
 end
-\end{verbatim}
+\end{minted}
 
 That's it, you should now be able to evaluate something like this:
 
-\begin{verbatim}
+\begin{minted}{elixir}
 seq = [{:match, {:var, :x}, {:atm, :a}},
        {:case, {:var, :x},
           [{:clause, {:atm, :b}, [{:atm, :ops}]},
            {:clause, {:atm, :a}, [{:atm, :yes}]}
           ]}
        ]
-eval_seq(seq, [])
-\end{verbatim}
 
-\subsection{lambda expressions}
+Eager.eval_seq(seq, [])
+\end{minted}
+
+\subsection{Lambda expressions}
 
 Adding lambda expressions might look very complicated but it turns out
 to be quite simple. We first have to find a representation but this is
-by now not a probem. We know that a lambda expression (unnamed
-function) consiste of a sequence of parameter variables, a sequence of
+by now not a problem. We know that a lambda expression (unnamed
+function) consists of a sequence of parameter variables, a sequence of
 free variables and a sequence expression. If we agree to represent the
 parameters as well as the free variables as lists of identifiers we
 are done.
 
-\begin{verbatim}
-  {:lambda, parameters, free, sequence}
-\end{verbatim}
+\begin{minted}{elixir}
+{:lambda, parameters, free, sequence}
+\end{minted}
 
 Now when we evaluate a lambda expression we need to represent a
-clouser but this is equally simple. A closure simply consists of a
-sequence of paramter varaiables, a sequence expresion together with an
+closure but this is equally simple. A closure simply consists of a
+sequence of parameter variables, a sequence expression together with an
 environment.
 
-\begin{verbatim}
-  {:closure, parameters, sequence, environment}
-\end{verbatim}
+\begin{minted}{elixir}
+{:closure, parameters, sequence, environment}
+\end{minted}
 
 To evaluate a lambda expression we need to add a function to the {\tt
   Env} module that creates a new environment from a list of variable
 identifiers and an existing environment. If we can do this the rest is
 simple.
 
-\begin{verbatim}
-  def eval_expr({:lambda, par, free, seq}, ...) do
-    case Env.closure(free, ...) do
-      :error ->
-        :error
-      closure ->
-        {:ok, {:closure, ..., ..., ...}}
-    end
+\begin{minted}{elixir}
+def eval_expr({:lambda, par, free, seq}, ...) do
+  case Env.closure(free, ...) do
+    :error ->
+      :error
+    closure ->
+      {:ok, {:closure, ..., ..., ...}}
   end
-\end{verbatim}
+end
+\end{minted}
 
-The only thing we now have left is to funcion application i.e. when we
+The only thing we now have left is to function application i.e. when we
 apply a closure to a sequence of argument expressions. We need a way
 to represent this and the most natural way is the best. Note that we
 have an expression in the structure. The closure is something we will
-hopefully have as a result of evaluating the expression. 
+hopefully have as a result of evaluating the expression.
 
-\begin{verbatim}
-  {:apply, expression, arguments}
-\end{verbatim}
+\begin{minted}{elixir}
+{:apply, expression, arguments}
+\end{minted}
 
 The evaluation should first evaluate the expression. If this is indeed
 a closure we can evaluate the arguments and apply the closure to the
 resulting list of data structures.
 
-\begin{verbatim}
-
+\begin{minted}{elixir}
 def eval_expr({:apply, expr, args}, ...) do
-  case ... do 
+  case ... do
     :error ->
       :error
     {:ok, {:closure, par, seq, closure}} ->
-      case eval_args(args, env) do
+      case ... do
         :error ->
-          :error
+          :foo
         strs ->
           env = Env.args(par, strs, closure)
           eval_seq(seq, env)
       end
   end
 end
-\end{verbatim}
+\end{minted}
 
 You have to extend the {\tt Env} module to include a function {\tt
   args/3} that is given a list of variable identifiers ({\tt par}) , a
@@ -620,35 +658,36 @@ should now include bindings for all the variables in the sequence of
 the closure. If you get it right we should be able to evaluate the
 following.
 
-\begin{verbatim}
+\begin{minted}{elixir}
 seq = [{:match, {:var, :x}, {:atm, :a}},
        {:match, {:var, :f}, 
           {:lambda, [:y], [:x], [{:cons, {:var, :x}, {:var, :y}}]}},
        {:apply, {:var, :f}, [{:atm, :b}]}
       ]
-eval_seq(seq, [])
+      
+Eager.eval_seq(seq, [])
+\end{minted}
 
-\end{verbatim}
-
-\subsection{named functions}
-
+\subsection{Named functions}
 You're now a small step from being able to handle named functions
 i.e. a program. What we need is a key-value store that given a
 function identifier (an atom), returns a structure that holds a list
-of parameters and a seqence. We store this in a list and can use the
+of parameters and a sequence. We store this in a list and can use the
 library function {\tt List.keyfind/3} to retrieve the right function.
 
 Since we now have a program we need to give each function access to
 this data structure. This means that we need to change the {\tt
-  eval_expr/2} function to take athird argument, the program. This
+  eval_expr/2} function to take a third argument, the program. This
 value must also be passed to {\tt eval_seq/2} and {\tt eval_cls/3}. If
 you think this is a tedious task you have just encountered the
 downside of not having global data structures.
 
-Change the program and add the follwing clause to handle named
+Change the program and add the following clause to handle named
 functions.
 
-\begin{verbatim}
+\pagebreak
+
+\begin{minted}{elixir}
 def eval_expr({:call, id, args}, env, prg) when is_atom(id) do
   case List.keyfind(prg, id, 0) do
     ... ->
@@ -657,18 +696,19 @@ def eval_expr({:call, id, args}, env, prg) when is_atom(id) do
       case eval_args(..., ..., prg) do
         :error ->
           :error
-        strs  ->
+
+        strs ->
           env = Env.args(..., ..., ...)
           eval_seq(..., ..., prg)
       end
   end
 end
-\end{verbatim}
+\end{minted}
 
-If everything works you should now be able to run the follwing program:
+If everything works you should now be able to run the following program:
 
-\begin{verbatim}
- prgm = [{:append, [:x, :y],
+\begin{minted}{elixir}
+prgm = [{:append, [:x, :y],
            [{:case, {:var, :x}, 
                [{:clause, {:atm, []}, [{:var, :y}]},
                 {:clause, {:cons, {:var, :hd}, {:var, :tl}}, 
@@ -678,16 +718,16 @@ If everything works you should now be able to run the follwing program:
                 }]
             }]
          }]
-  seq = [{:match, {:var, :x}, 
-           {:cons, {:atm, :a}, {:cons, {:atm, :b}, {:atm, []}}}},
-         {:match, {:var, :y}, 
-           {:cons, {:atm, :c}, {:cons, {:atm, :d}, {:atm, []}}}},
-         {:call, :append, [{:var, :x}, {:var, :y}]}
-        ]
-  eval_seq(seq, [], prgm)
-\end{verbatim}
-
-
+         
+seq = [{:match, {:var, :x}, 
+       {:cons, {:atm, :a}, {:cons, {:atm, :b}, {:atm, []}}}},
+     {:match, {:var, :y}, 
+       {:cons, {:atm, :c}, {:cons, {:atm, :d}, {:atm, []}}}},
+     {:call, :append, [{:var, :x}, {:var, :y}]}
+    ]
+    
+Eager.eval_seq(seq, [], prgm)
+\end{minted}
 
 
 \end{document}

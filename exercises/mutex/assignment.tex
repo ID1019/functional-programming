@@ -12,7 +12,7 @@
 % Custom paragraph indentation
 \setlength{\parindent}{0em}
 \setlength{\parskip}{1em}
-    
+  
 % Headers/footers styling
 \pagestyle{fancy}
 \fancyhf{}
@@ -64,14 +64,14 @@
 \section*{Getting started}
 
 In this assignment you will learn about the concept of {\em mutual
-    exclusion} and how locks, semaphores and monitors can give us what
+  exclusion} and how locks, semaphores and monitors can give us what
 we want. These concepts are not frequently used in Elixir programming
 but you should know about them and understand why they are not often
 explicitly used in Elixir.
 
 The main idea with mutual exclusion is that we want to limit the
 concurrency to at most one executing process in a {\em critical
-    section}. A critical section could be a section in the program where
+  section}. A critical section could be a section in the program where
 we modify some data structure and we do not want any other process to
 see what we have done until we are completely done. Since we do not
 have any mutable data structures in Elixir the need for locks is
@@ -97,20 +97,21 @@ and accepts two messages: {\bf set} and {\bf get}.
 
 \begin{minted}{elixir}
 defmodule Cell do
+  
+  def new(), do: spawn_link(fn -> cell(:open) end)
 
-    def new, do: spawn_link(fn -> cell(:open) end)
-
-    defp cell(state) do
+  defp cell(state) do
     receive do
-        {:get, from} ->
-        send from, {:ok, state}
+      {:get, from} ->
+        send(from, {:ok, state})
         cell(state)
-        {:set, value, from} ->
-        send from, :ok
+
+      {:set, value, from} ->
+        send(from, :ok)
         cell(value)
     end
-    end
-    
+  end
+
 end
 \end{minted}
 
@@ -119,17 +120,17 @@ hide the fact that we do asynchronous communication.
 
 \begin{minted}{elixir}
 def get(cell) do
-    send cell, {:get, self()}
-    receive do
+  send(cell, {:get, self()})
+  receive do
     {:ok, value} -> value
-    end
+  end
 end
 
 def set(cell, value) do
-    send cell, {:set, value, self()}
-    receive do
+  send(cell, {:set, value, self()})
+  receive do
     :ok -> :ok
-    end
+  end
 end
 \end{minted}
 
@@ -141,14 +142,14 @@ reading here).
 
 \begin{minted}{elixir}
 def do_it(thing, lock) do
-    case Cell.get(lock) do
-    :taken -> 
-        do_it(thing, lock)
+  case Cell.get(lock) do
+    :taken ->
+      do_it(thing, lock)
     :open ->
-        Cell.set(lock, :taken)
-        do_ya_critical_thing(thing)
-        Cell.set(lock, :open)
-    end
+      Cell.set(lock, :taken)
+      do_ya_critical_thing(thing)
+      Cell.set(lock, :open)
+  end
 end
 \end{minted}
 
@@ -174,14 +175,14 @@ implementation we will implement it ourselves with a small extension to the lock
 
 \begin{minted}{elixir}
 defp cell(state) do
-    receive do
+  receive do
     {:swap, value, from} ->
-        send from, {:ok, state}
-        cell(value)
+      send(from, {:ok, state})
+      cell(value)
     {:set, value, from} ->
-        send from, :ok
-        cell(value)
-    end
+      send(from, :ok)
+      cell(value)
+  end
 end
 \end{minted}
 
@@ -191,19 +192,19 @@ Assuming we also provide a functional interface we could now use the lock as fol
 
 \begin{minted}{elixir}
 def do_it(thing, lock) do
-    case Cell.swap(lock, :taken) do
-    :taken -> 
-        do_it(thing, lock)
+  case Cell.swap(lock, :taken) do
+    :taken ->
+      do_it(thing, lock)
     :open ->
-        do_ya_critical_thing(thing)
-        Cell.set(lock, :open)
-    end
+      do_ya_critical_thing(thing)
+      Cell.set(lock, :open)
+  end
 end
 \end{minted}
 
 In this version it does not matter if two processes calls the
 procedure at the same time; both of them will swap in the value {\tt
-    :taken} but only one of them would receive the {\tt :open} value in
+  :taken} but only one of them would receive the {\tt :open} value in
 return. The process that loses the race will have to retry to take
 the lock and will succeed once the holding process sets the lock to
 {\tt :open}.
@@ -234,36 +235,37 @@ determine the winner if we have a draw.
 The two processes will execute slightly different code when trying to
 enter the critical section; or rather, the code is the same but the
 parameters are shifted. The first process will call the procedure {\tt
-    lock(0, p1, p2, q)} where as the second process will call {\tt lock(1, p2, p1, q)}.
+  lock(0, p1, p2, q)} where as the second process will call {\tt lock(1, p2, p1, q)}.
 
 \pagebreak
 
 \begin{minted}{elixir}
 def lock(id, m, p, q) do
-    Cell.set(m, true)
-    other = rem(id + 1, 2)
-    Cell.set(q, other)
-    case Cell.get(p) do
+  Cell.set(m, true)
+  other = rem(id + 1, 2)
+  Cell.set(q, other)
+
+  case Cell.get(p) do
     false ->
-        :locked
-    true -> 
-        case Cell.get(q) do
+      :locked
+    true ->
+      case Cell.get(q) do
         ^id ->
-            :locked
+          :locked
         ^other ->
-            lock(id, m, p, q)            
-        end
-    end
+          lock(id, m, p, q)
+      end
+  end
 end
 
 def unlock(_id, m, _p, _q) do
-    Cell.set(m, false)
+  Cell.set(m, false)
 end
 \end{minted}
 
 The intuition is that each process begins to declare that they are
 interested in taking the lock. They then set the common cell {\tt
-    q} to the second process's identifier as a signal to the second
+  q} to the second process's identifier as a signal to the second
 process to go ahead if they are both interested of the lock. If a
 process however sees that the second process is not interested it
 holds the lock and proceed into the critical section.
@@ -274,10 +276,10 @@ holds the lock and proceed into the critical section.
 To understand how Peterson's algorithm works is not easy; to prove
 that it ensures that the two processes do not believe to hold the
 lock at the same time is more difficult. 
-    
+  
 If you want to prove that Peterson's algorithm works, you can draw a
 finite state machine diagram with the state of the variables: {\em
-    p1}, {\em p2}, {\em q} and two variable {\em l1} and {\em l2} that
+  p1}, {\em p2}, {\em q} and two variable {\em l1} and {\em l2} that
 describes if a process is in the critical section. One alternative
 method is to use so-called {\em temporal logic} where the rules can
 prove that it is never so that {\em l1} and {\em l2} are both true.
@@ -286,9 +288,9 @@ An interesting question is whether one can make use of Peterson's
 algorithm in a computer that has as much as possible in the cache, or
 in a distributed system where clients have local copies. A
 prerequisite for the algorithm to work is that if a process sets {\em
-    p1} to {\em true} and then reads that {\em p2} is {\em false} then
+  p1} to {\em true} and then reads that {\em p2} is {\em false} then
 it can not be that the second process manages to set {\em p2} to {\em
-    true} and then read that {\em p1} is {\em false}. Describe a
+  true} and then read that {\em p1} is {\em false}. Describe a
 scenario using cached local copies that will violate this prerequisite.
 
 
@@ -355,7 +357,7 @@ chopstick and requesting the second?
 \section{The semaphore}
 
 In the previous section we implemented the locks using a {\em busy
-    waiting} or {\em spin-lock} strategy. A process that would not
+  waiting} or {\em spin-lock} strategy. A process that would not
 immediately require the lock would try and try again until the lock
 was acquired. This is a very aggressive strategy that in the worst case
 means that a process will spend a lot of resources just reading from a
@@ -378,20 +380,20 @@ have implemented a semaphore. Look at the code below:
 
 \begin{minted}{elixir}
 def semaphore(0) do
-    receive do
+  receive do
     :release ->
-        semaphore(1)
-    end
+      semaphore(1)
+  end
 end
 
 def semaphore(n) do
-    receive do
+  receive do
     {:request, from} ->
-        send from, :granted
-        semaphore(n - 1)
+      send(from, :granted)
+      semaphore(n - 1)
     :release ->
-        semaphore(n + 1)
-    end
+      semaphore(n + 1)
+  end
 end
 \end{minted}
 
@@ -401,11 +403,11 @@ section. The code for requesting entrance would of course look like follows:
 
 \begin{minted}{elixir}
 def request(semaphore) do
-    send semaphore, {:request, self()}
-    receive do
+  send(semaphore, {:request, self()})
+  receive do
     :granted ->
-        :ok
-    end
+      :ok
+  end
 end
 \end{minted}
 
@@ -463,12 +465,12 @@ thing is of course handled by messages.
 
 \begin{minted}{elixir}
 def monitor(state) do
-    receive do
+  receive do
     {:request, from} ->
-        updated = critical(state)
-        send from, :ok
-        monitor(updated)
-    end
+      updated = critical(state)
+      send(from, :ok)
+      monitor(updated)
+  end
 end
 \end{minted}
 
@@ -484,12 +486,12 @@ control what should be done.
 
 \begin{minted}{elixir}
 def monitor(state) do
-    receive do
+  receive do
     {:request, fun, from} ->
-        updated = fun.(state)
-        send from, :ok
-        monitor(updated)
-    end
+      updated = fun.(state)
+      send(from, :ok)
+      monitor(updated)
+  end
 end
 \end{minted}
 
@@ -519,10 +521,10 @@ A complete deadlock is of course the worst thing that could happen but
 there are other related problems that are almost as bad:
 
 \begin{itemize}
-    \item deadlock: Nothing moves.
-    \item livelock: Things move but we're not making progress.
-    \item starvation: We make progress but at least one process is prevented from progressing.
-    \item non-fair scheduling: All processes make progress but some processes do not get a fair share of the resources. 
+  \item deadlock: Nothing moves.
+  \item livelock: Things move but we're not making progress.
+  \item starvation: We make progress but at least one process is prevented from progressing.
+  \item non-fair scheduling: All processes make progress but some processes do not get a fair share of the resources. 
 \end{itemize}
 
 It is not necessarily so that every system you implement must
@@ -550,7 +552,7 @@ before any process that issues a request at a later moment?
 Even if the locks, semaphores and monitors that we have discussed have
 algorithms that will not deadlock, we can easily create a deadlock if
 we have two or more locks. If process {\em P1} is granted a lock {\em
-    A}, process {\em P2} is granted a lock {\em B} and requests lock
+  A}, process {\em P2} is granted a lock {\em B} and requests lock
 {\em A} it will of course have to wait. If process {\em P1} now
 requests lock {\em B} we have a circular dependency that has caused a
 deadlock.
@@ -574,13 +576,14 @@ function to acquire access.
 
 \begin{minted}{elixir}
 def request(semaphore) do
-    send semaphore, {:request, self()}
-    receive do
+  send(semaphore, {:request, self()})
+  receive do
     :granted ->
-        :ok
-    after 1000 ->
-        :aborted
-    end
+      :ok
+  after
+    1000 ->
+      :abort
+  end
 end
 \end{minted}
 
@@ -607,21 +610,22 @@ will find this granted message that has been there all the time.
 
 \begin{minted}{elixir}
 def request(semaphore) do
-    ref = make_ref()
-    send semaphore, {:request, ref, self()}
-    wait(semaphore, ref)
+  ref = make_ref()
+  send(semaphore, {:request, ref, self()})
+  wait(semaphore, ref)
 end
 
 def wait(semaphore, ref) do
-    receive do
+  receive do
     {:granted, ^ref} ->
-        :ok
+      :ok
     {:granted, _} ->
-        wait(semaphore, ref)
-    after 1000 ->
-    send semaphore, :release
-    :abort
-    end
+      wait(semaphore, ref)
+  after
+    1000 ->
+      send(semaphore, :release)
+      :abort
+  end
 end
 \end{minted}
 
@@ -683,6 +687,5 @@ Deadlock is a problem but can often be avoided by ordering the
 resources and always request the resources in this order. Detecting a
 deadlock situation and resolve the situation might be trickier than
 think. 
-
 
 \end{document}

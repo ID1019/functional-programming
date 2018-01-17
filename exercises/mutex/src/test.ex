@@ -3,8 +3,9 @@ defmodule Test do
   # Naïve lock usage
   def do_it(thing, lock) do
     case Cell.get(lock) do
-      :taken -> 
+      :taken ->
         do_it(thing, lock)
+
       :open ->
         Cell.set(lock, :taken)
         do_ya_critical_thing(thing)
@@ -15,8 +16,9 @@ defmodule Test do
   # Lock with atomic swap usage
   def do_it(thing, lock) do
     case Cell.swap(lock, :taken) do
-      :taken -> 
+      :taken ->
         do_it(thing, lock)
+
       :open ->
         do_ya_critical_thing(thing)
         Cell.set(lock, :open)
@@ -28,15 +30,18 @@ defmodule Test do
     Cell.set(m, true)
     other = rem(id + 1, 2)
     Cell.set(q, other)
+
     case Cell.get(p) do
       false ->
         :locked
-      true -> 
+
+      true ->
         case Cell.get(q) do
           ^id ->
             :locked
+
           ^other ->
-            lock(id, m, p, q)            
+            lock(id, m, p, q)
         end
     end
   end
@@ -44,5 +49,5 @@ defmodule Test do
   def unlock(_id, m, _p, _q) do
     Cell.set(m, false)
   end
-  
+
 end
