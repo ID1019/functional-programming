@@ -165,7 +165,7 @@ We have the following rules for evaluation of expressions:
 
   \vspace{20pt} What if we have $E\sigma(v)$ and $\ v/s \not\in \sigma$? 
 
-  \pause $$\frac{ v/s \not\in \sigma}{E\sigma(v) \rightarrow  \perp}$$  
+  \pause $$\frac{ v/s \not\in \sigma}{E\sigma(v) \rightarrow  \perp}$$
 
 \end{frame}
 
@@ -191,15 +191,16 @@ We have the following rules for evaluation of expressions:
   environment. \pause We write: $$P\sigma(p,s) \rightarrow \theta$$
   where $\theta$ (theta) is the extended environment.
 
-\pause\vspace{10pt} Match an atom and a structure:
+\pause\vspace{5pt} Match an atom:
 $$\frac{a \equiv s}{P\sigma(a, s) \rightarrow \sigma}$$ 
 
+\pause\vspace{5pt} Match an unbound variable:
+$$\frac{v/t \not\in \sigma}{P\sigma(v, s) \rightarrow \lbrace v/s \rbrace \cup \sigma}$$
 
-\pause\vspace{10pt} Match a variable and a structure:
-$$\frac{v/t \not\in \sigma}{P\sigma(v, s) \rightarrow \lbrace v/s \rbrace \cup \sigma}$$ 
+\pause\vspace{5pt} Match a bound variable:
+$$\frac{v/s \in \sigma}{P\sigma(v, s) \rightarrow \sigma}$$ 
 
-
-\pause\vspace{10pt} Match {\tt ignore} and a structure:
+\pause\vspace{5pt} Match {\tt ignore}:
 $$\frac{}{P\sigma(\_, s) \rightarrow \sigma}$$ 
 
 \end{frame} 
@@ -210,7 +211,7 @@ $$\frac{}{P\sigma(\_, s) \rightarrow \sigma}$$
 
 \pause\vspace{20pt}
 
-$$\frac{a \not\equiv s}{P\sigma(a, s) \rightarrow {\mathrm fail}}$$ 
+$$\frac{a \not\equiv s}{P\sigma(a, s) \rightarrow {\rm fail}}$$ 
 
 \pause\vspace{20pt}
 
@@ -234,7 +235,7 @@ $$\frac{P\sigma(p_1, s_1) \rightarrow \sigma' \wedge P\sigma'(p_2, s_2) \rightar
 \pause \vspace{10pt}
 Note that the second part is evaluated in $\sigma'$. 
 
-\pause \vspace{10pt}Example: \{x,\{y,x\}\} = $\{a, \{b,c\}\}$
+\pause \vspace{10pt}Example: $P\{\}({\texttt \{x,\{y,x\}\}}, \{a, \{b,c\}\}$)
 
 \vspace{20pt}{\em Match a compund pattern with anyting but a compound structure will fail.}
 
@@ -277,10 +278,10 @@ A sequence is evaluated one pattern matching expression after the other.
 
 $$\frac{   
   E\sigma(e) \rightarrow t
-  \qquad \sigma' = S(\sigma, p)
+  \qquad S(\sigma, p) \rightarrow \sigma' 
   \qquad P\sigma'(p, t) \rightarrow \theta
   \qquad E\theta({\rm sequence}) \rightarrow s
-}{E\sigma(p = e, {\rm sequence}) \rightarrow s}$$ 
+}{E\sigma(p = e; {\rm sequence}) \rightarrow s}$$ 
 
 \vfill
 {\em Erlang and Elixir differ in how this rule is defined.}
@@ -288,7 +289,7 @@ $$\frac{
 
 \begin{frame}{example}
 
-   {\tt x = :a, y = :b, \{x,y\}}
+   {\tt x = :a; y = :b; \{x,y\}}
 
 \end{frame}
 
@@ -367,19 +368,26 @@ $$\frac{E\sigma(e) \rightarrow t \qquad C\sigma(t, {\rm clauses}) \rightarrow s 
 \begin{frame}{selection of a clause}
 
 $$\frac{
-  \sigma' = S(\sigma, p) \qquad
+  S(\sigma, p) \rightarrow \sigma' \qquad
   P\sigma'(p, s) \rightarrow \theta \qquad
   \theta \not = {\rm fail} \qquad
   E\theta({\rm sequence}) \rightarrow s}{
-C\sigma(s, p \;{\rm -\textgreater}\;    {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
+C\sigma(s, p \;{\rm ->}\;    {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
 
 \pause \vspace{10pt}
 
 $$\frac{
-  \sigma' = S(\sigma, p) \qquad
+  S(\sigma, p) \rightarrow \sigma'   \qquad
   P\sigma'(p, s) \rightarrow {\rm fail} \qquad
   C\sigma(s, {\rm clauses}) \rightarrow s}{
 C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
+
+\pause \vspace{10pt}
+
+$$\frac{
+  S(\sigma, p) \rightarrow \sigma' \qquad
+  P\sigma'(p, s) \rightarrow {\rm fail} }{
+C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence}) \rightarrow \perp}$$
 
 
 \end{frame}
