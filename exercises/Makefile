@@ -7,6 +7,7 @@ DIRS =	huffman \
 	mandel \
 	morse \
 	operational \
+        tracer \
 	philosophers \
 	avl \
 	twothree
