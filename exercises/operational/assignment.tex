@@ -296,7 +296,7 @@ sequence.
 
 $$\frac{   
   E\sigma(e) \rightarrow t
-  \qquad \sigma' = S(\sigma, p)
+  \qquad S(\sigma, p) \rightarrow \sigma'
   \qquad P\sigma'(p, t) \rightarrow \theta
   \qquad E\theta({\rm sequence}) \rightarrow s
 }{E\sigma(p = e, {\rm sequence}) \rightarrow s}$$ 
@@ -350,7 +350,7 @@ evaluate the sequence of the clause, in the extended environment. Note
 that we also here create new scopes for the variables in the pattern.
 
 $$\frac{
-  \sigma' = S(\sigma, p) \qquad
+  S(\sigma, p) \rightarrow \sigma' \qquad
   P\sigma'(p, s) \rightarrow \theta \qquad
   \theta \not = {\rm fail} \qquad
   E\theta({\rm sequence}) \rightarrow s}{
@@ -363,13 +363,13 @@ If the pattern matching fails we will simply try the next clause in
 the sequence of clauses.
 
 $$\frac{
-  \sigma' = S(\sigma, p) \qquad
+  S(\sigma, p) \rightarrow \sigma' \qquad
   P\sigma'(p, s) \rightarrow {\rm fail} \qquad
   C\sigma(s, {\rm clauses}) \rightarrow s}{
 C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
 
 If no pattern matches the evaluation will simply terminate
-unsuccessfully. In real life this would mean that we receive a {\em
+unsuccessfully ($\perp$). In real life this would mean that we receive a {\em
   CaseClauseError} or similarly.
 
 We now have everything we need to handle case expressions in our

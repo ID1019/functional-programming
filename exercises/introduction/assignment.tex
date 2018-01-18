@@ -316,10 +316,11 @@ result of evaluating the function.
 \item {\tt unique(l)}: return a list of unique elements in the list {\em l},
   that is {\tt [:a, :b, :d]} are the unique elements in the list {\tt [:a, :b, :a, :d, :a, :b, :b, :a]}
 \item {\tt pack(l)}: return a list containing lists of equal elements, {\tt
-  [:a, :a, :b, :c, :b, :a, :c]} should return {\tt [[:a, :a, :a], [b], [:c, :c]]}
+  [:a, :a, :b, :c, :b, :a, :c]} should return {\tt [[:a, :a, :a], [:b, :b], [:c, :c]]}
 \item {\tt reverse(l)}: return a list where the order of elements is reversed
 \end{itemize}
 
+{\em Things to ponder: what are the runtime complexity of these operations.}
 
 \subsection{Sorting}
 
@@ -514,7 +515,7 @@ def bench() do
     seq = Enum.to_list(1..l)
     tn = time(n, fn -> nreverse(seq) end)
     tr = time(n, fn -> reverse(seq) end)
-    :io.format("length: ~10w  nrev: ~8w µs    rev: ~8w us~n", [l, tn, tr])
+    :io.format("length: ~10w  nrev: ~8w us    rev: ~8w us~n", [l, tn, tr])
   end
 
   # We use the library function Enum.each that will call
