@@ -27,7 +27,7 @@ def sum([]) do 0 end
 def sum([h|t]) do 
    s = sum(t)
    h + s
-edn
+end
        \end{verbatim}
       \end{block}
     \end{column}
@@ -361,7 +361,7 @@ What if we run qsort on a already ordered list?
    \begin{column}{.6\linewidth}
     \begin{verbatim}
 def msort([]) do [] end
-def msort(l) do end
+def msort(l) do
    {a, b} = split(l)
    as = msort(a)
    bs = msort(a)

@@ -32,8 +32,8 @@
  \begin{column}{0.5\linewidth}
 \begin{verbatim} 
 def foo(x)  do
-    Y = bar(x)
-    Z = zot(x)
+    y = bar(x)
+    z = zot(x)
     {y, z}
 end
 \end{verbatim}
@@ -42,8 +42,8 @@ end
   \begin{column}{0.5\linewidth}
 \begin{verbatim} 
 def grk(x) do
-    z = zot(x),
-    y = bar(x),
+    z = zot(x)
+    y = bar(x)
     {y, z}
 end
 \end{verbatim}
@@ -64,7 +64,8 @@ def foo(x, y) do
               error ->
                   {:caught, error}
           end,
-    {x, y, res}.
+    {x, y, res}
+end
 \end{verbatim}
 \end{frame}
 
@@ -150,7 +151,7 @@ def foo(x, y) do
 
 \begin{verbatim}
 def append([], y) do y end
-def append([h|t], Y) do
+def append([h|t], y) do
    z = append(t, y)
    [ h | z ]
 end
