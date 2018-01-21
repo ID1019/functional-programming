@@ -113,7 +113,9 @@ defmodule Huffman do
     represent english but it is probably not that far off'
   end
 
-  def text, do: 'this is something that we should encode'
+  def text()  do
+    'this is something that we should encode'
+  end
   
   def test do
     sample = sample()
@@ -299,7 +301,9 @@ and see what we have, it will work and will probably not take that much time.
 Your solution might look something like this:
 
 \begin{minted}{elixir}
-def decode([], _), do: []
+def decode([], _)  do
+  []
+end
 
 def decode(seq, table) do
   {char, rest} = decode_char(seq, 1, table)
