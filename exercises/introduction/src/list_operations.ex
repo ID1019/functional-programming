@@ -1,5 +1,5 @@
 defmodule ListOperations do
-  
+
   # Returns the n´th elemt of the list.
   def nth(0, [head | _tail]) do head end
   def nth(n, [_head | tail]) do nth(n - 1, tail) end
@@ -14,7 +14,7 @@ defmodule ListOperations do
 
   # Returns a list where all the elements are duplicated.
   def duplicate([]) do [] end
-  def duplicate([head | tail]) do 
+  def duplicate([head | tail]) do
     [head, head | duplicate(tail)]
   end
 
@@ -40,7 +40,7 @@ defmodule ListOperations do
   # Returns a list containing lists of equal elements.
   def pack([]) do [] end
   def pack([x | tail]) do
-    {all, rest} = match(x, tail, [], [])
+    {all, rest} = match(x, tail, [x], [])
     [all | pack(rest)]
   end
 
