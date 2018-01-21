@@ -12,44 +12,4 @@ defmodule World do
             ambient: @ambient,
             refraction: @refraction
 
-  def world(objects, lights) do
-    struct(World, objects: objects, lights: lights)
-  end
-
-  def world(objects, lights, opt) do
-    depth =
-      case List.keyfind(opt, :depth, 0) do
-        {:depth, d} -> d
-        nil -> @depth
-      end
-
-    background =
-      case List.keyfind(opt, :background, 0) do
-        {:background, b} -> b
-        nil -> @background
-      end
-
-    ambient =
-      case List.keyfind(opt, :ambient, 0) do
-        {:ambient, a} -> a
-        nil -> @ambient
-      end
-
-    refraction =
-      case List.keyfind(opt, :refraction, 0) do
-        {:refraction, r} -> r
-        nil -> @refraction
-      end
-
-    struct(
-      World,
-      objects: objects,
-      lights: lights,
-      background: background,
-      depth: depth,
-      ambient: ambient,
-      refraction: refraction
-    )
-  end
-
 end

@@ -128,9 +128,8 @@ To model our world and do the necessary computations we need to solve
 the following problems:
 
 \begin{itemize}
- \item represent and do calculations on vectors
+ \item represent and do calculations on vectors and rays
  \item represent objects such as spheres
- \item represent rays
  \item determine if a ray intersects an object
  \item represent a camera i.e. the location of the eye and the canvas
 \end{itemize}
@@ -144,10 +143,10 @@ about rays, objects and intersections.
 
 
 % ================================================== %
-% == Vectors  == %
+% == Vectors and rays == %
 % ================================================== %
 
-\section{Vectors}
+\section{Vectors and rays}
 
 The first task is to create a module that will handle all vector
 operations. We will need to represent vectors and be able to do the
@@ -178,7 +177,7 @@ defmodule Vector do
 
   def add({x1, x2, x3}, {y1, y2, y3}) do ... end
 
-  def dot({x1, x2, x3}, {y1, y2, y3}) do ... end
+  def dot({x1, x2, x3}, {y1, y2, y3}) do ... end  
 
   def normalize(x) do ... end
 
@@ -186,6 +185,8 @@ defmodule Vector do
 
 end
 \end{minted}
+
+\subsection*{vector arithmetics}
 
 The first functions, scalar multiplication, addition and subtraction
 should be quite easy to implement.
@@ -209,6 +210,31 @@ vector i.e. the users of this module will know that vectors are
 represented by tuples with three elements. This is not the best
 solution but unfortunately a very convenient solution.
 
+\subsection*{rays}
+
+We will however create a more proper data structure to represent a {\em ray}. 
+A ray has an origin, represented by a vector, and a direction,
+represented by a normalized vector. When we implement rays we will use
+Elixir structs. A struct is always associated with a module and gives
+us a convenient way of referencing elements of a data structure. Instead
+of having to remember which element of a tuple a particular element
+is we can refer to them by name. 
+
+Create a module {\tt Ray} and define the following struct. We provide
+a default posistion {\tt \{0,0,0\}} and direction {\tt \{1,1,1\}}. If
+none is given when we create a ray the deafult values will be used.
+
+\begin{minted}{elixir}
+defmodule Ray do
+
+  defstruct pos: {0, 0, 0}, dir: {1, 1, 1}
+  
+end
+\end{minted}
+
+We now have the mathematical tools to describe a world of obkects.
+
+
 
 % ================================================== %
 % == Objects == %
@@ -216,9 +242,29 @@ solution but unfortunately a very convenient solution.
 
 \section{Objects}
 
-Our next task is to create a module that can represent the objects in
-our world. We will keep things simple and only handle rays and
-spheres. 
+Our next task is to create data structures that can
+represent the objects in our world. We will keep things simple and
+only handle spheres. We should however implement the spheres in a way
+that makes it easy to add new obejcts in the future.
+
+We will use Elixir {\em protocols} to define a common interface that
+all objects should implement. Similarly to defining a module we define
+a protocol called {\tt Object}. The protocol will so far only specify
+one functtion {\tt intersetc/2} that will determine if a ray
+intersects an object.
+
+\begin{minted}{elixir}
+defprotocol Object do
+
+  def intersect(object, ray)
+  
+end
+\end{minted}
+
+As we define different object we will instantiate the {\tt Object}
+protocol by defining the {\tt intersect/2} function. 
+
+\subsection*{spheres}
 
 When we decide on the representation we need to think about the
 operations we should perform; a representation is efficient if it
@@ -230,47 +276,26 @@ performed.
 The operations that we will perform over and over again is to
 determine if a ray intersects with another object such as a sphere. If
 we model our objects in a Cartesian space we will be able to
-determine intersections quite easily. A ray will have an origin and a
-sphere will have an origin and a radius. An origin is represented by
-a vector, a direction by a normalized vector and a radius by an integer.
+determine intersections quite easily.
 
-When we choose a representation of rays and spheres we will use Elixir
-structs. Structs are very similar to tuples but they are identified by
-a name and also have named elements. We will later add more properties
-to these objects and the struct implementation makes it much easier to
-modify our code.
+A sphere will have an position and a radius. The position is
+represented by a vector and the radious by a number. We create a
+struct with two properties and default values.
 
 \begin{minted}{elixir}
 defmodule Sphere do
 
-  defstruct radius: 2, center: {0, 0, 0}
+  defstruct pos: {0, 0, 0}, radius: 2
 
-  def sphere(radius, center) do
-    struct(Sphere, radius: radius, center: center)
-  end
-  
 end
 \end{minted}
 
-\begin{minted}{elixir}
-defmodule Ray do
 
-  defstruct origin: {0, 0, 0}, direction: {1, 1, 1}
-
-  def ray(origin, direction) do
-    struct(Ray, origin: origin, direction: direction)
-  end
-  
-end
-\end{minted}
-
-Structs are defined in a module of the same name. The first two functions 
-for the {\tt Sphere} and {\tt Ray} structs will simply return objects of specified
-types. You see how we use the structs to construct and initiate the named
-elements.
+\subsection*{intersection}
 
 The tricky part is of course to determine if a ray will intersect a
-sphere but this is actually easily determined if we remember our linear algebra.
+sphere but this is actually easily determined if we remember our
+linear algebra.
 
 \begin{figure}[h!]
 \begin{center}
@@ -345,19 +370,29 @@ point is behind us; if only one value is negative we are actually
 inside the sphere. If both values are positive we return the smallest
 value since this is the surface that we will actually see.
 
-Implement the function {\tt intersect/2} that checks if ray
-intersects a sphere; return {\tt :no} if it does not and {\tt \{:ok,
-  d\}}, where {\tt d} is the closest distance, if it does. Do some
-experiments to see that it works.
+\subsection*{object protocol}
+
+Implement the function {\tt intersect/2} that checks if ray intersects
+a sphere; return {\tt :no} if it does not and {\tt \{:ok, d\}}, where
+{\tt d} is the closest distance, if it does. We implement the function
+in the {\tt Sphere} module but use the {\tt defimpl} construct to
+declare this as the {\tt Obect} protocol implementation.
 
 \begin{minted}{elixir}
-defmodule Objects do
+ defimpl Object do
 
-  def intersect(sphere, ray) do ... end
-  
-end
+   def intersect(sphere = %Sphere{}, ray = %Ray{}) do
+     :
+     :
+   end
+ end
 \end{minted}
 
+ The function {\tt intersect/2} is now reached using the call {\tt
+   Object.intersect/2} since it is defined as an {\tt Object}
+ protocoll.
+
+ 
 
 % ================================================== %
 % == The camera == %
@@ -372,7 +407,7 @@ course need to define where in the room it is and where it is pointing
 but also what kind of lens it has. This is probably the most
 complicated part of the implementation but we will give it a try.
 
-\subsection{The name of the game}
+\subsection*{the name of the game}
 In the end we would like to have a representation of a camera that
 will allow us to ask for a ray that starts in the focal point (or
 origin) of the camera and runs through a given $\langle x, y\rangle$
@@ -388,9 +423,9 @@ When you think about representation, then always think about what
 you're going to use the object for. This will allow you to represent
 the object in a way that makes the operations easier to perform. Also
 think about how you would like to talk about the object, the easiest
-way to describe an object might not be the bets way to represent it.
+way to describe an object might not be the best way to represent it.
 
-\subsection{Properties of a camera}
+\subsection*{properties of a camera}
 If you have not used a large camera you might not have thought about
 how different lenses changes the picture but think about the
 difference between a ``fish-eye'' and telephoto lens. The difference
@@ -449,8 +484,9 @@ and pointing straight into the picture, could be described as follows:
  \item vertical: $\langle 0,540,0\rangle$
 \end{itemize}
 
-This would give us a canvas of size $1920 \times 1080$
-at a distance from the origin of $1600$ (which will approximately give us a ``normal'' lens). 
+This would give us a canvas of size $1920 \times 1080$ at a distance
+from the origin of $1600$ (which will approximately give us a
+``normal'' lens).
 
 To minimize the computation needed when calculating the rays we could
 represent the camera by a position and a vector to the upper left
@@ -478,53 +514,44 @@ defmodule Camera do
 end
 \end{minted}
 
-You should also define, and export, a function {\tt camera/5} that will
-return a camera given the properties. It will also be very handy to
-have a function that returns a default camera so that we don't have to
-think about the different parameters. This default camera can be
-positions at $\langle 0,0,0\rangle$
-and point straight forward (in the z direction). We can give it a
-parameter that is the size of the image that we want to generate; you
-will have to calculate the rest of the parameters.
+It will also be very handy to have a function that returns a default
+camera so that we don't have to think about the different
+parameters. This default camera can be positions at
+$\langle 0,0,0\rangle$ and point straight forward (in the z
+direction). We can give it a parameter that is the size of the image
+that we want to generate; you will have to calculate the rest of the
+parameters.
 
 \begin{minted}{elixir}
-def camera(pos, corner, right, down, size) do
-  struct(Camera, pos: pos, corner: corner, right: right, down: down, size: size)
-end
-
 def normal(size) do
   {width, height} = size
   d = width * 1.2
   h = width / 2
   v = height / 2
   corner = ...
-  camera({0, 0, 0}, corner, ..., ..., size)
+    :
+    :
+  %Camera{pos: {0, 0, 0}, corner: corner, ..., ..., size: size)
 end
 \end{minted}
 
 Given a camera we now need to calculate a ray that passes through a
 given coordinate or pixel. This should be straight forward given that
-we created our representation with this mind.
+we created our representation with this in mind.
 
 \begin{minted}{elixir}
-def ray(x, y, camera) do
+def ray(camera, x, y) do
   origin = ...   # the origin of the ray
-  x_pos = ...    # a vector from the corner to the X column
-  y_pos = ...    # a vector from the corner to the Y row
+  x_pos = ...    # a vector from the corner to the x column
+  y_pos = ...    # a vector from the corner to the y row
   pixle = ...    # a vector from origin to the pixle
   dir = ...      # the normalized vector
-  Ray.ray(origin, dir)
+  %Ray{pos: origin, dir: dir}
 end
 \end{minted}
 
-Also implement a function {\tt size/1} that returns the size of a
-camera and then you're done with the camera module.
 
-% ================================================== %
-% == The world == %
-% ================================================== %
-
-\section{The world}
+\subsection*{the world}
 
 The world is simply a list of objects. We will extend the world to also
 hold other things but for our first test this will be sufficient.
@@ -534,14 +561,11 @@ defmodule World do
 
   defstruct objects: []
 
-  def world(objects) do
-    struct(World, objects: objects)
-  end
-
 end
 \end{minted}
 
-That completes all the modules that we need, high time to generate some images. 
+That completes all the modules that we need to represnt the world,
+high time to generate some images.
 
 
 % ================================================== %
@@ -567,9 +591,11 @@ will extend quite easily. We will build the tracer {\em bottom up}
 which will give us the opportunity to test things as we implement
 it. 
 
+\subsection*{intersect}
+
 The first thing we will do is to determine which object a ray
 intersects, if any, from a list of objects. We know that we can call
-{\tt intersect/2} form the {\tt Objects} module but now we have a list
+{\tt intersect/2} using the {\tt Objects} protocol but now we have a list
 of objects and we want to find the closest point of intersection.
 
 The {\tt intersect/2} function returns either {\tt \{:ok, d\}} or {\tt
@@ -579,10 +605,10 @@ point of intersection. We will here use the higher order construct
 
 \begin{minted}{elixir}
 def intersect(ray, objects) do
-  List.foldl(objects, {:inf, :no}, fn object, sofar ->
+  List.foldl(objects, {:inf, nil}, fn(object, sofar) ->
     {dist, _} = sofar
 
-    case Objects.intersect(object, ray) do
+    case Object.intersect(object, ray) do
       {:ok, d} when d < dist ->
         {d, object}
       _ ->
@@ -592,11 +618,17 @@ def intersect(ray, objects) do
 end
 \end{minted}
 
-So the function {\tt intersect/2} will tell us if a ray intersects an
+The function {\tt intersect/2} will tell us if a ray intersects an
 object and it will also tell us the distance to this object. If the
-ray does not intersect an object it will return {\tt \{:inf, :no\}}
+ray does not intersect an object it will return {\tt \{:inf, nil\}}
 (using a value like this is called a sentinel, a value that we know
 will be higher than any other value).
+
+The use of the {\tt Object} protocol allows us to have objects of
+different kinds. We onky have spheres now but can add any objects as
+long as they implement the {\tt Object} protocol.
+
+\subsection*{tracing}
 
 We now define a two functions: {\tt trace/4} and {\tt trace/2}. The
 latter will use {\tt intersect/2}, check the outcome and then return
@@ -619,6 +651,15 @@ def trace(ray, objects) do
   end
 end
 \end{minted}
+
+Here we use Elixir module attributes to define the rgb-values for
+black and white. You will have to add these in the beginning of the
+module.
+
+\begin{mint}{elixir}
+  @black {0, 0, 0}
+  @white {1, 1, 1}
+\end{mint}
 
 The only thing that is left is to trace every possible ray of the
 camera; this is neatly done using list comprehension. The function
@@ -643,7 +684,9 @@ App~\ref{app:ppm} you will find a module that will take an image, as we
 generates it, and writes a {\em ppm} file. Not all image viewers can
 open a ppm file so you might have to try several before finding one that works.
 
-It is now quite easy to generate an image, all we have to do is to describe the world and then take a snap shot. Create a module called {\tt Test} and describe your first image.
+It is now quite easy to generate an image, all we have to do is to
+describe the world and then take a snap shot. Create a module called
+{\tt Test} and describe your first image.
 
 \pagebreak
 
@@ -653,9 +696,9 @@ defmodule Test do
   def snap do
     camera = Camera.normal({800, 600})
 
-    obj1 = Sphere.sphere(140, {0, 0, 700})
-    obj2 = Sphere.sphere(50, {200, 0, 600})
-    obj3 = Sphere.sphere(50, {-80, 0, 400})
+    obj1 = %Sphere{pos: 140, pos: {0, 0, 700})
+    obj2 = %Sphere{radius: 50, pos: {200, 0, 600}}
+    obj3 = %Sphere{radius: 50, pos: {-80, 0, 400}}
 
     image = Tracer.tracer(camera, [obj1, obj2, obj3])
     PPM.write("test.ppm", image)
@@ -668,7 +711,8 @@ If you look at your picture you will hopefully see three white circles
 on a black background. One circle (the image of {\tt obj3} in the
 description above) is closer to the camera and is partly blocking the
 larger circle (that is the image of {\tt obj1}). This is not very
-existing but you will see that it is very easy to extend this simple ray tracer. 
+existing but you will see that it is very easy to extend this simple
+ray tracer.
 
 
 % ================================================== %
@@ -677,43 +721,24 @@ existing but you will see that it is very easy to extend this simple ray tracer.
 
 \section{Extensions}
 
-Can you provide a better strategy for the philosophers so that they
-can eat and dream without ending up in a deadlock? What happens if
-you provide a waiter that controls how many philosophers that can eat
-at any given time. How would this help the situation? How many
-philosophers can try to eat without ending up in a deadlock? How
-smart does the waiter need to be?
-
 We will do three extensions to the tracer: colors, lights and
 reflections. The first extension is quite simple while the last one
 requires that you repeat you knowledge i geometry. 
 
-\subsection{Adding colors}
+\subsection*{adding colors}
+
 Turning the image into a color image is two simple changes. First of
 all we extend the {\tt Sphere} struct structure to also include a
-color element. We can have a default color if we want so that all
-spheres have colors; we also provide a function {\tt sphere/3} that
-will create colorful spheres.
+color element. We can have a default color if we want, so that all
+spheres have colors.
+
 
 \begin{minted}{elixir}
 @color {1.0, 0.4, 0.4}
 
-defstruct radius: 2, center: {0, 0, 0}, color: @color
+defstruct pos: {0, 0, 0}, radius: 2 , color: @color
 
-def sphere(radius, center, opt) do
-  color =
-    case List.keyfind(opt, :color, 0) do
-      {:color, c} -> c
-      nil -> @color
-    end
-
-  struct(Sphere, radius: radius, center: center, color: color)
-end
 \end{minted}
-
-The way we choose to implement {\tt sphere/3} is a bit over-kill but we
-now have a simple way of adding more properties as we go (and we
-will).
 
 Once we have spheres with colors, we simply change the {\tt trace/3}
 function so that it will return the color of the object rather than
@@ -721,36 +746,15 @@ the default white. Describe a new snap-shot where you have some
 colorful spheres and see what the image looks like.
 
 \subsection{Lights}
-We will do two things in this extension; we will introduce a
-world-object that holds general information about the world and then
-we will add lights. Extend the {\tt World} module and
-describe a world object:
+
+Extend the {\tt World} module and describe a world struct to also hold
+a list of lights and a background color.
 
 \begin{minted}{elixir}
 @background {0, 0, 0}
 
 defstruct objects: [], lights: [], background: @background
-
-def world(objects, lights, opt) do
-  background =
-    case List.keyfind(opt, :background, 0) do
-      {:background, b} -> b
-      nil -> @background
-    end
-
-  struct(
-    World,
-    objects: objects,
-    lights: lights,
-    background: background
-  )
-end
 \end{minted}
-
-We use the same scheme as for the spheres and have a function that can
-create a world given a list of objects, a list of lights and an list
-of additional properties. One of the properties we will add right now
-is the background color.
 
 The question is now what a light source looks like; we create a new
 module {\tt Light} that will handle all aspects of it. The lights
@@ -760,11 +764,7 @@ color.
 \begin{minted}{elixir}
 defmodule Light do
 
-  defstruct origin: nil, color: {1.0, 1.0, 1.0}
-
-  def light(origin, color) do
-    struct(Light, origin: origin, color: color)
-  end
+  defstruct pos: nil, color: {1.0, 1.0, 1.0}
 
 end
 \end{minted}
@@ -776,14 +776,16 @@ ray tracer but we will try to keep it simple.
 Let's look at the trace function, it detects if a ray hits an object
 and then returns the object and the distance to this object. Since we
 know the direction of the ray we can easily describe the point in
-space where the ray hits the object. Now what if we ask if a ray
-starting in this point, in the direction of a light source, hits any
-object in the world - if not the point should be illuminated by the
-light source. If we examine all light sources we would determine which
-sources that illuminates the point and combined with the color of the
-object we can determine what the color of the corresponding pixel. Note
-that you have all the pieces of this puzzle, it's just a matter of
-combining light sources and the color of the object.
+space where the ray hits the object.
+
+What if we ask if a ray starting in this point and in the direction of
+a light source, hits any object in the world. If it does not intersect
+with any object it should be illuminated by the light source. If we
+examine all light sources we could determine which sources that
+illuminates the point. Combined with the color of the object we can
+determine the color of the corresponding pixel. Note that you
+have all the pieces of this puzzle, it's just a matter of combining
+light sources and the color of the object.
 
 \pagebreak
 
@@ -794,13 +796,13 @@ defp trace(ray, world) do
   case intersect(ray, objects) do
     {:inf, _} ->
       world.background
-    {d, obj} ->
-      o = ray.origin
-      l = ray.direction
-      i = Vector.add(o, Vector.smul(l, d - @delta))
-      normal = Sphere.normal(i, obj)
-      visible = visible(i, world.lights, objects)
-      illumination = Light.combine(i, normal, visible)
+    {dist, obj} ->
+      pos = ray.pos
+      dir = ray.direction
+      point = Vector.add(pos, Vector.smul(dir, dist - @delta))
+      normal = Sphere.normal(point, obj)
+      visible = visible(point, world.lights, objects)
+      illumination = Light.combine(point, normal, visible)
       Light.illuminate(obj, illumination, world)
   end
 end
@@ -810,12 +812,12 @@ In the code above there are two things that needs some explanation:
 the {\tt @delta} and the use of the {\em normal vector}. The delta is
 a hack that we need to do since floating points are not exact, or
 rather since a point that is actually ``in'' the surface of an object
-might be shadowed by the object it self. By raising the point a small
+might be shadowed by the object itself. By raising the point a small
 distance from the surface we avoid being lured into thinking that we
 are in the surface or even worse below the surface; the delta that I
 use is $0.001$ and it works fine.
 
-The second thing is the normal vector that we calculate use when
+The second thing is the normal vector that we use when
 combining the light sources. A light that hits the surface at an angle
 will contribute to less illumination compared to a light that hits it
 straight from above. You can first try to combine the light sources
@@ -837,7 +839,7 @@ $$a =  |\vec{s} - \vec{i}| \cdot \vec{n}$$
 
 What we are doing here is to first calculate the vector from $\vec{i}$
 to $\vec{s}$ and then normalize this. Then we do the dot product with
-the normal vector to obtain a number between $0$ and $1$.  An light
+the normal vector to obtain a number between $0$ and $1$.  A light
 source that is orthogonal to the normal vector will not contribute at
 all while a light source in exactly the same direction will contribute
 with its full strength.
@@ -852,7 +854,8 @@ And we should do the same thing here (do some thinking). If you get it
 right your images will get a lot more live and will start to look like
 something that you could show to someone besides your mother.
 
-\subsection{Reflections}
+\subsection*{reflections}
+
 The third extension that we will look at is reflections; sounds tricky
 but it turns out to be even simpler than adding lights. What we wan to
 do is to calculate a reflecting ray in the point of intersection and
@@ -885,7 +888,8 @@ reflection would be visible in a sphere with high brilliance. If you
 start to dig into this you will find that you have enough to do for a
 day or two.
 
-\subsection{And more}
+\subsection*{and more}
+
 Another thing that we might want to explore is of course to add more
 objects. A plane would be fairly easy to describe and the intersection
 can be found if you do some reading.
@@ -894,7 +898,7 @@ We could also start to add texture or images to the surface of
 objects. An image could of course be mapped to a rectangular plane or
 cylinder and you would see the distorted photo in your rendered image.
 
-A fairly simple thing to add is transparency; an object can be made to
+A tricky thing to add is transparency; an object can be made to
 look like colored glass. To do this you would simply calculate two
 contributing rays at a point of intersection. One is in the direction
 of the reflection but the other one is continuing through the object,
@@ -904,6 +908,12 @@ depending on the index of the material. You would thus use the
 refraction index to calculate the direction of the ray and then take
 the transparency into account when you add the contribution of the
 refraction.
+
+This becomes tricky since you would have to keep track of if we enter
+of exit an object, the {\em current} refraxtion index and the index of
+the material outside of an object. If we only consier air and solid
+spheres that do not overlap it's easier but the general case becomes
+problematic.
 
 
 % ================================================== %

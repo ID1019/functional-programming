@@ -2,11 +2,7 @@ defmodule Light do
 
   @white {1.0, 1.0, 1.0}
 
-  defstruct origin: nil, color: @white
-
-  def light(origin, color) do
-    struct(Light, origin: origin, color: color)
-  end
+  defstruct pos: nil, color: @white
 
   def illuminate(obj, ill, world) do
     color = obj.color
@@ -33,7 +29,7 @@ defmodule Light do
 
   def combine(point, normal, lights) do
     List.foldl(lights, {0, 0, 0}, fn light, contr ->
-      mul(contribute(point, normal, light.origin, light.color), contr)
+      mul(contribute(point, normal, light.pos, light.color), contr)
     end)
   end
 
