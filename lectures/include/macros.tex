@@ -46,8 +46,8 @@
    \path (origin) ++(0.5,-1.5) coordinate (value);
    \path (origin) ++(0.5,-2.5) coordinate (left);
    \path (origin) ++(0.5,-3.5) coordinate (right);
-   \draw [ultra thick] (node) rectangle +(3,1) node at +(1,0.5) {node};
-   \draw [ultra thick] (value) rectangle +(3,1) node at +(1,0.5) {#3};
+   \draw [ultra thick] (node) rectangle +(3,1) node at +(1.5,0.5) {:node};
+   \draw [ultra thick] (value) rectangle +(3,1) node at +(1.5,0.5) {#3};
    \draw [ultra thick] (left) rectangle +(3,1);
    \draw [ultra thick] (right) rectangle +(3,1);
 }
@@ -56,8 +56,8 @@
    \path (#1,#2) coordinate (origin);
    \path (origin) ++(0.5,-0.5) coordinate (leaf);
    \path (origin) ++(0.5,-1.5) coordinate (value);
-   \draw [ultra thick] (leaf) rectangle +(3,1) node at +(1,0.5) {leaf};
-   \draw [ultra thick] (value) rectangle +(3,1) node at +(1,0.5) {#3};
+   \draw [ultra thick] (leaf) rectangle +(3,1) node at +(1.5,0.5) {:leaf};
+   \draw [ultra thick] (value) rectangle +(3,1) node at +(1.5,0.5) {#3};
 }
 
 \newcommand{\branchleft}[4]{%
