@@ -109,76 +109,74 @@ Benchmark different versions of n'th:
  \begin{figure}
   \centering
   \includegraphics[height=200pt]{bench.png}
-  \caption{Execution time in ms of 100.000 calls}
+  \caption{Execution time in ms of 1000.000 calls}
  \end{figure}
 
 \end{frame}
 
-\begin{frame}[fragile]{copying}
+\begin{frame}[fragile]{why use lists}
 
-  Assume we represent students by a tuple {\tt \{:student, name, prgm,
-    year, id\}} and we want to change the program.
-
-\pause
-\begin{verbatim}
-def new_prgm({:student, name, _, year, id}, new) do \end{verbatim}\pause\begin{verbatim}
-     {:student, name, new, year, id}
-end
-\end{verbatim}
-
-\pause
-
-How costly is this operations?
-
-\vspace{10pt}
-{\em Important to understand on what the cost depends on.}
-
-\end{frame}
-
-
-\begin{frame}{copying}
-
-\end{frame}
-
-\begin{frame}{when to use what}
-
-Represent the following information using ether a list, tuple, number or atom.
+Represent the following information using ether a list or tuple:
                    
 \begin{itemize}
-\item a playing card: ace of club, king of hearts etc
-\item a deck of playing cards
-\item a car manufacturer: Volvo, Saab, Audi, \ldots
-\item a year: 1984, 2001
-\item a description of a car: maker, model, year
-\item a phone number: +46-709757802
-\item a course with an id, name, course responsible etc
-\item a student with a number of courses two which she is enrolled
+\pause \item a playing card: ace of club, king of hearts etc 
+\pause \item a stack of playing cards
+\pause \item 1001 movies to see before you die
+\pause \item a million things you should do i order
 \end{itemize}
 
+\pause\vspace{20pt}
+{\em Lists are sometimes called ``stacks'' since the push an pop are cheap.}
 \end{frame}
 
-\begin{frame}[fragile]{member of a list}
+\begin{frame}[fragile]{what about queues}
 
-Assume we have a list of tuples {\tt \{:card, :heart, 7\}} representing playing cards. 
-\pause
 
-\vspace{10pt}
-Implement a function that checks if a given card is in a deck of cards and returns {\tt :yes}, or {\tt :no}.
+  How do we implement a {\em queue}?
 
 \begin{verbatim}
-def member(_, []) do ... end
-def member(card, [...|_]) do ... end
-def member(card, [_|rest]) do 
-    ... 
+def add(queue,  elem) do
+   :
+
 end
 \end{verbatim}
 
+\begin{verbatim}
+def remove(queue) do
+   :
+
+end
+\end{verbatim}  
+  
 \end{frame}
+
+\begin{frame}[fragile]{an ok queue}
+
+\begin{verbatim}
+  def add({:queue, front, back}, elem) do
+    {:queue, front, [elem|back]}
+  end
+\end{verbatim}
+
+\begin{verbatim}
+  def remove({:queue, [], []}) do :fail end
+
+  def remove({:queue, [elem|rest], back}) do
+    {:ok, elem, {:queue, rest, back}}
+  end
+
+  def remove({:queue, [], back}) do
+    [elem|rest] = reverse(back)
+    {:ok, elem, {:queue, rest, []}}
+  end
+\end{verbatim}
+  
+\end{frame}
+
 
 \begin{frame}[fragile]{trees}
 
 \pause How do we represent a binary tree?
-
 
 \vspace{10pt}
 \pause How do we represent a leaf node?
@@ -198,13 +196,11 @@ end
 \vspace{10pt}
 {\tt :nil}
 
-
 \vspace{10pt}
 
 \begin{verbatim}
   tree = {:node, :b, {:leaf, :a}, {:leaf, :c}}
 \end{verbatim}
-
 
 \end{frame}
 
@@ -482,7 +478,13 @@ end
 
 \begin{frame}{Summary}
 
-\vspace{40pt}\hspace{80pt}Trees
+\begin{itemize}
+\item Lists: a stack structure, easy to push and pop, simple to work with 
+\item Tuples: constant time random access, expensive to change when large
+\item Queues: implemented using lists, amortized time complexity O(1)
+\item Trees: O(lg(n)) operations
+\end{itemize}
+
 
 \end{frame}
 
