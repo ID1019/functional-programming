@@ -103,16 +103,16 @@ end
 
 \begin{tikzpicture}[scale=0.4]
 
-\node at (0,3.5) {{\large z = []}};
+\node[anchor=west] at (0,3.5) {{\large z = []}};
 
-\node at (14,1.5) {{\large z:}};
+\node at (14,1.5) {{\large z}};
 \draw [ultra thick, red] (15,1) rectangle +(2,1);
 \draw [ultra thick, red] (15,1) -- +(2,1);
 
 \pause 
-\node at (0.7,2) {{\large y = [:b|:z]}};
+\node[anchor=west] at (0,2) {{\large y = [:b | z]}};
 \pause 
-\node at (6,2.5) {{\large y:}};
+\node at (6,2.5) {{\large y }};
 \draw [ultra thick, blue] (7,2) rectangle +(2,1);
 \pause 
 \draw [ultra thick, blue] (10,4) rectangle +(2,1) node at +(1,0.5) {{\bf :b}};
@@ -124,9 +124,9 @@ end
 \draw [ultra thick, blue, ->] (9.5,4.5) -- (10,4.5); 
 
 \pause 
-\node at (0.7,0.5) {{\large x = [:a|y]}};
+\node[anchor=west] at (0,0.5) {{\large x = [:a | y]}};
 \pause 
-\node at (0,7.5) {{\large x:}};
+\node at (1,7.5) {{\large x }};
 \draw [ultra thick, black] (2,7) rectangle +(2,1);
 \pause 
 \draw [ultra thick, black] (6,7) rectangle +(2,1) node at +(1,0.5) {{\bf :a}};
@@ -166,7 +166,7 @@ a = [1,2]; b = [3,4]; c = append(a, b)
 
 \begin{tikzpicture}[scale=0.4]
   
-  \node at (0,8) {{\bf a:} }; 
+  \node at (0,8) {{\bf a } }; 
   \cell{0.5}{8}
   \pointer{0.5}{8}{2}{6}
 
@@ -176,7 +176,7 @@ a = [1,2]; b = [3,4]; c = append(a, b)
   \cons{6}{4}{2}
   \cdrnil{6}{4}
 
-  \node at (8,8) {{\bf a:}};
+  \node at (8,8) {{\bf b }};
   \cell{8.5}{8}
   \pointer{8.5}{8}{12}{6}
 
@@ -195,10 +195,10 @@ a = [1,2]; b = [3,4]; c = append(a, b)
 
   \pause
   \pointer{0.5}{2}{2}{0}
-  \cons{2}{0}{3}
+  \cons{2}{0}{1}
 
   \pause
-  \node at (0,2) {{\bf c:}};
+  \node at (0,2) {{\bf c }};
   \cell{0.5}{2}
   \pause
 
@@ -412,7 +412,7 @@ end
 \end{verbatim}
 \pause
 \begin{verbatim}
-odd_n_even([y|t], odd, even) do
+odd_n_even([h|t], odd, even) do
    if rem(h,2) == 1  do 
      odd_n_even(t, ..., ...)
    else
