@@ -27,12 +27,12 @@ Compound data structures in Elixir:
 \begin{frame}{lists}
 
 We could implement lists using tuples:
-
+ 
 \pause
 
 \begin{code}
-   <list> ::=  & nil | \\
-               & \{cons, <structure>, <list> \}
+   <list> ::=  & :nil | \\
+               & '\{' :cons ',' <expression> ',' <list> '\}'
 \end{code}
 
 
@@ -41,7 +41,7 @@ We could implement lists using tuples:
 
 \pause \vspace{10pt}
 {\tt [:foo | [:bar | [:zot | [] ] ] ] }
-
+ 
 \pause \vspace{10pt}
 {\tt \{:cons, :foo, \{:cons, :bar, \{:cons, :zot, :nil\}\}\}}
 
@@ -77,7 +77,7 @@ def nth_l(3, [_,_,r]) do r end
 \begin{verbatim}
 def nth_t(1, {r,_,_}) do r end
 def nth_t(2, {_,r,_}) do r end
-def nth_t(3, {_,_,t}) do r end
+def nth_t(3, {_,_,r}) do r end
 \end{verbatim}
 
 \end{frame}
@@ -98,8 +98,8 @@ def nth(n, [_|t]) do nth(n-1, t) end
 \begin{frame}{nth element}
 
 \begin{itemize}
-  \item {\tt element(N, Tuple):} return the n'th element in the tuple
-  \item {\tt lists:nth(N, List):} return the n'th element of the list
+  \item {\tt elem(tuple, n):} return the n'th element in the tuple (zero indexed)
+  \item {\tt Enum.at(list, n):} return the n'th element of the list (zero indexed)
 \end{itemize}
 
 \end{frame}
@@ -163,7 +163,7 @@ Assume we have a list of tuples {\tt \{:card, :heart, 7\}} representing playing 
 \pause
 
 \vspace{10pt}
-Implement a function that checks if a given card is in a deck of cards and returns {\tt yes}, or {\tt no}.
+Implement a function that checks if a given card is in a deck of cards and returns {\tt :yes}, or {\tt :no}.
 
 \begin{verbatim}
 def member(_, []) do ... end
@@ -184,19 +184,19 @@ end
 \pause How do we represent a leaf node?
 
 \vspace{10pt}
-{\tt \{leaf, Value\}}
+{\tt \{:leaf, value\}}
 
 \vspace{20pt}
 \pause How do we represent a branch node?
 
 \vspace{10pt}
-{\tt \{node, Value, Left, Right\}}
+{\tt \{:node, value, left, right\}}
 
 \vspace{10pt}
 \pause How do we represent an empty tree?
 
 \vspace{10pt}
-{\tt nil}
+{\tt :nil}
 
 
 \vspace{10pt}
@@ -239,7 +239,7 @@ end
 
 \begin{code}
   z = &\{:node, 40, \{:leaf, 42\} \{:leaf, 39\}\},\\
-  t = &\{:node, 38, Z, \{:leaf, 34\}\}
+  t = &\{:node, 38, z, \{:leaf, 34\}\}
 \end{code}
 \pause \vspace{20pt}
 
@@ -261,7 +261,7 @@ end
  \node at (9.5,8) {{\bf z:} }; 
 
  \pause
- \:leaf{6}{3}{34}
+ \leaf{6}{3}{34}
 
  \pause
  \branch{0.5}{8}{38}
@@ -286,18 +286,18 @@ tree or not.
 \pause\vspace{20pt}
 
 \begin{verbatim}
-def member(N, :nil) do :no end
-def member(N, {:leaf, ...}) do :yes end
+def member(_, :nil) do :no end
+def member(n, {:leaf, ...}) do :yes end
 def member(_, {:leaf, ...}) do :no end
 \end{verbatim}
 \pause
 \begin{verbatim}
-def member(N, {:node, ..., ..., ...}) do :yes end
+def member(n, {:node, ..., ..., ...}) do :yes end
 \end{verbatim}
 \pause
 
 \begin{verbatim}
-def member(N, {:node, _, Left, Right}) do 
+def member(n, {:node, _, left, right}) do 
           case ...  do
              :yes -> :yes
              :no -> ....
@@ -312,20 +312,20 @@ What is the asymptotic time complexity of this function?
 
 \begin{frame}[fragile]{ordered tree}
 
-How is the situation changed if the tree is ordered, smaller elements to the left and larger to the right?
+How is the situation changed if the tree is ordered?
 
-\pause\vspace{20pt}
+\pause\vspace{10pt}
 
 \begin{verbatim}
-def member(N, :nil) do :no end
-def member(N, {:leaf, ...}) do :yes end
+def member(_, :nil) do :no end
+def member(n, {:leaf, ...}) do :yes end
 def member(_, {:leaf, ...}) do :no end
-def member(N, {:node, ..., ..., ...}) do :yes end
+def member(n, {:node, ..., ..., ...}) do :yes end
 \end{verbatim}
 \pause
 \begin{verbatim}
-def member(N, {:node, V, left, right}) do 
-          if  N < V do
+def member(n, {:node, v, left, right}) do 
+          if  n < v do
              ...
           else 
               ...
@@ -333,7 +333,7 @@ def member(N, {:node, V, left, right}) do
 end
 \end{verbatim}
 
-\pause  What is the asymptotic time complexity of this function? {\em Assume that the tree is balanced.}
+\pause{\em What is the asymptotic time complexity of this function?}
 
 \end{frame}
 
@@ -341,7 +341,7 @@ end
 Assume that we have an ordered tree of key-value pairs:
 
 \begin{code}
-  T = \{:node,&:k, 38,\\
+  t = \{:node,&:k, 38,\\
              &\{:node, b, 34,&:nil, :nil\},\\
              &\{:node, o, 40,&\{:node, :l, 42, :nil, :nil\}, \\
                            &&\{:node, :q, 39, :nil, :nil\}\}\}\\
@@ -409,7 +409,7 @@ end
 
 \begin{frame}[fragile]{insert}
 
-Same assumptions, how do we implement {\tt insert(key, value, Tree)} (assuming it does not exists)?
+Same assumptions, how do we implement {\tt insert(key, value, tree)} (assuming it does not exists)?
 
 \pause\vspace{20pt}
 
