@@ -33,7 +33,9 @@ defmodule Msg do
 
   defp decode_answer(0, body, _), do: {[], body}
   defp decode_answer(n, answers, raw) do
-    {name, <<type::16, class::16, ttl::32, rdlength::16, rest::binary>>} = decode_name(answers, raw)
+    {name, <<type::16, class::16, ttl::32, rdlength::16, rest::binary>>} =
+      decode_name(answers, raw)
+
     {rdata, next} = decode_rdata(rdlength, rest)
     record = decode_record(type, class, rdata, raw)
     {decoded, body} = decode_answer(n - 1, next, raw)
@@ -81,7 +83,7 @@ defmodule Msg do
   end
 
   def decode_name(label, raw), do: decode_name(label, [], raw)
-  def decode_name(<<0::1, 0::1, _::6, _::binary>> = label, names, raw) do 
+  def decode_name(<<0::1, 0::1, _::6, _::binary>> = label, names, raw) do
     ## regular name encoding
     decode_label(label, names, raw)
   end
