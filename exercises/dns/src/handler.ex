@@ -17,11 +17,13 @@ defmodule Handler do
     # trace(packet)
     case frw.(packet) do
       {:ok, answer} ->
-	      IO.puts("Received reply: #{answer}")
-	      # trace(answer)
-	      reply.(answer)
-	    {:error, error} ->
-	      IO.puts("Error in forward: #{error}")
+        IO.puts("Received reply: #{answer}")
+        # trace(answer)
+        reply.(answer)
+
+      {:error, error} ->
+        IO.puts("Error in forward: #{error}")
     end
   end
+
 end

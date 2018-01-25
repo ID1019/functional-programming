@@ -15,7 +15,8 @@ defmodule DNS do
     case :gen_udp.open(port, [{:active, true}, :binary]) do
       {:ok, socket} ->
         dns(socket, server)
-      error -> 
+
+      error ->
         IO.puts("DNS error opening server socket: #{error}")
     end
   end
@@ -27,11 +28,14 @@ defmodule DNS do
         frw = fn(req) -> forward(req, server) end
         Handler.start(packet, reply, frw)
         dns(socket, server)
+
       {:update} ->
         dns(socket, server)
+
       {:stop} ->
         IO.puts("Bye, bye!")
         :ok
+
       error ->
         IO.puts("Strange message: #{error}")
         dns(socket, server)
@@ -42,17 +46,22 @@ defmodule DNS do
     case :gen_udp.open(0, [{:active, true}, :binary]) do
       {:ok, client} ->
         :gen_udp.send(client, server, @port, request)
-        result = receive do
-          {:udp, ^client, _ip, _port, reply} ->
-            {:ok, reply}
-          after @timeout ->
-            {:error, :timeout}
-        end
+
+        result =
+          receive do
+            {:udp, ^client, _ip, _port, reply} ->
+              {:ok, reply}
+          after
+            @timeout ->
+              {:error, :timeout}
+          end
 
         :gen_udp.close(client)
         result
+
       error ->
         {:error, error}
     end
   end
+
 end
