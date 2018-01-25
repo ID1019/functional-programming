@@ -122,7 +122,7 @@ Represent the following information using ether a list or tuple:
 \pause \item a playing card: ace of club, king of hearts etc 
 \pause \item a stack of playing cards
 \pause \item 1001 movies to see before you die
-\pause \item a million things you should do i order
+\pause \item a million things you should do, in order
 \end{itemize}
 
 \pause\vspace{20pt}
@@ -159,15 +159,16 @@ end
 \end{verbatim}
 
 \begin{verbatim}
-  def remove({:queue, [], []}) do :fail end
-
   def remove({:queue, [elem|rest], back}) do
     {:ok, elem, {:queue, rest, back}}
   end
 
-  def remove({:queue, [], back}) do
-    [elem|rest] = reverse(back)
-    {:ok, elem, {:queue, rest, []}}
+  def remove({:queue, [], back) do 
+    case reverse(back) do
+      [] -> 
+         :fail
+      [elem|rest] ->
+         {:ok, elem, {:queue, rest, []}}
   end
 \end{verbatim}
   
@@ -242,9 +243,9 @@ end
 \begin{tikzpicture}[scale=0.4]
 
  \pause 
- \:leaf{16}{6}{42}
+ \leaf{16}{6}{42}
  \pause 
- \:leaf{16}{3}{39}
+ \leaf{16}{3}{39}
 
  \pause 
  \branch{10}{8}{40}
@@ -338,8 +339,8 @@ Assume that we have an ordered tree of key-value pairs:
 
 \begin{code}
   t = \{:node,&:k, 38,\\
-             &\{:node, b, 34,&:nil, :nil\},\\
-             &\{:node, o, 40,&\{:node, :l, 42, :nil, :nil\}, \\
+             &\{:node, :b, 34,&:nil, :nil\},\\
+             &\{:node, :o, 40,&\{:node, :l, 42, :nil, :nil\}, \\
                            &&\{:node, :q, 39, :nil, :nil\}\}\}\\
 
 \end{code}
@@ -405,7 +406,7 @@ end
 
 \begin{frame}[fragile]{insert}
 
-Same assumptions, how do we implement {\tt insert(key, value, tree)} (assuming it does not exists)?
+How do we implement {\tt insert(key, value, tree)} (assuming it does not exists)?
 
 \pause\vspace{20pt}
 
@@ -427,9 +428,9 @@ def insert(key, value, {:node, k, v, left, right}) do
 
 \begin{frame}[fragile]{delete}
 
-Same assumptions, how do we implement {\tt delete(Item, Tree)} (assuming it does exists)?
+How do we implement {\tt delete(item, tree)} (assuming it does exists)?
 
-\pause\vspace{20pt}
+\pause\vspace{10pt}
 
 \begin{verbatim}
 def delete(key, {:node, key, _, :nil, :nil}) do ... end
@@ -444,8 +445,9 @@ def delete(key, {:node, key, _, left, :nil}) do ... end
 \end{verbatim}
 \pause
 \begin{verbatim}
-def delete(key, {:node, key, _, left, right}) do end
-            :
+def delete(key, {:node, key, _, left, right}) do 
+            ?
+end
 \end{verbatim}
 \pause
 \begin{verbatim}
@@ -473,8 +475,6 @@ end
 \end{verbatim}
 
 \end{frame}
-
-
 
 \begin{frame}{Summary}
 
