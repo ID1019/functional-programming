@@ -78,5 +78,34 @@ defmodule Splay do
     {:splay, value, {:node, pk, pv, {:node, gk, gv, a, b}, c}, d}
   end
 
+  # Same thing but now we will only do a lookup. The lookup will still
+  # change the structure of the tree.
+
+    #  The special case when the tree is empty.
+  def lookup(nil, _), do: :fail
+
+  def lookup({:node, key, value, a, b}, key) do
+    # We've found what we're looking for and it is at the root.
+    {:ok, value, {:node, key, value, a, b}}
+  end
+
+  def lookup({:node, rk, rv, z, c}, key) when key < rk do
+    case splay(Z, key) do
+	{:splay, :na, _, _} ->
+	    fail
+	{:splay, value, a, b} ->	
+	    {:ok, value, {:node, key, value, a, {:node, rk, rv, b, c}}}
+    end
+  end
+
+  def lookup({:node, rk, rv, a, z}, key) when key >= rk do
+    case splay(z, key) do
+	{:splay, :na, _, _} ->
+	    :fail
+	{:splay, value, b, c} ->
+	    {:ok, value, {:node, key, value, {:node, rk, rv, a, b}, c}}
+    end
+  end
+
 
 end
