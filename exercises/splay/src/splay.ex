@@ -68,20 +68,20 @@ defmodule Splay do
     {:splay, value, a, {:node, pk, pv, b, {:node, gk, gv, c, d}}}
   end
   defp splay({:node, gk, gv, {:node, pk, pv, a, zig_zag}, d}, key) when key < gk and key >= pk do
-    #  Going down left-right, this is the so called zig-zag case. 
+    # Going down left-right, this is the so called zig-zag case. 
     {:splay, value, b, c} = splay(zig_zag, key)
     {:splay, value, {:node, pk, pv, a, b}, {:node, gk, gv, c, d}}
   end
-  defp splay({:node, gk, gv, a, {:node, pk, pv, zag_zig, d}}, key) when key >= gk and key < pk do
-    #  Going down right-left, this is the so called zag-zig case. 
-    {:splay, value, b, c} = splay(zag_zig, key)
-    {:splay, value, {:node, gk, gv, a, b}, {:node, pk, pv, c, d}}
-  end
-  defp splay({:node, gk, gv, a, {:node, pk, pv, b, zag_zag}}, key) when key >= gk and key >= pk do
-    #  Going down right-right, this is the so called zag-zag case. 
-    {:splay, value, c, d} = splay(zag_zag, key)
-    {:splay, value, {:node, pk, pv, {:node, gk, gv, a, b}, c}, d}
-  end
+defp splay({:node, gk, gv, a, {:node, pk, pv, zag_zig, d}}, key) when key >= gk and key < pk do
+  # Going down right-left, this is the so called zag-zig case. 
+  {:splay, value, b, c} = splay(zag_zig, key)
+  {:splay, value, {:node, gk, gv, a, b}, {:node, pk, pv, c, d}}
+end
+defp splay({:node, gk, gv, a, {:node, pk, pv, b, zag_zag}}, key) when key >= gk and key >= pk do
+  # Going down right-right, this is the so called zag-zag case. 
+  {:splay, value, c, d} = splay(zag_zag, key)
+  {:splay, value, {:node, pk, pv, {:node, gk, gv, a, b}, c}, d}
+end
 
   # Same thing but now we will only do a lookup. The lookup will still
   # change the structure of the tree.
@@ -109,6 +109,12 @@ defmodule Splay do
       {:splay, value, b, c} ->
         {:ok, value, {:node, key, value, {:node, rk, rv, a, b}, c}}
     end
+  end
+
+  def test() do
+    insert = [{3, :c}, {5, :e}, {2, :b}, {1, :a}, {7, :g}, {4, :d} {5, :e}]
+    empty = nil
+    List.foldl(insert, empty, fn({k, v}, t) -> update(t, k, v) end)
   end
 
 end
