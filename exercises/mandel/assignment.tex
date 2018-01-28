@@ -1,40 +1,68 @@
 \documentclass[a4paper,11pt]{article}
 
-\usepackage{ifthen}
-\usepackage[latin1]{inputenc}
-\usepackage{verbatim}
+% Packages for page layout
+\usepackage[utf8]{inputenc}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
 
-\usepackage[breaklinks=true,
-            bookmarksnumbered=true,
-            pdftitle={Distributed Computing},
-            pdfauthor={Johan Montelius},
-            pdfsubject={Distributed Mandelbrot set},
-            pdfkeywords={distributed computing erlang}
-            ]{}
+% Minted for syntax highlighting
+\usepackage{minted}
+\usemintedstyle{tango}
 
-\newcommand{\nnsection}[1]{
-\section*{#1}
-\addcontentsline{toc}{section}{#1}
-}
+% Custom paragraph indentation
+\setlength{\parindent}{0em}
+\setlength{\parskip}{1em}
+ 
+% Headers/footers styling
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+
+% Footer
+\lfoot{ID1019}
+\cfoot{KTH}
+\rfoot{\thepage \hspace{1pt} / \pageref{LastPage}}
+
+
+% SECTIONS
+%
+% * Introduction
+% * Mandelbrot
+% * Carrying on
+
 
 \begin{document}
 
-\begin{center}
-\vspace{20pt}
-\textbf{\large Generating a Mandelbrot image }\\
-\vspace{10pt}
-\textbf{Johan Montelius}\\
-\vspace{10pt}
-\today{}
-\end{center}
+% ================================================== %
+% == Title  == %
+% ================================================== %
 
-\nnsection{Introduction}
+\title{
+    \textbf{Generating a Mandelbrot Image}\\
+    \large{Programming II - Elixir Version}
+}
+\author{Johan Montelius}
+\date{Spring Term 2018}
+\maketitle
+\thispagestyle{fancy}
+
+
+% ================================================== %
+% == Introduction == %
+% ================================================== %
+
+\section*{Introduction}
 
 In this exercise you will implement a Mandelbrot set generator, or
 rather an image generator. You should do some reading so that you
 understand the basics of what the Mandelbrot set is and why it can
 generate some beautiful images; this text only contains a minimal
 explanation.
+
+
+% ================================================== %
+% == Mandelbrot == %
+% ================================================== %
 
 \section{Mandelbrot}
 
@@ -44,13 +72,13 @@ is defined as follows:
 
 \begin{eqnarray*}
     z_0 &= &0 \\ 
-    z_{n+1} & = &z_n² + c
+    z_{n+1} & = &z_n^2 + c
 \end{eqnarray*}
 
 If you remember how to do the square of a complex numbers you know
 everything there is to know to start:
 
-$$ (x + yi)² = x² - y² + 2xyi$$
+$$ (x + yi)^2 = x^2 - y^2 + 2xyi$$
 
 How do we know if a complex number $(x + yi)$ belongs to the
 Mandelbrot set? We could of course start to compute $z_n$ for higher
@@ -62,11 +90,11 @@ $z_n$: {\em if $|z_n| >= 2$ then there is no turning back, $z_n$ will
   only increase in size}. The absolute value of a complex number is of
 course:
 
-$$|(x + yi)| = \sqrt{x² + y²}  $$
+$$|(x + yi)| = \sqrt{x^2 + y^2}  $$
 
 We still do not want to compute forever; if the number actually does
 belong to the Mandelbrot set we will of course never hit the
-threashold. Therefore, we set an upper limit $n$ that will be the
+threshold. Therefore, we set an upper limit $n$ that will be the
 maximum {\em depth} of our computation.
 
 So given a maximum value of $n$, we can for any complex number $c$ say
@@ -76,38 +104,28 @@ that the number does not belong to the set we also have a value $i$
 which was the point where $|z_i| >= 2$. This value $i$ is the color we
 need to generate a beautiful Mandelbrot image.
 
-\subsection{complex numbers}
 
+\subsection{Complex numbers}
 Since we are going to work with complex numbers we might as well start
 by implementing a module to handle these. Let's make it simple and
-represent a complex number as a tuple, {\tt \{:cpx, r, i\}} with its
-real and imaginary values. Create a module {\tt Cmplx} that exports
-the following functions:
+represent a complex number as a tuple with its real and imaginary
+values. Create a module {\tt cmplx} that exports the following
+functions:
 
 \begin{itemize}
- \item {\tt new(r, i)} : returns the complex number with real value r and imaginary i
- \item {\tt add(a,b)} : adds two complex numbers
+ \item {\tt new(x, y)} : returns the complex number with real value $x$ and imaginary $y$
+ \item {\tt add(a, b)} : adds two complex numbers
  \item {\tt sqr(a)} : squares a complex number
- \item {\tt abs(a)} : the absolute value of A
+ \item {\tt abs(a)} : the absolute value of $a$
 \end{itemize}
 
-You might want to use the {\tt sqrt/1} function exported from the
-Erlang {\tt :math} module when calculating the absolute value. You
-call Erlang modules like any module but the Erlang modules all have
-atoms as names.
+You might want to use the {\tt sqrt/1} function exported from the Erlang {\tt
+  math} module when calculating the absolute value.
+  
 
-\begin{verbatim}
-> :math.sqrt(42)
-\end{verbatim}
+\subsection{The Brot module}
 
-The Complex module implements an abstract data type; the internals of
-how complex numbers are represented should not be visible outside of
-the module. We of course know, but we should not mek use of this
-knowledge.
-
-\subsection{the brot module}
-
-For no reason at all we will create a module called {\tt Brot} that will
+For no reason at all we will call our first module {\tt Brot}, it will
 implement the computation of the $i$ value given a complex value
 $c$. We must of course give it a maximum iteration {\em depth} or we
 risk getting stuck in an infinite computation.
@@ -117,50 +135,46 @@ $c$ and the maximum number of iterations $m$, return the value $i$ at
 which $|z_i| >= 2$ or $0$ if it does not for any $i < m$ i.e. it
 should always return a value in the range $0..(m-1)$.
 
-\begin{verbatim}
+\begin{minted}{elixir}
 def mandelbrot(c, m) do
-    zo = Cmplx.new(...,...)
-    i = 0
-    test(i, x0, c, m)
+  z0 = Cmplx.new(..., ...)
+  i = 0
+  test(i, z0, c, m)
 end
-
-
-
-\end{verbatim}
+\end{minted}
 
 The {\tt test/4} function should of course test if we have reached the
 maximum iteration, in which case it returns zero, or if the absolute
-value of {\tt z} is greater than $2$, in which case it returns {\tt i}. 
+value of {\tt z} is greater than $2$, in which case it returns {\tt
+  i}. Make sure that you use the functions exported from the {\tt
+  Cmplx} module.
 
-Do some test to see that the function works:
+Do some test to see that the function works (here I'm writing the
+complex numbers directly knowing that we represent them as tuples,
+this is of course cheating but very convenient).
 
-\begin{verbatim}
- > Brot.mandelbrot(Cmplx.new(0.8, 0), 30)}
-
- > Brot.mandelbrot(Cmplx.new(0.5, 0), 30)}
-
- > Brot.mandelbrot(Cmplx.new(0.3, 0), 30)}
- 
- > Brot.mandelbrot(Cmplx.new(0.27, 0), 30)} 
- 
- > Brot.mandelbrot(Cmplx.new(0.26, 0), 30)}
- 
- > Brot.mandelbrot(Cmplx.new(0.255, 0), 30)}
-\end{verbatim}
+\begin{itemize}
+ \item {\tt Brot.mandelbrot(\{:cpx, 0.8, 0\}, 30)}
+ \item {\tt Brot.mandelbrot(\{:cpx, 0.5, 0\}, 30)}
+ \item {\tt Brot.mandelbrot(\{:cpx, 0.3, 0\}, 30)}
+ \item {\tt Brot.mandelbrot(\{:cpx, 0.27, 0\}, 30)} 
+ \item {\tt Brot.mandelbrot(\{:cpx, 0.26, 0\}, 30)}
+ \item {\tt Brot.mandelbrot(\{:cpx, 0.255, 0\}, 30)}
+\end{itemize}
 
 What is happening? Which values could possibly belong to the
 Mandelbrot set - how sure are you? Do some more testing, why stop at
 thirty iterations? Try fifty!
 
-\subsection{the printer}
+
+\subsection{The printer}
 
 Before carrying on we should make sure that we can generate an
-image. You should have the file {\tt ppm.ex} that will write the final
-image to a file. The file will be in the {\em .ppm} format i.e. an
-uncompressed rgb bit map. Make sure that you can use this module and
-that you know where files are located when created.
+image. You should have the file {\tt PPM} module that will write the
+final image to a file. Make sure that you can use this module and that
+you know where files are located when created.
 
-The api to the module is:
+The API to the module is:
 
 \begin{itemize}
  \item {\tt write(name, image)}: where the name is the name (possibly
@@ -169,10 +183,10 @@ The api to the module is:
    the range 0..255).
 \end{itemize}
 
-So, once we know that it is working we can carry on to produce some images. 
+So once we know that it is working we can carry on to produce some images.
 
-\subsection{colors}
 
+\subsection{Colors}
 We create one module (that in the end will be the one that you want to
 play with the most), the {\tt Color} module. This module should export
 a function {\tt convert(depth, max)} that given a depth on a scale
@@ -182,23 +196,23 @@ The conversion of depth information to {\em RGB values} can of course
 be done in many different ways and the one presented here is only for
 inspiration.
 
-Let's assume that we have a depth of a point $d$, with the maximum
-possible depth being $m$. We could create five sections that divides
-the range $0$ to $m$. Divide $d$ by $m$ and so that you have a
-fraction $f$. Then multiply this fraction by four to generate a
-floating point $a$ from $0$ to $4$. Now truncate the value to give you
-an integer $x$ from $0$ to $4$ (this is the section) and generate an
-offset $y$ that is the truncated value of $255*(a-x)$.
+Let's assume that we have a depth of a point $D$, with the maximum
+possible depth being $M$. We could create five sections that divides
+the range $0$ to $M$. Divide $D$ by $M$ and so that you have a
+fraction $F$. Then multiply this fraction by four to generate a
+floating point $A$ from $0$ to $4$. Now truncate the value to give you
+an integer $X$ from $0$ to $4$ (this is the section) and generate an
+offset $Y$ that is the truncated value of $255*(A-X)$.
 
-The two values $x$ and $y$ will now be used to give you an RGB
+The two values $X$ and $Y$ will now be used to give you an RGB
 value. You can use the following transformation:
 
 \begin {itemize}
-\item 0 : $\lbrace y, 0, 0 \rbrace$
-\item 1 : $\lbrace 255, y, 0 \rbrace$
-\item 2 : $\lbrace 255-y, 255, 0 \rbrace$
-\item 3 : $\lbrace 0, 255, y \rbrace$
-\item 4 : $\lbrace 0, 255-y, 255 \rbrace$
+\item 0 : $\lbrace Y, 0, 0 \rbrace$
+\item 1 : $\lbrace 255, Y, 0 \rbrace$
+\item 2 : $\lbrace 255-Y, 255, 0 \rbrace$
+\item 3 : $\lbrace 0, 255, Y \rbrace$
+\item 4 : $\lbrace 0, 255-Y, 255 \rbrace$
 \end{itemize}
 
 What colors does this correspond to? Does it look anything like a
@@ -209,39 +223,40 @@ the distribution of depths in the whole image or reuse colors at
 different depths.
 
 
-\subsection{computing the set}
+\subsection{Computing the set}
 
 So we know how to find the depth of a complex number so why not try to
 compute the depth at all points in a rectangular plane. We create a
 module {\tt Mandel} that should calculate an image. The function that
 will be our interface to the module looks like this:
 
-\begin{verbatim}
+\begin{minted}{elixir}
 def mandelbrot(width, height, x, y, k, depth) do
-    trans = fn(w, h) -> 
-              Cmplx.new(x + k*(w-1), y-k*(h-1))
-            end
-    rows(width, height, trans, depth, [])
+  trans = fn(w, h) ->
+    Cmplx.new(x + k * (w - 1), y - k * (h - 1))
+  end
+
+  rows(width, height, trans, depth, [])
 end
-\end{verbatim}
+\end{minted}
 
 What is happening here? We want to generate an image of the size {\em
   Width x Height}. The upper left corner of this image is the point $X
 + Yi$ and the offset between two points is $K$. This means that the
 first pixels of the upper row should correspond to the ``depth'' of
-$x+yi$, $(x+k) + yi$, $(x+2k) + yi$ etc and that the second row starts
-with $x + (y-k)i$. 
+$X+Yi$, $(X+K) + Yi$, $(X+2K) + Yi$ etc and that the second row starts
+with $X + (Y-K)i$. 
 
 To help the mandelbrot generator from keeping track of this we simply
 provide a function that does the work. The {\em Trans} function will
-take a pixel position ($w$,$h$) and return a complex number that is
+take a pixel position ($W$, $H$) and return a complex number that is
 the one we should compute the depth of. It is better to do this here
 and then we could more easily change the function rather than passing
 all the necessary information in arguments.
 
 Now the {\em rows} function should return a list of rows, where each
 row is a list of colors. Each item in a row corresponds to a pixel at
-($w$, $h$) and the color is computed by:
+($W$, $H$) and the color is computed by:
 
 \begin{itemize}
  \item generating the complex number that corresponds to the pixel
@@ -253,21 +268,28 @@ The only tricky issue is to generate the rows in ``correct'' order, it
 is easy to generate the image up side down or mirrored. In the end it
 does not mean very much but try to get it right.
 
-When you can generate an image, write it to a file using the {\tt Ppm}
+When you can generate an image, write it to a file using the {\tt PPM}
 module. This code would hopefully give you a first look at the Mandelbrot set.
 
-\begin{verbatim}
+\begin{minted}{elixir}
 def demo() do
-    small(-2.6, 1.2, 0.04)
+  small(-2.6, 1.2, 1.2)
 end
 
-def small(x, y, k) do
-    width = 960
-    height = 540
-    Depth = 64
-    image =  mandelbrot(width, height, x, y, k, depth)
-    Ppm.write("small.ppm", image).
-\end{verbatim}
+def small(x0, y0, xn) do
+  width = 960
+  height = 540
+  depth = 64
+  k = (xn - x0) / width
+  image = Mandel.mandelbrot(width, height, x0, y0, k, depth)
+  PPM.write("small.ppm", image)
+end
+\end{minted}
+
+
+% ================================================== %
+% == Carrying on == %
+% ================================================== %
 
 \section{Carrying on}
 
@@ -279,13 +301,11 @@ function this simple.
 
 \begin{eqnarray*}
     z_0 &= &0 \\ 
-    z_{n+1} & = &z_n² + c
+    z_{n+1} & = &z_n^2 + c
 \end{eqnarray*}
 
 Could we speed up the calculations? Are there any operations that are
 of unnecessary complexity? Can you include an image in your report
 (you would probably have to convert it to png)?
-
-
 
 \end{document}
