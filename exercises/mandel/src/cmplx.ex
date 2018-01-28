@@ -42,8 +42,8 @@ defmodule Cmplx do
 
   # This is doing the mandelbrot calculation using the NIF
   # interface. 
-  def mandelbrot_nif({:cpx, Cr, Ci}, M) do
-    Depth.test(Cr, Ci, M)
+  def mandelbrot_nif({:cpx, cr, ci}, m) do
+    Depth.test(cr, ci, m)
   end
 
 end
