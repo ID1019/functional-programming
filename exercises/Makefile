@@ -4,6 +4,7 @@ DIRS =	huffman \
         introduction \
 	interpreter \
 	lambda \
+	lzw \
 	mandel \
 	morse \
 	operational \
