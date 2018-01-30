@@ -244,12 +244,12 @@ We would like to to this:
    \begin{column}{.5\linewidth}
      \begin{block}{foldr/3}
        \begin{verbatim}
-def foldr(op, acc, []) do acc end
+def foldr([], acc, op) do acc end
        \end{verbatim}
 \pause
        \begin{verbatim}
-def foldr(op, acc, [h|t]) do
-   op.(h, foldr(op, acc, t))
+def foldr([h|t], acc, op) do
+   op.(h, foldr(t, acc, op))
 end
       \end{verbatim}
        \vfill
@@ -261,7 +261,7 @@ end
        \begin{verbatim}
 def sum(l) do
   add = ... 
-  foldr(add, ..., l)
+  foldr(l, ..., add)
 end
        \end{verbatim}
      \end{block}
@@ -270,7 +270,7 @@ end
        \begin{verbatim}
 def prod(l) do
   mul = ... 
-  foldr(mul, ..., L)
+  foldr(l, ..., mul)
 end
        \end{verbatim}
      \end{block}
@@ -328,13 +328,19 @@ We have not really defined what {\em Parameters}, {\em Sequence} nor an {\em Env
 We will write:
 \pause\vspace{40pt}\hspace{60pt}\verb!x = 2; f = fn (y) -> x + y end; f.(4) !
 
+
+\vspace{40pt}\pause
+Remember this?
+
+\pause\vspace{40pt}\hspace{60pt} $ \lambda y -> x + y $
+
 \end{frame}
 
 
 \begin{frame}[fragile]{evaluation of a function expression}
 
 $$\frac{ \theta = \{ v/s \mid  v/s \in \sigma \wedge v {\rm\ free\  in\ sequence}\}}{
-E\sigma({\rm fn}({\rm parameters})\; {\rm ->}\; {\rm sequence}\; end )\rightarrow \quad \langle{\rm parameters}:{\rm sequence}:\theta\rangle}$$
+E\sigma(\texttt{fn (} {\rm parameters}\;  \texttt{) ->}\; {\rm sequence}\; \texttt{end} ) \rightarrow \quad \langle{\rm parameters}:{\rm sequence}:\theta\rangle}$$
 
 \vspace{20pt}\pause
 \begin{verbatim}
@@ -378,7 +384,7 @@ end
        \begin{verbatim}
 def sum(l) do
   add = fn (x,y) -> x + y end
-  foldr(add, 0, l)
+  foldr(l, 0, add)
 end
        \end{verbatim}
      \end{block}
@@ -387,7 +393,7 @@ end
        \begin{verbatim}
 def prod(l) do
   mul = fun(x,a) -> x * a end
-  foldr(mul, 1, l)
+  foldr(l, 1, mul)
 end
        \end{verbatim}
 \vfill
@@ -404,7 +410,7 @@ end
 \begin{verbatim}
 def gurka(l) do
   f = fn (_, a) -> a + 1 end
-  foldr(f, 0, l)
+  foldr(l, 0, f)
 end
 \end{verbatim}
 
@@ -415,7 +421,7 @@ end
 \begin{verbatim}
 def tomat(l) do 
   f = fn (h, a) ->  a ++ [h] end
-  foldr(f, [], l)
+  foldr(l, [], f)
 end
 \end{verbatim}
 \end{frame}
@@ -423,18 +429,18 @@ end
 \begin{frame}[fragile]{example}
      \begin{block}{foldr/3}
        \begin{verbatim}
-def foldr(op, acc, []) do acc end
-def foldr(op, acc, [h|t]) ->
-   op.(h, foldr(op, acc, t))
+def foldr([], acc, op) do acc end
+def foldr([h|t], acc, op) ->
+   op.(h, foldr(t, acc, op))
 end
        \end{verbatim}
      \end{block}
 \pause
      \begin{block}{foldl/3}
        \begin{verbatim}
-def foldl(op, acc, []) do acc end
-foldl(op, acc, [h|t]) do
-  foldl(op, op.(h, acc), t)
+def foldl([], acc, op) do acc end
+foldl([h|t], acc, op) do
+  foldl(t, op.(h, acc), op)
 end
        \end{verbatim}
      \end{block}
@@ -447,14 +453,14 @@ end
 \begin{verbatim}
 def tomat(l) do
   f = fn (h, a) ->  a ++ [h] end
-  foldr(f, [], l)
+  foldr(l, [], f)
 end
 \end{verbatim}
 \pause 
 \begin{verbatim}
 def morot(L) do
   f = fn (h, a) ->  [h|a] end
-  foldl(f, [], l)
+  foldl(l, [], f)
 end
 \end{verbatim}
 \end{frame}
@@ -472,16 +478,16 @@ Which one should you use, {\em fold-left} or {\em fold-right}?
 \vspace{20pt}
 
 \begin{verbatim}
-def append_left(l) ->
-  f = fn (e,a) -> a ++ e end
-  foldl(f, [], l)
+def append_right(l) do
+  f = fun(e,a) -> e ++ a end
+  foldr(l, [], f)
 end
 \end{verbatim}
 
 \begin{verbatim}
-def append_right(l) do
-  f = fun(e,a) -> e ++ a end
-  foldr(f, [], l)
+def append_left(l) ->
+  f = fn (e,a) -> a ++ e end
+  foldl(l, [], f)
 end
 \end{verbatim}
 
@@ -494,8 +500,8 @@ end
 In the {\tt List} module. 
 
 \begin{itemize}
-\item {\tt foldr(list, a, f)}: fold from right  {\tt f.(x1, .. f.(xn, a)..) }
-\item {\tt foldl(list, a, f)}: fold from left  {\tt f.(xn, .. f.(x1, a)..) }
+\item {\tt foldr(list, acc, f)}: fold from right  {\tt f.(x1, .. f.(xn, acc)..) }
+\item {\tt foldl(list, acc, f)}: fold from left  {\tt f.(xn, .. f.(x1, acc)..) }
 \end{itemize}
 
 \vspace{10pt}\pause
@@ -555,10 +561,78 @@ end
 
 \end{frame}
 
-\begin{frame}{Enumerable}
+\begin{frame}{a lazy list from 1 to 10}
 
+  Let's represent a {\em range} of integers from 1 to 10 as:
+
+  \vspace{10pt}\hspace{20pt} {\tt \{:range, 1, 10\}}
+
+  \vspace{10pt}\pause
+
+  Elixir gives us a syntax for this:
+
+    \vspace{10pt}\hspace{20pt} {\tt 1..10}
+  
+
+    
+  \vspace{40pt}\pause
+  {\em This is not exactly how Elixir represents it but it's fine for now}
 
 \end{frame}
+
+\begin{frame}[fragile]{operations on a range}
+
+  
+\begin{verbatim}
+  def reduce({:range, from , to}, {:cont, acc}, fun) do
+    if from == to do
+      {:done, acc}
+    else
+      reduce({:range, from+1, to}, fun.(from, acc), fun)
+    end
+  end
+\end{verbatim}
+
+  \pause
+  
+\begin{verbatim}
+  def sum(r) do
+    reduce(r, {:cont, 0}, fn(x,a) -> {:cont, x+a} end)
+  end
+\end{verbatim}
+
+  
+\end{frame}
+
+\begin{frame}[fragile]{stop in the midle}
+
+\begin{verbatim}
+    :
+  def reduce(_, {:halt, acc}, _fun) do
+    {:halted, acc}
+  end
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+  def take(r, n) do
+    reduce(r, {:cont, {0,[]}},
+      fn(x,{s,a}) ->
+        if s == n do
+          {:halt, Enum.reverse(a)}
+        else
+          {:cont, {s+1, [x|a]}}
+        end
+      end)
+  end    
+\end{verbatim}
+  
+\pause
+
+
+  
+\end{frame}
+
 
 
 \begin{frame}{Streams}
