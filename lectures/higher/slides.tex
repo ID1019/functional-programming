@@ -326,13 +326,14 @@ We have not really defined what {\em Parameters}, {\em Sequence} nor an {\em Env
 
 \pause\vspace{10pt}
 We will write:
-\pause\vspace{40pt}\hspace{60pt}\verb!x = 2; f = fn (y) -> x + y end; f.(4) !
+
+\pause\vspace{10pt}\hspace{60pt}\verb!x = 2; f = fn (y) -> x + y end; f.(4) !
 
 
-\vspace{40pt}\pause
+\vspace{20pt}\pause
 Remember this?
 
-\pause\vspace{40pt}\hspace{60pt} $ \lambda y -> x + y $
+\pause\vspace{10pt}\hspace{60pt} $ \lambda y -> x + y $
 
 \end{frame}
 
@@ -458,7 +459,7 @@ end
 \end{verbatim}
 \pause 
 \begin{verbatim}
-def morot(L) do
+def morot(l) do
   f = fn (h, a) ->  [h|a] end
   foldl(l, [], f)
 end
@@ -523,7 +524,7 @@ In the {\tt Enum} module.
 
 \pause\vspace{20pt}
 
-\verb+inf = infinity()+\pause \verb+, [0|inf1] = inf.()+\pause \verb+, [1|inf2] = inf1.()+
+\verb+inf = infinity()+\pause \verb+; [0|inf] = inf.()+\pause \verb+; [1|inf] = inf.()+
 
 \pause
 \begin{verbatim}
@@ -580,15 +581,55 @@ end
 
 \end{frame}
 
-\begin{frame}[fragile]{operations on a range}
+
+\begin{frame}[fragile]{let's reduce this range}
+
+  \begin{verbatim}
+  def reduce({:range, from , to}, acc, fun) do
+    if from <= to do
+      reduce({:range, from+1, to}, fun.(from, acc), fun)
+    else
+      acc
+    end
+  end
+\end{verbatim}
+
+\vspace{20pt}  \pause
+  
+\begin{verbatim}
+  def sum(r) do
+    reduce(r,  0, fn(x,a) -> x+a end)
+  end
+\end{verbatim}
+  
+\vspace{10pt}\pause{\em Our {\tt reduce/3} is equal to our {\tt foldl/3} (does it make sense to have a {\tt foldr/3}).}
+  
+\end{frame}
+
+\begin{frame}{Things we would like to do}
+
+  Can we, without traversing the full range:
+  \begin{itemize}
+  \item take the first five elements
+  \item find an element in the range
+  \item return the first element and the rest of the range
+  \end{itemize}
+
+  \vspace{20pt}\pause
+  {\em We need to control the reduction.}
+\end{frame}
+
+
+
+\begin{frame}[fragile]{continue}
 
   
 \begin{verbatim}
   def reduce({:range, from , to}, {:cont, acc}, fun) do
-    if from == to do
-      {:done, acc}
-    else
+    if from <= to do
       reduce({:range, from+1, to}, fun.(from, acc), fun)
+    else
+      {:done, acc}
     end
   end
 \end{verbatim}
@@ -616,28 +657,54 @@ end
 \pause
 \begin{verbatim}
   def take(r, n) do
-    reduce(r, {:cont, {0,[]}},
-      fn(x,{s,a}) ->
+    reduce(r, {:cont, {:sofar, 0, [] }},
+      fn(x,{:sofar, s, a}) ->
         if s == n do
           {:halt, Enum.reverse(a)}
         else
-          {:cont, {s+1, [x|a]}}
+          {:cont, {:sofar, s+1, [x|a]}}
         end
       end)
   end    
 \end{verbatim}
   
-\pause
-
-
   
 \end{frame}
 
+\begin{frame}[fragile]{ head and tail }
+
+\begin{verbatim}
+    :
+  def reduce(range, {:suspend, acc}, fun) do
+    {:suspended, acc, fn(cmd) -> reduce(range, cmd, fun) end}
+  end
+\end{verbatim}
+  \pause
 
 
-\begin{frame}{Streams}
+\begin{verbatim}
+  def head(r) do
+    reduce(r, {:cont, nil},
+      fn (x, _) ->
+        {:suspend, x}
+      end)
+  end
+\end{verbatim}
+  
+\end{frame}
 
+\begin{frame}{Elixir libraries}
 
+  \begin{itemize}
+  \item {\tt List} : operatates on lists, returns a list or some value.  \pause
+  \item {\tt Enum} : takes an {\tt Enumerable} as argument, returns a list or value. \pause
+  \item {\tt Stream} : takes an {\tt Enumerable} as argument, returns an {\tt Enumerable} or value. 
+  \end{itemize}
+
+  \vspace{20pt}\pause {\em A datastructure is {\em Enumerable} if it
+    implements the {\em reduce protocol}. Lists and ranges are {\tt
+      Enumerable}.}
+  
 \end{frame}
 
 
@@ -684,7 +751,9 @@ Are functions considered to be ``first-class citizen''?
 \begin{itemize}
 \pause\item {closure}: a function and an environment
 \pause\item {generic algorithms}: separate the recursive pattern from the data it operates over
-\pause\item {conntinuations}: powerful technique to handle incomplete information
+\pause\item {conntinuations}: powerful technique to handle incomplete informatio
+\pause\item {range}: representation of a range of integers
+\pause\item {streams}: lazy evaluation of ranges resulting in 
 \end{itemize}
 
 
