@@ -146,9 +146,9 @@ defmodule Eager do
   end
 
   @doc """
-  Evaluate a match expression given an environment and a program. 
+  Evaluate a match of a pattern and structure given an environment
   """
-  @spec eval_match(expr, env, prgm) :: {:ok, env} | :fail
+  @spec eval_match(pattern, str, env) :: {:ok, env} | :fail
   def eval_match({:atm, id}, id, env) do
     {:ok, env}
   end
