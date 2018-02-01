@@ -221,6 +221,7 @@ of expressions, pattern matching and finally a sequence of
 expressions.
 
 \subsection{The environment}
+
 Implementing an environment will be the simplest task that we have; an
 environment is simply a mapping from variables to data structures. If
 we assume that environments will be small, we can represent an
@@ -256,6 +257,12 @@ call should return {\tt \{:foo,  42\}}:
 \begin{minted}{elixir}
 Env.lookup(:foo, Env.add(:foo, 42, Env.new()))
 \end{minted}
+
+Note that Elixir will write a list of binary tuples in a special
+way. It is so common that we work with key-value where the ``key'' is
+an atom that Elixir uses a special syntax. The list {\tt [\{:x, 12\},
+  \{:y, 13\}]} will be written {\tt [x: 12, y: 13]}. You also use this
+for when you enter key-value list, it will save you some typing.
 
 \subsection{Terms and patterns}
 
@@ -461,7 +468,7 @@ first need to remove all bindings of variables that occur in the
 pattern. The evaluation of the following sequence should result in {\em \{c, b\}}.
 
 \begin{minted}{elixir}
-x = a; y = b; x = :c; {x, y}
+x = :a; y = :b; x = :c; {x, y}
 \end{minted}
 
 Here is some skeleton code that Will get you started. You need to
