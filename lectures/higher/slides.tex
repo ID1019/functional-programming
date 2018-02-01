@@ -50,7 +50,7 @@
 
 \pause
 \begin{verbatim}
-def lt({:card, S, V1}, {:card, S, V2})  do  V1 < V2 end
+def lt({:card, s, v1}, {:card, s, v2})  do  v1 < v2 end
 \end{verbatim}
 \pause
 \begin{verbatim}
@@ -220,7 +220,7 @@ end
      \begin{block}{prod/1}
        \begin{verbatim}
 def prod([]) do 1 end
-def prod([h|t]) ->
+def prod([h|t]) do
    mul(h,prod(t))
 end
        \end{verbatim}
@@ -440,7 +440,7 @@ end
      \begin{block}{foldl/3}
        \begin{verbatim}
 def foldl([], acc, op) do acc end
-foldl([h|t], acc, op) do
+def foldl([h|t], acc, op) do
   foldl(t, op.(h, acc), op)
 end
        \end{verbatim}
