@@ -167,14 +167,15 @@ $$\frac{{\rm prerequisite}}{E\sigma({\rm expression}) \rightarrow {\rm result}}$
 
 In this description $E$ is the evaluation function, and we will also
 have rules for other functions and $\sigma$ an environment. The result
-of applying the function is a data structure.
+of applying the function is a data structure or $\perp$. The symbol
+$\perp$ represents the failed execution.
 
 In order to apply the rule the prerequisite must be met and this will
 in the end guide us in how we can implement a recursive evaluator. The
 so called {\em big-step} operational semantics is often used since it
 is easily turned into an implementation of the language.
 
-\subsection{atoms}
+\subsection{atoms, variables and tuples}
 
 The simplest rule is the one that describes how we evaluate an
 expression consisting of a simple atom.
@@ -190,11 +191,23 @@ environment for a binding of the variable.
 
    $$\frac{v/s \in \sigma}{E\sigma(v) \rightarrow s}$$
 
+We have one more situation, the case where we do not have a binding
+for our variable. This is the point where evaluation fails and we return $\perp$.
+
+   $$\frac{v/s \not\in \sigma}{E\sigma(v) \rightarrow \perp}$$
+   
+   
 The rule for a compound expression {\tt \{:foo, :bar\}} is straight
 forward Given that we can evaluate its two components we will of
 course be able to evaluate the compound expression.
 
 $$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow {s_1, s_2}}$$
+
+Note that we here implicitly require that $s_1$ and $s_2$ are
+structures ( $ s_i \in Structures$ ). If the evaluation of one of the expressions fail, the whole evaluation fails. 
+
+$$\frac{ E\sigma(e_i) \rightarrow \perp }{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow \perp}$$
+
 
 \subsection{a pattern matching expression}
 
@@ -203,18 +216,12 @@ expression. What we need to do is to first evaluate the right hand
 side and then try to match the pattern of the left hand side to the
 data structure that we obtain. The result of a pattern matching is
 either an extended environment or a {\em failure}. This failure is
-important since we will later use it in our case statement.
+important since we will later use it in our case statement. The
+failure is not the same as $\perp$.
 
-We will start with one rule that might seam to be a bit redundant but
-it will save us some problems when we have to write up rules for
-failure. A pattern matching given a failed environment will result in
-a failure.
-
-$$\frac{}{P\;{\rm fail}\;(e, s) \rightarrow {\rm fail}}$$ 
-
-We now proceed with the rules how to do pattern matching. The first
-two rules are simple; an atom will of course match its corresponding
-data structure and the don't care symbol will match anything.
+The first two rules are simple; an atom will of course match its
+corresponding data structure and the don't care symbol will match
+anything.
 
 $$\frac{a \equiv s}{P\sigma(a, s) \rightarrow \sigma}$$ 
 
@@ -240,11 +247,20 @@ $$\frac{v/t \in \sigma \wedge t \not\equiv s}{P\sigma(v, s) \rightarrow  {\rm fa
 
 Matching a cons expression is quite simple but note what the rules
 says about the environment. We need to do the pattern matching of the
-expression $e_1$ and the data structure $s_1$ in $\sigma$ but the o
+expression $e_1$ and the data structure $s_1$ in $\sigma$ but the 
 matching of $e_2$ and $s_2$ in $\sigma'$. We thus gain information in
 the first matching that must be consisting with the second matching.
 
 $$\frac{P\sigma(p_1, s_1) \rightarrow \sigma' \wedge P\sigma'(p_2, s_2) \rightarrow \theta}{P\sigma(\lbrace p_1, p_2 \rbrace  , \lbrace s_1, s_2 \rbrace) \rightarrow \theta}$$
+
+We here implicity state that the pattern matching succeeds. If the first matching fails the matching of the whole structure fails.
+
+$$\frac{P\sigma(p_1, s_1) \rightarrow {\rm fail} }{P\sigma(\lbrace p_1, p_2 \rbrace  , \lbrace s_1, s_2 \rbrace) \rightarrow {\rm fail}}$$
+
+The same holds if the second matching fails.
+
+$$\frac{P\sigma(p_1, s_1) \rightarrow \sigma' \wedge P\sigma'(p_2, s_2) \rightarrow {\rm fail}}{P\sigma(\lbrace p_1, p_2 \rbrace  , \lbrace s_1, s_2 \rbrace) \rightarrow {\rm fail}}$$
+
 
 As an exercise you should do the pattern matching of the expression
 {\tt \{x, \{x, :c\}\}} and the data structure {\em \{a, \{b, c\}\}}. Note
@@ -301,9 +317,17 @@ $$\frac{
   \qquad E\theta({\rm sequence}) \rightarrow s
 }{E\sigma(p = e, {\rm sequence}) \rightarrow s}$$ 
 
-A sequence consist of one or more patter matching expressions
-followed by an expression, so the rule will terminate once we reach
-the final expression.
+A sequence consist of one or more patter matching expressions followed
+by an expression, so the rule will terminate once we reach the final
+expression. Note that we also here implicity require that the
+evaluation of $e$ succeeds i.e. $t \in Structs$. If the evaluation
+returns $\perp$ the whole evalation fails.
+
+
+$$\frac{   
+  E\sigma(e) \rightarrow \perp
+}{E\sigma(p = e, {\rm sequence}) \rightarrow \perp}$$ 
+
 
 \subsection{that's it}
 
@@ -368,9 +392,15 @@ $$\frac{
   C\sigma(s, {\rm clauses}) \rightarrow s}{
 C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
 
-If no pattern matches the evaluation will simply terminate
-unsuccessfully ($\perp$). In real life this would mean that we receive a {\em
-  CaseClauseError} or similarly.
+If the last clause fails, the evaluation will simply terminate
+unsuccessfully i.e. $\perp$. In real life this would mean that we
+receive a {\em CaseClauseError} or similarly.
+
+$$\frac{
+  S(\sigma, p) \rightarrow \sigma' \qquad
+  P\sigma'(p, s) \rightarrow {\rm fail}}{
+C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence}) \rightarrow \perp}$$
+
 
 We now have everything we need to handle case expressions in our
 language, this is starting to look like something.

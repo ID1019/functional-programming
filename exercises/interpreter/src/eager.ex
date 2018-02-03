@@ -120,7 +120,7 @@ defmodule Eager do
       {:ok, {:closure, par, seq, closure}} ->
         case eval_args(args, env, prg) do
           :error ->
-            :foo
+            :error
 
           strs ->
             env = Env.args(par, strs, closure)
@@ -146,9 +146,9 @@ defmodule Eager do
   end
 
   @doc """
-  Evaluate a match expression given an environment and a program. 
+  Evaluate a match of a pattern and structure given an environment
   """
-  @spec eval_match(expr, env, prgm) :: {:ok, env} | :fail
+  @spec eval_match(pattern, str, env) :: {:ok, env} | :fail
   def eval_match({:atm, id}, id, env) do
     {:ok, env}
   end
