@@ -1,0 +1,260 @@
+\input{../include/preamble}
+
+\title[ID1019 Interpreter]{The Interpreter}
+
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+
+\begin{frame}{the language}
+  
+\begin{grammar}
+<atom> ::= :a | :b | :c | \ldots
+
+<variable> ::= x | y | z | \ldots
+
+<literal> ::= <atom>
+
+<expression> ::= <literal> | <variable> |  '\{' <expression> ',' <expression> '\}'
+
+<pattern> ::= <literal> 
+      \alt <variable> 
+      \alt '\_' 
+      \alt '\{' <pattern> ',' <pattern> '\}'
+
+<match> ::=  <pattern> '=' <expression>
+
+<sequence> ::=  <expression> \alt <match> ';' <sequence>
+\end{grammar}
+
+\end{frame} 
+
+\begin{frame}{the domain}
+
+
+$${\rm Atoms} =  \{a,b,c, ...\}$$
+
+$${\rm Structures} = {\rm Atoms} \cup \{\{s_1, s_2\} | s_i \in {\rm Structures}\}$$
+
+\end{frame}
+
+
+\begin{frame}{operational semantics}
+
+\vspace{10pt}
+$$\frac{{\rm prerequisite}}{E\sigma({\rm expression}) \rightarrow {\rm result}}$$
+
+\vspace{20pt}
+
+\begin{itemize}
+\item Evaluation of expressions: $E\; {\rm env}\; ({\rm expr}) \; \rightarrow \; \perp \; \cup \; {\rm Structures}$
+\item Pattern matching: $P\; {\rm env}\; ({\rm pattern}, \; {\rm struct})\;  \rightarrow \; {\rm fail} \; \cup\;  {\rm Environments}$
+\end{itemize}
+
+\vspace{40pt}{\em This is called ``big step'' operational semantics.''}
+
+\end{frame}
+
+
+\begin{frame}{evaluation of expressions}
+
+
+$$\frac{a \equiv s}{E\sigma(a) \rightarrow s}$$
+
+$$\frac{v/s \in \sigma}{E\sigma(v) \rightarrow s}$$
+
+$$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow \{s_1, s_2\}}$$
+
+$$\frac{ v/s \not\in \sigma}{E\sigma(v) \rightarrow  \perp}$$
+
+\end{frame}
+
+
+\begin{frame}{pattern matching}
+
+
+$$\frac{a \equiv s}{P\sigma(a, s) \rightarrow \sigma}$$ 
+
+$$\frac{v/t \not\in \sigma}{P\sigma(v, s) \rightarrow \lbrace v/s \rbrace \cup \sigma}$$
+
+$$\frac{v/s \in \sigma}{P\sigma(v, s) \rightarrow \sigma}$$ 
+
+$$\frac{}{P\sigma(\_, s) \rightarrow \sigma}$$ 
+
+$$\frac{a \not\equiv s}{P\sigma(a, s) \rightarrow {\rm fail}}$$ 
+
+$$\frac{v/t \in \sigma \qquad  t \not\equiv s}{P\sigma(v, s) \rightarrow {\rm fail}}$$ 
+
+\end{frame}
+
+\begin{frame}{pattern matching}
+
+
+$$\frac{P\sigma(p_1, s_1) \rightarrow \sigma' \wedge P\sigma'(p_2, s_2) \rightarrow \theta}{P\sigma(\lbrace p_1, p_2 \rbrace  , \lbrace s_1, s_2 \rbrace) \rightarrow \theta}$$
+
+\vspace{10pt}
+$$\frac{P\sigma(p_1, s_1) \rightarrow {\rm fail} }{P\sigma(\lbrace p_1, p_2 \rbrace  , \lbrace s_1, s_2 \rbrace) \rightarrow {\rm fail}}$$
+
+\vspace{10pt}
+$$\frac{P\sigma(p_1, s_1) \rightarrow \sigma' \wedge P\sigma'(p_2, s_2) \rightarrow {\rm fail}}{P\sigma(\lbrace p_1, p_2 \rbrace  , \lbrace s_1, s_2 \rbrace) \rightarrow {\rm fail}}$$
+
+
+\vspace{40pt}{\em Match a compund pattern with anyting but a compound structure will fail.}
+
+\end{frame}
+
+
+\begin{frame}{evaluation of sequences}
+
+
+$$\frac{\sigma' = \sigma \setminus \lbrace v/t \quad | \quad v/t \in \sigma \quad \wedge \quad  v \quad {\rm in} \quad p\rbrace}{S(\sigma, p) \rightarrow \sigma'}$$
+  
+
+$$\frac{   
+  E\sigma(e) \rightarrow t
+  \qquad S(\sigma, p) \rightarrow \sigma' 
+  \qquad P\sigma'(p, t) \rightarrow \theta
+  \qquad E\theta({\rm sequence}) \rightarrow s
+}{E\sigma(p = e; {\rm sequence}) \rightarrow s}$$ 
+
+
+\end{frame}
+
+
+\begin{frame}{case expression}
+
+\begin{grammar}
+     <expression> ::=  <case expression> | ...  
+
+     <case expression> ::= 'case' <expression> 'do' <clauses>  'end' 
+
+     <clauses> ::=   <clause> | <clause> ';' <clauses>
+
+     <clause> ::=  <pattern> '->' <sequence>
+\end{grammar}
+\end{frame}
+
+\begin{frame}{evaluation of case expression}
+
+
+$$\frac{E\sigma(e) \rightarrow t \qquad C\sigma(t, {\rm clauses}) \rightarrow s }{E\sigma({\tt case}\ e \ {\tt do}\ {\rm clauses} \ {\tt end}) \rightarrow s}$$
+  
+\end{frame}
+\begin{frame}{selection of a clause}
+
+$$\frac{
+  S(\sigma, p) \rightarrow \sigma' \qquad
+  P\sigma'(p, s) \rightarrow \theta \qquad
+  \theta \not = {\rm fail} \qquad
+  E\theta({\rm sequence}) \rightarrow s}{
+C\sigma(s, p \;{\rm ->}\;    {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
+
+\vspace{10pt}
+
+$$\frac{
+  S(\sigma, p) \rightarrow \sigma'   \qquad
+  P\sigma'(p, s) \rightarrow {\rm fail} \qquad
+  C\sigma(s, {\rm clauses}) \rightarrow s}{
+C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
+
+\vspace{10pt}
+
+$$\frac{
+  S(\sigma, p) \rightarrow \sigma' \qquad
+  P\sigma'(p, s) \rightarrow {\rm fail} }{
+C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence}) \rightarrow \perp}$$
+
+
+\end{frame}
+
+
+
+
+
+\begin{frame}[fragile]{variable scope}
+
+\vspace{20pt}
+
+\hspace{20pt}
+\begin{verbatim}
+   y = case :a do
+         :a -> z = 42, {:b, z}
+       end;
+   {y, z}
+\end{verbatim}
+
+\vspace{20pt}{\em This is not allowed in our language, \texttt{Z} in
+  \texttt{\{Y,Z\}} is a free variable. However .... \pause this is
+  allowed in Elixir and Erlang (but it should not be).}
+
+\end{frame}
+ 
+\begin{frame}{what's missing}
+
+\vspace{20pt}\hspace{20pt} Handle lambda expressions, closures and function application.
+  
+\end{frame}
+
+
+\begin{frame}[fragile]{lambda expressions}
+
+  \vspace{20pt}
+
+  \begin{tabular}{r l l}
+   {\em Atoms} & = & \{a, b, c, \ldots\} \\
+   {\em Closures} & = & \{<p:s:e> | p $\in $ Parameters $\wedge$ s $\in $ Sequence $\wedge$  e $\in $ Environment \}\\
+   {\em Structures} & = & {\em Closures} $\cup$ {\em Atoms} $\cup$ \{ \{a, b\} \textbar a $\in$ {\em Structures}  $\wedge$  b $\in$ {\em Structures} \}
+  \end{tabular}
+
+
+
+\end{frame}
+
+\begin{frame}[fragile]{syntax for function expressions}
+
+\begin{grammar}
+  <function> ::= 'fn' '(' <parameters> ')' '->' <sequence> 'end'
+  
+   <parameters> ::= '  ' | <variables> 
+
+   <variables> ::= <variable> |  <variable> ',' <variables>
+
+   <application> ::= <expression> '.(' <arguments> ')'
+
+   <arguments> ::= '  ' | <expressions>
+   
+   <expressions> ::= <expression> |  <expression> ',' <expressions>
+
+   <expression> ::= <function> | <application> | ...
+\end{grammar}
+
+\end{frame}
+
+\begin{frame}[fragile]{evaluation of a function expression}
+
+$$\frac{ \theta = \{ v/s \mid  v/s \in \sigma \wedge v {\rm\ free\  in\ sequence}\}}{
+E\sigma(\texttt{fn (} {\rm parameters}\;  \texttt{) ->}\; {\rm sequence}\; \texttt{end} ) \rightarrow \quad \langle{\rm parameters}:{\rm sequence}:\theta\rangle}$$
+
+\end{frame}
+
+
+\begin{frame}[fragile]{evaluation of a function application}
+
+$$\frac{E\sigma(e) \rightarrow <v_1, \ldots:{\rm seq}:\theta > \qquad E\sigma(e_i) \rightarrow s_i \qquad E\{v_1/s_1, \ldots\}\cup\theta({\rm seq}) \rightarrow s}{
+E\sigma(e.(e_1, \ldots)) \rightarrow s}$$ 
+
+
+\end{frame}
+
+
+
+
+\end{document}
