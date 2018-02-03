@@ -120,7 +120,7 @@ defmodule Eager do
       {:ok, {:closure, par, seq, closure}} ->
         case eval_args(args, env, prg) do
           :error ->
-            :foo
+            :error
 
           strs ->
             env = Env.args(par, strs, closure)

@@ -7,6 +7,7 @@ DIRS = 	overview \
 	trees \
 	complexity \
 	higher \
+        interpreter \
         types \
 	tracer
 
