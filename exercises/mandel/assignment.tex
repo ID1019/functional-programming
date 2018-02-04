@@ -86,7 +86,7 @@ values and see if we approach infinity but that would of course take
 a very long time (to say the least). 
 
 An observation saves us from spending the rest of our lives computing
-$z_n$: {\em if $|z_n| >= 2$ then there is no turning back, $z_n$ will
+$z_n$: {\em if $|z_n| > 2$ then there is no turning back, $z_n$ will
   only increase in size}. The absolute value of a complex number is of
 course:
 
@@ -101,7 +101,7 @@ So given a maximum value of $n$, we can for any complex number $c$ say
 if it {\em definitely does not belong to} or if it {\em could possibly
   belong to} the Mandelbrot set. In the case where we know for sure
 that the number does not belong to the set we also have a value $i$
-which was the point where $|z_i| >= 2$. This value $i$ is the color we
+which was the point where $|z_i| > 2$. This value $i$ is the color we
 need to generate a beautiful Mandelbrot image.
 
 
@@ -132,7 +132,7 @@ risk getting stuck in an infinite computation.
 
 Implement a function {\tt mandelbrot/2} that, given the complex number
 $c$ and the maximum number of iterations $m$, return the value $i$ at
-which $|z_i| >= 2$ or $0$ if it does not for any $i < m$ i.e. it
+which $|z_i| > 2$ or $0$ if it does not for any $i < m$ i.e. it
 should always return a value in the range $0..(m-1)$.
 
 \begin{minted}{elixir}

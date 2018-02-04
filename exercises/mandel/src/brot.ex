@@ -24,7 +24,7 @@ defmodule Brot do
     end
   end
 
-  # mandelbrot(c, m): calculate the mandelbrot value of 
+  # mandelbrot(c, m): calculate the mandelbrot value of
   # complex value c with a maximum iteration of m. Returns
   # 0..(m - 1).
 
@@ -38,7 +38,7 @@ defmodule Brot do
   def test(i, z, c, m) do
     a = Cmplx.abs(z)
 
-    if a < 2.0 do
+    if a <= 2.0 do
       z1 = Cmplx.add(Cmplx.sqr(z), c)
       test(i + 1, z1, c, m)
     else
