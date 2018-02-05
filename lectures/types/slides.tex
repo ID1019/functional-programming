@@ -80,6 +80,7 @@ end
 \begin{frame}{types in Elixir}
 
 What types do we have:
+
 \pause\vspace{10pt}
 Singletons, the types of individual data structures:
 \begin{itemize}
@@ -344,7 +345,7 @@ The pros and cons of dynamically typed languages:
 \begin{verbatim}
 def car_brand_model( {:car, brand, {:model, model, _}, _ , _}) do 
   "#{brand} #{model}"
-end\
+end
 \end{verbatim}
 \end{frame}
 
@@ -362,7 +363,7 @@ end\
 
 \begin{verbatim}
 def car_brand_model( {:car, brand, prop} ) do
-    case model = List.keyfind(prop, :model, 0) do
+    case List.keyfind(prop, :model, 0) do
       nil -> 
          brand
       {:model, model} ->
@@ -392,7 +393,7 @@ end
   \item {\tt \%\{\}} : an empty map \pause
   \item {\tt myCar = \%\{:brand => "Volvo", :model => "XC60", :year= 2008\}} : define properties \pause
   \item {\tt \%\{:model => model\} = myCar} : pattern matching \pause
-  \item {\tt newCar = \%\{myCar | :year => 2018} : map as template for new map
+  \item {\tt newCar = \%\{myCar | :year => 2018\}} : map as template for new map
   \end{itemize}
   
 
