@@ -1,0 +1,1135 @@
+\input{../include/preamble}
+
+\title[ID1019 Dynamic programming]{Dynamic programming}
+ 
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Hinges and latches}
+
+\pause Assume you're producing hinges and latches and would like to make as much money as possible.
+
+\begin{columns}
+
+ \begin{column}{0.4\linewidth}
+
+\includegraphics[width=0.8\linewidth]{hinges.jpg}
+
+\includegraphics[width=0.8\linewidth]{latch.jpg}
+
+ \end{column}
+ \begin{column}{0.5\linewidth}
+  \begin{itemize}
+\pause\item Your resources are 2400g of raw material and 480 minutes of time.
+
+\pause\item Each hinge takes 260g of material and 40 minutes to make.
+
+\pause \item Each latch takes 180g of material and 60 minutes to make.
+
+\pause \item Hinges are sold for 30 crowns and latches for 24 crowns.
+  \end{itemize}
+ \end{column}
+\end{columns}
+\pause \vspace{20pt}
+
+How many hinges and latches should you produce to maximize profit. 
+
+\end{frame}
+
+\begin{frame}{Hinges and latches}
+
+\pause Assume you're producing hinges and latches and would like to make as much money as possible.
+
+\begin{columns}
+
+ \begin{column}{0.4\linewidth}
+
+\includegraphics[width=0.8\linewidth]{hinges.jpg}
+
+\includegraphics[width=0.8\linewidth]{latch.jpg}
+
+ \end{column}
+ \begin{column}{0.5\linewidth}
+ Assume we make $h$ hinges and $l$ latches:
+  \begin{itemize}
+\pause\item limited resources: $260h + 180l < 2400$
+
+\pause\item limited time: $40h + 60l < 480$
+
+\pause \item profit: $p = 30h + 24l$
+
+\pause \item find $h$ and $l$ to maximize $p$
+  \end{itemize}
+ \end{column}
+\end{columns}
+\pause \vspace{20pt}
+
+How many hinges and latches should you produce to maximize profit. 
+
+\end{frame}
+
+
+\begin{frame}{linear programming}
+
+\begin{columns}
+ \begin{column}{0.5\linewidth}
+\begin{figure}
+\begin{tikzpicture}[
+        scale=0.3,
+        important line/.style={thick},
+        axis/.style={very thick, ->, >=stealth'},
+        dashed line/.style={dashed, thin},
+        pile/.style={thick, ->, >=stealth', shorten >=2pt},
+        every node/.style={color=black}
+    ]
+
+    % axis
+    \draw[axis] (-1,0)  -- (16,0) node(xline)[right] {$hinges$};
+    \draw[axis] (0,-1) -- (0,16) node(yline)[above] {$latches$};
+    \pause
+    \draw [dashed] (0,13.3) -- (9.2,0);
+    \node [right] at (2,13) {$260h + 180l < 2400$};
+    \pause
+    \draw [dashed] (0,8) -- (12,0) {};
+    %\draw [dashed] (0,10) -- (15,0) {};
+    \node [right] at (14,4) {$40h + 60l < 480$};
+\end{tikzpicture}
+\end{figure}
+ \end{column} 
+ \begin{column}{0.5\linewidth}
+  $$ p = 30h + 24l$$ 
+  \pause
+  maxium profit is found in one of the corners: \pause
+  $$ h = 0, l = 8 \rightarrow  p = 192$$ \pause
+  $$ h = 9, l = 0  \rightarrow  p = 270$$  \pause
+  $$ h = 7, l = 3 \rightarrow p =  282$$ \pause
+ \end{column}
+ \end{columns}
+\end{frame}
+
+\begin{frame}{search for the answer}
+
+To find the maximum profit, we either:
+
+\pause \vspace{20pt}\hspace{40pt}
+   make a hinge and then maximize profit or
+
+\pause \vspace{20pt}\hspace{40pt}
+   make a latch and then maximize profit.
+
+\pause \vspace{20pt}\hspace{40pt}
+
+
+\end{frame}
+
+
+\begin{frame}[fragile]{search for the answer}
+
+Describe a product as {\tt \{material, time, prize\}}: a hinge is {\tt \{260, 40, 30\}} and a latch is {\tt \{180, 60, 24\}}.
+
+\pause\vspace{20pt}
+
+Define a function {\tt search(material, time, hinge, latch)}, that
+given an amount of material, time and descriptions of hinges and
+latches, returns the number of hinges, $h$, and latches, $l$, to produce to
+maximize profit $p$, {\tt \{h, l, p\}}.
+
+\pause\vspace{20pt}
+
+\begin{verbatim}
+search(material, time, {hm, ht, hp}, {lm, lt, lp}) ->
+\end{verbatim}
+\end{frame}
+
+
+\begin{frame}[fragile]{search for the answer}
+
+\begin{verbatim}
+def search(m, t, {hm, ht, hp}=h, {lm, lt, lp}=l) when (m >= hm) and 
+                                                      (t >= ht) and 
+                                                      (m >= lm) and 
+                                                      (t >= lt) ->
+  {hi, li, pi} = search((m-hm), (t-ht), h, l),
+  {hj, lj, pj} = search((m-lm), (t-lt), h, l), 
+  if (pi+hp) > (pj+lp) do
+    {(hi+1), li, (pi+hp)};
+  else
+    {hj, (lj+1), (pj+lp)}
+  end
+end
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{search for the answer}
+
+\begin{verbatim}
+   :
+def search(m, t, {hm, ht, hp}=h, l) when (m >= hm) and (t >= ht)  do
+  {hn, ln, p} = search((m-hm), (t-ht), h, l)
+  {hn+1, ln, (P+hp)}
+end
+def search(m, t, h, {lm, lt, lp}=l) when (m >= lm) and (t >= lt)  do
+  {hn, ln, p} = search((m-lm), (t-lt), h, l)
+  {hn, ln+1, p+lp}
+end
+def search(_, _, _, _) do
+  {0,0,0}
+end
+\end{verbatim}
+\end{frame}
+
+
+\begin{frame}[fragile]{a test}
+
+\begin{verbatim}
+>Hinges.search(2400, 480, {260, 40, 30}, {180, 60, 24}).
+\end{verbatim}
+\pause
+\begin{verbatim}
+{7, 3, 282}
+\end{verbatim}
+\pause
+\begin{verbatim}
+>Hinges.search(2000,480,{260,40,30},{180,60,24}).
+\end{verbatim}
+\pause
+\begin{verbatim}
+{4,5,240}
+\end{verbatim}
+\begin{verbatim}
+>Hinges.search(2800,520,{260,40,30},{180,60,32}).
+\end{verbatim}
+\pause
+\begin{verbatim}
+{7,4,338}
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{problem solved}
+
+\pause
+\vspace{40pt}\hspace{140pt}What is the problem?
+
+\end{frame}
+
+\begin{frame}{complexity}
+
+\begin{figure}
+\begin{tikzpicture}[
+        scale=0.5,
+        important line/.style={thick},
+        dashed line/.style={dashed, thin},
+        every node/.style={color=black}
+    ]
+    \node [] at (14,20) {\texttt{search(2400,480, ...)}};
+    \pause
+    \draw [dashed] (14,19) -- (5,17);
+    \node [] at (5,16) {\texttt{search(2140,440, ...)}};
+    \pause
+    \draw [dashed] (14,19) -- (21,17);
+    \node [] at (21,16) {\texttt{search(2220,420, ...)}};
+    \pause
+    \draw [dashed] (5,15) -- (0,13);
+    \node [] at (0,12) {\texttt{search(1880,400, ...)}};
+    \pause
+    \draw [dashed] (5,15) -- (10,13);
+    \node [] at (10,12) {\texttt{search(2040,360, ...)}};
+    \pause
+    \draw [dashed] (0,11) -- (-2,9);    
+    \draw [dashed] (0,11) -- (2,9);    
+    \draw [dashed] (10,11) -- (8,9);    
+    \draw [dashed] (10,11) -- (12,9);    
+    \draw [dashed] (21,15) -- (19,13);    
+    \draw [dashed] (21,15) -- (23,13);    
+\end{tikzpicture}
+\end{figure}
+
+{\em What is the depth of this tree? How does it relate to the size of the resources?}
+\end{frame}
+
+\begin{frame}{complexity}
+
+\begin{figure} 
+ \includegraphics[scale=0.5]{doomed.png}
+\end{figure}
+
+
+\end{frame}
+
+\begin{frame}{the MxT space}
+
+\begin{figure}
+\begin{tikzpicture}[
+        scale=0.6,
+        important line/.style={thick},
+        axis/.style={very thick, ->, >=stealth'},
+        dashed line/.style={dashed, thin},
+        pile/.style={thick, ->, >=stealth', shorten >=2pt},
+        every node/.style={color=black}
+    ]
+
+    % axis
+    \draw[axis] (-1,0)  -- (10,0) node(xline)[right] {material};
+    \draw[axis] (0,-1) -- (0,10) node(yline)[above] {time};
+    \pause
+    \draw [pile, color=red] (0,0) -- +(2.6,2) node()[below right]{hinge}; 
+    \pause
+    \draw [pile, color=green] (0,0) -- +(1.8,3) node()[above left]{latch}; 
+    % --------------------------------------
+    \pause
+    \draw [pile, color=red] (2.6,2) -- +(2.6,2); 
+    \pause
+    \draw [pile, color=green] (2.6,2) -- +(1.8,3); 
+    \pause
+    \draw [pile, color=red] (1.8,3) -- +(2.6,2) ; 
+    \pause
+    \draw [pile, color=green] (1.8,3) -- +(1.8,3); 
+    % --------------------------------------
+
+    \draw [pile, color=red] (5.2,4) -- +(2.6,2); 
+    \draw [pile, color=green] (5.2,4) -- +(1.8,3); 
+    \draw [pile, color=red] (4.4,5) -- +(2.6,2); 
+    \draw [pile, color=green] (4.4,5) -- +(1.8,3); 
+    \draw [pile, color=red] (3.6,6) -- +(2.6,2); 
+    \draw [pile, color=green] (3.6,6) -- +(1.8,3); 
+
+
+\end{tikzpicture}
+\end{figure}
+\end{frame}
+
+\begin{frame}{dynamic programming}
+
+\vspace{40pt}\hspace{100pt}\parbox[l][100pt][l]{200pt}{Problem divided into simpler parts that can be solved independently, but \pause
+
+-  the parts share sub-problems that can be reused.}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{Fibonacci}
+
+\begin{columns}
+ \begin{column}{0.5\linewidth}
+\begin{verbatim}
+def fib(0) do 0 end
+def fib(1) do 1 end
+def fib(n) do
+    fib(n-1) + fib(n-2)
+end
+\end{verbatim}
+ \end {column}
+\pause
+ \begin{column}{0.5\linewidth}
+\begin{verbatim}
+def fib(0) do {0, nil} end
+\end{verbatim}
+\pause
+\begin{verbatim}
+def fib(1) do {1, 0} end
+\end{verbatim}
+\pause
+\begin{verbatim}
+def fib(n) do
+    {n1, n2} = fib(n-1) 
+\end{verbatim}
+\pause
+\begin{verbatim}
+    {n1+n2, n1}
+end
+\end{verbatim}
+ \end {column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{memory}
+
+Let's add a memory to the search function. 
+
+\begin{verbatim}
+def memory(m, t, h, l) do
+  mem = Memory.new()
+  {solution, _} = search(m, t, h, l, mem)
+  solution
+edn
+\end{verbatim}
+
+\begin{verbatim}
+def check(m, t, h, l, mem) do
+  case Memory.lookup({m,t}, mem) of
+    nil ->
+      {solution, mem} = search(m, t, h, l, mem)
+      {solution, Memory.store({m,t}, solution, mem)}
+    {_, solution} -> 
+      {solution, mem}
+  end
+end
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{memory}
+
+\begin{verbatim}
+def search(m, t,..., mem) when ... do 
+\end{verbatim}
+\pause
+\begin{verbatim}
+    {..., mem} = check(...,  mem), 
+\end{verbatim}
+\pause
+\begin{verbatim}
+    {..., mem} = check(..., mem), 
+\end{verbatim}
+\pause
+\begin{verbatim}
+    if ...  do
+      {..., mem};
+\end{verbatim}
+\pause
+\begin{verbatim}
+    else 
+      {..., mem}
+    end
+  end
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{a memory}
+
+\vspace{10pt}\pause
+
+the {\em key} is a tuple \texttt{\{m,t\}}, defining the remaining resource (the point in the mxt space).
+
+\vspace{10pt}\pause
+
+The {\em value} is the number of hinges and latches and best profit possible at this point \texttt{\{h, l, p\}}.
+
+\vspace{10pt}\pause
+
+The functions we should implement are:
+
+\begin{itemize}
+\pause \item \texttt{new()}: return a new memory
+\pause \item \texttt{store(k, v, mem)}: return a new memory where the key \texttt{k} is associated with the value \texttt{V}
+\pause \item \texttt{lookup(k, mem)}: return the value \texttt{\{k,v\}} or \texttt{nil} if not found
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{a key-value list}
+
+Let's implement the memory as a list of tuples \texttt{\{k, v\}}.
+
+\pause \vspace{10pt}
+\begin{verbatim}
+defmodule Memory do
+
+def new() do [] end
+\end{verbatim}
+
+\pause\vspace{5pt}
+\begin{verbatim}
+def store(k, v, mem) do
+\end{verbatim}
+\pause
+\begin{verbatim}
+   [{k, v}|mem]
+end
+\end{verbatim}
+
+\pause\vspace{5pt}
+\begin{verbatim}
+def lookup(_, []) do nil end
+\end{verbatim}\pause
+\begin{verbatim}
+def lookup(k, [{k,v}|_]) do {k, v} end
+\end{verbatim}
+\pause
+\begin{verbatim}
+def lookup(k, [_|rest]) do lookup(k, rest) end
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{benchmark}
+
+
+\hspace{100pt}\begin{tabular}{|c|c|c|c|c|}
+\hline 
+       m & t & N & search & memory \\
+\hline
+    1000 &    200 &  1200 &     0.01  &  0.02   \\
+    2000 &    400 &  2400 &     0.06  &  0.05   \\
+    3000 &    600 &  3600 &     1.0   &  0.07   \\
+    4000 &    800 &  4800 &    13    &  0.15  \\
+\pause 
+    5000 &   1000 &  6000 &   210  &  0.29   \\
+\pause
+    6000 &   1200 &  7200 &  2800  &  0.51    \\
+\pause
+    7000 &   1400 &  8400 & 47000  &  0.85    \\
+
+
+\hline
+\end{tabular}
+
+\end{frame}
+
+\begin{frame}[fragile]{complexity}
+
+\begin{columns}
+\begin{column}{0.5\linewidth}
+\begin{tikzpicture}[
+        scale=0.5,
+        important line/.style={thick},
+        axis/.style={very thick, ->, >=stealth'},
+        dashed line/.style={dashed, thin},
+        pile/.style={thick, ->, >=stealth', shorten >=2pt},
+        every node/.style={color=black}
+    ]
+    % axis
+    \draw[axis] (-1,0)  -- (10,0) node(xline)[right] {material};
+    \draw[axis] (0,-1) -- (0,10) node(yline)[above] {time};
+    \draw [pile, color=red] (0,0) -- +(2.6,2);
+
+    % --------------------------------------
+    \draw [pile, color=red] (2.6,2) -- +(2.6,2); 
+    \draw [pile, color=red] (5.2,4) -- +(2.6,2); 
+    \draw [pile, color=green] (5.2,4) -- +(1.8,3);
+
+\pause
+    \draw [pile, color=green] (2.6,2) -- +(1.8,3); 
+\pause
+    \draw [pile, dashed, color=gray] (4.4,5) -- +(2.6,2);
+\pause
+    \draw [pile, color=green] (4.4,5) -- +(1.8,3);
+\pause
+    % --------------------------------------
+\pause
+    \draw [pile, color=green] (0,0) -- +(1.8,3);
+\pause
+    \draw [pile, dashed, color=gray] (1.8,3) -- +(2.6,2) ; 
+\pause
+    \draw [pile, color=green] (1.8,3) -- +(1.8,3); 
+\pause
+    \draw [pile, dashed, color=gray] (3.6,6) -- +(2.6,2); 
+\pause
+    \draw [pile, color=green] (3.6,6) -- +(1.8,3); 
+\end{tikzpicture}
+
+\end{column}
+\begin{column}{0.5\linewidth}
+\begin{verbatim}
+lookup(_, []) -> 
+          false;
+lookup(k, [{k,v}|_]) -> 
+          {k, v};
+lookup(k, [_|Rest]) -> 
+          lookup(k, Rest).
+\end{verbatim}
+
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{lists:keyfind/3}
+
+\vspace{20pt}\pause
+\begin{verbatim}
+df lookup(k, mem) do List.keyfind(mem, k, 0) end
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{a map}
+
+Why not implement the memory as a hash map? 
+
+\vspace{10pt}
+\begin{verbatim}
+defmodule Better do
+
+def new() do %{} end
+\end{verbatim}
+\pause
+\begin{verbatim}    
+def store(k,v, mem) do 
+  Map.put(mem, k, v)
+end
+\end{verbatim}
+\pause
+\begin{verbatim}        
+def lookup(k, mem) do
+  Map.get(mem, k)
+end
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{benchmark}
+
+
+\hspace{100pt}\begin{tabular}{|c|c|c|c|c|}
+\hline 
+       m & t & N & list & map\\
+\hline
+        10&          2&         12&        0.10&     0.02\\
+        20&          4&         24&        0.47&     0.06\\
+        30&          6&         36&        2.2&      0.16\\
+        40&          8&         48&        7.0&      0.32\\
+        50&         10&         60&       17&        0.50\\
+        60&         12&         72&       36&        0.78\\
+        70&         14&         84&       66&        1.1\\
+        80&         16&         96&      110&        1.5\\
+        90&         18&        108&      190&        2.0\\
+       100&         20&        120&      300&        2.6\\
+\hline
+\end{tabular}
+
+\vspace{10pt}
+{\em Material = 100*m, Time = 100*t, all times in ms}
+
+\end{frame}
+
+\begin{frame}{dynamic programming}
+
+\vspace{40pt}\hspace{80pt}\parbox[l][60pt][l]{240pt}{Problem divided into simpler parts that can be solved independently, but 
+
+\vspace{10pt}\pause
+-  the parts share subproblems that can be reused and,
+
+\vspace{10pt}\pause
+-  we can memorize solutions of subproblems.
+}
+
+
+
+\end{frame}
+
+
+\begin{frame}{can we do better}
+
+\begin{figure}
+\begin{tikzpicture}[
+        scale=0.5,
+        important line/.style={thick},
+        axis/.style={very thick, ->, >=stealth'},
+        dashed line/.style={dashed, thin},
+        pile/.style={thick, ->, >=stealth', shorten >=2pt},
+        every node/.style={color=black}
+    ]
+    % axis
+    \draw[axis] (-1,0)  -- (10,0) node(xline)[right] {material};
+    \draw[axis] (0,-1) -- (0,10) node(yline)[above] {time};
+
+    \draw [pile, color=red] (0,0) -- +(2.6,2);
+    \pause
+    \draw [pile, color=red] (2.6,2) -- +(2.6,2); 
+    \pause
+    \draw [pile, color=red] (5.2,4) -- +(2.6,2); 
+    \pause
+    \draw [pile, color=red] (7.8,6) -- +(2.6,2); 
+    % --------------------------------------
+    \pause
+    \draw [pile, color=green] (7.8,6) -- +(1.8,3);     
+    % --------------------------------------
+    \pause
+    \draw [pile, color=green] (5.2,4) -- +(1.8,3); 
+    \pause
+    \draw [pile, color=green] (7,7) -- +(1.8,3); 
+    \pause
+    % --------------------------------------
+    \draw [pile, color=green] (2.6,2) -- +(1.8,3); 
+    \draw [pile, color=green] (4.4,5) -- +(1.8,3); 
+    \draw [pile, color=green] (6.2,8) -- +(1.8,3); 
+    % --------------------------------------
+    \pause
+    \draw [pile, color=green] (0,0) -- +(1.8,3);
+    \draw [pile, color=green] (1.8,3) -- +(1.8,3); 
+    \draw [pile, color=green] (3.6,6) -- +(1.8,3); 
+    \draw [pile, color=green] (5.4,9) -- +(1.8,3); 
+\end{tikzpicture}
+\end{figure}
+
+\pause
+{\em What is the time complexity of this algorithm?}
+
+\end{frame}
+
+\begin{frame}{ordered}
+
+  Assume $n$ is the search space i.e. proportional to $m \times t$. 
+  
+\begin{figure}
+ \includegraphics[scale=0.5]{ordered.png}
+\end{figure}
+\pause
+{\em What is the time complexity of the memory based algorithm?}
+
+\end{frame}
+
+
+\begin{frame}{shortest path}
+
+
+Find the shortest path from one node to another.
+
+\begin{figure}
+\begin{tikzpicture}[scale=1,
+        ->,>=stealth',shorten >=1pt,auto, node distance=80pt, semithick]
+
+  \tikzstyle{every state}=[fill=red,draw=none,text=white]
+
+  \node[initial,state] (A)                    {A};
+  \node[state]         (B) [above right of=A] {B};
+  \node[state]         (D) [below right of=A] {D};
+  \node[state]         (C) [below right of=B] {C};
+  \node[state]         (E) [above right of=C] {E};
+  \node[state]         (F) [below right of=C] {F};
+  \node[state]         (G) [below right of=E] {G};
+
+  \path (A) edge              node {2} (B)
+            edge              node {5} (D)
+        (B) edge              node {2} (C)
+            edge              node {3} (E)
+        (C) edge              node {6} (E)
+            edge              node {1} (G)
+        (D) edge              node {3} (C)
+            edge              node {2} (F)
+        (E) edge              node {2} (G)
+        (F) edge              node {3} (G)
+            edge              node {1} (C);
+\end{tikzpicture}
+\end{figure}
+
+{\em We assume the graph is a ``Directed Acyclic Graph'' (DAG)}
+
+\end{frame}
+
+\begin{frame}{dynamic programming aproach}
+
+\begin{columns}
+ \begin{column}{0.4\linewidth}
+\begin{figure}
+\begin{tikzpicture}[scale=0.6,
+        ->,>=stealth',shorten >=1pt,auto, node distance=40pt, semithick]
+
+  \tikzstyle{every state}=[fill=red,draw=none,text=white,minimum size=10pt]
+
+  \node[initial,state] (A)                    {A};
+  \node[state]         (B) [above right of=A] {B};
+  \node[state]         (D) [below right of=A] {D};
+  \node[state]         (C) [below right of=B] {C};
+  \node[state]         (E) [above right of=C] {E};
+  \node[state]         (F) [below right of=C] {F};
+  \node[state]         (G) [below right of=E] {G};
+
+  \path (A) edge              node {2} (B)
+            edge              node {5} (D)
+        (B) edge              node {2} (C)
+            edge              node {3} (E)
+        (C) edge              node {6} (E)
+            edge              node {1} (G)
+        (D) edge              node {3} (C)
+            edge              node {2} (F)
+        (E) edge              node {2} (G)
+        (F) edge              node {3} (G)
+            edge              node {1} (C);
+\end{tikzpicture}
+\end{figure}
+ \end{column}
+ \begin{column}{0.6\linewidth}
+   The {\em dynamic programming approach}: 
+   \begin{itemize}
+     \item find a recursive solution
+     \item memorize solutions to subproblems
+   \end{itemize}
+ \end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{dynamic programming aproach}
+
+\begin{columns}
+ \begin{column}{0.4\linewidth}
+  If we are in the final node the distance is zero and the path is \[\].
+
+  \vspace{10pt}
+  Otherwise, for each outgoing edge: find the shortest path from the
+  reached node and return the shortest given the distance to the node.
+
+ \end{column}
+ \begin{column}{0.6\linewidth}
+  \begin{verbatim}
+shortest(From, From, _) -> {0, []};
+  \end{verbatim}
+  \pause
+  \begin{verbatim}
+shortest(From, to, Graph) ->
+    Next = next(From, Graph),
+    Distances = distances(Next, to, Graph),
+    select(Distances).
+  \end{verbatim}
+  \pause {\em If no path is found we should return {\tt \{inf, na\}}}.
+ \end{column}
+\end{columns}
+
+
+
+\end{frame}
+
+\begin{frame}[fragile]{a graph}
+
+How do we represent a graph?
+
+\begin{columns}
+ \begin{column}{0.4\linewidth}
+\begin{figure}
+\begin{tikzpicture}[scale=0.6,
+        ->,>=stealth',shorten >=1pt,auto, node distance=40pt, semithick]
+
+  \tikzstyle{every state}=[fill=red,draw=none,text=white,minimum size=10pt]
+
+  \node[initial,state] (A)                    {A};
+  \node[state]         (B) [above right of=A] {B};
+  \node[state]         (D) [below right of=A] {D};
+  \node[state]         (C) [below right of=B] {C};
+  \node[state]         (E) [above right of=C] {E};
+  \node[state]         (F) [below right of=C] {F};
+  \node[state]         (G) [below right of=E] {G};
+
+  \path (A) edge              node {2} (B)
+            edge              node {5} (D)
+        (B) edge              node {2} (C)
+            edge              node {3} (E)
+        (C) edge              node {6} (E)
+            edge              node {1} (G)
+        (D) edge              node {3} (C)
+            edge              node {2} (F)
+        (E) edge              node {2} (G)
+        (F) edge              node {3} (G)
+            edge              node {1} (C);
+\end{tikzpicture}
+\end{figure}
+ \end{column}
+ \begin{column}{0.6\linewidth}
+  As a list of edges: 
+
+\texttt{[\{a, b, 2\}, \{a, d, 5\}, \{b, c, 2\} ... ]}
+
+\pause \vspace{10pt}
+
+  As a list of nodes:
+
+\begin{verbatim}
+[{a, [{b,2}, {d,5}]}, 
+ {b, [{c,2}, {e,3}]}, 
+ ...]
+\end{verbatim}
+
+\pause \vspace{10pt}
+
+  As a matrix of edges:
+
+\begin{verbatim}
+{{n,2,n,5,n,n,n}, 
+ {n,n,2,n,3,n,n}, 
+  ...}}
+\end{verbatim}
+
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{a graph}
+
+How about this?
+
+\begin{columns}
+ \begin{column}{0.4\linewidth}
+\begin{figure}
+\begin{tikzpicture}[scale=0.6,
+        ->,>=stealth',shorten >=1pt,auto, node distance=40pt, semithick]
+
+  \tikzstyle{every state}=[fill=red,draw=none,text=white,minimum size=10pt]
+
+  \node[initial,state] (A)                    {A};
+  \node[state]         (B) [above right of=A] {B};
+  \node[state]         (D) [below right of=A] {D};
+  \node[state]         (C) [below right of=B] {C};
+  \node[state]         (E) [above right of=C] {E};
+  \node[state]         (F) [below right of=C] {F};
+  \node[state]         (G) [below right of=E] {G};
+
+  \path (A) edge              node {2} (B)
+            edge              node {5} (D)
+        (B) edge              node {2} (C)
+            edge              node {3} (E)
+        (C) edge              node {6} (E)
+            edge              node {1} (G)
+        (D) edge              node {3} (C)
+            edge              node {2} (F)
+        (E) edge              node {2} (G)
+        (F) edge              node {3} (G)
+            edge              node {1} (C);
+\end{tikzpicture}
+\end{figure}
+ \end{column}
+ \begin{column}{0.6\linewidth}
+\begin{verbatim}
+ G = {:g, []},
+ E = {:e, [{2, g}]},
+ C = {:c, [{1, g}, {6, e}]},
+ F = {:f, [{1, c}, {3, g}]},
+ D = {:d, [{2, f}, {3, c}]},
+ B = {:b, [{2, c}, {3, e}]},
+ A = {:a, [{2, b}, {5, d}]}
+\end{verbatim}
+\pause
+{\em What has this to do with topological order?}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]{next}
+
+  Assume we represent a graph by a list of edges:
+
+  \vspace{10pt}\hspace{40pt}\texttt{[\{a, b, 2\}, \{a, d, 5\}, \{b, c, 2\} ... ]}  
+  
+\begin{verbatim}
+next(from, []) -> [];
+next(from, [{from, t, d}|rest]) -> [{t, d}|next(from, rest)];
+next(from, [_|rest]) -> next(from, rest).
+\end{verbatim}
+
+\pause\vspace{10pt} 
+{\em or, if we use the lists library}
+
+\begin{verbatim}
+next(from, graph) ->
+    lists:foldl(fun({f,t,d}, N) -> 
+                        if f == from  -> [{t,d}|n];
+                           true -> N
+                        end
+                end,
+                [],graph).
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{distances}
+
+  Find the distance to the destination from each of the next steps.
+
+\vspace{20pt} \pause
+  
+\begin{verbatim}
+distances(next, to, graph) ->
+\end{verbatim}
+\pause
+\begin{verbatim}
+    lists:map(fun({t,d}) ->   
+\end{verbatim}
+\pause
+\begin{verbatim}
+                   case shortest(t, to, graph) of 
+\end{verbatim}
+\pause
+\begin{verbatim}
+                        {inf, na} -> {inf, na};
+\end{verbatim}
+\pause
+\begin{verbatim}
+                        {n, path} -> {d+n, [t|path]}
+\end{verbatim}
+\pause
+\begin{verbatim}
+                   end
+\end{verbatim}
+\begin{verbatim}
+                end, Next).    
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{select}
+
+Select the smallest path in the list: \texttt{[\{9, [d,c,g]\}, ..]}
+
+\vspace{10pt}\pause
+
+\begin{verbatim}
+select(Distances) ->
+    lists:foldl(fun({sd,_}=s, {ad,_}=a) ->
+                        if 
+                            sd < ad ->
+                                s;
+                            true ->
+                                a
+                        end
+                end,
+                {inf, na},
+                distances).
+\end{verbatim}
+
+\pause\vspace{10pt}{\em If the list is empty, the result could be {\tt \{inf, na\}}}.
+\end{frame}
+
+\begin{frame}[fragile]{dynamic programming aproach}
+
+\begin{columns}
+ \begin{column}{0.4\linewidth}
+  If we are in the final node the distance is zero and the path is \[\].
+
+  \vspace{10pt}
+  Otherwise, for each outgoing edge: find the shortest path from the
+  reached node and return the shortest given the distance to the node.
+
+ \end{column}
+ \begin{column}{0.6\linewidth}
+   \begin{verbatim}
+shortest(from, from, _) -> {0, []};
+  \end{verbatim}
+  \pause
+  \begin{verbatim}
+shortest(from, to, Graph) ->
+    Next = next(from, Graph),
+    Distances = distances(Next, to, Graph),
+    select(Distances).
+  \end{verbatim}
+ \end{column}
+\end{columns}
+
+\pause\vspace{20pt}{\em What is the complexity?}
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]{let's add a memory}
+
+\begin{verbatim}
+dynamic(from, t, Graph) ->
+    mem = new(),
+    shortest(from, to, Graph, mem).
+\end{verbatim}
+
+\pause\vspace{10pt}
+
+{\em shortest(from, to, Graph, mem) should return \{Shortest path, Updated memmory\}}
+
+\pause\vspace{10pt}
+\begin{verbatim}
+shortest(from, from, _, mem) ->
+    {{0, []}, ...};
+shortest(from, to, Graph, mem) ->
+    Next = next(from, Graph),
+    {..., ...} = distances(Next, to, Graph, mem),
+    Shortest = select(...),
+    ... = store(from, ..., ..),
+    {..., ...}.
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{shortest path given memeory}
+
+\pause\vspace{10pt}
+
+{\em For all next steps, find the shortesta path.}
+
+\pause\vspace{10pt}
+
+\begin{verbatim}
+distances(Next, to, Graph, mem) ->
+    lists:foldl(fun({_, t, D}, {Dis, m}) ->     
+                        {{N, path}, Upd} = check(t, to, Graph, m),
+                        {[{D+N, [t|path]}|Dis], Upd}
+                end, 
+                {[],mem},
+                Next).    
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{shortest path given memeory}
+
+{\em If a solution exists use it, if not - compute it.}
+
+\begin{verbatim}
+check(from, to, Graph, mem) ->
+    case lookup(from, mem) of
+        {from, Solution} ->
+            {Solution, mem};
+        false ->
+            shortest(from, to, Graph, mem)
+    end.
+\end{verbatim}
+\end{frame}
+
+
+
+\begin{frame}{what if?}
+
+\begin{figure}
+\begin{tikzpicture}[scale=1,
+        ->,>=stealth',shorten >=1pt,auto, node distance=80pt, semithick]
+
+  \tikzstyle{every state}=[fill=red,draw=none,text=white,minimum size=10pt]
+
+  \node[initial,state] (a)                    {a};
+  \node[state]         (b) [above right of=a] {b};
+  \node[state]         (d) [below right of=a] {d};
+  \node[state]         (c) [below right of=b] {c};
+  \node[state]         (e) [above right of=c] {e};
+  \node[state]         (f) [below right of=c] {f};
+  \node[state]         (g) [below right of=e] {g};
+
+  \path (A) edge              node {2} (b)
+            edge              node {5} (d)
+        (B) edge              node {2} (c)
+            edge              node {3} (e)
+        (C) edge              node {6} (e)
+            edge              node {3} (d)
+            edge              node {1} (g)
+        (D) edge              node {2} (f)
+        (E) edge              node {2} (g)
+        (F) edge              node {3} (g)
+            edge              node {1} (c);
+\end{tikzpicture}
+\end{figure}
+
+\end{frame}
+
+\begin{frame}{Summary}
+
+
+\vspace{40pt}\hspace{80pt}\parbox[l][60pt][l]{240pt}{Problem divided into simpler parts that can be solved independently, but 
+
+\vspace{10pt}\pause
+-  the parts share subproblems that can be reused and,
+
+\vspace{10pt}\pause
+-  we can memorize solutions of subproblems.
+}
+
+\end{frame}
+\end{document}
