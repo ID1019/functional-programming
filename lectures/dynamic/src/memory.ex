@@ -11,7 +11,10 @@ defmodule Memory do
   end
     
   def lookup(k, mem) do
-    List.keyfind(mem, k, 0)
+    case List.keyfind(mem, k, 0) do
+      nil -> nil
+      {_, v} -> v
+    end
   end
 
 end

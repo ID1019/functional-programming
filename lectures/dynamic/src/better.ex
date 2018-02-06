@@ -1,6 +1,6 @@
 defmodule Better do
 
-  @docmodule """
+  @moduledoc """
   The memory module bbut now using a map.
   """
 

@@ -39,91 +39,67 @@ defmodule Hinges do
   end
   
 
-  @doc """
-  The search/4 solution can be extended with a memory and then bring
-  the compexity down to O(n^2) (or more precise O(m*t) ). 
+  @doc """ 
+
+  The memory/4 solution is extended with a memory and then bring the
+  compexity down to O(n^2) (or more precise O(m*t)). Note that there
+  is a hidden sot of doing the memory lookup. As the memory grows this
+  becomes a O(n) factor that can not be ignored.
   """
 
   def memory(m, t, h, l) do
-    mem = Memory.new()
-    {solution, _} = search(m, t, h, l, mem)
+    memory(m, t, h, l, Memory)
+  end
+
+  def map(m, t, h, l) do
+    memory(m, t, h, l, Better)
+  end  
+    
+  
+  def memory(m, t, h, l, module) do
+    mem = module.new()
+    {solution, _} = search(m, t, h, l, mem, module)
     solution
   end
 
-  def check(m, t, h, l, mem) do
-    case Memory.lookup({m,t}, mem) do
+  def check(m, t, h, l, mem, module) do
+    case module.lookup({m,t}, mem) do
       nil ->
-	{solution, mem} = search(m, t, h, l, mem)
-	{solution, Memory.store({m,t}, solution, mem)}
-      {_, solution} -> 
+	{solution, mem} = search(m, t, h, l, mem, module)
+	{solution, module.store({m,t}, solution, mem)}
+      solution -> 
 	{solution, mem}
     end
   end
-  def search(m, t, {hm, ht, hp}=h, {lm, lt, lp}=l, mem) when (m >= hm) and (t >= ht) and (m >= lm) and (t >= lt) do
-    {{hi, li, pi}, mem} = check((m-hm), (t-ht), h, l, mem)
-    {{hj, lj, pj}, mem} = check((m-lm), (t-lt), h, l, mem)
+
+  def search(m, t, {hm, ht, hp}=h, {lm, lt, lp}=l, mem, module) when (m >= hm) and (t >= ht) and (m >= lm) and (t >= lt) do
+    {{hi, li, pi}, mem} = check((m-hm), (t-ht), h, l, mem, module)
+    {{hj, lj, pj}, mem} = check((m-lm), (t-lt), h, l, mem, module)
     if (pi+hp) > (pj+lp) do
       {{(hi+1), li, (pi+hp)}, mem}
     else
       {{hj, (lj+1), (pj+lp)}, mem}
     end
   end
-  def search(m, t, {hm, ht, hp}=h, l, mem) when ((m >= hm) and (t >= ht)) do
-    {{hn, ln, p}, mem} = check((m-hm), (t-ht), h, l, mem)
+  def search(m, t, {hm, ht, hp}=h, l, mem, module) when ((m >= hm) and (t >= ht)) do
+    {{hn, ln, p}, mem} = check((m-hm), (t-ht), h, l, mem, module)
     {{hn+1, ln, (p+hp)}, mem}
   end
-  def search(m, t, h, {lm, lt, lp}=l, mem) when ((m >= lm) and (t >= lt)) do
-    {{hn, ln, p}, mem} = check((m-lm), (t-lt), h, l, mem)
+  def search(m, t, h, {lm, lt, lp}=l, mem, module) when ((m >= lm) and (t >= lt)) do
+    {{hn, ln, p}, mem} = check((m-lm), (t-lt), h, l, mem, module)
     {{hn, ln+1, p+lp}, mem}
   end
-  def search(_, _, _,  _, mem)  do
+  def search(_, _, _,  _, mem, _)  do
     {{0,0,0}, mem}
   end
-
-  @doc """
-  In the ordered/4 version we only check sequences that start with
-  hinges and continues with latches. This brings the computation time
-  down to O(n^2) same as the easy one.
-
-  Note that for this problem there is no point in trying to save
-  answers since the computation does not recompute any points
-  (unless the hinges and latches have the same parameters). If we
-  had three items the computations would make duplicates and it
-  could be profitable to store computetd values.
-  """
-
-  def ordered(m, t, {hm, ht, _}, l) when (m < hm) or (t < ht) do
-    {n, p} = then_latches(m, t, l)
-    {0, n, p}
-  end
-  def ordered(m, t, {hm, ht, hp}=h, l) do
-    {hi, li, pi} = ordered((m-hm), (t-ht), h, l)
-    latches = then_latches(m, t, l)
-    {lj, pj} = latches
-    if (pi+hp) > pj do
-      {(hi+1), li, (pi+hp)}
-    else
-      {0, lj, pj}
-    end
-  end
-
-  def then_latches(m, t, {lm, lt, _}) when (m < lm) or (t < lt) do
-    {0, 0}
-  end
-  def then_latches(m, t, {lm, lt, lp}=l) do
-    {n, p} = then_latches((m-lm), (t-lt), l)
-    {n+1, p+lp}
-  end
-
-
 
 
   @doc """
 
   The easy way is to simple generate all possible combinations of
-  the number of hinges and latches and then check 1/ is it possible
+  the number of hinges and latches and then check 1/ that it is possible
   to make them given the resources and 2/ what the profit would
-  be. the algorithm is O(n^2) so it's ok complexity wise. the
+  be. the algorithm is O(n^2) so it's ok complexity wise. The
   solution relies on the fact that we can compute a finite set of
   possible solutions and then iterate over these.
   """
