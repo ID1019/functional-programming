@@ -470,7 +470,7 @@ def lookup(k, [_|rest]) do lookup(k, rest) end
 
 \hspace{100pt}\begin{tabular}{|c|c|c|c|c|}
 \hline 
-       m & t & N & search & memory \\
+       m & t & m*t & search & memory \\
 \hline
     1000 &    200 &  1200 &     0.01  &  0.02   \\
     2000 &    400 &  2400 &     0.06  &  0.05   \\
@@ -586,7 +586,7 @@ end
 
 \hspace{100pt}\begin{tabular}{|c|c|c|c|c|}
 \hline 
-       m & t & N & list & map\\
+       m & t & m+t & list & map\\
 \hline
         10&          2&         12&        0.10&     0.02\\
         20&          4&         24&        0.47&     0.06\\
@@ -671,21 +671,8 @@ end
 
 \end{frame}
 
-\begin{frame}{ordered}
-
-  Assume $n$ is the search space i.e. proportional to $m \times t$. 
-  
-\begin{figure}
- \includegraphics[scale=0.5]{ordered.png}
-\end{figure}
-\pause
-{\em What is the time complexity of the memory based algorithm?}
-
-\end{frame}
-
 
 \begin{frame}{shortest path}
-
 
 Find the shortest path from one node to another.
 
@@ -777,20 +764,19 @@ Find the shortest path from one node to another.
  \end{column}
  \begin{column}{0.6\linewidth}
   \begin{verbatim}
-shortest(From, From, _) -> {0, []};
+def shortest(from, from, _) do  {0, []} end
   \end{verbatim}
   \pause
   \begin{verbatim}
-shortest(From, to, Graph) ->
-    Next = next(From, Graph),
-    Distances = distances(Next, to, Graph),
-    select(Distances).
+def shortest(from, to, graph) do
+  next = next(from, graph)
+  distances = distances(next, to, graph)
+  select(distances)
+end
   \end{verbatim}
   \pause {\em If no path is found we should return {\tt \{inf, na\}}}.
  \end{column}
 \end{columns}
-
-
 
 \end{frame}
 
@@ -831,15 +817,15 @@ How do we represent a graph?
  \begin{column}{0.6\linewidth}
   As a list of edges: 
 
-\texttt{[\{a, b, 2\}, \{a, d, 5\}, \{b, c, 2\} ... ]}
+\texttt{[\{:a, :b, 2\}, \{:a, :d, 5\}, \{:b, :c, 2\} ... ]}
 
 \pause \vspace{10pt}
 
   As a list of nodes:
 
 \begin{verbatim}
-[{a, [{b,2}, {d,5}]}, 
- {b, [{c,2}, {e,3}]}, 
+[{:a, [{:b,2}, {:d,5}]}, 
+ {:b, [{:c,2}, {:e,3}]}, 
  ...]
 \end{verbatim}
 
@@ -848,8 +834,8 @@ How do we represent a graph?
   As a matrix of edges:
 
 \begin{verbatim}
-{{n,2,n,5,n,n,n}, 
- {n,n,2,n,3,n,n}, 
+{{nil,  2,nil,  5,nil,nil,nil}, 
+ {nil,nil,  2,nil,  3,nil,nil}, 
   ...}}
 \end{verbatim}
 
@@ -894,13 +880,13 @@ How about this?
  \end{column}
  \begin{column}{0.6\linewidth}
 \begin{verbatim}
- G = {:g, []},
- E = {:e, [{2, g}]},
- C = {:c, [{1, g}, {6, e}]},
- F = {:f, [{1, c}, {3, g}]},
- D = {:d, [{2, f}, {3, c}]},
- B = {:b, [{2, c}, {3, e}]},
- A = {:a, [{2, b}, {5, d}]}
+ g = {:g, []},
+ e = {:e, [{2, g}]},
+ c = {:c, [{1, g}, {6, e}]},
+ f = {:f, [{1, c}, {3, g}]},
+ d = {:d, [{2, f}, {3, c}]},
+ b = {:b, [{2, c}, {3, e}]},
+ a = {:a, [{2, b}, {5, d}]}
 \end{verbatim}
 \pause
 {\em What has this to do with topological order?}
@@ -910,12 +896,11 @@ How about this?
 \end{frame}
 
 
-
 \begin{frame}[fragile]{next}
 
-  Assume we represent a graph by a list of edges:
+  Assume we represent a graph by a list of ....:
 
-  \vspace{10pt}\hspace{40pt}\texttt{[\{a, b, 2\}, \{a, d, 5\}, \{b, c, 2\} ... ]}  
+  \vspace{10pt}\hspace{40pt}\texttt{[\{:a, :b, 2\}, \{:a, :d, 5\}, \{:b, :c, 2\} ... ]}  
   
 \begin{verbatim}
 next(from, []) -> [];

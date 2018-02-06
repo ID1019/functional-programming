@@ -1,11 +1,7 @@
 defmodule Memory do
 
   @moduledoc """
-  This module will handle a key value memory.
-  """
-
-  @doc """
-  new/0 will create a new memory
+  This module will handle a key value memory. Implemented a key-value list.
   """
   
   def new() do  [] end
