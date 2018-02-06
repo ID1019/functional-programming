@@ -370,7 +370,7 @@ def check(m, t, h, l, mem) do
     nil ->
       {solution, mem} = search(m, t, h, l, mem)
       {solution, Memory.store({m,t}, solution, mem)}
-    {_, solution} -> 
+    solution -> 
       {solution, mem}
   end
 end
@@ -456,7 +456,7 @@ end
 def lookup(_, []) do nil end
 \end{verbatim}\pause
 \begin{verbatim}
-def lookup(k, [{k,v}|_]) do {k, v} end
+def lookup(k, [{k,v}|_]) do v end
 \end{verbatim}
 \pause
 \begin{verbatim}
@@ -472,18 +472,16 @@ def lookup(k, [_|rest]) do lookup(k, rest) end
 \hline 
        m & t & m*t & search & memory \\
 \hline
-    1000 &    200 &  1200 &     0.01  &  0.02   \\
-    2000 &    400 &  2400 &     0.06  &  0.05   \\
-    3000 &    600 &  3600 &     1.0   &  0.07   \\
-    4000 &    800 &  4800 &    13    &  0.15  \\
+      1000&        200&       1200&       0.01&       0.03  \\
+      2000&        400&       2400&       0.08&       0.08  \\
+      3000&        600&       3600&       0.71&       0.13  \\
+      4000&        800&       4800&      10.13&       0.35  \\
 \pause 
-    5000 &   1000 &  6000 &   210  &  0.29   \\
+      5000&       1000&       6000&     114.45&       0.42 \\
 \pause
-    6000 &   1200 &  7200 &  2800  &  0.51    \\
+      6000&       1200&       7200&    1867.23&       0.80 \\
 \pause
-    7000 &   1400 &  8400 & 47000  &  0.85    \\
-
-
+      7000&       1400&       8400&   32147.43&       1.28 \\
 \hline
 \end{tabular}
 
@@ -534,25 +532,15 @@ def lookup(k, [_|rest]) do lookup(k, rest) end
 \end{column}
 \begin{column}{0.5\linewidth}
 \begin{verbatim}
-lookup(_, []) -> 
-          false;
-lookup(k, [{k,v}|_]) -> 
-          {k, v};
-lookup(k, [_|Rest]) -> 
-          lookup(k, Rest).
+def lookup(_, []) -> nil end
+def lookup(k, [{k,v}|_]) do v end
+def lookup(k, [_|rest]) do 
+  lookup(k, rest)
+end
 \end{verbatim}
 
 \end{column}
 \end{columns}
-
-\end{frame}
-
-\begin{frame}[fragile]{lists:keyfind/3}
-
-\vspace{20pt}\pause
-\begin{verbatim}
-df lookup(k, mem) do List.keyfind(mem, k, 0) end
-\end{verbatim}
 
 \end{frame}
 
@@ -588,21 +576,23 @@ end
 \hline 
        m & t & m+t & list & map\\
 \hline
-        10&          2&         12&        0.10&     0.02\\
-        20&          4&         24&        0.47&     0.06\\
-        30&          6&         36&        2.2&      0.16\\
-        40&          8&         48&        7.0&      0.32\\
-        50&         10&         60&       17&        0.50\\
-        60&         12&         72&       36&        0.78\\
-        70&         14&         84&       66&        1.1\\
-        80&         16&         96&      110&        1.5\\
-        90&         18&        108&      190&        2.0\\
-       100&         20&        120&      300&        2.6\\
+      1000&       200&      1200&      0.03&      0.06\\
+      2000&       400&      2400&      0.11&      0.18\\
+      3000&       600&      3600&      0.34&      0.24\\
+      4000&       800&      4800&      0.82&      0.39\\
+      5000&      1000&      6000&      1.26&      0.31\\
+      6000&      1200&      7200&      1.53&      0.36\\
+      7000&      1400&      8400&      2.25&      0.34\\
+      8000&      1600&      9600&      2.94&      0.43\\
+      9000&      1800&     10800&      4.22&      0.49\\
+     10000&      2000&     12000&      6.22&      0.58\\
+     11000&      2200&     13200&      8.97&      0.69\\
+     12000&      2400&     14400&     12.55&      0.84\\
 \hline
 \end{tabular}
 
 \vspace{10pt}
-{\em Material = 100*m, Time = 100*t, all times in ms}
+{\em All times in ms}
 
 \end{frame}
 
@@ -898,28 +888,20 @@ How about this?
 
 \begin{frame}[fragile]{next}
 
-  Assume we represent a graph by a list of ....:
+  Assume we represent a graph by a map indxed by nodes.
 
-  \vspace{10pt}\hspace{40pt}\texttt{[\{:a, :b, 2\}, \{:a, :d, 5\}, \{:b, :c, 2\} ... ]}  
+  \vspace{10pt}\hspace{40pt}\texttt{[a: [b: 2, d: 5], b: [c: 2], ... ]}  
   
 \begin{verbatim}
-next(from, []) -> [];
-next(from, [{from, t, d}|rest]) -> [{t, d}|next(from, rest)];
-next(from, [_|rest]) -> next(from, rest).
+def new(nodes) do
+  Map.new(nodes)
+end
+
+def next(from, map) do 
+   Map.get(map, from, [])
+end
 \end{verbatim}
 
-\pause\vspace{10pt} 
-{\em or, if we use the lists library}
-
-\begin{verbatim}
-next(from, graph) ->
-    lists:foldl(fun({f,t,d}, N) -> 
-                        if f == from  -> [{t,d}|n];
-                           true -> N
-                        end
-                end,
-                [],graph).
-\end{verbatim}
 \end{frame}
 
 \begin{frame}[fragile]{distances}
@@ -963,20 +945,20 @@ Select the smallest path in the list: \texttt{[\{9, [d,c,g]\}, ..]}
 \vspace{10pt}\pause
 
 \begin{verbatim}
-select(Distances) ->
-    lists:foldl(fun({sd,_}=s, {ad,_}=a) ->
-                        if 
-                            sd < ad ->
-                                s;
-                            true ->
-                                a
-                        end
-                end,
-                {inf, na},
-                distances).
+  def select(distances) do
+    List.foldl(distances,
+      {:inf, nil},
+      fn ({d,_}=s,{ad,_}=acc) ->
+	if d < ad do
+	  s
+	else
+	  acc
+	end
+      end)
+  end
 \end{verbatim}
 
-\pause\vspace{10pt}{\em If the list is empty, the result could be {\tt \{inf, na\}}}.
+\pause\vspace{10pt}{\em If the list is empty, the result could be {\tt \{:inf, nil\}}}.
 \end{frame}
 
 \begin{frame}[fragile]{dynamic programming aproach}
@@ -992,14 +974,15 @@ select(Distances) ->
  \end{column}
  \begin{column}{0.6\linewidth}
    \begin{verbatim}
-shortest(from, from, _) -> {0, []};
+def shortest(from, from, _) -> {0, []} end
   \end{verbatim}
   \pause
   \begin{verbatim}
-shortest(from, to, Graph) ->
-    Next = next(from, Graph),
-    Distances = distances(Next, to, Graph),
-    select(Distances).
+def shortest(from, to, graph) do
+  next = Graph.next(from, graph)
+  distances = distances(next, to, graph)
+  select(distances)
+end
   \end{verbatim}
  \end{column}
 \end{columns}
@@ -1008,30 +991,31 @@ shortest(from, to, Graph) ->
 
 \end{frame}
 
-
-
 \begin{frame}[fragile]{let's add a memory}
 
 \begin{verbatim}
-dynamic(from, t, Graph) ->
-    mem = new(),
-    shortest(from, to, Graph, mem).
+def dynamic(from, t, graph) do
+  mem = Memory.new()
+  shortest(from, to, graph, mem)
+end
 \end{verbatim}
 
 \pause\vspace{10pt}
 
-{\em shortest(from, to, Graph, mem) should return \{Shortest path, Updated memmory\}}
+{\em shortest(from, to, graph, mem) should return \{shortest path, updated memmory\}}
 
 \pause\vspace{10pt}
 \begin{verbatim}
-shortest(from, from, _, mem) ->
-    {{0, []}, ...};
-shortest(from, to, Graph, mem) ->
-    Next = next(from, Graph),
-    {..., ...} = distances(Next, to, Graph, mem),
-    Shortest = select(...),
-    ... = store(from, ..., ..),
-    {..., ...}.
+def shortest(from, from, _, mem) do
+    {{0, []}, ...}
+end
+def shortest(from, to, graph, mem) do
+    Next = next(from, graph),
+    {..., ...} = distances(next, to, graph, mem)
+    shortest = select(...)
+    ... = Memory.store(from, ..., ..)
+    {..., ...}
+end
 \end{verbatim}
 
 \end{frame}
@@ -1045,13 +1029,17 @@ shortest(from, to, Graph, mem) ->
 \pause\vspace{10pt}
 
 \begin{verbatim}
-distances(Next, to, Graph, mem) ->
-    lists:foldl(fun({_, t, D}, {Dis, m}) ->     
-                        {{N, path}, Upd} = check(t, to, Graph, m),
-                        {[{D+N, [t|path]}|Dis], Upd}
-                end, 
-                {[],mem},
-                Next).    
+  def distances(next, to, graph, mem) do
+    List.foldl(next, {[], mem},
+      fn ({t,d}, {dis,mem}=acc) ->
+	case check(t, to, graph, mem) do
+	  {{:inf, _}, _} ->
+	    acc
+	  {{n, path}, mem} ->
+            {[{d+n, [t|path]}| dis ], mem}
+	end
+      end)
+  end
 \end{verbatim}
 \end{frame}
 
@@ -1060,13 +1048,15 @@ distances(Next, to, Graph, mem) ->
 {\em If a solution exists use it, if not - compute it.}
 
 \begin{verbatim}
-check(from, to, Graph, mem) ->
-    case lookup(from, mem) of
-        {from, Solution} ->
-            {Solution, mem};
-        false ->
-            shortest(from, to, Graph, mem)
-    end.
+  def check(from, to, graph, mem) do
+    case Memory.lookup(from, mem) do
+      {_, solution} ->
+	{solution, mem}
+      nil ->
+	{solution, mem} = shortest(from, to, graph, mem)
+        {solution,  Memory.store(from, solution, mem)}
+    end
+  end
 \end{verbatim}
 \end{frame}
 

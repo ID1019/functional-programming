@@ -1,7 +1,7 @@
 defmodule Graph do
 
   def sample() do
-    Map.new(
+    new(
       [a: [b: 4, c: 2],
        b: [c: 1, d: 2, e: 4],
        c: [f: 1, e: 3, h: 5],
@@ -12,8 +12,11 @@ defmodule Graph do
       ])
   end
 
+  def new(nodes) do
+    Map.new(nodes)
+  end
 
   def next(node, graph) do
-    Map.get(graph, node)
+    Map.get(graph, node, []) 
   end
 end
