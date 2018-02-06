@@ -186,7 +186,7 @@ defmodule Vector do
 end
 \end{minted}
 
-\subsection*{vector arithmetics}
+\subsection*{Vector arithmetic}
 
 The first functions, scalar multiplication, addition and subtraction
 should be quite easy to implement.
@@ -210,7 +210,7 @@ vector i.e. the users of this module will know that vectors are
 represented by tuples with three elements. This is not the best
 solution but unfortunately a very convenient solution.
 
-\subsection*{rays}
+\subsection*{Rays}
 
 We will however create a more proper data structure to represent a {\em ray}. 
 A ray has an origin, represented by a vector, and a direction,
@@ -221,8 +221,8 @@ of having to remember which element of a tuple a particular element
 is we can refer to them by name. 
 
 Create a module {\tt Ray} and define the following struct. We provide
-a default posistion {\tt \{0,0,0\}} and direction {\tt \{1,1,1\}}. If
-none is given when we create a ray the deafult values will be used.
+a default position {\tt \{0,0,0\}} and direction {\tt \{1,1,1\}}. If
+none is given when we create a ray the default values will be used.
 
 \begin{minted}{elixir}
 defmodule Ray do
@@ -245,12 +245,12 @@ We now have the mathematical tools to describe a world of obkects.
 Our next task is to create data structures that can
 represent the objects in our world. We will keep things simple and
 only handle spheres. We should however implement the spheres in a way
-that makes it easy to add new obejcts in the future.
+that makes it easy to add new objects in the future.
 
 We will use Elixir {\em protocols} to define a common interface that
 all objects should implement. Similarly to defining a module we define
 a protocol called {\tt Object}. The protocol will so far only specify
-one functtion {\tt intersetc/2} that will determine if a ray
+one function {\tt intersect/2} that will determine if a ray
 intersects an object.
 
 \begin{minted}{elixir}
@@ -264,7 +264,7 @@ end
 As we define different object we will instantiate the {\tt Object}
 protocol by defining the {\tt intersect/2} function. 
 
-\subsection*{spheres}
+\subsection*{Spheres}
 
 When we decide on the representation we need to think about the
 operations we should perform; a representation is efficient if it
@@ -279,7 +279,7 @@ we model our objects in a Cartesian space we will be able to
 determine intersections quite easily.
 
 A sphere will have an position and a radius. The position is
-represented by a vector and the radious by a number. We create a
+represented by a vector and the radius by a number. We create a
 struct with two properties and default values.
 
 \begin{minted}{elixir}
@@ -291,7 +291,7 @@ end
 \end{minted}
 
 
-\subsection*{intersection}
+\subsection*{Intersection}
 
 The tricky part is of course to determine if a ray will intersect a
 sphere but this is actually easily determined if we remember our
@@ -370,13 +370,13 @@ point is behind us; if only one value is negative we are actually
 inside the sphere. If both values are positive we return the smallest
 value since this is the surface that we will actually see.
 
-\subsection*{object protocol}
+\subsection*{Object protocol}
 
 Implement the function {\tt intersect/2} that checks if ray intersects
 a sphere; return {\tt :no} if it does not and {\tt \{:ok, d\}}, where
 {\tt d} is the closest distance, if it does. We implement the function
 in the {\tt Sphere} module but use the {\tt defimpl} construct to
-declare this as the {\tt Obect} protocol implementation.
+declare this as the {\tt Object} protocol implementation.
 
 \begin{minted}{elixir}
  defimpl Object do
@@ -390,7 +390,7 @@ declare this as the {\tt Obect} protocol implementation.
 
  The function {\tt intersect/2} is now reached using the call {\tt
    Object.intersect/2} since it is defined as an {\tt Object}
- protocoll.
+ protocol.
 
  
 
@@ -407,7 +407,7 @@ course need to define where in the room it is and where it is pointing
 but also what kind of lens it has. This is probably the most
 complicated part of the implementation but we will give it a try.
 
-\subsection*{the name of the game}
+\subsection*{The name of the game}
 In the end we would like to have a representation of a camera that
 will allow us to ask for a ray that starts in the focal point (or
 origin) of the camera and runs through a given $\langle x, y\rangle$
@@ -425,7 +425,7 @@ the object in a way that makes the operations easier to perform. Also
 think about how you would like to talk about the object, the easiest
 way to describe an object might not be the best way to represent it.
 
-\subsection*{properties of a camera}
+\subsection*{Properties of a camera}
 If you have not used a large camera you might not have thought about
 how different lenses changes the picture but think about the
 difference between a ``fish-eye'' and telephoto lens. The difference
@@ -551,7 +551,7 @@ end
 \end{minted}
 
 
-\subsection*{the world}
+\subsection*{The world}
 
 The world is simply a list of objects. We will extend the world to also
 hold other things but for our first test this will be sufficient.
@@ -564,7 +564,7 @@ defmodule World do
 end
 \end{minted}
 
-That completes all the modules that we need to represnt the world,
+That completes all the modules that we need to represent the world,
 high time to generate some images.
 
 
@@ -591,7 +591,7 @@ will extend quite easily. We will build the tracer {\em bottom up}
 which will give us the opportunity to test things as we implement
 it. 
 
-\subsection*{intersect}
+\subsection*{Intersect}
 
 The first thing we will do is to determine which object a ray
 intersects, if any, from a list of objects. We know that we can call
@@ -625,10 +625,10 @@ ray does not intersect an object it will return {\tt \{:inf, nil\}}
 will be higher than any other value).
 
 The use of the {\tt Object} protocol allows us to have objects of
-different kinds. We onky have spheres now but can add any objects as
+different kinds. We only have spheres now but can add any objects as
 long as they implement the {\tt Object} protocol.
 
-\subsection*{tracing}
+\subsection*{Tracing}
 
 We now define a two functions: {\tt trace/4} and {\tt trace/2}. The
 latter will use {\tt intersect/2}, check the outcome and then return
@@ -656,10 +656,10 @@ Here we use Elixir module attributes to define the rgb-values for
 black and white. You will have to add these in the beginning of the
 module.
 
-\begin{mint}{elixir}
+\begin{minted}{elixir}
   @black {0, 0, 0}
   @white {1, 1, 1}
-\end{mint}
+\end{minted}
 
 The only thing that is left is to trace every possible ray of the
 camera; this is neatly done using list comprehension. The function
@@ -725,7 +725,7 @@ We will do three extensions to the tracer: colors, lights and
 reflections. The first extension is quite simple while the last one
 requires that you repeat you knowledge i geometry. 
 
-\subsection*{adding colors}
+\subsection*{Adding colors}
 
 Turning the image into a color image is two simple changes. First of
 all we extend the {\tt Sphere} struct structure to also include a
@@ -854,7 +854,7 @@ And we should do the same thing here (do some thinking). If you get it
 right your images will get a lot more live and will start to look like
 something that you could show to someone besides your mother.
 
-\subsection*{reflections}
+\subsection*{Reflections}
 
 The third extension that we will look at is reflections; sounds tricky
 but it turns out to be even simpler than adding lights. What we wan to
@@ -888,7 +888,7 @@ reflection would be visible in a sphere with high brilliance. If you
 start to dig into this you will find that you have enough to do for a
 day or two.
 
-\subsection*{and more}
+\subsection*{And more}
 
 Another thing that we might want to explore is of course to add more
 objects. A plane would be fairly easy to describe and the intersection
@@ -910,8 +910,8 @@ the transparency into account when you add the contribution of the
 refraction.
 
 This becomes tricky since you would have to keep track of if we enter
-of exit an object, the {\em current} refraxtion index and the index of
-the material outside of an object. If we only consier air and solid
+of exit an object, the {\em current} refraction index and the index of
+the material outside of an object. If we only consider air and solid
 spheres that do not overlap it's easier but the general case becomes
 problematic.
 
@@ -960,8 +960,8 @@ your graphic card is doing when you spawn in BF.
 defmodule PPM do
 
   # write(Name, Image) The image is a list of rows, each row a list of
-  # tuples {R,G,B} where the values are flots from 0 to 1. The image
-  # is written using PMM format P6 and color depth 0-255. This means that
+  # tuples {R,G,B} where the values are floats from 0 to 1. The image
+  # is written using PPM format P6 and color depth 0-255. This means that
   # each tuple is written as three bytes.
 
   def write(name, image) do
