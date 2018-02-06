@@ -109,18 +109,27 @@ need to generate a beautiful Mandelbrot image.
 Since we are going to work with complex numbers we might as well start
 by implementing a module to handle these. Let's make it simple and
 represent a complex number as a tuple with its real and imaginary
-values. Create a module {\tt cmplx} that exports the following
+values. Create a module {\tt Cmplx} that exports the following
 functions:
 
 \begin{itemize}
- \item {\tt new(x, y)} : returns the complex number with real value $x$ and imaginary $y$
+ \item {\tt new(r, i)} : returns the complex number with real value $r$ and imaginary $i$
  \item {\tt add(a, b)} : adds two complex numbers
  \item {\tt sqr(a)} : squares a complex number
  \item {\tt abs(a)} : the absolute value of $a$
 \end{itemize}
 
-You might want to use the {\tt sqrt/1} function exported from the Erlang {\tt
-  math} module when calculating the absolute value.
+You might want to use the sqrt/1 function exported from the Erlang
+:math module when calculating the absolute value. You call Erlang modules
+like any module but the Erlang modules all have atoms as names.
+
+\begin{minted}{elixir}
+> :math.sqrt(42)
+\end{minted}
+
+The Complex module implements an abstract data type; the internals of
+how complex numbers are represented should not be visible outside of the
+module. We of course know, but we should not make use of this knowledge.
   
 
 \subsection{The Brot module}
@@ -154,12 +163,12 @@ complex numbers directly knowing that we represent them as tuples,
 this is of course cheating but very convenient).
 
 \begin{itemize}
- \item {\tt Brot.mandelbrot(\{:cpx, 0.8, 0\}, 30)}
- \item {\tt Brot.mandelbrot(\{:cpx, 0.5, 0\}, 30)}
- \item {\tt Brot.mandelbrot(\{:cpx, 0.3, 0\}, 30)}
- \item {\tt Brot.mandelbrot(\{:cpx, 0.27, 0\}, 30)} 
- \item {\tt Brot.mandelbrot(\{:cpx, 0.26, 0\}, 30)}
- \item {\tt Brot.mandelbrot(\{:cpx, 0.255, 0\}, 30)}
+ \item {\tt Brot.mandelbrot(Cmplx.new(0.8, 0), 30)}
+ \item {\tt Brot.mandelbrot(Cmplx.new(0.5, 0), 30)}
+ \item {\tt Brot.mandelbrot(Cmplx.new(0.3, 0), 30)}
+ \item {\tt Brot.mandelbrot(Cmplx.new(0.27, 0), 30)} 
+ \item {\tt Brot.mandelbrot(Cmplx.new(0.26, 0), 30)}
+ \item {\tt Brot.mandelbrot(Cmplx.new(0.255, 0), 30)}
 \end{itemize}
 
 What is happening? Which values could possibly belong to the
@@ -196,23 +205,23 @@ The conversion of depth information to {\em RGB values} can of course
 be done in many different ways and the one presented here is only for
 inspiration.
 
-Let's assume that we have a depth of a point $D$, with the maximum
-possible depth being $M$. We could create five sections that divides
-the range $0$ to $M$. Divide $D$ by $M$ and so that you have a
-fraction $F$. Then multiply this fraction by four to generate a
-floating point $A$ from $0$ to $4$. Now truncate the value to give you
-an integer $X$ from $0$ to $4$ (this is the section) and generate an
-offset $Y$ that is the truncated value of $255*(A-X)$.
+Let's assume that we have a depth of a point $d$, with the maximum
+possible depth being $m$. We could create five sections that divides
+the range $0$ to $m$. Divide $d$ by $m$ and so that you have a
+fraction $f$. Then multiply this fraction by four to generate a
+floating point $a$ from $0$ to $4$. Now truncate the value to give you
+an integer $x$ from $0$ to $4$ (this is the section) and generate an
+offset $y$ that is the truncated value of $255 * (a - x)$.
 
-The two values $X$ and $Y$ will now be used to give you an RGB
+The two values $x$ and $y$ will now be used to give you an RGB
 value. You can use the following transformation:
 
 \begin {itemize}
-\item 0 : $\lbrace Y, 0, 0 \rbrace$
-\item 1 : $\lbrace 255, Y, 0 \rbrace$
-\item 2 : $\lbrace 255-Y, 255, 0 \rbrace$
-\item 3 : $\lbrace 0, 255, Y \rbrace$
-\item 4 : $\lbrace 0, 255-Y, 255 \rbrace$
+\item 0 : $\lbrace y, 0, 0 \rbrace$
+\item 1 : $\lbrace 255, y, 0 \rbrace$
+\item 2 : $\lbrace 255-y, 255, 0 \rbrace$
+\item 3 : $\lbrace 0, 255, y \rbrace$
+\item 4 : $\lbrace 0, 255-y, 255 \rbrace$
 \end{itemize}
 
 What colors does this correspond to? Does it look anything like a
@@ -241,22 +250,22 @@ end
 \end{minted}
 
 What is happening here? We want to generate an image of the size {\em
-  Width x Height}. The upper left corner of this image is the point $X
-+ Yi$ and the offset between two points is $K$. This means that the
+  Width by Height}. The upper left corner of this image is the point $x
++ xi$ and the offset between two points is $k$. This means that the
 first pixels of the upper row should correspond to the ``depth'' of
-$X+Yi$, $(X+K) + Yi$, $(X+2K) + Yi$ etc and that the second row starts
-with $X + (Y-K)i$. 
+$x+yi$, $(x+k) + yi$, $(x+2k) + yi$ etc and that the second row starts
+with $x + (y-k)i$. 
 
-To help the mandelbrot generator from keeping track of this we simply
-provide a function that does the work. The {\em Trans} function will
-take a pixel position ($W$, $H$) and return a complex number that is
+To help the Mandelbrot generator from keeping track of this we simply
+provide a function that does the work. The {\em trans} function will
+take a pixel position ($w$, $h$) and return a complex number that is
 the one we should compute the depth of. It is better to do this here
 and then we could more easily change the function rather than passing
 all the necessary information in arguments.
 
 Now the {\em rows} function should return a list of rows, where each
 row is a list of colors. Each item in a row corresponds to a pixel at
-($W$, $H$) and the color is computed by:
+($w$, $h$) and the color is computed by:
 
 \begin{itemize}
  \item generating the complex number that corresponds to the pixel
