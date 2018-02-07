@@ -145,7 +145,13 @@ maximize profit $p$, {\tt \{h, l, p\}}.
 \pause\vspace{20pt}
 
 \begin{verbatim}
-search(material, time, {hm, ht, hp}, {lm, lt, lp}) ->
+@spec seach(integer, integer, hinge, latch) :: {integer, integer, integer}
+
+def search(material, time, hinge, latch) do 
+   :
+   :
+  {hinges, latches, profit}
+end
 \end{verbatim}
 \end{frame}
 
@@ -157,11 +163,19 @@ def search(m, t, {hm, ht, hp}=h, {lm, lt, lp}=l) when (m >= hm) and
                                                       (t >= ht) and 
                                                       (m >= lm) and 
                                                       (t >= lt) ->
+\end{verbatim}\pause
+\begin{verbatim}
+  ## we have material and time to make either a hinge or latch
   {hi, li, pi} = search((m-hm), (t-ht), h, l),
   {hj, lj, pj} = search((m-lm), (t-lt), h, l), 
+\end{verbatim}\pause
+\begin{verbatim}
+  ## which alternative will give us the maximum profit
   if (pi+hp) > (pj+lp) do
+    ## make hinge
     {(hi+1), li, (pi+hp)};
   else
+    # make a latch
     {hj, (lj+1), (pj+lp)}
   end
 end
@@ -173,14 +187,21 @@ end
 \begin{verbatim}
    :
 def search(m, t, {hm, ht, hp}=h, l) when (m >= hm) and (t >= ht)  do
+  ## we can make a hinge
   {hn, ln, p} = search((m-hm), (t-ht), h, l)
   {hn+1, ln, (P+hp)}
 end
+\end{verbatim}\pause
+\begin{verbatim}
 def search(m, t, h, {lm, lt, lp}=l) when (m >= lm) and (t >= lt)  do
+  ## we can make a latch
   {hn, ln, p} = search((m-lm), (t-lt), h, l)
   {hn, ln+1, p+lp}
 end
+\end{verbatim}\pause
+\begin{verbatim}
 def search(_, _, _, _) do
+  ## we can make neither
   {0,0,0}
 end
 \end{verbatim}
@@ -265,7 +286,7 @@ end
 
 \end{frame}
 
-\begin{frame}{the MxT space}
+\begin{frame}{the m x t space}
 
 \begin{figure}
 \begin{tikzpicture}[
@@ -357,21 +378,22 @@ end
 Let's add a memory to the search function. 
 
 \begin{verbatim}
-def memory(m, t, h, l) do
+def memory(material, time, hinge, latch) do
   mem = Memory.new()
-  {solution, _} = search(m, t, h, l, mem)
+  {solution, _} = search(material, time, hinge, latch, mem)
   solution
-edn
-\end{verbatim}
+end
+\end{verbatim}\pause
 
 \begin{verbatim}
-def check(m, t, h, l, mem) do
-  case Memory.lookup({m,t}, mem) of
+def check(material, time, hinge, latch, mem) do
+  case Memory.lookup({material,time}, mem) of
     nil ->
-      {solution, mem} = search(m, t, h, l, mem)
-      {solution, Memory.store({m,t}, solution, mem)}
-    solution -> 
-      {solution, mem}
+      ## no previous solution found
+      {solution, mem} = search(material, time, hinge, latch, mem)
+      {solution, Memory.store({material,time}, solution, mem)}
+    found -> 
+      {found, mem}
   end
 end
 \end{verbatim}
@@ -419,12 +441,17 @@ The {\em value} is the number of hinges and latches and best profit possible at 
 
 \vspace{10pt}\pause
 
-The functions we should implement are:
+The functions we should implement are: \pause
 
 \begin{itemize}
-\pause \item \texttt{new()}: return a new memory
-\pause \item \texttt{store(k, v, mem)}: return a new memory where the key \texttt{k} is associated with the value \texttt{V}
-\pause \item \texttt{lookup(k, mem)}: return the value \texttt{\{k,v\}} or \texttt{nil} if not found
+
+  \item \texttt{new()}: returns a new memory \pause
+
+  \item \texttt{store(k, v, mem)}: returns a new memory where the key
+  \texttt{k} is associated with the value \texttt{v} \pause
+
+  \item \texttt{lookup(k, mem)}: return the value \texttt{v} assocaued with
+  the key or \texttt{nil} if not found
 \end{itemize}
 
 \end{frame}
@@ -467,21 +494,21 @@ def lookup(k, [_|rest]) do lookup(k, rest) end
 
 \begin{frame}{benchmark}
 
+  {\em on a i7-4500 1.8GHz, time in ms}
+  \vspace{10pt}
 
 \hspace{100pt}\begin{tabular}{|c|c|c|c|c|}
 \hline 
-       m & t & m*t & search & memory \\
+       m & t & m + t & search & memory \\
 \hline
-      1000&        200&       1200&       0.01&       0.03  \\
-      2000&        400&       2400&       0.08&       0.08  \\
-      3000&        600&       3600&       0.71&       0.13  \\
-      4000&        800&       4800&      10.13&       0.35  \\
-\pause 
-      5000&       1000&       6000&     114.45&       0.42 \\
-\pause
-      6000&       1200&       7200&    1867.23&       0.80 \\
-\pause
-      7000&       1400&       8400&   32147.43&       1.28 \\
+      1000&        200&       1200&         0.01&        0.03  \\
+      2000&        400&       2400&         0.08&        0.08  \\
+      3000&        600&       3600&         0.70&        0.13  \\
+      4000&        800&       4800&           10&        0.35  \\
+      5000&       1000&       6000& \pause   110& \pause 0.42 \\
+      6000&       1200&       7200& \pause  1900& \pause 0.80 \\
+      7000&       1400&       8400& \pause  3200& \pause 1.30 \\
+      8000&       1600&       9600& \pause  550000& \pause 2.10 \\          
 \hline
 \end{tabular}
 
@@ -571,6 +598,8 @@ end
 
 \begin{frame}{benchmark}
 
+  {\em on a i7-4500 1.8GHz, time in ms}
+  \vspace{10pt}
 
 \hspace{100pt}\begin{tabular}{|c|c|c|c|c|}
 \hline 
@@ -591,8 +620,6 @@ end
 \hline
 \end{tabular}
 
-\vspace{10pt}
-{\em All times in ms}
 
 \end{frame}
 

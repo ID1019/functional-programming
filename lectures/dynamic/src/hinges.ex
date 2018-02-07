@@ -10,43 +10,10 @@ defmodule Hinges do
   in order to maximize profit.
   """
   
-  
-  @doc """ 
-  First compute the maximum profit if staring with a hinge and then do
-  the same for a latch and take the maximum of the two answers.  
-  """
-
-    
-  def search(m, t, {hm, ht, hp}=h, {lm, lt, lp}=l) when  (m >= hm) and (t >= ht) and (m >= lm) and (t >= lt) do
-    {hi, li, pi} = search((m-hm), (t-ht), h, l)
-    {hj, lj, pj} = search((m-lm), (t-lt), h, l)
-    if (pi+hp) > (pj+lp) do
-      {(hi+1), li, (pi+hp)};
-    else
-      {hj, (lj+1), (pj+lp)}
-    end
-  end
-  def search(m, t, {hm, ht, hp}=h, l) when ((m >= hm) and (t >= ht))  do
-    {hn, ln, p} = search((m-hm), (t-ht), h, l)
-    {hn+1, ln, (p+hp)}
-  end
-  def search(m, t, h, {lm, lt, lp}=l) when ((m >= lm) and (t >= lt))  do
-    {hn, ln, p} = search((m-lm), (t-lt), h, l)
-    {hn, ln+1, p+lp}
-  end
-  def search(_, _, _, _) do
-    {0,0,0}
+  def search(m, t, h, l) do
+    memory(m, t, h, l, None)
   end
   
-
-  @doc """ 
-
-  The memory/4 solution is extended with a memory and then bring the
-  compexity down to O(n^2) (or more precise O(m*t)). Note that there
-  is a hidden sot of doing the memory lookup. As the memory grows this
-  becomes a O(n) factor that can not be ignored.
-  """
-
   def memory(m, t, h, l) do
     memory(m, t, h, l, Memory)
   end
@@ -103,7 +70,6 @@ defmodule Hinges do
   solution relies on the fact that we can compute a finite set of
   possible solutions and then iterate over these.
   """
-
 
   def easy(m, t, {hm, ht, hp}, {lm, lt, lp}) do
     maxh = max(trunc(m/hm), trunc(t/ht))
