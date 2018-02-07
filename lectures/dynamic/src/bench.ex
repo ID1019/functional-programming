@@ -28,7 +28,7 @@ defmodule Bench do
   end
 
   def map(n)  do
-    all = Enum.map(1..n, fn (x) -> {x * 1000, x * 200} end)
+    all = Enum.map(5..n, fn (x) -> {x * 1000, x * 200} end)
     {:ok, fd} = :file.open("map.dat", [:write])
     :io.format(fd, "%~9s ~10s ~10s ~10s ~10s~n", ["m", "t", "m x t", "linear", "map"])
     Enum.each( all,

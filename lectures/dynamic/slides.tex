@@ -623,6 +623,14 @@ end
 
 \end{frame}
 
+\begin{frame}{benchmark}
+
+\begin{figure}
+ \includegraphics[scale=0.5]{map.png}
+\end{figure}
+
+\end{frame}
+
 \begin{frame}{dynamic programming}
 
 \vspace{40pt}\hspace{80pt}\parbox[l][60pt][l]{240pt}{Problem divided into simpler parts that can be solved independently, but 
@@ -638,55 +646,6 @@ end
 
 \end{frame}
 
-
-\begin{frame}{can we do better}
-
-\begin{figure}
-\begin{tikzpicture}[
-        scale=0.5,
-        important line/.style={thick},
-        axis/.style={very thick, ->, >=stealth'},
-        dashed line/.style={dashed, thin},
-        pile/.style={thick, ->, >=stealth', shorten >=2pt},
-        every node/.style={color=black}
-    ]
-    % axis
-    \draw[axis] (-1,0)  -- (10,0) node(xline)[right] {material};
-    \draw[axis] (0,-1) -- (0,10) node(yline)[above] {time};
-
-    \draw [pile, color=red] (0,0) -- +(2.6,2);
-    \pause
-    \draw [pile, color=red] (2.6,2) -- +(2.6,2); 
-    \pause
-    \draw [pile, color=red] (5.2,4) -- +(2.6,2); 
-    \pause
-    \draw [pile, color=red] (7.8,6) -- +(2.6,2); 
-    % --------------------------------------
-    \pause
-    \draw [pile, color=green] (7.8,6) -- +(1.8,3);     
-    % --------------------------------------
-    \pause
-    \draw [pile, color=green] (5.2,4) -- +(1.8,3); 
-    \pause
-    \draw [pile, color=green] (7,7) -- +(1.8,3); 
-    \pause
-    % --------------------------------------
-    \draw [pile, color=green] (2.6,2) -- +(1.8,3); 
-    \draw [pile, color=green] (4.4,5) -- +(1.8,3); 
-    \draw [pile, color=green] (6.2,8) -- +(1.8,3); 
-    % --------------------------------------
-    \pause
-    \draw [pile, color=green] (0,0) -- +(1.8,3);
-    \draw [pile, color=green] (1.8,3) -- +(1.8,3); 
-    \draw [pile, color=green] (3.6,6) -- +(1.8,3); 
-    \draw [pile, color=green] (5.4,9) -- +(1.8,3); 
-\end{tikzpicture}
-\end{figure}
-
-\pause
-{\em What is the time complexity of this algorithm?}
-
-\end{frame}
 
 
 \begin{frame}{shortest path}
@@ -786,12 +745,12 @@ def shortest(from, from, _) do  {0, []} end
   \pause
   \begin{verbatim}
 def shortest(from, to, graph) do
-  next = next(from, graph)
+  next = Graph.next(from, graph)
   distances = distances(next, to, graph)
   select(distances)
 end
   \end{verbatim}
-  \pause {\em If no path is found we should return {\tt \{inf, na\}}}.
+  \pause {\em If no path is found we should return {\tt \{:inf, nil\}}}.
  \end{column}
 \end{columns}
 
@@ -841,8 +800,8 @@ How do we represent a graph?
   As a list of nodes:
 
 \begin{verbatim}
-[{:a, [{:b,2}, {:d,5}]}, 
- {:b, [{:c,2}, {:e,3}]}, 
+[{:a, [{:b, 2}, {:d, 5}]}, 
+ {:b, [{:c, 2}, {:e, 3}]}, 
  ...]
 \end{verbatim}
 
@@ -851,8 +810,8 @@ How do we represent a graph?
   As a matrix of edges:
 
 \begin{verbatim}
-{{nil,  2,nil,  5,nil,nil,nil}, 
- {nil,nil,  2,nil,  3,nil,nil}, 
+{{ nil, 2 ,nil, 5 ,nil,nil,nil}, 
+ { nil,nil, 2 ,nil, 3 ,nil,nil}, 
   ...}}
 \end{verbatim}
 
@@ -897,14 +856,16 @@ How about this?
  \end{column}
  \begin{column}{0.6\linewidth}
 \begin{verbatim}
- g = {:g, []},
- e = {:e, [{2, g}]},
- c = {:c, [{1, g}, {6, e}]},
- f = {:f, [{1, c}, {3, g}]},
- d = {:d, [{2, f}, {3, c}]},
- b = {:b, [{2, c}, {3, e}]},
- a = {:a, [{2, b}, {5, d}]}
-\end{verbatim}
+ g = {:g, []}
+ e = {:e, [{g , 2}]}
+ c = {:c, [{g, 1}, {e, 6}]}
+ f = {:f, [{c, 1}, {g, 3}]}
+ d = {:d, [{f, 2}, {c, 3}]}
+ b = {:b, [{c, 2}, {e, 3}]}
+ a = {:a, [{b, 2}, {d, 5}]}
+ 
+ [a: a, b: b, c: c, d: d, e: e, f: f, g: g]
+ \end{verbatim}
 \pause
 {\em What has this to do with topological order?}
 \end{column}
@@ -913,19 +874,26 @@ How about this?
 \end{frame}
 
 
-\begin{frame}[fragile]{next}
+\begin{frame}[fragile]{the graph}
 
-  Assume we represent a graph by a map indxed by nodes.
+  Assume we represent a graph by a map indxed by nodes. Each node holds a key-value list of edges.
 
-  \vspace{10pt}\hspace{40pt}\texttt{[a: [b: 2, d: 5], b: [c: 2], ... ]}  
+\begin{verbatim}
+defmodule Graph do 
+
+  def sample() do
+    new([a: [b: 2, d: 5], b: [c: 2], ... ])
+  end
+\end{verbatim}
   
 \begin{verbatim}
-def new(nodes) do
-  Map.new(nodes)
-end
+  def new(nodes) do
+    Map.new(nodes)
+  end
 
-def next(from, map) do 
-   Map.get(map, from, [])
+  def next(from, map) 
+    Map.get(map, from, [])
+  end
 end
 \end{verbatim}
 
@@ -938,36 +906,35 @@ end
 \vspace{20pt} \pause
   
 \begin{verbatim}
-distances(next, to, graph) ->
+def distances(next, to, graph) do
 \end{verbatim}
 \pause
 \begin{verbatim}
-    lists:map(fun({t,d}) ->   
+    Enum.map(next, fn({n,d}) ->   
 \end{verbatim}
 \pause
 \begin{verbatim}
-                   case shortest(t, to, graph) of 
+                   case shortest(n, to, graph) do
 \end{verbatim}
 \pause
 \begin{verbatim}
-                        {inf, na} -> {inf, na};
+                        {:inf, nil} -> {:inf, nil};
 \end{verbatim}
 \pause
 \begin{verbatim}
-                        {n, path} -> {d+n, [t|path]}
+                        {k, path} -> {d+k, [n|path]}
 \end{verbatim}
 \pause
 \begin{verbatim}
                    end
-\end{verbatim}
-\begin{verbatim}
-                end, Next).    
+                end)
+end
 \end{verbatim}
 \end{frame}
 
 \begin{frame}[fragile]{select}
 
-Select the smallest path in the list: \texttt{[\{9, [d,c,g]\}, ..]}
+Select the smallest path in the list: \texttt{[\{9, [:d, :c, :g]\}, ..]}
 
 \vspace{10pt}\pause
 
@@ -976,11 +943,11 @@ Select the smallest path in the list: \texttt{[\{9, [d,c,g]\}, ..]}
     List.foldl(distances,
       {:inf, nil},
       fn ({d,_}=s,{ad,_}=acc) ->
-	if d < ad do
-	  s
-	else
-	  acc
-	end
+        if d < ad do
+          s
+        else
+          acc
+        end
       end)
   end
 \end{verbatim}
@@ -992,7 +959,7 @@ Select the smallest path in the list: \texttt{[\{9, [d,c,g]\}, ..]}
 
 \begin{columns}
  \begin{column}{0.4\linewidth}
-  If we are in the final node the distance is zero and the path is \[\].
+  If we are in the final node, the distance is zero and the path is \[\].
 
   \vspace{10pt}
   Otherwise, for each outgoing edge: find the shortest path from the
@@ -1021,9 +988,10 @@ end
 \begin{frame}[fragile]{let's add a memory}
 
 \begin{verbatim}
-def dynamic(from, t, graph) do
+def dynamic(from, to, graph) do
   mem = Memory.new()
-  shortest(from, to, graph, mem)
+  {solution, _} = shortest(from, to, graph, mem)
+  solution
 end
 \end{verbatim}
 
@@ -1037,10 +1005,9 @@ def shortest(from, from, _, mem) do
     {{0, []}, ...}
 end
 def shortest(from, to, graph, mem) do
-    Next = next(from, graph),
+    next = Graph.next(from, graph),
     {..., ...} = distances(next, to, graph, mem)
     shortest = select(...)
-    ... = Memory.store(from, ..., ..)
     {..., ...}
 end
 \end{verbatim}
@@ -1077,11 +1044,11 @@ end
 \begin{verbatim}
   def check(from, to, graph, mem) do
     case Memory.lookup(from, mem) do
-      {_, solution} ->
-	{solution, mem}
       nil ->
 	{solution, mem} = shortest(from, to, graph, mem)
         {solution,  Memory.store(from, solution, mem)}
+     solution ->
+	{solution, mem}
     end
   end
 \end{verbatim}
@@ -1095,27 +1062,28 @@ end
 \begin{tikzpicture}[scale=1,
         ->,>=stealth',shorten >=1pt,auto, node distance=80pt, semithick]
 
-  \tikzstyle{every state}=[fill=red,draw=none,text=white,minimum size=10pt]
+  \tikzstyle{every state}=[fill=red,draw=none,text=white]
 
-  \node[initial,state] (a)                    {a};
-  \node[state]         (b) [above right of=a] {b};
-  \node[state]         (d) [below right of=a] {d};
-  \node[state]         (c) [below right of=b] {c};
-  \node[state]         (e) [above right of=c] {e};
-  \node[state]         (f) [below right of=c] {f};
-  \node[state]         (g) [below right of=e] {g};
+  \node[initial,state] (A)                    {A};
+  \node[state]         (B) [above right of=A] {B};
+  \node[state]         (D) [below right of=A] {D};
+  \node[state]         (C) [below right of=B] {C};
+  \node[state]         (E) [above right of=C] {E};
+  \node[state]         (F) [below right of=C] {F};
+  \node[state]         (G) [below right of=E] {G};
 
-  \path (A) edge              node {2} (b)
-            edge              node {5} (d)
-        (B) edge              node {2} (c)
-            edge              node {3} (e)
-        (C) edge              node {6} (e)
-            edge              node {3} (d)
-            edge              node {1} (g)
-        (D) edge              node {2} (f)
-        (E) edge              node {2} (g)
-        (F) edge              node {3} (g)
-            edge              node {1} (c);
+  \path (A) edge              node {2} (B)
+            edge              node {5} (D)
+        (B) edge              node {2} (C)
+            edge              node {3} (E)
+        (C) edge              node {6} (E)
+            edge              node {1} (G)
+            edge              node {2} (A)        
+        (D) edge              node {3} (C)
+            edge              node {2} (F)
+        (E) edge              node {2} (G)
+        (F) edge              node {3} (G)
+            edge              node {1} (C);
 \end{tikzpicture}
 \end{figure}
 

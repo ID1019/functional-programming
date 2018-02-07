@@ -9,7 +9,8 @@ DIRS = 	overview \
 	higher \
         interpreter \
         types \
-	tracer
+	tracer \
+	dynamic
 
 
 

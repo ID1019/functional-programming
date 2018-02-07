@@ -13,12 +13,11 @@ set style line 1 lw 4
 
 set style line 2 lw 4
 
-p(x) = (x*x)/4000
+p(x) = (x/600)**2
 
-q(x) = (x*x)/60
-
-r(x) = (x*x*x)/6000
+q(x) = (x/600)**3
 
 plot "map.dat" using 3:4 ls 2 w linespoint title "list",  \
-     "map.dat" using 3:5 ls 1 w linespoint title "map"
+     "map.dat" using 3:5 ls 1 w linespoint title "map", \
+     p(x) lc 1 title "O(n^2)", q(x) lc 2 title "O(n^3)
 
