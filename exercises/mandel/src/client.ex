@@ -1,7 +1,16 @@
 defmodule Client do
 
-  def start(server) do
-    spawn(fn -> init(server) end)
+  ### Example of usage Client.start(:"gold@130.120.33.23", :server)
+  ### Note how the node is writen
+  
+  def start(node, name) do
+    case Node.connect(node) do
+      true ->
+	pid = :global.whereis_name(name)
+	spawn(fn -> init(pid) end)
+      _ ->
+	:error
+    end
   end
 
   defp init(server), do: client(server, 0)
