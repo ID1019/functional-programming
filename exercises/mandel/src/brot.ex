@@ -28,8 +28,12 @@ defmodule Brot do
   # complex value c with a maximum iteration of m. Returns
   # 0..(m - 1).
 
-  # This is the vanilla version
   def mandelbrot(c, m) do
+    mandelbrot_nif(c, m)
+  end
+  
+  # This is the vanilla version
+  def mandelbrot_vanilla(c, m) do
     z0 = Cmplx.new(0, 0)
     test(0, z0, c, m)
   end
