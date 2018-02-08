@@ -1,12 +1,14 @@
 defmodule Bench do
 
+  def server() do
+    server(:waves, :small, 255, "wave.ppm")
+  end
 
   def server(img, size, depth, name) do
-    file = Atom.to_string(name) <> ".ppm"
     {x, y, xn} = image(img)
     {width, height, k} = size(size, x, xn)
-    {:ok, server} = Server.start(width, height, x, y, k, depth, file)
-    :erlang.register(server, server)
+    {:ok, server} = Server.start(width, height, x, y, k, depth, name)
+    :global.register_name(:server, server)
   end
 
   def sky(img, size, depth) do 
@@ -55,16 +57,14 @@ defmodule Bench do
   ### name this procedure will calculate an image and print it to a .ppm
   ### file.
 
-  def print({x, y}, {width, height, k}, depth, name) do
-    file = Atom.to_string(name) <> ".ppm"
-  {t, _} = :timer.tc( fn() ->
+  
+  def print({x, y}, {width, height, k}, depth, file) do
+    {t, _} = :timer.tc( fn() ->
       image = Mandelp.mandelbrot(width, height, x, y, k, depth)
       PPM.write(file, image)
     end)
     IO.puts("picture generated and printed in #{trunc(t/1000)} ms")
   end
-  
-  
  
   ### size(size, x, xn) ::  {width, height, k} where size is :small,
   ### :large or :huge, and x, xn are the left- and rightermost

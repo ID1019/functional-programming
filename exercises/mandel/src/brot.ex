@@ -29,7 +29,7 @@ defmodule Brot do
   # 0..(m - 1).
 
   def mandelbrot(c, m) do
-    mandelbrot_nif(c, m)
+    mandelbrot_vanilla(c, m)
   end
   
   # This is the vanilla version
