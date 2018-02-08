@@ -1,7 +1,7 @@
 \input{../include/preamble}
 
 \title[ID1019 Dynamic programming]{Dynamic programming}
- 
+
 
 \author{Johan Montelius}
 \institute{KTH}
@@ -40,7 +40,7 @@
 \end{columns}
 \pause \vspace{20pt}
 
-How many hinges and latches should you produce to maximize profit. 
+How many hinges and latches should you produce to maximize profit.
 
 \end{frame}
 
@@ -72,7 +72,7 @@ How many hinges and latches should you produce to maximize profit.
 \end{columns}
 \pause \vspace{20pt}
 
-How many hinges and latches should you produce to maximize profit. 
+How many hinges and latches should you produce to maximize profit.
 
 \end{frame}
 
@@ -103,9 +103,9 @@ How many hinges and latches should you produce to maximize profit.
     \node [right] at (14,4) {$40h + 60l < 480$};
 \end{tikzpicture}
 \end{figure}
- \end{column} 
+ \end{column}
  \begin{column}{0.5\linewidth}
-  $$ p = 30h + 24l$$ 
+  $$ p = 30h + 24l$$
   \pause
   maxium profit is found in one of the corners: \pause
   $$ h = 0, l = 8 \rightarrow  p = 192$$ \pause
@@ -147,7 +147,7 @@ maximize profit $p$, {\tt \{h, l, p\}}.
 \begin{verbatim}
 @spec seach(integer, integer, hinge, latch) :: {integer, integer, integer}
 
-def search(material, time, hinge, latch) do 
+def search(material, time, hinge, latch) do
    :
    :
   {hinges, latches, profit}
@@ -159,21 +159,21 @@ end
 \begin{frame}[fragile]{search for the answer}
 
 \begin{verbatim}
-def search(m, t, {hm, ht, hp}=h, {lm, lt, lp}=l) when (m >= hm) and 
-                                                      (t >= ht) and 
-                                                      (m >= lm) and 
-                                                      (t >= lt) ->
+def search(m, t, {hm, ht, hp}=h, {lm, lt, lp}=l) when (m >= hm) and
+                                                      (t >= ht) and
+                                                      (m >= lm) and
+                                                      (t >= lt) do
 \end{verbatim}\pause
 \begin{verbatim}
   ## we have material and time to make either a hinge or latch
-  {hi, li, pi} = search((m-hm), (t-ht), h, l),
-  {hj, lj, pj} = search((m-lm), (t-lt), h, l), 
+  {hi, li, pi} = search((m-hm), (t-ht), h, l)
+  {hj, lj, pj} = search((m-lm), (t-lt), h, l)
 \end{verbatim}\pause
 \begin{verbatim}
   ## which alternative will give us the maximum profit
   if (pi+hp) > (pj+lp) do
     ## make hinge
-    {(hi+1), li, (pi+hp)};
+    {(hi+1), li, (pi+hp)}
   else
     # make a latch
     {hj, (lj+1), (pj+lp)}
@@ -189,7 +189,7 @@ end
 def search(m, t, {hm, ht, hp}=h, l) when (m >= hm) and (t >= ht)  do
   ## we can make a hinge
   {hn, ln, p} = search((m-hm), (t-ht), h, l)
-  {hn+1, ln, (P+hp)}
+  {hn+1, ln, (p+hp)}
 end
 \end{verbatim}\pause
 \begin{verbatim}
@@ -211,7 +211,7 @@ end
 \begin{frame}[fragile]{a test}
 
 \begin{verbatim}
->Hinges.search(2400, 480, {260, 40, 30}, {180, 60, 24}).
+>Hinges.search(2400, 480, {260, 40, 30}, {180, 60, 24})
 \end{verbatim}
 \pause
 \begin{verbatim}
@@ -219,14 +219,14 @@ end
 \end{verbatim}
 \pause
 \begin{verbatim}
->Hinges.search(2000,480,{260,40,30},{180,60,24}).
+>Hinges.search(2000,480,{260,40,30},{180,60,24})
 \end{verbatim}
 \pause
 \begin{verbatim}
 {4,5,240}
 \end{verbatim}
 \begin{verbatim}
->Hinges.search(2800,520,{260,40,30},{180,60,32}).
+>Hinges.search(2800,520,{260,40,30},{180,60,32})
 \end{verbatim}
 \pause
 \begin{verbatim}
@@ -265,12 +265,12 @@ end
     \draw [dashed] (5,15) -- (10,13);
     \node [] at (10,12) {\texttt{search(2040,360, ...)}};
     \pause
-    \draw [dashed] (0,11) -- (-2,9);    
-    \draw [dashed] (0,11) -- (2,9);    
-    \draw [dashed] (10,11) -- (8,9);    
-    \draw [dashed] (10,11) -- (12,9);    
-    \draw [dashed] (21,15) -- (19,13);    
-    \draw [dashed] (21,15) -- (23,13);    
+    \draw [dashed] (0,11) -- (-2,9);
+    \draw [dashed] (0,11) -- (2,9);
+    \draw [dashed] (10,11) -- (8,9);
+    \draw [dashed] (10,11) -- (12,9);
+    \draw [dashed] (21,15) -- (19,13);
+    \draw [dashed] (21,15) -- (23,13);
 \end{tikzpicture}
 \end{figure}
 
@@ -279,7 +279,7 @@ end
 
 \begin{frame}{complexity}
 
-\begin{figure} 
+\begin{figure}
  \includegraphics[scale=0.5]{doomed.png}
 \end{figure}
 
@@ -302,26 +302,26 @@ end
     \draw[axis] (-1,0)  -- (10,0) node(xline)[right] {material};
     \draw[axis] (0,-1) -- (0,10) node(yline)[above] {time};
     \pause
-    \draw [pile, color=red] (0,0) -- +(2.6,2) node()[below right]{hinge}; 
+    \draw [pile, color=red] (0,0) -- +(2.6,2) node()[below right]{hinge};
     \pause
-    \draw [pile, color=green] (0,0) -- +(1.8,3) node()[above left]{latch}; 
+    \draw [pile, color=green] (0,0) -- +(1.8,3) node()[above left]{latch};
     % --------------------------------------
     \pause
-    \draw [pile, color=red] (2.6,2) -- +(2.6,2); 
+    \draw [pile, color=red] (2.6,2) -- +(2.6,2);
     \pause
-    \draw [pile, color=green] (2.6,2) -- +(1.8,3); 
+    \draw [pile, color=green] (2.6,2) -- +(1.8,3);
     \pause
-    \draw [pile, color=red] (1.8,3) -- +(2.6,2) ; 
+    \draw [pile, color=red] (1.8,3) -- +(2.6,2) ;
     \pause
-    \draw [pile, color=green] (1.8,3) -- +(1.8,3); 
+    \draw [pile, color=green] (1.8,3) -- +(1.8,3);
     % --------------------------------------
 
-    \draw [pile, color=red] (5.2,4) -- +(2.6,2); 
-    \draw [pile, color=green] (5.2,4) -- +(1.8,3); 
-    \draw [pile, color=red] (4.4,5) -- +(2.6,2); 
-    \draw [pile, color=green] (4.4,5) -- +(1.8,3); 
-    \draw [pile, color=red] (3.6,6) -- +(2.6,2); 
-    \draw [pile, color=green] (3.6,6) -- +(1.8,3); 
+    \draw [pile, color=red] (5.2,4) -- +(2.6,2);
+    \draw [pile, color=green] (5.2,4) -- +(1.8,3);
+    \draw [pile, color=red] (4.4,5) -- +(2.6,2);
+    \draw [pile, color=green] (4.4,5) -- +(1.8,3);
+    \draw [pile, color=red] (3.6,6) -- +(2.6,2);
+    \draw [pile, color=green] (3.6,6) -- +(1.8,3);
 
 
 \end{tikzpicture}
@@ -361,7 +361,7 @@ def fib(1) do {1, 0} end
 \pause
 \begin{verbatim}
 def fib(n) do
-    {n1, n2} = fib(n-1) 
+    {n1, n2} = fib(n-1)
 \end{verbatim}
 \pause
 \begin{verbatim}
@@ -375,7 +375,7 @@ end
 
 \begin{frame}[fragile]{memory}
 
-Let's add a memory to the search function. 
+Let's add a memory to the search function.
 
 \begin{verbatim}
 def memory(material, time, hinge, latch) do
@@ -387,12 +387,12 @@ end
 
 \begin{verbatim}
 def check(material, time, hinge, latch, mem) do
-  case Memory.lookup({material,time}, mem) of
+  case Memory.lookup({material,time}, mem) do
     nil ->
       ## no previous solution found
       {solution, mem} = search(material, time, hinge, latch, mem)
       {solution, Memory.store({material,time}, solution, mem)}
-    found -> 
+    found ->
       {found, mem}
   end
 end
@@ -404,24 +404,24 @@ end
 \begin{frame}[fragile]{memory}
 
 \begin{verbatim}
-def search(m, t,..., mem) when ... do 
+def search(m, t,..., mem) when ... do
 \end{verbatim}
 \pause
 \begin{verbatim}
-    {..., mem} = check(...,  mem), 
+    {..., mem} = check(...,  mem)
 \end{verbatim}
 \pause
 \begin{verbatim}
-    {..., mem} = check(..., mem), 
+    {..., mem} = check(..., mem)
 \end{verbatim}
 \pause
 \begin{verbatim}
     if ...  do
-      {..., mem};
+      {..., mem}
 \end{verbatim}
 \pause
 \begin{verbatim}
-    else 
+    else
       {..., mem}
     end
   end
@@ -498,7 +498,7 @@ def lookup(k, [_|rest]) do lookup(k, rest) end
   \vspace{10pt}
 
 \hspace{100pt}\begin{tabular}{|c|c|c|c|c|}
-\hline 
+\hline
        m & t & m + t & search & memory \\
 \hline
       1000&        200&       1200&         0.01&        0.03  \\
@@ -508,7 +508,7 @@ def lookup(k, [_|rest]) do lookup(k, rest) end
       5000&       1000&       6000& \pause   110& \pause 0.42 \\
       6000&       1200&       7200& \pause  1900& \pause 0.80 \\
       7000&       1400&       8400& \pause  3200& \pause 1.30 \\
-      8000&       1600&       9600& \pause  550000& \pause 2.10 \\          
+      8000&       1600&       9600& \pause  550000& \pause 2.10 \\
 \hline
 \end{tabular}
 
@@ -532,12 +532,12 @@ def lookup(k, [_|rest]) do lookup(k, rest) end
     \draw [pile, color=red] (0,0) -- +(2.6,2);
 
     % --------------------------------------
-    \draw [pile, color=red] (2.6,2) -- +(2.6,2); 
-    \draw [pile, color=red] (5.2,4) -- +(2.6,2); 
+    \draw [pile, color=red] (2.6,2) -- +(2.6,2);
+    \draw [pile, color=red] (5.2,4) -- +(2.6,2);
     \draw [pile, color=green] (5.2,4) -- +(1.8,3);
 
 \pause
-    \draw [pile, color=green] (2.6,2) -- +(1.8,3); 
+    \draw [pile, color=green] (2.6,2) -- +(1.8,3);
 \pause
     \draw [pile, dashed, color=gray] (4.4,5) -- +(2.6,2);
 \pause
@@ -547,21 +547,21 @@ def lookup(k, [_|rest]) do lookup(k, rest) end
 \pause
     \draw [pile, color=green] (0,0) -- +(1.8,3);
 \pause
-    \draw [pile, dashed, color=gray] (1.8,3) -- +(2.6,2) ; 
+    \draw [pile, dashed, color=gray] (1.8,3) -- +(2.6,2) ;
 \pause
-    \draw [pile, color=green] (1.8,3) -- +(1.8,3); 
+    \draw [pile, color=green] (1.8,3) -- +(1.8,3);
 \pause
-    \draw [pile, dashed, color=gray] (3.6,6) -- +(2.6,2); 
+    \draw [pile, dashed, color=gray] (3.6,6) -- +(2.6,2);
 \pause
-    \draw [pile, color=green] (3.6,6) -- +(1.8,3); 
+    \draw [pile, color=green] (3.6,6) -- +(1.8,3);
 \end{tikzpicture}
 
 \end{column}
 \begin{column}{0.5\linewidth}
 \begin{verbatim}
-def lookup(_, []) -> nil end
+def lookup(_, []) do nil end
 def lookup(k, [{k,v}|_]) do v end
-def lookup(k, [_|rest]) do 
+def lookup(k, [_|rest]) do
   lookup(k, rest)
 end
 \end{verbatim}
@@ -573,7 +573,7 @@ end
 
 \begin{frame}[fragile]{a map}
 
-Why not implement the memory as a hash map? 
+Why not implement the memory as a hash map?
 
 \vspace{10pt}
 \begin{verbatim}
@@ -582,13 +582,13 @@ defmodule Better do
 def new() do %{} end
 \end{verbatim}
 \pause
-\begin{verbatim}    
-def store(k,v, mem) do 
+\begin{verbatim}
+def store(k,v, mem) do
   Map.put(mem, k, v)
 end
 \end{verbatim}
 \pause
-\begin{verbatim}        
+\begin{verbatim}
 def lookup(k, mem) do
   Map.get(mem, k)
 end
@@ -602,7 +602,7 @@ end
   \vspace{10pt}
 
 \hspace{100pt}\begin{tabular}{|c|c|c|c|c|}
-\hline 
+\hline
        m & t & m+t & list & map\\
 \hline
       1000&       200&      1200&      0.03&      0.06\\
@@ -633,7 +633,7 @@ end
 
 \begin{frame}{dynamic programming}
 
-\vspace{40pt}\hspace{80pt}\parbox[l][60pt][l]{240pt}{Problem divided into simpler parts that can be solved independently, but 
+\vspace{40pt}\hspace{80pt}\parbox[l][60pt][l]{240pt}{Problem divided into simpler parts that can be solved independently, but
 
 \vspace{10pt}\pause
 -  the parts share subproblems that can be reused and,
@@ -717,7 +717,7 @@ Find the shortest path from one node to another.
 \end{figure}
  \end{column}
  \begin{column}{0.6\linewidth}
-   The {\em dynamic programming approach}: 
+   The {\em dynamic programming approach}:
    \begin{itemize}
      \item find a recursive solution
      \item memorize solutions to subproblems
@@ -791,7 +791,7 @@ How do we represent a graph?
 \end{figure}
  \end{column}
  \begin{column}{0.6\linewidth}
-  As a list of edges: 
+  As a list of edges:
 
 \texttt{[\{:a, :b, 2\}, \{:a, :d, 5\}, \{:b, :c, 2\} ... ]}
 
@@ -800,8 +800,8 @@ How do we represent a graph?
   As a list of nodes:
 
 \begin{verbatim}
-[{:a, [{:b, 2}, {:d, 5}]}, 
- {:b, [{:c, 2}, {:e, 3}]}, 
+[{:a, [{:b, 2}, {:d, 5}]},
+ {:b, [{:c, 2}, {:e, 3}]},
  ...]
 \end{verbatim}
 
@@ -810,8 +810,8 @@ How do we represent a graph?
   As a matrix of edges:
 
 \begin{verbatim}
-{{ nil, 2 ,nil, 5 ,nil,nil,nil}, 
- { nil,nil, 2 ,nil, 3 ,nil,nil}, 
+{{ nil, 2 ,nil, 5 ,nil,nil,nil},
+ { nil,nil, 2 ,nil, 3 ,nil,nil},
   ...}}
 \end{verbatim}
 
@@ -863,7 +863,7 @@ How about this?
  d = {:d, [{f, 2}, {c, 3}]}
  b = {:b, [{c, 2}, {e, 3}]}
  a = {:a, [{b, 2}, {d, 5}]}
- 
+
  [a: a, b: b, c: c, d: d, e: e, f: f, g: g]
  \end{verbatim}
 \pause
@@ -879,19 +879,19 @@ How about this?
   Assume we represent a graph by a map indxed by nodes. Each node holds a key-value list of edges.
 
 \begin{verbatim}
-defmodule Graph do 
+defmodule Graph do
 
   def sample() do
     new([a: [b: 2, d: 5], b: [c: 2], ... ])
   end
 \end{verbatim}
-  
+
 \begin{verbatim}
   def new(nodes) do
     Map.new(nodes)
   end
 
-  def next(from, map) 
+  def next(from, map) do
     Map.get(map, from, [])
   end
 end
@@ -904,13 +904,13 @@ end
   Find the distance to the destination from each of the next steps.
 
 \vspace{20pt} \pause
-  
+
 \begin{verbatim}
 def distances(next, to, graph) do
 \end{verbatim}
 \pause
 \begin{verbatim}
-    Enum.map(next, fn({n,d}) ->   
+    Enum.map(next, fn({n,d}) ->
 \end{verbatim}
 \pause
 \begin{verbatim}
@@ -918,7 +918,7 @@ def distances(next, to, graph) do
 \end{verbatim}
 \pause
 \begin{verbatim}
-                        {:inf, nil} -> {:inf, nil};
+                        {:inf, nil} -> {:inf, nil}
 \end{verbatim}
 \pause
 \begin{verbatim}
@@ -968,7 +968,7 @@ Select the smallest path in the list: \texttt{[\{9, [:d, :c, :g]\}, ..]}
  \end{column}
  \begin{column}{0.6\linewidth}
    \begin{verbatim}
-def shortest(from, from, _) -> {0, []} end
+def shortest(from, from, _) do {0, []} end
   \end{verbatim}
   \pause
   \begin{verbatim}
@@ -1005,7 +1005,7 @@ def shortest(from, from, _, mem) do
     {{0, []}, ...}
 end
 def shortest(from, to, graph, mem) do
-    next = Graph.next(from, graph),
+    next = Graph.next(from, graph)
     {..., ...} = distances(next, to, graph, mem)
     shortest = select(...)
     {..., ...}
@@ -1078,7 +1078,7 @@ end
             edge              node {3} (E)
         (C) edge              node {6} (E)
             edge              node {1} (G)
-            edge              node {2} (A)        
+            edge              node {2} (A)
         (D) edge              node {3} (C)
             edge              node {2} (F)
         (E) edge              node {2} (G)
@@ -1092,7 +1092,7 @@ end
 \begin{frame}{Summary}
 
 
-\vspace{40pt}\hspace{80pt}\parbox[l][60pt][l]{240pt}{Problem divided into simpler parts that can be solved independently, but 
+\vspace{40pt}\hspace{80pt}\parbox[l][60pt][l]{240pt}{Problem divided into simpler parts that can be solved independently, but
 
 \vspace{10pt}\pause
 -  the parts share subproblems that can be reused and,
