@@ -33,7 +33,8 @@ modules that we will implement
 \begin{itemize}
  \item {\bf vector:} vector arithmetic
  \item {\bf ray:} the description of a ray
- \item {\bf sphere:} a sphere object 
+ \item {\bf sphere:} a sphere object
+ \item {\bf object:} a protocol for all objects
  \item {\bf camera:} the camera position, direction and characteristics
  \item {\bf tracer:} responsible for the tracing of rays 
  \item {\bf ppm:} how to generate a .ppm file
@@ -131,8 +132,8 @@ end
   \end{verbatim}
 \pause
   \begin{verbatim}
-def sub({x1,x2,x3}, {y1,y2,y3}) do
-  {x1-y1, x2-y2, x3-y3}
+def add({x1,x2,x3}, {y1,y2,y3}) do
+  {x1+y1, x2+y2, x3+y3}
 end
   \end{verbatim}
 \pause
@@ -159,7 +160,8 @@ end
 \pause
   \begin{verbatim}
 def normalize(x) do
-  scale(x, 1)
+  n = norm(x)
+  smul(x, 1 / n)
 end
   \end{verbatim}
   \end{column}
@@ -175,7 +177,7 @@ We now define how to represent object and rays.
 \begin{itemize}
   \item {\bf ray:} position and direction
   \item {\bf sphere:} position, radius, ...
-  \item {\bf objects:} intersection of rays and objects
+  \item {\bf object:} a {\em protocol} for all obejcts
  \end{itemize}
 
 \end{frame}
@@ -216,7 +218,7 @@ We now define how to represent object and rays.
 \begin{verbatim}
 defmodule Ray do
 
-  defstruct pos: {0, 0, 0}, dir: {1, 1, 1}
+  defstruct pos: {0, 0, 0}, dir: {0, 0, 1}
 \end{verbatim}
 
   \end{column}
@@ -294,7 +296,7 @@ A sphere is defined by:
 \begin{verbatim}
 defmodule Sphere do
 
-  defstruct pos: center: {0, 0, 0}, radius: 2
+  defstruct pos: {0, 0, 0}, radius: 2
 
 end
 \end{verbatim}
@@ -752,8 +754,8 @@ def trace(ray, objects) do
   case intersect(ray, objects) do
     {:inf, _} ->
       @black
-    {_, sphere} ->
-      sphere.color
+    {_, object} ->
+      object.color
   end
 end
 \end{verbatim}
@@ -841,7 +843,7 @@ defmodule World do
   defstruct objects: [],
             lights: [],
             background: @background,
-            ambient: @ambient,
+            ambient: @ambient
 end
 \end{verbatim}
 
@@ -858,6 +860,9 @@ end
   In the tracer, when we have found an intersecting object:
 
 \begin{verbatim}
+ case intersect(ray, objects) do
+  {:inf, _} ->
+      @black
   {d, obj} ->
      o = ray.pos
      l = ray.dir
