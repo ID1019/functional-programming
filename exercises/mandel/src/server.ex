@@ -35,7 +35,7 @@ defmodule Server do
   defp rows(w, h, tr, depth, ctrl) do
     receive do
       {:request, from} ->
-        IO.write("Sending request to ")
+        IO.write("Sending request {#{w}, #{h}} to ")
         IO.inspect(from)
         send(from, {:task, w, h, tr, depth, ctrl})
         send(ctrl, :go)
