@@ -25,7 +25,7 @@ defmodule Print do
     end
 
     receive do
-      {:row, n, row} ->
+      {:row, ^n, row} ->
         chars = row(row)
         IO.write(fd, chars)
         rows(h - 1, n + 1, w, fd)
