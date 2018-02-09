@@ -8,7 +8,7 @@ defmodule Bench do
     {x, y, xn} = image(img)
     {width, height, k} = size(size, x, xn)
     {:ok, server} = Server.start(width, height, x, y, k, depth, name)
-    :global.register_name(:server, server)
+    :global.re_register_name(:server, server)
   end
 
   def sky(img, size, depth) do 
