@@ -11,9 +11,9 @@
 ---
 
 ## General guidelines
-This repository contains the code for a course in *functional and concurrent programming* at KTH, Royal Institute of Technology. The programming language used for this course was originally Erlang, but has been changed to [Elixir](http://elixir-lang.github.io/) since the spring term 2018. The assignment files and the lecture slides are written in [LaTex](https://www.latex-project.org/). GitHub-flavoured Markdown and Makefile are also used.
+This repository contains the code for a course in *functional and concurrent programming* at KTH, Royal Institute of Technology. The programming language used for this course was originally Erlang, but was changed to [Elixir](http://elixir-lang.github.io/) in the spring term 2018. The assignment files and the lecture slides are written in [LaTex](https://www.latex-project.org/). GitHub-flavoured Markdown and Makefile are also used.
 
-If you are knowledgeable about Elixir or about the topic in general or you feel you can contribute to the improvement of the course you are very welcome to help. Below is more information about [how to contribute to the codebase](#how-to-contribute-to-the-codebase).
+If you are knowledgeable about Elixir or about the topic in general or you feel you can contribute to the improvement of the course you are very welcome to help. Below you can find more information about [how to contribute to the codebase](#how-to-contribute-to-the-codebase).
 
 If you find any mistake, bug or error and you do not know how to fix it, you can file an issue. We will try to solve the problem as quickly as possible. More about how to *properly* file an issue in the section [how to create an issue](#how-to-create-an-issue) below. 
 
