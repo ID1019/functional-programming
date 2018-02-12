@@ -39,7 +39,7 @@ The repository contains various Makefiles used for LaTex compilation among other
 **All contributions need to be made through pull requests.** We highly recommend to use a *gitflow-like* workflow. Here is a basic example:
 1) Fork the repository
 2) Make the changes/additions to the codebase **in a specific branch in your fork**. You can use the following branch name convention `feature/<title>` (e.g. `feature/add-binary-tree`).
-3) Open a pull request from your branch to the main repository master branch `ID1019/master`.
+3) Open a pull request from your branch to the main repository master branch `ID1019/functional-programming/master`.
 4) Clearly explain content and intention behind the pull request. Do not be afraid of extensively describe your work.
 5) Remember to synchronize your fork with the main repository (pull/rebase/merge) when the pull request has been accepted.
 
