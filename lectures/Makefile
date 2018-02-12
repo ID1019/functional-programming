@@ -10,7 +10,9 @@ DIRS = 	overview \
         interpreter \
         types \
 	tracer \
-	dynamic
+	dynamic \
+	concurrency \
+	asynchronous
 
 
 
