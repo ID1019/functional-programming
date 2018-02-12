@@ -51,4 +51,4 @@ static ErlNifFunc nif_funcs[] = {
     {"test", 3, test_nif},
 };
 
-ERL_NIF_INIT(depth, nif_funcs, NULL, NULL, NULL, NULL)
+ERL_NIF_INIT(Elixir.Depth, nif_funcs, NULL, NULL, NULL, NULL)

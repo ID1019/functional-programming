@@ -1,5 +1,17 @@
 defmodule Server do
 
+  def small() do
+    start(960, 540, -0.136, 0.85, -0.134, 255, "forest.ppm") 
+  end
+
+  def large() do
+    start(1920, 1080, -0.136, 0.85, -0.134, 255, "forest.ppm") 
+  end
+
+  def huge() do
+    start(3840, 2160, -0.136, 0.85, -0.134, 255, "forest.ppm") 
+  end  
+  
   # The start/7 process will start a mandel server and a print process.
   def start(width, height, x, y, k, depth, file) do
     {:ok, spawn(fn -> init(width, height, x, y, k, depth, file) end)}
@@ -23,7 +35,8 @@ defmodule Server do
   defp rows(w, h, tr, depth, ctrl) do
     receive do
       {:request, from} ->
-        IO.puts("Sending request to #{from}...")
+        IO.write("Sending request {#{w}, #{h}} to ")
+        IO.inspect(from)
         send(from, {:task, w, h, tr, depth, ctrl})
         send(ctrl, :go)
         rows(w, h - 1, tr, depth, ctrl)

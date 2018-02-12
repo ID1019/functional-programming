@@ -19,12 +19,13 @@ defmodule Print do
   defp rows(0, _, _, _fd), do: :ok
   defp rows(h, n, w, fd) do
     receive do
-      :ok ->
+      :go ->
+	### the server has sent a row to a client
         :ok
     end
 
     receive do
-      {:row, n, row} ->
+      {:row, ^n, row} ->
         chars = row(row)
         IO.write(fd, chars)
         rows(h - 1, n + 1, w, fd)
