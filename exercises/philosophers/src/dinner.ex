@@ -21,7 +21,7 @@ defmodule Dinner do
     Philosopher.start(n, 5, c2, c3, "Hypatia", ctrl, seed + 2)
     Philosopher.start(n, 5, c3, c4, "Simone", ctrl, seed + 3)
     Philosopher.start(n, 5, c4, c5, "Elisabeth", ctrl, seed + 4)
-    Philosopher.start(n, 5, c1, c5, "Ayn", ctrl, seed + 5)
+    Philosopher.start(n, 5, c5, c1, "Ayn", ctrl, seed + 5)
     wait(5, [c1, c2, c3, c4, c5])
   end
 
