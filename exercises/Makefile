@@ -11,7 +11,8 @@ DIRS =	huffman \
         tracer \
 	philosophers \
 	avl \
-	twothree
+	twothree \
+	transport
 
 
 
