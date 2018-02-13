@@ -108,7 +108,7 @@ layers that we will work with are:
 \item order: This layer will add re-transmissions of
   missing messages and keep track of ordering of messages. 
   
-\item flow: This layer will and solve the flow-control problem.
+\item flow: This layer will solve the flow-control problem.
 
 \end{itemize}
 
@@ -176,8 +176,7 @@ layer.
 The link layer process is, as shown in Fig.\ref{fig:link} quite
 simple. We will first start the process and give it the process
 identifier of the master process. We will then send it a message that
-connect the process with a destination process. The link layer is then
-ready to receive the following messages:
+connect the process with a destination link layer process. 
 
 \begin{figure}
 \centering  
@@ -202,9 +201,9 @@ ready to receive the following messages:
 
 Note the order here; we can not provide the link layer process with
 its connection point when we create the process. If we tried we would
-end up in a checken and the egg question of wich process to start
-first. We solve this by first creating a link process and the send it
-a messag with the process identifier of its peer.
+end up in a chicken or the egg question. We solve this by first
+creating both link processes and the send them a message with the process
+identifier of their peer.
 
 The link layer should be able to handle the following messages:
 
@@ -240,7 +239,7 @@ together.
 \end{lstlisting}  
 
 This program will start two processes, the {\tt sender} and the {\tt
-  receiver}.  Note the order in which we have to start the
+  receiver};  note the order in which we have to start the
 processes. The two master processes are started first in order to
 provide the link processes with their respective master. Once the link
 processes are created we can connect them together and then connect
@@ -249,12 +248,12 @@ the master processes to the link processes.
 The {\tt link\_sender} process could look like follows. Implement the
 corresponding receive process and see if your systems runs.
 
-
 \begin{lstlisting}
 def sender() do
   receive do
     {:connect, lnk} ->
-      :io.format("sender connected to link ~w, sending hello~n", [lnk]),
+      :io.format("sender connected to link ~w ~n", [lnk]),
+      :io.format("sending hello~n", [])
       send(lnk, {:send, :hello})
   end
 end            
@@ -294,6 +293,7 @@ environment where nodes fail before having been disconnected.
 \caption{The hub.}
 \label{fig:hub}
 \end{figure}
+
 
 
 \section{network layer}
