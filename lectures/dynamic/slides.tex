@@ -507,8 +507,8 @@ def lookup(k, [_|rest]) do lookup(k, rest) end
       4000&        800&       4800&           10&        0.35  \\
       5000&       1000&       6000& \pause   110& \pause 0.42 \\
       6000&       1200&       7200& \pause  1900& \pause 0.80 \\
-      7000&       1400&       8400& \pause  3200& \pause 1.30 \\
-      8000&       1600&       9600& \pause  550000& \pause 2.10 \\
+      7000&       1400&       8400& \pause  32000& \pause 1.30 \\
+      8000&       1600&       9600& \pause  550000& \pause 2.10 \\          
 \hline
 \end{tabular}
 
@@ -1026,12 +1026,12 @@ end
   def distances(next, to, graph, mem) do
     List.foldl(next, {[], mem},
       fn ({t,d}, {dis,mem}=acc) ->
-	case check(t, to, graph, mem) do
-	  {{:inf, _}, _} ->
-	    acc
-	  {{n, path}, mem} ->
+        case check(t, to, graph, mem) do
+          {{:inf, _}, _} ->
+            acc
+          {{n, path}, mem} ->
             {[{d+n, [t|path]}| dis ], mem}
-	end
+        end
       end)
   end
 \end{verbatim}
@@ -1045,10 +1045,10 @@ end
   def check(from, to, graph, mem) do
     case Memory.lookup(from, mem) do
       nil ->
-	{solution, mem} = shortest(from, to, graph, mem)
+        {solution, mem} = shortest(from, to, graph, mem)
         {solution,  Memory.store(from, solution, mem)}
      solution ->
-	{solution, mem}
+        {solution, mem}
     end
   end
 \end{verbatim}
