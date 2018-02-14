@@ -10,8 +10,7 @@ defmodule Philosopher do
   end
 
   defp init(hunger, strength, left, right, name, ctrl, seed) do
-    # gui = Gui.start(name)
-    gui = nil
+    gui = Gui.start(name)
     :rand.seed(:exsplus, {seed, seed, seed})
     dreaming(hunger, strength, left, right, name, ctrl, gui)
   end
@@ -19,12 +18,12 @@ defmodule Philosopher do
   # Philosopher is in a dreaming state.
   defp dreaming(0, strength, _left, _right, name, ctrl, gui) do
     IO.puts("#{name} is happy, strength is still #{strength}!")
-    # send(gui, :stop)
+    send(gui, :stop)
     send(ctrl, :done)
   end
   defp dreaming(hunger, 0, _left, _right, name, ctrl, gui) do
     IO.puts("#{name} is starved to death, hunger is down to #{hunger}!")
-    # send(gui, :stop)
+    send(gui, :stop)
     send(ctrl, :done)
   end
   defp dreaming(hunger, strength, left, right, name, ctrl, gui) do
@@ -35,7 +34,7 @@ defmodule Philosopher do
 
   # Philosopher is waiting for chopsticks.
   defp waiting(hunger, strength, left, right, name, ctrl, gui) do
-    # send(gui, :waiting)
+    send(gui, :waiting)
     IO.puts("#{name} is waiting, #{hunger} to go!")
 
     case Chopstick.request(left) do
@@ -52,7 +51,7 @@ defmodule Philosopher do
 
   # Philosopher is eating.
   defp eating(hunger, strength, left, right, name, ctrl, gui) do
-    # send(gui, :enter)
+    send(gui, :enter)
     IO.puts("#{name} is eating...")
 
     delay(@eat)
@@ -60,7 +59,7 @@ defmodule Philosopher do
     Chopstick.return(left)
     Chopstick.return(right)
 
-    # send(gui, :leave)
+    send(gui, :leave)
     dreaming(hunger - 1, strength, left, right, name, ctrl, gui)
   end
 

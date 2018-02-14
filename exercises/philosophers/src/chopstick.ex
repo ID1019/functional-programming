@@ -1,6 +1,7 @@
 defmodule Chopstick do
 
-  def start do
+  def start() do
+    ## We link to the dinner process inorder to avoid zombie chopsticks
     stick = spawn_link(fn -> init() end)
     {:stick, stick}
   end
@@ -18,6 +19,7 @@ defmodule Chopstick do
     send(pid, :return)
   end
 
+  
   # Using a timeout to detect deadlock, does it work?
   def request({:stick, pid}, timeout) do
     send(pid, {:request, self()})
@@ -50,16 +52,16 @@ defmodule Chopstick do
     end
   end
 
-  defp return({:stick, pid}, ref) do
-    send(pid, {:return, ref})
-  end
-
   # A asynchronous request, divided into sending the
   # request and waiting for the reply.
-  defp asynch({:stick, pid}, ref) do
+  def asynch({:stick, pid}, ref) do
     send(pid, {:request, ref, self()})
   end
 
+  def return({:stick, pid}, ref) do
+    send(pid, {:return, ref})
+  end
+  
   # To terminate the process.
   def quit({:stick, pid}) do
     send(pid, :quit)
