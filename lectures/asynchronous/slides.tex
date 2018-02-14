@@ -1,0 +1,596 @@
+\input{../include/preamble}
+
+\title[ID1019 Asynchronous]{Asynchronous vs Synchronous}
+
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{let's implement a memory}
+
+  The {\em memory} should be a zero indexed {\em mutable data
+    structure} of a given size and provide the following functions:
+
+\pause\vspace{20pt}
+
+\begin{itemize}
+ \item {\tt @spec new([any]) :: memory} : creates a memory initialized with values from a list \pause
+ \item {\tt @spec read(memory, integer) :: any } : returns the  value stored in the memory at position $n$ 
+ \item {\tt @spec write(memory, n, any) -> :ok} : writes the value at position $n$ in the memory 
+\end{itemize}
+
+\pause\vspace{20pt}
+{\em what do we mean by read and write}
+
+\end{frame}
+
+\begin{frame}[fragile]{a first try}
+
+\begin{verbatim}
+defmodule Mem do
+
+  def new(list) do
+    {:mem, List.to_tuple(list)}
+  end
+\end{verbatim} \pause
+\begin{verbatim}
+  def read({:mem, mem}, n) do
+    elemt(mem, n)
+  end
+\end{verbatim} \pause
+\begin{verbatim}
+  def write({:mem, mem}, n, val) do
+      ???
+  end 
+\end{verbatim}
+
+\pause\vspace{20pt}
+{\em ... hmm, not that easy}
+
+\end{frame}
+
+\begin{frame}[fragile]{the functional way}
+
+Functional programming rules!
+
+\pause\vspace{10pt}
+Let {\tt write/3} return a new memory, a copy of the original with the update.
+
+\pause\vspace{10pt}
+\begin{verbatim}
+def write({:mem, mem}, n, val) ->
+   {:mem, put_elem(mem, n, val}}
+end
+\end{verbatim}
+\pause\vspace{40pt}
+
+{\em I love functional programming}
+
+\end{frame}
+
+\begin{frame}[fragile]{life is easy}
+\pause
+\begin{verbatim}
+def test() do
+  mem1 = Mem.new([:a, :b, :c, :d, :e, :f])
+  mem2 = Mem.write(mem, 3, :foo)
+  take_a_look_at_this(mem1)
+  and_check_this(mem2)
+end
+\end{verbatim}
+
+\pause
+What if we always write like this:
+
+\begin{verbatim}
+def test() do
+  mem = Mem.new([:a, :b, :c, :d, :e, :f])
+  mem = Mem.write(mem, 3, :foo)
+  take_a_look_at_this(mem)
+  and_check_this(mem)
+end
+\end{verbatim}
+
+
+\end{frame}
+
+\begin{frame}{why not cheat}
+
+Can we cheat, and introduce a mutable data structure?
+
+\pause\vspace{20pt}
+Can we use processes to implement mutable data structures?
+
+\end{frame}
+
+
+\begin{frame}[fragile]{a mutable cell}
+
+\begin{block}{cell/1}
+ \begin{verbatim}
+def cell(v) do
+  receive do
+    {:read, pid} ->
+       send(pid, {:value, v})
+       cell(v)
+    {:write, w, pid} ->
+       send(pid, :ok)
+       cell(w)
+    :quit ->
+       ok
+  end
+end
+ \end{verbatim}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{a synchronous interface}
+
+\begin{columns}
+\begin{column}{.5\linewidth}
+\begin{block}{read/1}
+ \begin{verbatim}
+def read({:cell, cell}) do
+  send(cell , {:read, self()})
+  receive do
+    {:value, v} ->
+       v
+  end
+end
+ \end{verbatim}
+\end{block}
+\end{column}
+\pause
+\begin{column}{.5\linewidth}
+\begin{block}{write/1}
+ \begin{verbatim}
+def write({:cell, cell}, val) do
+  send(cell, {:write, val, self()})
+  receive do
+    :ok ->
+       :ok
+  end
+end
+ \end{verbatim}
+\end{block}
+\end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{the cell module}
+\begin{verbatim}
+defmodule Cell do
+
+  def start(val) do       ## things to do in mother process
+    {:cell, spawn_link(fn() -> init(val) end)}
+  end
+
+  def read({:cell, cell}) do  ... end
+
+  def write({:cell, cell}, V) do ...  end
+
+  def init(val) do        ## things to do in the child process
+     cell(val)
+  end
+
+  def cell(V) do 
+     :
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{the memory}
+
+\begin{verbatim}
+defmodule Memory do
+
+def new(list) do
+  cells = Enum.map(list, fn(e) -> Cell.start(e) end)
+  {:mem, List.to_tuple(cells)}
+end
+\end{verbatim} \pause
+\begin{verbatim}
+def read({:mem, mem}, n) do
+  Cell.read(elem(mem, n))
+end
+\end{verbatim} \pause
+\begin{verbatim}
+def write({:mem, mem}, n, val) do
+  Cell.write(elem(mem, n), val)
+end
+\end{verbatim} \pause
+\begin{verbatim}
+def delete({:mem, mem}) do
+  Enum.each(Tuple.to_list(mem), fn(c) -> send(c, :quit) end)
+end
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{at last}
+
+\pause
+\begin{verbatim}
+ test() -> 
+     array = Memory.new([:a,:b,:c,:d,:e,:f,:g,:h])
+     Memory.write(array, 5, :foo)
+     Memory.write(array, 2, :bar)
+     love_all(array)
+     sort_it_for_me(array)
+     i_love_imperative_programming(array)
+  end
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{functional vs processes}
+
+By extending our language to handle processes, we have left the
+functional world. 
+
+\pause\vspace{10pt}
+We can implement {\em mutable data structures}, something
+that we agreed was evil.
+
+\pause\vspace{20pt}
+
+Why are mutable data structures evil?
+
+\end{frame}
+
+\begin{frame}[fragile]{the evil of mutability}
+
+\pause
+\begin{verbatim}
+    :
+  this = check_this(mem),
+  %% I hope it did not change anything
+  that = check_that(mem),
+    :
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{truly bad}
+
+\begin{columns}
+ \begin{column}{0.5\linewidth}
+  \begin{block}{all\_work/2}
+   \begin{verbatim}
+def all_work(cell, 0, jack) do 
+  send(jack, :run)
+end
+def all_work(cell, n, jack) do
+  x = Cell.read(cell)
+  Cell.write(cell, x + 1)
+  all_work(cell, n-1, jack)
+end
+   \end{verbatim}
+  \end{block}
+ \end{column}
+ \begin{column}{0.5\linewidth}
+  \begin{block}{no\_play/1}
+\begin{verbatim}
+ def no_play(n) do
+    cell = Cell.start(0)
+    me = self()
+    spawn(fn() -> 
+       all_work(cell, n, me) end)
+    spawn(fn() -> 
+       all_work(cell, n, me) end)    
+    receive do :run ->
+         receive do :run ->
+              Cell.read(cell)
+         end
+    end
+ end
+\end{verbatim}
+  \end{block}
+ \end{column}
+\end{columns}
+
+
+\end{frame}
+
+\begin{frame}{a dull boy}
+
+\begin{columns}
+ \begin{column}{0.5\linewidth}
+   \includegraphics[width=\linewidth]{shining.jpg}
+ \end{column}
+ \pause
+ \begin{column}{0.5\linewidth}
+   \begin {itemize}
+    \item without mutable data structures, concurrency would be easy
+    \item sharing mutable data structures is the root of all evil
+    \item a process is, in one way, a mutable data structure
+    \pause
+    \item ... It's only a movie.
+   \end{itemize}
+ \end{column}
+ \end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{adding atomic operations}
+
+\begin{columns}
+ \begin{column}{0.5\linewidth}
+\begin{verbatim}
+def cell(v) do
+  receive do
+    {:read, pid} ->
+       send(pid, {:value, v})
+       cell(v)
+    {:write, w, pid} ->
+       send(pid, :ok)
+       cell(w)
+    :quit ->
+       ok
+  end
+end
+\end{verbatim}
+ \end{column}
+\pause
+ \begin{column}{0.5\linewidth}
+\begin{verbatim}
+def cell(v) do
+  receive do
+    {:read, pid} ->
+       send(pid, {:value, v})
+       cell(v)
+    {:write, w, pid} ->
+       send(pid, :ok)
+       cell(w)
+    {:inc, n} ->
+       send(pid, :ok)
+       cell(v+n)       
+    :quit ->
+       ok
+  end
+end
+\end{verbatim}
+ \end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{frame}[fragile]{a lock}
+
+\vspace{10pt}
+
+We want to avoid processes interfering with each other when intracting
+with a process.
+
+\vspace{10pt}
+Let's implement a lock using our cell.
+
+\pause
+\begin{itemize}
+ \item take the lock
+ \item relase the lock
+ \item at most one process can hold the lock
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{using a cell}
+
+\pause\vspace{20pt}
+
+\begin{verbatim}
+def critical(danger, lock) do
+  case cell:read(lock) of
+    :locked ->
+        critical(danger, lock);
+    :free ->
+        cell:write(lock, :locked),
+        do_it(danger),
+        cell:write(lock, :free)
+  end.    
+\end{verbatim}
+
+\pause\vspace{20pt}
+{\em hmmm, not so good}
+
+\end{frame}
+
+\begin{frame}[fragile]{a better lock}
+
+\begin{verbatim}
+defmodule Lock do
+
+def start() do
+   {:lock, spawn_link(fun() -> free() end)}
+end
+\end{verbatim}
+\begin{columns}
+  \begin{column}{0.5\linewidth}
+\begin{verbatim}
+def free() do
+  receive do
+    {:take, pid} ->
+       self(pid, :taken)
+       taken()
+  end
+end
+\end{verbatim}
+  \end{column}
+  \begin{column}{0.5\linewidth}
+\begin{verbatim}  
+def taken() do
+  receive do
+   :release ->
+     ...
+  end
+end
+
+\end{verbatim}
+  \end{column}
+\end{columns}
+\end{frame}
+
+
+\begin{frame}[fragile]{asynchronous communication}
+
+Messages in Erlang is a form of {\em asynchronous communication}.
+
+\pause\vspace{20pt}
+\begin{verbatim}
+  send(pid, {:take, self()}
+\end{verbatim}
+
+\pause\vspace{20pt}
+The sender does not block and wait for the receiver to accept the message. 
+\pause\vspace{20pt}
+{\em Asynchronous : not at the same time}
+\end{frame}
+
+\begin{frame}[fragile]{synchronous communication}
+
+We can implement {\em synchronous communication}
+\pause\vspace{20pt}
+
+\begin{columns}
+ \begin{column}{0.5\linewidth}
+  \begin{verbatim}
+def take(lock) do
+  send(lock, {:take, self()})
+  receive do
+    :taken ->
+       :ok
+  end 
+end
+  \end{verbatim}
+  \pause
+ \end{column}
+ \begin{column}{0.5\linewidth}
+  \begin{verbatim}
+def free() do
+  receive do
+    {:take, pid} ->
+       self(pid, :taken)
+       taken()
+  end
+end
+  \end{verbatim}
+ \end{column}
+\end{columns}
+\pause\vspace{10pt}
+        
+The reply is generated by the application layer.
+\pause\vspace{5pt}
+
+\begin{verbatim}
+  :ok = take(lock)
+\end{verbatim}
+
+The application process sees a {\em synchronous operations},
+\pause\vspace{5pt}
+
+{\em Synchronous : at the same time}
+\end{frame}
+
+\begin{frame}{pros and cons}
+
+What are the pros and cons of asynchronous communication?
+
+\end{frame}
+
+\begin{frame}[fragile]{synchronous by default}
+
+We could provide synchronous communication by default, for example:
+\pause\vspace{10pt}
+\begin{verbatim}
+send(jack, {:take, this})
+%% I now know that the message is in the queue of Jack
+  :
+  ?
+\end{verbatim}
+
+\pause 
+\vspace{10pt}... or\vspace{10pt}
+\begin{verbatim}
+send(jack, {:do, that})
+%% I now know that the message has been "received" by Jack
+  :
+  ?
+\end{verbatim}
+\pause 
+\vspace{10pt}but why not..\vspace{10pt}
+\end{frame}
+
+\begin{frame}[fragile]{synchronous when needed}
+\begin{verbatim}
+send(jack,  {:hello, self()}
+%% I need to know that Jack has fun
+receive 
+  :having_fun ->
+     run_as_hell()
+end
+\end{verbatim}
+\pause
+\includegraphics[height=0.3\textheight]{fun.jpg}
+\end{frame}
+
+\begin{frame}[fragile]{an asynchrounous memory}
+
+Synchronous programing is boring.
+
+\begin{verbatim}
+def cell(v) do
+  receive do
+    {:read, ref, pid} ->
+       send(pid, {:value, ref, v})
+       cell(v)
+    {:write, w, pid} ->
+       cell(w)
+    :quit ->
+       ok
+  end
+end
+\end{verbatim}
+
+  
+\end{frame}
+
+\begin{frame}[fragile]{an asynchrounous memory}
+
+\begin{verbatim}
+def redrum({:cell, cell}) do
+  ref = make_ref()
+  send(cell, {:read, ref, self()})
+  ref
+end
+\end{verbatim} \pause
+
+\begin{verbatim}  
+def murder(ref) do
+  receive do
+   {:value, ^ref, value} -> 
+      value
+  end
+end
+\end{verbatim}
+
+
+\end{frame}
+
+
+\begin{frame}{Summary}
+
+\begin{itemize}
+\item Processes can be used to implement mutable data structures.
+\item Same problems needs to be considered. 
+\item Made easier since each mutable data structure is a user defined process.
+\item Asynchronous vs synchronous message passing - pros and cons.
+\end{itemize}
+
+\end{frame}
+\end{document}
