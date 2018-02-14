@@ -1,10 +1,10 @@
 defmodule Ack do
 
-  defstruct id: 0
+  defstruct seq: 0
 
   defimpl String.Chars, for: Ack do
-    def to_string(%Ack{id: n})  do
-      "<Ack: #{n} >"
+    def to_string(%Ack{seq: n})  do
+      "Ack<seq: #{n}>"
     end
   end
 

@@ -4,7 +4,7 @@ defmodule Frame do
 
   defimpl String.Chars, for: Frame do
     def to_string(%Frame{data: msg})  do
-      "<Frame: " <> String.Chars.to_string(msg) <> ">"
+      "Frame<data: " <> String.Chars.to_string(msg) <> ">"
     end
   end
 
