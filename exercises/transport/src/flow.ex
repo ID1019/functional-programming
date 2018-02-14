@@ -5,9 +5,10 @@ defmodule Flow do
   end
 
   def init(size) do
+    :io.format("flow ~w started ~n", [self()])
     receive do
       {:connect, netw} ->
-	:io.format("flow connecting to ~w~n", [netw])
+	:io.format("flow ~w connecting to ~w~n", [self(), netw])
 	send(netw, {:send, %Syn{add: size}})
 	flow(size, 0, [], netw)
     end
@@ -61,7 +62,7 @@ defmodule Flow do
   def read(n, buffer) do
     l = length(buffer)
     if n <= l do
-      {deliver, keep} = Enum.split(n, buffer)
+      {deliver, keep} = Enum.split(buffer, n)
       {n, deliver, keep}
     else
       {l, buffer, []}

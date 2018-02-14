@@ -122,7 +122,7 @@ implemented.
 If we draw a diagram over the complete system it will look like
 Fig.\ref{fig:arch}. Each layer will have one or more processes that
 implements the right abstractions. In its first incarnation each layer
-will be handeled by a single process but when we extend the system we
+will be handled by a single process but when we extend the system we
 might want to have separate processes for different directions.
 
 \begin{figure}
@@ -209,12 +209,12 @@ The link layer should be able to handle the following messages:
 
 \begin{itemize}
 
-  \item {\tt \{:send, msg\} }: A message from the master, telling the link
-    process to send the message, {\tt msg}, to the destination process. The
-    message is wrapped in a {\em frame} and sent using the
-    regular Elixir send primitive.
+\item {\tt \{:send, msg\} }: A message from the master (the network
+  layer process), telling the link process to send the message, {\tt
+    msg}, to the destination process. The message is wrapped in a {\em
+    Frame} and sent using the regular Elixir send primitive.
 
-  \item {\tt \#Frame\{data: msg\}}: A {\em frame} from another link
+  \item {\tt \%Frame\{data: msg\}}: A frame from the peer  link
     process. This message should be forwarded to the master process
     using the regular Elixir send primitive. The message is sent as
     is, {\tt msg}, without being wrapped in any special data structure.
@@ -262,30 +262,34 @@ end
 \section{a hub}
 
 If we only have two nodes in our network it is rather pointless, so we
-will implement a ``hub'' to which we can connect several nodes. The hub
-will accept new connection and forward incoming frames to all
-connected nodes. The state machine is as shown in Fig.~\ref{fig:hub}
-simple and in the implementation we only need to solve how connections
-should be stored and how to implement broadcasting of messages.
+will implement a ``hub'' to which we can connect several nodes. The
+hub will accept new connection and forward incoming frames to all
+connected nodes. The state machine is shown in Fig.~\ref{fig:hub}. In
+the implementation we only need to solve how connections should be
+stored and how to implement broadcasting of messages.
 
-As an extra precaution we add monitoring of connected processes. If a
-connected process dies we remove it from the set of connected
+As an extra precaution we add monitoring of connected link layer processes. If a
+process dies we remove it from the set of connected
 processes. This will save the state of the hub from growing in an
 environment where nodes fail before having been disconnected.
 
+An implementation can be found in Appendix \ref{app:link}. Write a
+small test program, similar to the previous one, where two link layer
+processes are connected using a hub.
+
 \begin{figure}
 \centering  
-\begin{tikzpicture}[>=stealth', node distance=3cm, semithick, auto]
+\begin{tikzpicture}[>=stealth', node distance=4cm, semithick, auto]
 
     \node[initial, state]            (hub)                        {hub};
     \node[accepting, state]          (final)   [right of=hub]     {final};
 
 
     
-    \path[->]   (hub)   edge       [loop above, every loop/.append style={looseness=10,in=100, out=160 }]    node      {\{:connect, dest\}}       (hub)
-                        edge       [loop below, every loop/.append style={looseness=10,in=260, out=200 }]    node      {\{:disconnect, dest\}}    (hub)
-                        edge       [loop above, every loop/.append style={looseness=6,in=20, out=80 }]       node      {\#frame\{\}}              (hub)
-                        edge       [loop below, every loop/.append style={looseness=6,in=340, out=280 }]     node      {:DOWN}                    (hub)
+    \path[->]   (hub)   edge       [loop above, every loop/.append style={looseness=20,in=100, out=160 }]    node[anchor=south east]      {\{:connect, dest\}}       (hub)
+                        edge       [loop below, every loop/.append style={looseness=20,in=260, out=200 }]    node[anchor=north east]      {\{:disconnect, dest\}}    (hub)
+                        edge       [loop above, every loop/.append style={looseness=20,in=20,  out=80 }]     node[anchor=south west]      {\%Frame\{\}}              (hub)
+                        edge       [loop below, every loop/.append style={looseness=20,in=340, out=280 }]    node[anchor=north west]      {:DOWN}                    (hub)
                         edge       []                                                                        node      {:quit}                    (final);
     
 
@@ -295,13 +299,13 @@ environment where nodes fail before having been disconnected.
 \end{figure}
 
 
-
 \section{network layer}
 
 So we now have a link layer that works but the thing is that the hub
-will happily broadcast any message to all connected nodes. We need a
-network layer that introduces an addressing scheme so we can sen a
-message to a particular node in the network.
+will happily broadcast any message to all connected nodes. If we
+connect three nodes to the hub all three nodes will receive all
+messages. We need a network layer that introduces an addressing scheme
+so we can send a message to a particular node in the network.
 
 In Fig.\ref{fig:net} we have the state diagram of the network layer
 and as you see it is not much more complicated than then link
@@ -315,16 +319,16 @@ modifying the network layer.
 \centering  
 \begin{tikzpicture}[>=stealth', node distance=3cm, semithick, auto]
 
-    \node[initial, state]   (init)                             {init od};
+    \node[initial, state]   (init)                             {init id};
     \node[state]            (net)    [above right of=init]     {net id};
     \node[accepting, state] (final)  [below right of=init]     {final};
 
     
     \path[->]   (init)   edge       [bend left]     node      {\{:connect, lnk\}}       (net)
                          edge       []             node       {:quit}                   (final)
-                (net)    edge       [loop above, every loop/.append style={looseness=10,in=20, out=80 }]   node[anchor=west] {\#msg\{dst=id, msg=msg}(net)
+                (net)    edge       [loop above, every loop/.append style={looseness=10,in=20, out=80 }]   node[anchor=west] {\%Msg\{dst: id, msg: msg\}}(net)
                          edge       [loop above, every loop/.append style={looseness=10,in=100, out=160 }] node[anchor=east] {\{:send, to, msg\}}    (net)
-                         edge       [loop below, every loop/.append style={looseness=6,in=340, out=280 }]  node              {\#msg\{\}}             (net)
+                         edge       [loop below, every loop/.append style={looseness=6,in=340, out=280 }]  node              {\&Msg\{dst\}}             (net)
                          edge       []                                                                     node              {:quit}                 (final);
     
 \end{tikzpicture}
@@ -337,7 +341,16 @@ it will use this address to filter incoming messages. When we start
 the process we also provide its master process so that it knows to whom
 it should redirect incoming messages. Before we start sending messages
 we connect the processes to a link layer process; following the
-pattern of the test procedures for the link layer.
+same pattern as for the test procedures for the link layer.
+
+
+In Appendix \ref{app:netw} you will find an implementation of a
+network layer process. Implement a simple test function that as before
+creates a sender and receiver process that are connected using two
+network layer processes. The tricky part is how to start the processes
+in the right order: application layer, network layer, link layer,
+connect link layers, connect network layer to link layer, connect
+application layer to network layer.
 
 
 \section{order and reliability}
@@ -370,20 +383,20 @@ Elixir process.
 \centering
 \begin{subfigure}[b]{6cm}
 \resizebox{6cm}{!}{
-\begin{tikzpicture}[scale=1, >=stealth', node distance=4cm, semithick, auto]
+\begin{tikzpicture}[scale=1, >=stealth', node distance=5cm, semithick, auto]
     \node[initial, state]            (init)                              {init to};
     \node[state]                     (ready)   [above right of=init]     {ready i};
-    \node[state]                     (send)    [below right of=ready]    {ack a, i};
+    \node[state]                     (send)    [below right of=ready]    {ack msg i};
     \node[accepting, state]          (final)   [below right of=init]     {final};
 
     
     \path[->]   (init)   edge       [bend left]  node                          {\{:connect, lnk\}}   (ready)
                          edge       [bend right] node[anchor=east]             {:quit}               (final)
                 (ready)  edge       []           node[anchor=west, near start] {\{:send, msg\}}      (send)
-                         edge       [loop above] node                          {\{:ack, a\}}         (ready)
+                         edge       [loop above] node                          {\%Ack\{\}}         (ready)
                          edge       [bend right] node[anchor=east]             {:quit}               (final)                   
                 (send)   edge       [loop below, every loop/.append style={looseness=6,in=340, out=30 }] node[anchor=west] {timeout}  (send)   
-                         edge       [bend left]  node[near start]              {\{ack, a\}}          (ready)
+                         edge       [bend left]  node[near start, anchor=east]              {\%Ack\{seq: i\}}          (ready)
                          edge       [bend left]  node                          {:quit}               (final);
 \end{tikzpicture}}
 \subcaption{sending process}
@@ -391,15 +404,15 @@ Elixir process.
 \begin{subfigure}[b]{6cm}
 \resizebox{6cm}{!}{
 \begin{tikzpicture}[scale=1,>=stealth', node distance=3cm, semithick, auto]
-    \node[initial, state]            (init)                              {init from};
+    \node[initial, state]            (init)                              {init};
     \node[state]                     (receive) [above right of=init]     {receive i};
     \node[accepting, state]          (final)   [below right of=init]     {final};
 
     
     \path[->]   (init)   edge       [bend left]                  node              {\{:connect, lnk\}}   (receive)
                          edge       [below, bend right]          node[anchor=east] {:quit}               (final)
-               (receive)   edge     [loop above, every loop/.append style={looseness=6,in=20, out=80}]   node[anchor=west] {\{:dgr, i\}} (receive)
-                         edge       [loop below, every loop/.append style={looseness=6,in=340, out=280}] node[anchor=west] {\{:dgr, j\}\\ if $j<i$}  (receive)
+               (receive)   edge     [loop above, every loop/.append style={looseness=6,in=20, out=80}]   node[anchor=west] {\%Ord\{seq: i\}} (receive)
+                         edge       [loop below, every loop/.append style={looseness=6,in=340, out=280}] node[anchor=west] {\%Ord\{seq: j\} if $j<i$}  (receive)
                          edge       []                                                                   node              {:quit}                   (final);
 \end{tikzpicture}}
 \subcaption{receiving process}
@@ -411,8 +424,20 @@ Elixir process.
 \end{figure}
 
 In Fig.\ref{fig:order} we see the state machines of the sender and
-receiver processes. In its first incarnation we will only allow one
-message to be sent at a time so the processes will be fairly simple.
+receiver processes. This description in simplified in that it will
+only allow one outstanding message. The sender will be directed to
+send a message to the receiver and will move in to a state where it is
+waiting for an {\em acknowledgement} for that particular message {\em
+  i}. If everything works it will receive the {\em Ack} message and go
+back to the ready state. If no acknowledge message is received it will
+receive a timeout and resend the message ({\em msg}).
+
+The receiver knows what sequence number it is waiting. When the
+correct message arrives it will send an acknowledge message in return
+and forward it to its master. It could be that the sender has already
+sent a copy of the message so it must be prepared to discard messages
+that it has already seen. The sender must likewise be prepared to
+discard {\em Ack} messages that it has seen.
 
 Both processes are started and given a specified network address that
 it is communication with. It is then given access to a network process
@@ -421,60 +446,38 @@ we here assume that the sender and receiver are the only processes
 that are communicating using these addresses. The network processes are
 thus dedicated to this communication channel.
 
-In the simpler version the sender process can be in either of two
-states: {\em ready} and {\em acknowledge}. In the ready state it waits
-for a {\tt \{send, Msg\}} message from its user, it will then direct
-the network layer to deliver a numbered datagram and move to the
-acknowledge state. In this state it will wait for an acknowledgment
-before it returns to the ready state. The receiving process will
-simply wait for a datagram of the right sequence number, acknowledge
-this, and wait for the next. The ordering is thus preserved by the
-sequence numbers and the fact that the receiving process will only
-deliver messages in order.
-
-The model is of course complicated since datagrams can be delayed or
-lost in the network layer. We therefore need to add a {\em timeout}
-event in the sender process to re-send a possibly lost message. If the
-message was actually lost no harm is done but if it is only delayed,
-or the acknowledgment was lost, the datagram has now been
-duplicated. The receiving process will never deliver duplicated
-datagrams but we need to take care of these messages and discard them
-if they exist. In the same way the sender process needs to be aware of
-that we might have duplicate acknowledgments arriving and these should
-then be discarded. Note that the acknowledgments have the
-corresponding sequence number so we can detect the duplicates.
-
 In this simple version we only allow one message to be outstanding at
 any given time. Only when a message has been acknowledged will we send
 the next message. This is of course a severe limitation; our
 communication channel will be depending on the round trip thus being
 very slow.
 
-To solve this we extend the sender, as shown in Fig.~\ref{fig:multiple}, to allow several outstanding
-messages at the same time. We extend the receive {\em acknowledge}
-state so that we can send new messages while we are waiting for an
-acknowledgment. We have too keep track of all sent messages and make
-sure that we resend the right one so we keep all sent messages, with
-their corresponding sequence number, in a buffer (an list of all
-messages with the last message sent last).
+To solve this we extend the sender, as shown in
+Fig.~\ref{fig:multiple}, to allow several outstanding messages at the
+same time. We extend the receive {\em ack} state so that we
+can send new messages while we are waiting for an acknowledgment. We
+have too keep track of all sent messages and make sure that we resend
+the right one so we keep all sent messages, with their corresponding
+sequence number, in a buffer (an list of all messages with the last
+message sent last).
 
 The sender can now receive the following messages:
 
 \begin{itemize}
-\item {\tt \{send, Msg\}}: The process will send the message in a
+\item {\tt \{:send, msg\}}: The process will send the message in a
   numbered datagram to the receiving process. It will store the
   message with its corresponding sequence number as the last element in
   the buffer. The sequence number is then updated.
 
-\item {\tt \#ack\{id=A\}}: if $A$
+\item {\tt \%Ack\{seq: a\}}: if $a$
   is equal to the sequence number of the first element in the buffer
   then this element is removed from the buffer.If we receive an
   acknowledgment and remove the last element from the buffer we move
   to the {\em ready} state.
 
-\item {\tt \#ack\{id=A\}}: if $A$
-  is less than the sequence number of the first element in the buffer,
-  this is a duplicate acknowledgment and can be ignored.
+\item {\tt \%Ack\{seq: a\}}: if $a$ is less than the sequence number
+  of the first element in the buffer, this is a duplicate
+  acknowledgment and can be ignored.
 
 \item {\tt timeout} : the process will resend the first element in the buffer.
 
@@ -482,36 +485,33 @@ The sender can now receive the following messages:
 
 
 Note that we have excluded one alternative from the description. A
-sending process can send messages $14$,
-$15$
-and $16$,
+sending process can send messages $14$, $15$ and $16$,
 and then receive an acknowledgment for $15$
-- what should we do. We could of course remove the element from the
+- what should we do? We could of course remove the element from the
 buffer immediately but in our description we defer the message until
-$15$
-is the first element in the buffer. Implicit deferral is a technique
+$15$ is the first element in the buffer. Implicit deferral is a technique
 that allows us to simplify the description but it also introduce
 complications that we will discuss later.
 
 
 \begin{figure}
 \begin{tikzpicture}[scale=1, >=stealth', node distance=4cm, semithick, auto]
-    \node[initial, state]            (init)                              {init To};
-    \node[state]                     (ready)   [above right of=init]     {ready I, A};
-    \node[state]                     (send)   [below right of=ready]      {ack A, I};
+    \node[initial, state]            (init)                              {init to};
+    \node[state]                     (ready)   [above right of=init]     {ready i};
+    \node[state]                     (send)   [below right of=ready]     {ack a, i};
     \node[accepting, state]          (final)   [below right of=init]     {final};
 
     
-    \path[->]   (init)   edge       [bend left]     node      {\{connect, Net\}}       (ready)
-                         edge       [bend right] node[anchor=east] {quit} (final)
-                (ready)  edge       [] node[anchor=west, near start]      {\{send, Msg\}}     (send)
-                         edge       [loop above]  node  {\#ack\{\}}  (ready)
-                         edge       [bend right]               node[anchor=east]       {quit}          (final)                   
-                (send)   edge       [loop above, every loop/.append style={looseness=6,in=20, out=70 }] node[anchor=west]    {\{send, Msg\}} (send)
-                         edge       [loop below, every loop/.append style={looseness=6,in=310, out=0 }] node[anchor=west] {timeout}     (send)   
-                         edge       [loop above, every loop/.append style={looseness=6,in=230, out=170 }] node[anchor=north] {}     (send)
-                         edge       [bend left] node  {\#ack\{\}}  (ready)
-                         edge       [bend left]               node       {quit}          (final);
+    \path[->]   (init)   edge       [bend left]   node                          {\{:connect, net\}}       (ready)
+                         edge       [bend right]  node[anchor=east]             {:quit}                   (final)
+                (ready)  edge       []            node[anchor=west, near start] {\{:send, msg\}}          (send)
+                         edge       [loop above]  node                          {\%Ack\{\}}               (ready)
+                         edge       [bend right]  node[anchor=east]             {:quit}                   (final)                   
+                (send)   edge       [loop above, every loop/.append style={looseness=6,in=20, out=70 }]   node[anchor=west]    {\{:send, msg\}} (send)
+                         edge       [loop below, every loop/.append style={looseness=6,in=310, out=0 }]   node[anchor=west]    {timeout}        (send)   
+                         edge       [loop above, every loop/.append style={looseness=6,in=230, out=170 }] node[anchor=north]   {\%Ack{}}        (send)
+                         edge       [bend left]   node  {\%Ack\{seq: a\}}  (ready)
+                         edge       [bend left]   node  {:quit}            (final);
 \end{tikzpicture}
 \caption{The ordering process: multiple outstanding messages.}
 \label{fig:multiple}
@@ -519,8 +519,12 @@ complications that we will discuss later.
 
 In the description we have chosen to describe the sender and the
 receiver as two state machines, which they are. In the implementation
-however, we will implement them both as one Erlang process in the same
-way as we have implemented the link layer or network layer. 
+however, we will implement them both as one Elixir process in the same
+way as we have implemented the link layer or network layer. We do this
+in order to provide a duplex communication channel without having to
+create two pairs or processes for each direction. The implementation
+becomes trickier since we now have to keep track of both outstanding
+buffered messages as well as what messages to receive and acknowledge.
 
 
 \section{flow control layer}
@@ -530,16 +534,17 @@ synchronous reads of messages. The previous layers have simply passed
 an incoming message to the master process but now we require the
 master process to actively do a read operations. Similarly the send
 operation is acknowledged so the user of the sending process knows
-that it is safe to send the next message. The application layer thus has a message interface that looks like follows:
+that it is safe to send the next message. The application layer thus
+has a message interface that looks like follows:
 
 \begin{itemize}
-\item {\tt \{send, Msg, Pid\}} : sent to the sending process, a {\tt
-    ok} message is delivered to the process {\tt Pid}, when its safe
+\item {\tt \{:send, msg, pid\}} : sent to the sending process, a {\tt
+    :ok} message is delivered to the process {\tt pid}, when its safe
   to send the next message.
 
-\item {\tt \{read, N, Pid\}} : sent to the reading process, at most
-  {\tt N} messages are returned in a message {\tt \{ok, L, Mgs\}}
-  where {\tt L} is the number of messages.
+\item {\tt \{:read, n, pid\}} : sent to the reading process, at most
+  {\tt n} messages are returned in a message {\tt \{:ok, l, mgs\}}
+  where {\tt l} is the number of messages.
 \end{itemize}
 
 This layer would be easy to implement if we only allowed one
@@ -564,16 +569,16 @@ how many more messages it can send.
 \begin{tikzpicture}[scale=1, >=stealth', node distance=4cm, semithick, auto]
     \node[initial, state]            (init)                              {init};
     \node[state]                     (ready)   [above right of=init]     {ready};
-    \node[state]                     (send)   [below right of=ready]     {send S};
+    \node[state]                     (send)   [below right of=ready]     {send s};
     \node[accepting, state]          (final)   [below right of=init]     {final};
 
     
-    \path[->]   (init)   edge       [bend left]     node      {\{connect, Net\}}       (ready)
-                         edge       [bend right] node[anchor=east] {quit} (final)
-                (ready)  edge       [bend right] node[anchor=east]      {\#syn\{\}}     (send)
-                         edge       [bend right] node[anchor=east]       {quit}          (final)                   
+    \path[->]   (init)   edge       [bend left]  node               {\{:connect, net\}}       (ready)
+                         edge       [bend right] node[anchor=east]  {:quit}                   (final)
+                (ready)  edge       [bend right] node[anchor=east]  {\%Syn\{\}}               (send)
+                         edge       [bend right] node[anchor=east]  {:quit}                   (final)                   
                 (send)   edge       [bend right] node[anchor=west]  {\{send, Msg, Pid\}}  (ready)
-                         edge       [loop below, every loop/.append style={looseness=6,out=80, in=10 }] node[anchor=east] {}     (send)   
+                         edge       [loop below, every loop/.append style={looseness=6,out=80, in=10 }]   node[anchor=east]  {}              (send)   
                          edge       [loop below, every loop/.append style={looseness=6,out=340, in=280 }] node[anchor=north] {\#syn\{\}}     (send)
                          edge       [bend left]               node       {quit}          (final);
 \end{tikzpicture}}
@@ -582,16 +587,16 @@ how many more messages it can send.
 \begin{subfigure}[b]{6cm}
 \resizebox{6cm}{!}{
 \begin{tikzpicture}[scale=1,>=stealth', node distance=3cm, semithick, auto]
-    \node[initial, state]            (init)                              {init Size};
-    \node[state]                     (receive)   [above right of=init]      {receive S};
+    \node[initial, state]            (init)                              {init size};
+    \node[state]                     (receive)   [above right of=init]   {receive s};
     \node[accepting, state]          (final)   [below right of=init]     {final};
 
     
-    \path[->]   (init)   edge       [bend left]     node      {\{connect, Net\}}       (receive)
-                         edge       [below, bend right] node[anchor=east] {quit} (final)
-                (receive) edge    [loop above, every loop/.append style={looseness=6,in=20, out=80 }] node[anchor=west]   {\#msg\{data=Msg\}}     (receive)
-                         edge    [loop above, every loop/.append style={looseness=6,in=300, out=0 }] node[anchor=west]   {\{read, N, Pid\}}     (receive)
-                         edge       []               node       {quit}          (final);
+    \path[->]   (init)   edge  [bend left]     node                  {\{:connect, net\}}        (receive)
+                         edge  [below, bend right] node[anchor=east] {:quit}                    (final)
+              (receive)  edge  [loop above, every loop/.append style={looseness=6,in=20, out=80 }] node[anchor=west]   {\%Msg\{data: msg\}}   (receive)
+                         edge  [loop above, every loop/.append style={looseness=6,in=300, out=0 }] node[anchor=west]   {\{:read, n, pid\}}     (receive)
+                         edge  []              node                  {:quit}                    (final);
 \end{tikzpicture}}
 \subcaption{receiving process}
 \end{subfigure}
@@ -603,16 +608,89 @@ how many more messages it can send.
 
 
 In Fig~\ref{fig:flow} we sea the state diagrams of the sender and
-receiver. The sender keeps track of $S$,
+receiver. The sender keeps track of $s$,
 the free space in the receiver buffer, a value that is decremented
 with each send operation. If this value goes down to $0$
 it will enter the {\em ready} state were it must first see a synch
 message before it can accept more send operations. 
 
 As with the ordering layer we will implement the sender and receiver
-in one Erlang process. We could however have implemented them in
+in one Elixir process. We could however have implemented them in
 separate processes but we would the of course need two processes on
 either side if we want to provide a duplex channel. 
+
+Do as before and implement a test function that creates a sender and a
+receiver and connects them over a flow controlled connection.
+
+\section{extensions }
+
+If you think you have everything working you can continue with some
+extensions.
+
+\subsection{testing}
+
+Hopefully you have managed so far but let's see if things actually
+work. If we tweak our hub a bit we can make it drop a packet every now
+and then. As we receive a incoming frame we toss a coin and if we're
+unlucky we simply throw the frame away. If things works the ordering
+layer should resend the message and also order them in the right
+order.
+
+While you at it you can give the hub a {\em loss} rate that
+determines how often it should loose a frame. The following code will
+get you going:
+
+\begin{verbatim}
+  %Frame{} = frm ->
+    if :rand.uniform(100) <= loss do
+       IO.puts("nub: throwing away #{frm}")
+       :ok
+    else
+       Enum.each(connected, fn({_,pid}) -> send(pid, frm) end)
+    end
+    hub(loss, connected)
+\end{verbatim}
+
+\subsection{a switch}
+
+Our hub is of course nothing but a hub, it will distribute every frame
+in all directions. What would a switch look like?
+
+\subsection{zombies}
+
+By now you probably have a hundred link processes running on you
+machine. Every time you test the system you create several processes
+that are then not properly terminated. You could of course continue
+for a while but if this was a real system we would eventually run out
+of resources.
+
+All our processes can take a message {\tt :quit} and should then of
+course terminate. The problem is of course to find them, or rather
+making sure that who ever started them also terminates them. Since we
+want to make sure that processes terminate even if their parent
+processes crash we could use linking when processes are
+started. Linking is however bi-directional so if a underlying network
+process dies it might take it's master process with it.
+
+To solve these problems we could, as in the hub, use monitoring to let
+processes detect when their masters die. This soon starts to get
+complicated and it should be no surprise that Elixir has a whole
+framework, OTP, to handle larger systems.
+
+\subsection{marshaling}
+
+Our link layer can today send anything across the network but this is
+not a realistic assumption. Assume that we can only send a byte
+sequence. If the interface to the link layer was the message {\tt
+  \{:send, string\}}, the layers above would have to encode their
+sequence numbers, addresses, packet types etc in a string. This is one
+challenge, to encode all data structures as strings before sending
+them.
+
+The link layer can now turn into something more interesting and apply
+error detection etc to be able to send messages over connections
+where bit can be flipped. If you want to learn how a CRC code or a
+forward error correction code can be used this is the task to take on.
 
 
 
@@ -624,9 +702,24 @@ either side if we want to provide a duplex channel.
 \section{hub.ex} \label{app:hub}
 \lstinputlisting{src/hub.ex}
 \pagebreak
+
 \section{network.ex} \label{app:net}
 \lstinputlisting{src/network.ex}
-
-
+\pagebreak
+\section{order.ex} \label{app:order}
+\lstinputlisting{src/order.ex}
+\pagebreak
+\section{frame.ex} \label{app:frame}
+\lstinputlisting{src/frame.ex}
+\section{netw.ex} \label{app:netw}
+\lstinputlisting{src/netw.ex}
+\section{ack.ex} \label{app:ack}
+\lstinputlisting{src/ack.ex}
+\section{ord.ex} \label{app:ord}
+\lstinputlisting{src/ord.ex}
+\section{syn.ex} \label{app:syn}
+\lstinputlisting{src/syn.ex}
+\section{msg.ex} \label{app:msg}
+\lstinputlisting{src/msg.ex}
 
 \end{document}

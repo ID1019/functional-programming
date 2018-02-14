@@ -135,8 +135,7 @@ defmodule Test do
     send(n, {:read, 4, self()})
     receive do
       {:ok, l, msg} ->
-	## this should be fixed, impl String.Chars
-	IO.puts("receiver received msg")
+	IO.puts("receiver received #{msg}")
 	receiver_flow(i-l,n)
     end
   end
@@ -152,8 +151,7 @@ defmodule Test do
   def receiver_order(i,n) do
     receive do
       msg ->
-	## this should be fixed, impl String.Chars
-	IO.puts("receiver received msg")
+	IO.puts("receiver received #{msg}")
 	receiver_order(i-1,n)
     end
   end

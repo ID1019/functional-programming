@@ -5,7 +5,7 @@ defmodule Nub do
   end
 
   def start(loss) do
-   ## Loss rate is given as percent of messges lost 0-100
+    ## Loss rate is given as percent of messges lost 0-100
     {:ok, spawn(fn() -> init(loss) end)}
   end
 
@@ -31,9 +31,8 @@ defmodule Nub do
 	hub(loss, List.keydelete(connected, ref, 0))
 
       %Frame{} = frm ->
-	lost = :rand.uniform(100) <= loss
-	if lost do
-	    :io.format("nub ~w: throwing away ~w~n", [self(), frm])
+	if :rand.uniform(100) <= loss do
+	    IO.puts("nub: throwing away #{frm}")
 	    :ok
 	else
 	  Enum.each(connected, fn({_,pid}) -> send(pid, frm) end)

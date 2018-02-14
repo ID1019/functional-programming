@@ -20,7 +20,8 @@ defmodule Link do
 	send(lnk, %Frame{data: msg})
 	link(master, lnk)
 
-      %Frame{data: msg} ->
+      %Frame{data: msg} = frm ->
+	IO.puts("link receiving #{frm}")
 	send(master, msg)
 	link(master, lnk)
 

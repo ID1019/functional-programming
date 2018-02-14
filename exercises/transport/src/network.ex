@@ -1,8 +1,5 @@
 defmodule Network do
 
- defstruct src: 0, dst: 0, data: []
-
-
  def start(master, id) do
    con = spawn(fn() -> init(master, id) end)
    {:ok, con}
@@ -22,16 +19,16 @@ defmodule Network do
  def network(master, id, link) do
    receive do
      {:send, to, msg} ->
-       :io.format("network ~w: sending msg ~w to ~w~n", [id, msg, to])
-       send(link, {:send, %Network{src: id, dst: to,  data: msg}})
+       IO.puts("network #{id} sending #{msg} to #{to}")
+       send(link, {:send, %Netw{src: id, dst: to,  data: msg}})
        network(master, id, link)
 
-     %Network{dst: ^id, data: msg} ->
-       :io.format("network ~w: received msg ~w~n", [id, msg])
+     %Netw{dst: ^id, data: msg} ->
+       IO.puts("network #{id} receiving #{msg}")
        send(master, msg)
        network(master, id, link)
 
-     %Network{} ->
+     %Netw{} ->
        network(master, id, link)
 
      {:master, new} ->
