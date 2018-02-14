@@ -31,8 +31,7 @@ defmodule Nub do
 	hub(loss, List.keydelete(connected, ref, 0))
 
       %Frame{} = frm ->
-	lost = :rand.uniform(100) <= loss
-	if lost do
+	if :rand.uniform(100) <= loss do
 	    IO.puts("nub: throwing away #{frm}")
 	    :ok
 	else
