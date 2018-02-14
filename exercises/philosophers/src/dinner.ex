@@ -7,9 +7,16 @@ defmodule Dinner do
     Process.register(dinner, :dinner)
   end
 
-  # Stop a dinner.
-  def stop, do: send(:dinner, :abort)
-
+  # Stop the dinner.
+  def stop() do
+    case Process.whereis(:dinner) do
+      nil ->
+	:ok
+      pid ->
+	send(pid, :abort)
+    end
+  end
+  
   defp init(n, seed) do
     c1 = Chopstick.start()
     c2 = Chopstick.start()
@@ -35,6 +42,7 @@ defmodule Dinner do
         wait(n - 1, chopsticks)
 
       :abort ->
+	## in order to kill all chopsticks and philosophers
         Process.exit(self(), :kill)
     end
   end
