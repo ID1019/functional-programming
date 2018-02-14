@@ -1,7 +1,7 @@
 # A short description of the exercises
 
 
-- [Introduction](exercises/introduction)
+- [Introduction](/introduction)
 - [Huffmancoding ](exercises/huffman)
 - [The Mandelbrot set](exercises/mandel)
 - [Morse coding ](exercises/morse)
