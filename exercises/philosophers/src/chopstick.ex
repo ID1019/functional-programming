@@ -6,6 +6,12 @@ defmodule Chopstick do
     {:stick, stick}
   end
 
+  def start(node) do
+    ## We link to the dinner process inorder to avoid zombie chopsticks
+    stick = Node.spawn_link(node, fn -> init() end)
+    {:stick, stick}
+  end  
+
   # The synchronous version of requesting a chopstick.
   def request({:stick, pid}) do
     send(pid, {:request, self()})
@@ -45,6 +51,7 @@ defmodule Chopstick do
         :ok
 
       {:granted, _} ->
+	## this is an old message that we must ignore
         wait(ref, timeout)
     after
       timeout ->
@@ -52,14 +59,24 @@ defmodule Chopstick do
     end
   end
 
+  # Return a ref taged stick
+  def return({:stick, pid}, ref) do
+    send(pid, {:return, ref})
+  end
+  
+  
   # A asynchronous request, divided into sending the
   # request and waiting for the reply.
   def asynch({:stick, pid}, ref) do
     send(pid, {:request, ref, self()})
   end
 
-  def return({:stick, pid}, ref) do
-    send(pid, {:return, ref})
+  # Don't throw anything away (since there are no old messages)
+  def synch(ref) do
+    receive do
+      {:granted, ^ref} ->
+        :ok
+    end
   end
   
   # To terminate the process.
@@ -76,7 +93,12 @@ defmodule Chopstick do
       {:request, from} ->
         send(from, :granted)
         gone()
-
+      
+      {:request, ref, from} ->
+	## only used when we use refs
+        send(from, {:granted, ref})
+        gone(ref)
+      
       :quit ->
         :ok
     end
@@ -92,4 +114,15 @@ defmodule Chopstick do
     end
   end
 
+  defp gone(ref) do
+    receive do
+      {:return, ^ref}->
+	available()
+
+      :quit ->
+        :ok
+    end
+  end
+  
+  
 end

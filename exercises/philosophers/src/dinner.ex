@@ -7,6 +7,13 @@ defmodule Dinner do
     Process.register(dinner, :dinner)
   end
 
+  # Start table at another node
+  def start(n, node) do
+    seed = 1234
+    dinner = spawn(fn -> init(n, seed, node) end)
+    Process.register(dinner, :dinner)
+  end  
+  
   # Stop the dinner.
   def stop() do
     case Process.whereis(:dinner) do
@@ -32,6 +39,22 @@ defmodule Dinner do
     wait(5, [c1, c2, c3, c4, c5])
   end
 
+  defp init(n, seed, node) do
+    c1 = Chopstick.start(node)
+    c2 = Chopstick.start(node)
+    c3 = Chopstick.start(node)
+    c4 = Chopstick.start(node)
+    c5 = Chopstick.start(node)
+    ctrl = self()
+    Philosopher.start(n, 5, c1, c2, "Arendt", ctrl, seed + 1)
+    Philosopher.start(n, 5, c2, c3, "Hypatia", ctrl, seed + 2)
+    Philosopher.start(n, 5, c3, c4, "Simone", ctrl, seed + 3)
+    Philosopher.start(n, 5, c4, c5, "Elisabeth", ctrl, seed + 4)
+    Philosopher.start(n, 5, c5, c1, "Ayn", ctrl, seed + 5)
+    wait(5, [c1, c2, c3, c4, c5])
+  end
+  
+  
   defp wait(0, chopsticks) do
     Enum.each(chopsticks, fn(c) -> Chopstick.quit(c) end)
   end
