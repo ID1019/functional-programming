@@ -12,7 +12,8 @@ DIRS =	huffman \
 	philosophers \
 	avl \
 	twothree \
-	transport
+	transport \
+	server 
 
 
 
