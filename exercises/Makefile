@@ -1,18 +1,21 @@
-DIRS =	huffman \
+DIRS =  avl \
+	concurrency \
 	derivative \
-        concurrency \
-        introduction \
+	huffman \
 	interpreter \
+	introduction \
 	lambda \
-	lzw \
+	lzw  \
 	mandel \
 	morse \
+	mutex \
 	operational \
-        tracer \
 	philosophers \
-	avl \
-	twothree \
-	transport
+	server \
+	splay \
+	tracer \
+	transport \
+	twothree   
 
 
 
