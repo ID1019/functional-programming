@@ -1,12 +1,12 @@
 defmodule Batch do
 
-  def map({:image, header, image}, n, trans, kernel) do
-
+  def map({:image, header, image}, kernel) do
+    {:ok, n, header, kernel} = kernel.(header)
     lines = case n do
 	      1 -> map_1(image, kernel)
 	      3 -> map_3(image, kernel)
 	    end
-    {:image, trans.(header), lines}
+    {:image, header, lines}
   end
 
   ## 1x1 kernel 
