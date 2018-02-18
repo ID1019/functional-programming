@@ -288,10 +288,10 @@ end
 
 \pause\vspace{10pt}
 \begin{verbatim}
-bar(X,Y) ->
-    Z = this(X,Y),
-    Q = that(X),
-    {Z,Q}.
+def bar(X,Y) do
+    z = this(x,y),
+    q = that(x),
+    {z,q}.
 \end{verbatim}
 
 
@@ -383,7 +383,7 @@ def sum(s) do
   receive do
     {:add, x} -> sum(s + x)
     {:sub, x} -> sum(s - x)
-    {:mul, X} -> sum(s * x)
+    {:mul, x} -> sum(s * x)
   end
 end
 \end{verbatim}
@@ -406,7 +406,7 @@ Assume we spawn a process given the expression {\tt fn() -> sum(10) end}, \pause
 \begin{verbatim}
 def closed(s) do
   receive 
-    {:add, x} -> closed(s * x)
+    {:add, x} -> closed(s + x)
     :open -> open(s)
     :done -> :ok
   end
