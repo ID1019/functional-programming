@@ -140,7 +140,7 @@ def fib(n) do
    r1 = make_ref(),
    r2 = make_ref(),
    parallel(fun() -> fib(n-1) end, r1),
-   parallel(fun() -> fib(n-2) end, rr2),
+   parallel(fun() -> fib(n-2) end, r2),
    f1 = collect(r1),
    f2 = collect(r2),
    f1 + f2
@@ -307,26 +307,25 @@ easy parallel program''.
 
 \begin{frame}{Image processing}
 
-Assume that we want to transform an image to black and white, and then
+Assume that we want to transform an image to a gray scale, and then
 reduce the color depth of the image.
 \end{frame}
 
 
 \begin{frame}{question}
 
-\begin{columns}
- \begin{column}{0.3\linewidth}
-   \includegraphics[width=0.8\linewidth]{small.png}
- \end{column}
-\pause
- \begin{column}{0.3\linewidth}
-   \includegraphics[width=0.8\linewidth]{smallgray.png}
- \end{column}
-\pause
- \begin{column}{0.3\linewidth}
-   \includegraphics[width=0.8\linewidth]{smallreduced.png}
- \end{column}
-
+  \begin{columns}
+    \begin{column}{0.3\linewidth}
+      \includegraphics[width=0.8\linewidth]{hockey.png}
+    \end{column}
+    \pause
+    \begin{column}{0.3\linewidth}
+      \includegraphics[width=0.8\linewidth]{gray.png}
+    \end{column}
+    \pause
+    \begin{column}{0.3\linewidth}
+      \includegraphics[width=0.8\linewidth]{reduced.png}
+    \end{column}
 \end{columns}
 
 \pause\vspace{20pt}How do we parallelize this?
@@ -336,8 +335,8 @@ reduce the color depth of the image.
 \begin{frame}{alternatives}
 
 \begin{itemize}
-\pause \item parallelize the gray transformer and/or the color-depth transformer 
-\pause \item let the gray transformer feed the color-depth transformer, line by line
+\pause \item Parallelize the gray transformer and/or the depth transformer, or
+\pause \item let the gray transformer feed the color-depth transformer, line by line.
 \end{itemize}
 
 \pause\vspace{10pt}{\em A pipe-line: reader - transform - transform - writer}
@@ -347,48 +346,29 @@ reduce the color depth of the image.
 \begin{frame}[fragile]{the pipeline}
 
 \begin{verbatim}
-test(6) ->
-    S = erlang:system_time(milli_seconds),
-    W = ppm:writer("reduced.pgm", self()),
-    B = image:reducer(10, W),
-    G = image:grayer(B),
-    ppm:reader("morfar.ppm", G),
-    receive 
-        done ->
-            ok
-    end,
-    T = erlang:system_time(milli_seconds),
-    io:format("reading, to gray, reducing and writing in ~w ms ~n", [T]).
+  def stream() do
+    writer = PPM.writer("reduced.ppm", self())
+    reducer = Stream.start(gray_reduce(), writer)     
+    grayer = Stream.start(rgb_to_gray(), reducer)     
+    PPM.reader("hockey.ppm", grayer)
+    receive do
+     :done
+    end
+  end
 \end{verbatim}
 
 \end{frame}
 
 \begin{frame}[fragile]{a transformer}
 \begin{verbatim}
-grayer(Out) ->
-        spawn_link(fun() -> grayer_init(Out) end).
 
-grayer_init(Out) ->
-    receive 
-        {header, {P, Size, Depth}} ->
-            Out ! {header, {gray, Size, Depth}},
-            grayer_lines(P, Out)
-    end.
 \end{verbatim}
 \end{frame}
 
 
 \begin{frame}[fragile]{a transformer}
 \begin{verbatim}
-grayer_lines(P, Out) ->
-    receive
-        {line, N, Line} ->
-            Grayer = grayer_line(P, Line),
-            Out ! {line, N, Grayer},
-            grayer_lines(P, Out);
-        done ->
-            Out ! done
-    end.
+
 \end{verbatim}
 \end{frame}
 
@@ -397,7 +377,7 @@ grayer_lines(P, Out) ->
 \begin{columns}
  \begin{column}{0.5\linewidth}
 \begin{verbatim}
-> test:seq().
+> Test.batch().
 reading in  118 ms 
 gray in      66 ms 
 reduce in    66 ms 
@@ -409,9 +389,9 @@ total in    349 ms
 \pause
  \begin{column}{0.5\linewidth}
 \begin{verbatim}
-> test:test(6).
- reading turning gray, 
- reducing and writing in 260 ms 
+> Test.stream()
+
+ total in 260 ms 
 \end{verbatim}
  \end{column}
 \end{columns}
@@ -424,7 +404,7 @@ total in    349 ms
 \begin{frame}[fragile]{benchmark}
 
 \begin{verbatim}
-> test:test(6).
+> Test.stream().
 reading turning gray, reducing and writing in 260 ms 
 \end{verbatim}
 \pause
@@ -434,7 +414,7 @@ reading turning gray, reducing and writing in 260 ms
 \end{verbatim}
 \pause
 \begin{verbatim}
-> test:test(6).                            
+> Test.stream().
 reading turning gray, reducing and writing in 161 ms 
 \end{verbatim}
 

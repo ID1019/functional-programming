@@ -3,9 +3,10 @@ defmodule Test do
   def stream() do
     t0 = :erlang.monotonic_time(:millisecond)
     ctrl = self()
-    writer = PPM.writer("batch.ppm", ctrl)
-    conv0 = Stream.start(rgb_to_gray(), writer)     
-    PPM.reader("hockey.ppm", conv0)
+    out = PPM.writer("reduced.ppm", ctrl)
+    out = Stream.start(gray_reduce(), out)     
+    out = Stream.start(rgb_to_gray(), out)     
+    PPM.reader("hockey.ppm", out)
     t1 = receive do
            :done ->
    	     :erlang.monotonic_time(:millisecond)	
@@ -35,6 +36,17 @@ defmodule Test do
        end}
     end
   end
+
+  def gray_reduce() do
+    fn({:gray, size, 255}) ->
+      {:ok, 1,
+       {:gray, size, 4}, 
+       fn(d) ->
+	 div(d, 64)
+       end}
+    end
+  end
+  
 
   
   ## 3x3 kernels 
