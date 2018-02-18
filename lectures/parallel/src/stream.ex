@@ -1,13 +1,14 @@
 defmodule Stream do
 
-  def start(n, trans, kernel, out) do
-    spawn_link(fn() -> init(n, trans, kernel, out) end)
+  def start(kernel, out) do
+    spawn_link(fn() -> init(kernel, out) end)
   end
 
-  def init(n, trans, kernel, out) do
+  def init(kernel, out) do
     receive do
       {:header, header} ->
-	send(out, {:header, trans.(header)})
+	{:ok, n, header, kernel} = kernel.(header)
+	send(out, {:header, header})
 	case n do
 	  1 -> map_1(kernel, out)
 	  3 -> map_3(kernel, out)
