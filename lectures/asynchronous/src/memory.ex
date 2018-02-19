@@ -16,7 +16,7 @@ defmodule Memory do
   end
 
   def delete({:mem, mem}) do
-    Enum.each(Tuple.to_list(mem), fn(c) -> send(c, :quit) end)
+    Enum.each(Tuple.to_list(mem), fn(c) -> Cell.quit(c) end)
   end
     
 end

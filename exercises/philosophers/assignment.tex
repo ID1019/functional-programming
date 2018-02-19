@@ -186,6 +186,7 @@ you can use the library function {\tt :rand.uniform/1}. This sequence
 will make a process sleep for a random time.
 
 \begin{minted}{elixir}
+def sleep(0) do :ok end
 def sleep(t) do 
   :timer.sleep(:rand.uniform(t))
 end
@@ -218,7 +219,9 @@ message when it receives a chopstick:
 IO.puts("#{name} received a chopstick!")
 \end{minted}
 
-Elixir also supports string interpolation; in the code fragment above the content of the variable {\tt name} is interpolated with the rest of the string.
+Elixir also supports string interpolation; in the code fragment above
+the content of the variable {\tt name} is interpolated with the rest
+of the string.
 
 
 % ================================================== %
