@@ -135,7 +135,7 @@ end
 \end{minted}
 
 If we have created a cell we could use it to protect a critical
-operation using the codes that follows (not true so don's stop
+operation using the codes that follows (not true so don't stop
 reading here).
 
 \pagebreak
@@ -222,7 +222,7 @@ people have implemented it. It turns out that there is and the
 algorithm is fairly simple once you understand why it works.
 
 
-\subsection{The algorithm}
+\subsection{the algorithm}
 
 Assume we have our original cell with only the {\tt :get} and {\tt :set}
 operations. We also assume that there are only two processes that will
@@ -271,7 +271,7 @@ process however sees that the second process is not interested it
 holds the lock and proceed into the critical section.
 
 
-\subsection{Prove it}
+\subsection{prove it}
 
 To understand how Peterson's algorithm works is not easy; to prove
 that it ensures that the two processes do not believe to hold the
@@ -294,7 +294,7 @@ it can not be that the second process manages to set {\em p2} to {\em
 scenario using cached local copies that will violate this prerequisite.
 
 
-\subsection{The bakery algorithm}
+\subsection{the bakery algorithm}
 
 When I lived in Barcelona I learned a wonderful algorithm for keeping
 track of who is next to be served in a bakery. When you entered a
@@ -338,17 +338,6 @@ the scanner will eventually be set to $0$
 once the processed has completed its critical section. 
 
 
-% ================================================== %
-% == Why not in Elixir  == %
-% ================================================== %
-
-\section{Why not in Elixir}
-
-Experiment with the dinner ({\em Philosophers Exercise}), will the philosophers always be able to
-eat? What happens if you decrease the time they dream? What happens if
-you introduce an artificial delay between receiving of the first
-chopstick and requesting the second?
-
 
 % ================================================== %
 % == The semaphore  == %
@@ -373,7 +362,7 @@ enter the critical section. If {\em n} is $1$
 then it called a {\em binary semaphore}.
 
 
-\subsection{Was this it}
+\subsection{was this it}
 
 In Elixir this is expressed so easily that you hardly realize that you
 have implemented a semaphore. Look at the code below:
@@ -515,7 +504,7 @@ process can proceed since they are all waiting for someone else to
 take the first step.
 
 
-\subsection{Shades of hell}
+\subsection{shades of hell}
 
 A complete deadlock is of course the worst thing that could happen but
 there are other related problems that are almost as bad:
@@ -537,7 +526,7 @@ go for an implementation that guarantees fair scheduling then you
 might pay more than anyone asked for.
 
 
-\subsection{Locks, semaphores and monitors}
+\subsection{locks, semaphores and monitors}
 
 Go back to the locks, semaphores and monitors in the previous section
 and ask yourself what the implemented solutions actually provided. They
@@ -547,7 +536,7 @@ access to a critical section, will the process be granted access
 before any process that issues a request at a later moment?
 
 
-\subsection{Detecting a deadlock}
+\subsection{detecting a deadlock}
 
 Even if the locks, semaphores and monitors that we have discussed have
 algorithms that will not deadlock, we can easily create a deadlock if
@@ -569,7 +558,7 @@ receive statement. The implementation will however be more complicated
 than you might first think.
 
 
-\subsection{Master should be resting}
+\subsection{master should be resting}
 
 Assume that we have implemented a semaphore and use the following
 function to acquire access.
@@ -642,7 +631,7 @@ Better than trying to resolve a deadlock situation is of course to
 avoid it all together and there is a simple strategy that will always work. 
 
 
-\subsection{Avoiding deadlock}
+\subsection{avoiding deadlock}
 
 The problem with a deadlock is of course that we have a circular
 structure where everyone is waiting for someone else. If we can avoid
