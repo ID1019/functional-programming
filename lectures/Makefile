@@ -8,6 +8,7 @@ DIRS = 	overview \
 	complexity \
 	higher \
         interpreter \
+	parallel \
         types \
 	tracer \
 	dynamic \
