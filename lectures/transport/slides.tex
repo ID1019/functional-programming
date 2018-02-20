@@ -118,14 +118,14 @@ Each layers provides an {\em abstraction} that the layer above can make use of.
 \begin{frame}{the link process - a state diagram}
 \begin{tikzpicture}[>=stealth', node distance=3cm, semithick, auto]
 
-    \node[initial, state]            (init)                              {init: master};
-    \node[state]                     (link)    [above right of=init]     {link: master, dest};
+  \node[initial, state]            (init)    [align=center]        {init: \\master};
+    \node[state]                     (link)    [align=center, above right of=init]     {link: master,\\dest};
     \node[accepting, state]          (final)   [below right of=init]     {final};
 
 
     \path[->]   (init)   edge       [bend left]     node      {\{:connect, dest\}}       (link)
                          edge       [bend right]    node      {:quit}          (final) 
-                (link)   edge       [loop above]    node      {\{:send, msg\}}          (link)
+                (link)   edge       [loop above]    node[near start, anchor=east]   {\{:send, msg\}}          (link)
                          edge       [loop right]    node      {\%Frame\{data: msg\}}           (link)
                          edge       [bend left]     node      {:quit}          (final);
 \end{tikzpicture}
@@ -207,9 +207,9 @@ end
     
     \path[->, bend right]  (master)   edge  node[anchor=east]  {\{:connect, lnk\}}    (hub);
     \path[->, bend left]  (master)   edge   node[anchor=west]  {\{:disconnect, lnk\}} (hub);
-    \path[<->]  (hub)   edge        node[above, anchor=north west]  {\%Frame\{data: msg\}}       (link1);    
+    \path[<->]  (hub)   edge        node[near end, above, anchor=north west]  {\%Frame\{data: msg\}}       (link1);    
     \path[<->]  (hub)   edge        node[above]          {\%Frame\{data: msg\}}       (link2);
-    \path[<->]  (hub)   edge        node[above, anchor=south west]  {\%Frame\{data: msg\}}       (link3);        
+    \path[<->]  (hub)   edge        node[near end, above, anchor=south west]  {\%Frame\{data: msg\}}       (link3);        
 \end{tikzpicture}
 
 \end{frame}
@@ -226,12 +226,33 @@ end
     \path[->]   (hub)   edge       [loop above, every loop/.append style={looseness=20,in=100, out=160 }]    node[anchor=south east]      {\{:connect, dest\}}       (hub)
                         edge       [loop below, every loop/.append style={looseness=20,in=260, out=200 }]    node[anchor=north east]      {\{:disconnect, dest\}}    (hub)
                         edge       [loop above, every loop/.append style={looseness=20,in=20,  out=80 }]     node[anchor=south west]      {\%Frame\{\}}              (hub)
-                        edge       [loop below, every loop/.append style={looseness=20,in=340, out=280 }]    node[anchor=north west]      {:DOWN}                    (hub)
+
                         edge       []                                                                        node      {:quit}                    (final);
     
 
 \end{tikzpicture}
   
+\end{frame}
+
+\begin{frame}[fragile]{the hub process}
+
+\begin{verbatim}
+  def hub(connected) do
+    receive do
+      {:connect, pid} ->
+        hub([{ref, pid}|connected])
+
+      {:disconnect, pid} ->
+        hub(List.keydelete(connected, pid, 1))
+
+      %Frame{} = frm ->
+        Enum.each(connected, fn({_,pid}) -> send(pid, frm) end)
+        hub(connected)
+        
+      :quit ->
+        :ok
+    end
+\end{verbatim}
 \end{frame}
 
 \begin{frame}{the setup -  a sequence diagram}
@@ -242,15 +263,15 @@ end
     \node[] (sysopn) at (1,1) {};
     \draw[->] (sysop) -- (sysopn);
     \pause
-    \node[] (hub) at (12,7) {hub};
-    \node[] (hubn) at (12,1) {};
+    \node[] (hub) at (13,7) {hub};
+    \node[] (hubn) at (13,1) {};
     \draw[->] (hub) -- (hubn);
 
     \draw[dashed] (1.1,7) -- node[above] {start()} (hub);
     \pause
     
-    \node[] (user) at (5,6) {user};
-    \node[] (usern) at (5,1) {};    
+    \node[] (user) at (4.5,6) {user};
+    \node[] (usern) at (4.5,1) {};    
     \draw[->] (user) -- (usern);
 
     \draw[dashed] (1.1,6) -- node[above] {start()}  (user);
@@ -265,9 +286,9 @@ end
     
     \draw[->] (1.1,4) -- node[above, near end] {\{:connect, hub\}} (7.9,4);
     \pause
-    \draw[->] (1.1,3) -- node[above, near end] {\{:connect, link\}} (11.9,3);
+    \draw[->] (1.1,3) -- node[above, near end] {\{:connect, link\}} (12.9,3);
     \pause
-    \draw[->] (1.1,2) -- node[above] {\{:connect, link\}} (4.9,2);    
+    \draw[->] (1.1,2) -- node[above] {\{:connect, link\}} (4.4,2);    
     
     
   \end{tikzpicture}
@@ -290,11 +311,10 @@ end
     \node (link)  [fbp, below=2cm of network]            {link};    
 
 
-    \path[->, bend right]  (master)   edge        node[anchor=east]          {\{:send, to,  msg\}}       (network);
-    \path[->, bend right]  (network)   edge        node[anchor=west]          {msg}       (master);
-
-    \path[->, bend right]  (network)   edge        node[anchor=east]          {\{:send, \%Netw\{dst: to,  data: msg\}\}}       (link);
-    \path[->, bend right]  (link)   edge        node[anchor=west]          {\%Netw\{dst: id,  data: msg\}\}}       (network);    
+    \path[->, bend right]  (master)  edge  node[anchor=east]          {\{:send, to,  msg\}}                      (network);
+    \path[->, bend right]  (network) edge  node[anchor=west]          {msg}                                      (master);
+    \path[->, bend right]  (network) edge  node[anchor=east]          {\{:send, \%Netw\{dst: to,  data: msg\}\}} (link);
+    \path[->, bend right]  (link)    edge  node[anchor=west]          {\%Netw\{dst: id,  data: msg\}\}}          (network);    
 \end{tikzpicture}
 
 
@@ -369,19 +389,19 @@ def network(master, id, link) do
     \tikzstyle{fbp} = [rectangle, rounded corners, minimum width=50pt, minimum height=20pt, text centered, draw=black]        
 
 
-    \node (master)  [fbp]                                 {master};
+    \node (master)   [fbp]                        {master};
 
-    \node (order)  [fbp, below=2cm of master]            {order: to, n, i, a};
+    \node (order)    [fbp, below=2cm of master]   {order: to, n, i, a};
 
-    \node (network)  [fbp, below=2cm of order]            {network};    
+    \node (network)  [fbp, below=2cm of order]    {network};    
 
 
-    \path[->, bend right]  (master)   edge        node[anchor=east]          {\{:send, msg\}}       (order);
-    \path[->, bend right]  (order)   edge        node[anchor=west]          {msg}       (master);
+    \path[->, bend right]  (master)   edge     node[anchor=east]    {\{:send, msg\}}                            (order);
+    \path[->, bend right]  (order)    edge     node[anchor=west]    {msg}                                       (master);
 
-    \path[->, bend right]  (order)   edge        node[anchor=east]          {\{:send, to, \%Ord\{seq: n, data: msg\}\}}       (network);
-    \path[->, bend right]  (network)   edge        node[anchor=west]          {\%Ord\{seq: i,  data: msg\}}       (order);    
-    \path[->]  (network)   edge        node[anchor=west]          {\%Ack\{seq: a,\}}       (order);    
+    \path[->, bend right=65, looseness=1.4]  (order)    edge     node[anchor=east]    {\{:send, to, \%Ord\{seq: n, data: msg\}\}} (network);
+    \path[->, bend right=65, looseness=3]  (network)  edge     node[anchor=west]    {\%Ord\{seq: i,  data: msg\}}               (order);    
+    \path[->, bend left]              (network)  edge     node[anchor=west]    {\%Ack\{seq: a\}}                          (order);    
 \end{tikzpicture}
 
 \pause
@@ -395,18 +415,18 @@ def network(master, id, link) do
 \begin{tikzpicture}[scale=1, >=stealth', node distance=3cm, semithick, auto]
     \node[initial, state]            (init)                              {init to};
     \node[state]                     (ready)   [above right of=init]     {ready i};
-    \node[state]                     (send)    [below right of=ready]    {ack msg i};
+    \node[state]                     (send)    [right=5cm of init]    {ack msg i};
     \node[accepting, state]          (final)   [below right of=init]     {final};
 
     
-    \path[->]   (init)   edge       [bend left]  node                          {\{:connect, lnk\}}   (ready)
-                         edge       [bend right] node[anchor=east]             {:quit}               (final)
-                (ready)  edge       []           node[anchor=west, near start] {\{:send, msg\}}      (send)
-                         edge       [loop above] node                          {\%Ack\{\}}         (ready)
-                         edge       [bend right] node[anchor=east]             {:quit}               (final)              
+    \path[->]   (init)   edge       [bend left]  node                                  {\{:connect, lnk\}}   (ready)
+                         edge       [bend right] node[anchor=east]                     {:quit}               (final)
+                (ready)  edge       []           node[anchor=south west, near start]   {\{:send, msg\}}      (send)
+                         edge       [loop above] node                                  {\%Ack\{\}}           (ready)
+                         edge       [] node[anchor=east]                               {:quit}               (final)              
                 (send)   edge       [loop below, every loop/.append style={looseness=6,in=340, out=30 }] node[anchor=west] {timeout}  (send)   
-                         edge       [bend left]  node[near start, anchor=east]              {\%Ack\{seq: i\}}          (ready)
-                         edge       [bend left]  node                          {:quit}               (final);
+                         edge       [bend left]  node[near start, anchor=north east]   {\%Ack\{seq: i\}}     (ready)
+                         edge       [bend left]  node                                  {:quit}               (final);
 \end{tikzpicture}
   
 \end{frame}
@@ -429,36 +449,157 @@ def network(master, id, link) do
   
 \end{frame}
 
+
+\begin{frame}[fragile]{the order process}
+
+\begin{verbatim}
+  def order(master, to, n, i, [], netw) do
+    receive do
+      %Ord{seq: i, data: msg} ->
+        send(netw, {:send, to, %Ack{seq: i}})
+        send(master, msg)
+        order(master, to, n, i+1, [], netw)
+        
+      :
+         
+      {:send, msg} ->
+        send(netw, {:send, to, %Ord{seq: n, data: msg}})
+        order(master, to, n+1, I, [{n,Msg}], netw);
+    end
+  end
+\end{verbatim}
+  
+\end{frame}
+
+\begin{frame}[fragile]{the order process}
+
+\begin{verbatim}
+  def order(master, to, n, i, [{a,res}|rest]=buffer, netw) do
+    receive do
+       :
+      %Ack{seq: ^a} ->
+        order(master, to, n, i, rest, netw)
+
+       :
+
+       :
+                
+    after 10 ->
+        dgr = %Ord{seq: a, data: res}
+        send(netw, {:send, to, dgr})
+        order(master, to, n, i, buffer, netw)
+    end
+\end{verbatim}
+\end{frame}
+
 \begin{frame}{flow control}
 
-\pause
-
-
+ \begin{itemize}
+  \item do not overflow the receiver \pause
+  \item keep track of the reciever buffer size  \pause
+  \item wait for the user to activly read messges \pause
+\end{itemize}
 
 \vspace{20pt}{\em We are introducing a synchronous interface - only send if receiver prepared.}
 
 \end{frame}
 
+\begin{frame}{the flow control}
 
+  \begin{itemize}
+  \item {\tt \{:send, msg, pid\}} 
+
+  \item {\tt \{:read, n, pid\}} 
+
+
+  \item {\tt \%Msg\{data: msg\}}
+
+  \item {\tt \%Syn\{add: a\}}
+
+      
+\end{itemize}
+  
+\end{frame}
+
+\begin{frame}{the flow control }
+
+\begin{tikzpicture}[>=stealth', semithick, auto]
+
+    \tikzstyle{fbp} = [rectangle, rounded corners, minimum width=50pt, minimum height=20pt, text centered, draw=black]        
+
+
+    \node (master)   [fbp]                        {master};
+
+    \node (flow)    [fbp, below=2cm of master]   {flow: n};
+
+    \node (order)  [fbp, below=2cm of flow]    {order};    
+
+
+    \path[->, bend right=65, looseness=3]  (master)  edge     node[anchor=east]    {\{:send, msg, pid\}}                            (flow);
+    \path[->, bend left]  (master)  edge     node[anchor=east]    {\{:read, n, pid\}}                         (flow);    
+    \path[->, bend right=65, looseness=3]  (flow)    edge     node[anchor=west]    {\{:ok, i, [msg]\}}                          (master);
+
+    \path[->, bend right=65, looseness=1.4]  (flow)    edge     node[anchor=east]    {\{:send, \%Msg\{data: msg\}\}} (order);
+    \path[->, bend right=65, looseness=3]  (order)  edge     node[anchor=west]    {\%Msg\{data: msg\}}               (flow);    
+    \path[->, bend left]              (order)  edge     node[anchor=west]    {\%Syn\{add: a\}}                          (flow);    
+\end{tikzpicture}
+  
+  
+\end{frame}
+
+\begin{frame}{the flow sending process}
+
+\begin{tikzpicture}[scale=1, >=stealth', node distance=4cm, semithick, auto]
+    \node[initial, state]            (init)                              {init};
+    \node[state]                     (ready)   [above right of=init]     {ready};
+    \node[state]                     (send)   [below right of=ready]     {send s};
+    \node[accepting, state]          (final)   [below right of=init]     {final};
+
+    
+    \path[->]   (init)   edge       [bend left]  node               {\{:connect, net\}}       (ready)
+                         edge       [bend right] node[anchor=east]  {:quit}                   (final)
+                (ready)  edge       [bend right] node[anchor=east]  {\%Syn\{\}}               (send)
+                         edge       [bend right] node[anchor=east]  {:quit}                   (final)                   
+                (send)   edge       [bend right] node[anchor=west]  {\{send, Msg, Pid\}}      (ready)
+                         edge       [loop below, every loop/.append style={looseness=6,out=80, in=10 }]   node[anchor=west, near end]  {{\{send, Msg, Pid\}}}   (send)   
+                         edge       [loop below, every loop/.append style={looseness=6,out=340, in=280 }] node[anchor=north west] {\%Syn\{\}}     (send)
+                         edge       [bend left]               node  {quit}    (final);
+\end{tikzpicture}
+  
+  
+\end{frame}
+
+
+\begin{frame}{the flow receiving process}
+\begin{tikzpicture}[scale=1,>=stealth', node distance=3cm, semithick, auto]
+    \node[initial, state]            (init)                              {init size};
+    \node[state]                     (receive)   [above right of=init]   {receive s};
+    \node[accepting, state]          (final)   [below right of=init]     {final};
+
+    
+    \path[->]   (init)   edge  [bend left]     node                  {\{:connect, net\}}        (receive)
+                         edge  [below, bend right] node[anchor=east] {:quit}                    (final)
+              (receive)  edge  [loop above, every loop/.append style={looseness=6,in=20, out=80 }] node[anchor=west]   {\%Msg\{data: msg\}}   (receive)
+                         edge  [loop above, every loop/.append style={looseness=6,in=300, out=0 }] node[anchor=west]   {\{:read, n, pid\}}     (receive)
+                         edge  []              node                  {:quit}                    (final);
+\end{tikzpicture}
+\end{frame}
 
 \begin{frame}{extensions}
 
 \begin{itemize}
   \item What if the link layer could only send sequences of bytes?  \pause
   \item Can we add error detection in the link layer? \pause
-\end{itemize}
-\end{frame}
-
-\begin{frame}{an extension}
-
-\begin{itemize}
   \item Could we build a switch or router? \pause
 \end{itemize}
+
+\end{frame}
+
+\begin{frame}{a switch}
 
 \includegraphics[scale=0.4]{switch.jpg}
 
 \end{frame}
-
 
 
 \begin{frame}{summary}
@@ -467,8 +608,8 @@ def network(master, id, link) do
 \begin{itemize}
  \item divide a service into processes \pause
  \item layers of abstraction \pause
- \item Finite State Machine (FSM) description of a process \pause
- \item message diagrams \pause
+ \item finite State Machine (FSM) description of a process \pause
+ \item sequence diagrams to show protocol \pause
  \item asynchronous and synchronous interfaces \pause
 \end{itemize}
 
