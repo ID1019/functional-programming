@@ -111,7 +111,7 @@ result and the rest of the string.
 
 \begin{minted}{elixir}
 def parse_request(r0) do
-  {request, r1} = request_line(String.to_charlist(r0))
+  {request, r1} = request_line(r0)
   {headers, r2} = headers(r1)
   {body, _} = message_body(r2)
   {request, headers, body}
