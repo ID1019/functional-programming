@@ -1,24 +1,30 @@
 defmodule Kern do
 
-  def fold([], [], {r,g,b}) do
-    {trim(r),trim(g),trim(b)}
+  def fold([], [], {r,g,b}, depth) do
+    {trim(r, depth),trim(g, depth),trim(b, depth)}
   end
-  def fold([k|kernel], [p|pixels], acc) do
-    fold(kernel, pixels, add(k, p, acc))
+  def fold([], [], ga, depth) do
+    trim(ga, depth)
+  end
+  def fold([k|kernel], [p|pixels], acc, depth) do
+    fold(kernel, pixels, add(k, p, acc), depth)
   end
 
   def add(k, {r,g,b}, {ra,ga,ba}) do
     {k*r+ra, k*g+ga, k*b+ba}
   end
+  def add(k, g, ga) do
+    k*g+ga
+  end  
 
-  def trim(r) do
-    if r < 255 && r > 0 do
+  def trim(r, depth) do
+    if r < depth && r > 0 do
       trunc(r)
     else
-      if r < 255 do
+      if r < depth do
 	0
       else
-	255
+	depth
       end
     end
   end
