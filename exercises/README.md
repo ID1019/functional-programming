@@ -1,13 +1,13 @@
 # A short description of the exercises
 
 
-- [Introduction](exercises/introduction)
-- [Huffmancoding ](exercises/huffman)
-- [The Mandelbrot set](exercises/mandel)
-- [Morse coding ](exercises/morse)
-- [LZW](exercises)
-- [Meta Interpreter](exercises)
+- [Introduction](./introduction)
+- [Huffmancoding ](./huffman)
+- [The Mandelbrot set](./mandel)
+- [Morse coding ](./morse)
+- [LZW](./lzw)
+- [Meta Interpreter](./interpreter)
 - [Eager, lazy and lambdas](exercises)
 - [Distributed](exercises)
-- [Dining Philosophers](exercises)
-- [Web Server](exercises)
+- [Dining Philosophers](./philosophers)
+- [Web Server](./server)
