@@ -14,10 +14,10 @@ defmodule Flow do
     end
   end
     
-  def flow(S, 0, buffer, netw) do
+  def flow(s, 0, buffer, netw) do
     receive do
       %Syn{add: t} ->
-	flow(S, t, buffer, netw)
+	flow(s, t, buffer, netw)
     end
   end
   def flow(s, t, [], netw) do

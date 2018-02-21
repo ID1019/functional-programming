@@ -32,7 +32,7 @@ defmodule Nub do
 
       %Frame{} = frm ->
 	if :rand.uniform(100) <= loss do
-	    IO.puts("nub: throwing away #{frm}")
+	    ##IO.puts("nub: throwing away #{frm}")
 	    :ok
 	else
 	  Enum.each(connected, fn({_,pid}) -> send(pid, frm) end)

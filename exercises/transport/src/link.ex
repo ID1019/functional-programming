@@ -21,7 +21,7 @@ defmodule Link do
 	link(master, lnk)
 
       %Frame{data: msg} = frm ->
-	IO.puts("link receiving #{frm}")
+	##IO.puts("link receiving #{frm}")
 	send(master, msg)
 	link(master, lnk)
 
