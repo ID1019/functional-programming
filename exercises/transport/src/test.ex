@@ -1,42 +1,42 @@
 defmodule Test do
 
-  def test_flow() do
-    sender = spawn(fn() -> connect(fn(n) ->  sender_flow(20, n) end) end)
-    receiver = spawn(fn() ->  connect(fn(n) -> receiver_flow(20, n) end) end)
-    {:ok, ls} = flow(sender, 4, 2, 1)
-    {:ok, lr} = flow(receiver, 4, 1, 2)
+  def test_flow(n, size) do
+    sender = spawn(fn() -> connect(fn(net) ->  sender_flow(n, net) end) end)
+    receiver = spawn(fn() ->  connect(fn(net) -> receiver_flow(n, net) end) end)
+    {:ok, ls} = flow(sender, size, 2, 1)
+    {:ok, lr} = flow(receiver, size, 1, 2)
     switch(ls, lr)
   end
 
 
-  def test_flow(loss) do
-    sender = spawn(fn() -> connect(fn(n) ->  sender_flow(20, n) end) end)
-    receiver = spawn(fn() ->  connect(fn(n) -> receiver_flow(20, n) end) end)
-    {:ok, ls} = flow(sender, 4, 2, 1)
-    {:ok, lr} = flow(receiver, 4, 1, 2)
+  def test_flow(n, size, loss) do
+    sender = spawn(fn() -> connect(fn(net) ->  sender_flow(n, net) end) end)
+    receiver = spawn(fn() ->  connect(fn(net) -> receiver_flow(n, net) end) end)
+    {:ok, ls} = flow(sender, size, 2, 1)
+    {:ok, lr} = flow(receiver, size, 1, 2)
     connect(ls, lr, loss)
   end
 
 
-  def test_order() do
-    sender =  spawn(fn() -> connect(fn(n) -> sender_order(20, n) end) end)
-    receiver = spawn(fn() ->  connect(fn(n) -> receiver_order(20, n) end) end)
+  def test_order(n) do
+    sender =  spawn(fn() -> connect(fn(net) -> sender_order(n, net) end) end)
+    receiver = spawn(fn() ->  connect(fn(net) -> receiver_order(n, net) end) end)
     {:ok, ls} = order(sender, 2, 1)
     {:ok, lr} = order(receiver, 1, 2)
     switch(ls, lr)
   end
 
-  def test_order(loss) do
-    sender =  spawn(fn() -> connect(fn(n) -> sender_order(20, n) end) end)
-    receiver = spawn(fn() ->  connect(fn(n) -> receiver_order(20, n) end) end)
+  def test_order(n, loss) do
+    sender =  spawn(fn() -> connect(fn(net) -> sender_order(n, net) end) end)
+    receiver = spawn(fn() ->  connect(fn(net) -> receiver_order(n, net) end) end)
     {:ok, ls} = order(sender, 2, 1)
     {:ok, lr} = order(receiver, 1, 2)
     connect(ls, lr, loss)
   end
 
-  def test_switch() do
-    sender =  spawn(fn() -> connect(fn(n) -> sender_netw(20, 2, n) end) end)
-    receiver =  spawn(fn() -> connect(fn(n) -> receiver_netw(20, 1, n) end) end)
+  def test_switch(n) do
+    sender =  spawn(fn() -> connect(fn(net) -> sender_netw(n, 2, net) end) end)
+    receiver =  spawn(fn() -> connect(fn(net) -> receiver_netw(n, 1, net) end) end)
     {:ok, ls} = netw(sender, 1)
     {:ok, lr} = netw(receiver, 2)
     switch(ls, lr)
@@ -44,12 +44,8 @@ defmodule Test do
 
 
   def test_netw(n, loss) do
-    sender =  spawn(fn() -> 
-		 connect(fn(netw) -> 
-		       sender_netw(n, 2, netw) end) end)
-    receiver =  spawn(fn() -> 
-                   connect(fn(netw) -> 
-                       receiver_netw(n, 1, netw) end) end)
+    sender =  spawn(fn() -> connect(fn(net) ->  sender_netw(n, 2, net) end) end)
+    receiver =  spawn(fn() ->  connect(fn(net) -> receiver_netw(n, 1, net) end) end)
     {:ok, ls} = netw(sender, 1)
     {:ok, lr} = netw(receiver, 2)
     connect(ls, lr, loss)
@@ -57,10 +53,8 @@ defmodule Test do
   end
 
   def test_link(n) do
-    sender = spawn(fn() ->
-      connect(fn(lnk) -> sender_link(n, lnk) end) end)
-    receiver = spawn(fn() ->
-      connect(fn(lnk) -> receiver_link(n, lnk) end) end)
+    sender = spawn(fn() -> connect(fn(lnk) -> sender_link(n, lnk) end) end)
+    receiver = spawn(fn() -> connect(fn(lnk) -> receiver_link(n, lnk) end) end)
     {:ok, ls} = Link.start(sender)
     {:ok, lr} = Link.start(receiver)
     send(ls,{:connect, lr})
@@ -69,6 +63,8 @@ defmodule Test do
     send(receiver, {:connect, lr})
     :ok
   end
+
+  ## connecting layers together
   
   def flow(app, size, to, i) do
     {:ok, flow} = Flow.start(size)    
@@ -94,6 +90,9 @@ defmodule Test do
     {:ok, link}
   end
 
+
+  ## adding a switch and connecting it to two links
+  
   def switch(l1, l2) do
     {:ok, switch} = Switch.start()
     {:ok, s1} = Switch.new(switch)
@@ -104,6 +103,8 @@ defmodule Test do
     send(s2, {:connect, l2})
   end
 
+  ## adding a lossy hub and connecting it to two links  
+  
   def connect(l1, l2, loss) do
     {:ok, hub} = Nub.start(loss)
     send(l1, {:connect, hub})
@@ -112,6 +113,8 @@ defmodule Test do
     send(hub, {:connect, l2})
   end
 
+  ## wait for a connection 
+  
   def connect(f) do
     receive do
 	{:connect, n} ->
@@ -119,11 +122,12 @@ defmodule Test do
     end
   end
 
+  ## test processes
+  
   def sender_flow(0, _) do :ok end
   def sender_flow(i, n) do
-    ## this should be fixed, impl String.Chars
-    IO.puts("sender sending flow")
-    send(n, {:send, i, self()})
+    IO.puts("sender sending #{i} ")
+    send(n, {:send, "message #{i}" , self()})
     receive  do
       :ok ->
 	sender_flow(i-1, n)
@@ -132,10 +136,10 @@ defmodule Test do
 
   def receiver_flow(0,_) do :ok end
   def receiver_flow(i,n) do
-    send(n, {:read, 4, self()})
+    send(n, {:read, 1, self()})
     receive do
       {:ok, l, msg} ->
-	IO.puts("receiver received #{msg}")
+	IO.puts("receiver received #{l}  #{msg}")
 	receiver_flow(i-l,n)
     end
   end

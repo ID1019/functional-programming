@@ -19,12 +19,12 @@ defmodule Network do
  def network(master, id, link) do
    receive do
      {:send, to, msg} ->
-       IO.puts("network #{id} sending #{msg} to #{to}")
+       ##IO.puts("network #{id} sending #{msg} to #{to}")
        send(link, {:send, %Netw{src: id, dst: to,  data: msg}})
        network(master, id, link)
 
      %Netw{dst: ^id, data: msg} ->
-       IO.puts("network #{id} receiving #{msg}")
+       ##IO.puts("network #{id} receiving #{msg}")
        send(master, msg)
        network(master, id, link)
 

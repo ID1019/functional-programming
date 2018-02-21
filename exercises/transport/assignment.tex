@@ -326,9 +326,9 @@ modifying the network layer.
     
     \path[->]   (init)   edge       [bend left]     node      {\{:connect, lnk\}}       (net)
                          edge       []             node       {:quit}                   (final)
-                (net)    edge       [loop above, every loop/.append style={looseness=10,in=20, out=80 }]   node[anchor=west] {\%Msg\{dst: id, msg: msg\}}(net)
+                (net)    edge       [loop above, every loop/.append style={looseness=10,in=20, out=80 }]   node[anchor=west] {\%Netw\{dst: id, msg: msg\}}(net)
                          edge       [loop above, every loop/.append style={looseness=10,in=100, out=160 }] node[anchor=east] {\{:send, to, msg\}}    (net)
-                         edge       [loop below, every loop/.append style={looseness=6,in=340, out=280 }]  node              {\&Msg\{dst\}}             (net)
+                         edge       [loop below, every loop/.append style={looseness=6,in=340, out=280 }]  node              {\&Netw\{\}}             (net)
                          edge       []                                                                     node              {:quit}                 (final);
     
 \end{tikzpicture}

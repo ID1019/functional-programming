@@ -240,13 +240,13 @@ end
   def hub(connected) do
     receive do
       {:connect, pid} ->
-        hub([{ref, pid}|connected])
+        hub([pid|connected])
 
       {:disconnect, pid} ->
-        hub(List.keydelete(connected, pid, 1))
+        hub(List.delete(connected, pid))
 
       %Frame{} = frm ->
-        Enum.each(connected, fn({_,pid}) -> send(pid, frm) end)
+        Enum.each(connected, fn(pid) -> send(pid, frm) end)
         hub(connected)
         
       :quit ->
@@ -455,7 +455,7 @@ def network(master, id, link) do
 \begin{verbatim}
   def order(master, to, n, i, [], netw) do
     receive do
-      %Ord{seq: i, data: msg} ->
+      %Ord{seq: ^i, data: msg} ->
         send(netw, {:send, to, %Ack{seq: i}})
         send(master, msg)
         order(master, to, n, i+1, [], netw)
