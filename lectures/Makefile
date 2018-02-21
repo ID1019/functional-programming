@@ -11,6 +11,7 @@ DIRS = 	overview \
 	parallel \
         types \
 	tracer \
+	transport \
 	dynamic \
 	concurrency \
 	asynchronous

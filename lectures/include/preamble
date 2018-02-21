@@ -15,10 +15,7 @@
 \lstset{language=Erlang} 
 
 \usepackage{tikz}
-\usetikzlibrary{arrows}
-\usetikzlibrary{automata}
-\usetikzlibrary{topaths}
-\usetikzlibrary{calc}
+\usetikzlibrary{automata,arrows,topaths,calc,positioning}
  
 \usepackage{syntax}
 \grammarindent=2cm
