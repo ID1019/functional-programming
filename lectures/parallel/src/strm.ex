@@ -1,4 +1,4 @@
-defmodule Stream do
+defmodule Strm do
 
   def start(kernel, out) do
     spawn_link(fn() -> init(kernel, out) end)
