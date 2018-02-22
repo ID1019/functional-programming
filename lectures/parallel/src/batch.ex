@@ -5,6 +5,7 @@ defmodule Batch do
     lines = case n do
 	      1 -> map_1(image, kernel)
 	      3 -> map_3(image, kernel)
+	      5 -> map_5(image, kernel)		
 	    end
     {:image, header, lines}
   end
@@ -55,9 +56,9 @@ defmodule Batch do
   def map_5(l1, l2, l3, l4, lines, kernel) do
     case lines do
       [] ->
-	[Conv.map(l1,l2,l3,l4,l4,kernel) | map_5(l2, l3, l4, l4, l3)]
+	[Conv.map(l1,l2,l3,l4,l4,kernel),  Conv.map(l2, l3, l4, l4, l4, kernel)]
       [l5|lines] ->
-	[Conv.map(l1,l2,l3,l4,l4,kernel)| map_5(l2, l3, l4, l5, lines, kernel)]
+	[Conv.map(l1,l2,l3,l4,l5,kernel)| map_5(l2, l3, l4, l5, lines, kernel)]
     end
   end
 
