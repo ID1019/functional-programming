@@ -4,7 +4,7 @@ defmodule Handler do
   @timeout 5000
 
   # def handle(packet, ip, port, _socket, _server) do
-  #   IO.puts("Received request from #{ip}:#{port}:#{packet}")
+  #   :io.format("Received request from ~w:~w  ~w~n", [ip, port, packet])
   # end
 
   def start(packet, repl, frw) do
@@ -12,17 +12,17 @@ defmodule Handler do
   end
 
   def handler(packet, reply, frw) do
-    IO.puts("Handler received request: #{packet}")
+    :io.format("Handler received request: ~w~n", [packet])
 
     # trace(packet)
     case frw.(packet) do
       {:ok, answer} ->
-        IO.puts("Received reply: #{answer}")
+        :io.format("Received reply: ~w~n", [answer])
         # trace(answer)
         reply.(answer)
 
       {:error, error} ->
-        IO.puts("Error in forward: #{error}")
+        :io.format("Error in forward: ~w~n", [error])
     end
   end
 

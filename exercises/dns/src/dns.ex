@@ -17,7 +17,7 @@ defmodule DNS do
         dns(socket, server)
 
       error ->
-        IO.puts("DNS error opening server socket: #{error}")
+        :io.format("DNS error opening server socket: ~w~n", [error])
     end
   end
 
@@ -33,11 +33,11 @@ defmodule DNS do
         dns(socket, server)
 
       {:stop} ->
-        IO.puts("Bye, bye!")
+        :io.format("Bye, bye!")
         :ok
 
       error ->
-        IO.puts("Strange message: #{error}")
+        :io.format("Strange message: ~w~n", [error])
         dns(socket, server)
     end
   end
