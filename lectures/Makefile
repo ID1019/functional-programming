@@ -1,25 +1,21 @@
 PDFLATEX = pdflatex
 
-DIRS = 	overview \
-	introduction \
-	evaluation \
-	recursion \
-	trees \
+DIRS = 	asynchronous \
 	complexity \
+	concurrency \
+	dns \
+	dynamic \
+	evaluation \
 	higher \
-        interpreter \
+	interpreter \
+	introduction \
+	overview \
 	parallel \
-        types \
+	recursion \
 	tracer \
 	transport \
-	dynamic \
-	concurrency \
-	asynchronous
-
-
-
-
-
+	trees \
+	types 
 
 
 WWW =  ./www
