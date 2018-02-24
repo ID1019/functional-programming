@@ -137,12 +137,12 @@ end
 def fib(0) do 0 end
 def fib(1) do 1 end
 def fib(n) do
-   r1 = make_ref(),
-   r2 = make_ref(),
-   parallel(fun() -> fib(n-1) end, r1),
-   parallel(fun() -> fib(n-2) end, r2),
-   f1 = collect(r1),
-   f2 = collect(r2),
+   r1 = make_ref()
+   r2 = make_ref()
+   parallel(fn() -> fib(n-1) end, r1)
+   parallel(fn() -> fib(n-2) end, r2)
+   f1 = collect(r1)
+   f2 = collect(r2)
    f1 + f2
 end
 \end{verbatim}
@@ -151,17 +151,17 @@ end
  \begin{column}{0.4\linewidth}
 \begin{verbatim}
 def parallel(fun, ref) ->
-   self = self(),
+   self = self()
    spawn(fn() -> 
-          res = fun.(), 
-          self ! {:ok, ref, res}
-         end)
+     res = fun.()
+     send(self ! {:ok, ref, res})
+     end)
 end 
 \end{verbatim}
 \begin{verbatim}
 def collect(ref) do
    receive  do
-      {ok, ref, res} ->
+      {:ok, ref, res} ->
           res
    end
 end
@@ -202,8 +202,8 @@ def fix(n, m) when n > m do
    r2 = make_ref()
    parallel(fn() -> fix(n-1, m) end, r1)
    parallel(fn() -> fix(n-2, m) end, r2)
-   f1 = collect(Ref)
-   f2 = collect(Ref)
+   f1 = collect(r)
+   f2 = collect(r2)
    f1 + f2
 end
 def fix(n, _) do fib(n) end
