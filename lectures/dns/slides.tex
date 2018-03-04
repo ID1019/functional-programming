@@ -310,6 +310,8 @@ Encapsulation of the handling of a request in a process gives us something more 
 \begin{frame}[fragile]{message flags}
 
 \begin{itemize}
+
+
 \item QR: query or reply
 \item Op-code: the operation 
 \item AA: authoritative answer (if the server is responsible for the domain)
@@ -336,15 +338,15 @@ Encapsulation of the handling of a request in a process gives us something more 
 \begin{frame}[fragile]{the bit syntax}
 
 \begin{verbatim}
-def decode(<<id:16, flags:2/binary, 
-         qdc:16, anc:16, 
-         ncs:16, arc:16, 
-         body/binary>>=raw) do
+def decode(<<id::16, flags::binary-size(2), 
+         qdc::16, anc::16, 
+         ncs::16, arc::16, 
+         body::binary>>=raw) do
 \end{verbatim}
 
 \pause
 \begin{verbatim}
-    <<qr:1, op:4, aa:1, tc:1, rd:1, ra:1, _:3, resp:4>> = flags
+    <<qr::1, op::4, aa::1, tc::1, rd::1, ra::1, _::3, resp::4>> = flags
 \end{verbatim}
 \pause
 \begin{verbatim}
@@ -417,7 +419,7 @@ def decode_query(0, body, _) do
     {[], body}
 end
 def decode_query(n, body, raw) do
-    {name, <<qtype:16, qclass:16, rest/binary>>} = 
+    {name, <<qtype::16, qclass::16, rest::binary>>} = 
           decode_name(body, raw),
     {decoded, rest} = decode_query(n-1, rest, raw),
     {[{name, qtype, qclass} | decoded], rest}.
@@ -436,7 +438,7 @@ end
 \vspace{20pt}\pause
 
 \begin{verbatim}
-def decode_name(<<0:1, 0:1, _:6, _/binary>>=label, names, raw) do
+def decode_name(<<0::1, 0::1, _::6, _::binary>>=label, names, raw) do
     decode_label(label, names, raw)
 end
 \end{verbatim}
@@ -446,10 +448,10 @@ end
 \begin{frame}[fragile]{decode a label}
 
 \begin{verbatim}
-def decode_label(<<0:8, rest/binary>>, names, _) do
+def decode_label(<<0::8, rest::binary>>, names, _) do
     {Enum.reverse(names), rest}
 end
-def decode_label(<<n:8, rest/binary>>, names, raw) do
+def decode_label(<<n::8, rest::binary>>, names, raw) do
     decode_label(n, rest, [], names, raw)
 end
 \end{verbatim}
@@ -460,7 +462,7 @@ end
 decode_label(0, rest, sofar, names, raw) ->
     decode_name(rest, [lists:reverse(sofar)|names], raw);
 
-decode_label(n, <<char:8, rest/binary>>, sofar, names, raw) ->
+decode_label(n, <<char::8, rest::binary>>, sofar, names, raw) ->
     decode_label(n-1, rest, [char|sofar], names, raw).
 \end{verbatim}
 
@@ -512,12 +514,12 @@ Assume we have encoded {\tt www.kth.se} and need to encode {\tt
 \begin{frame}[fragile]{offset encoding}
 
 \begin{verbatim}
-def decode_name(<<0:1, 0:1, _:6, _/binary>>=label, names, raw) do
+def decode_name(<<0::1, 0::1, _::6, _::binary>>=label, names, raw) do
     ## regular name encoding
     decode_label(label, names, raw)
 end
       
-def decode_name(<<1:1, 1:1, n:14, rest/binary>>, names, raw) do
+def decode_name(<<1::1, 1::1, n::14, rest::binary>>, names, raw) do
     ## offset encoding
     offset = 8*n
     <<_:offset, section/binary>> = raw
