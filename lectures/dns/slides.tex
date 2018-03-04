@@ -61,225 +61,67 @@
 
 \begin{verbatim}
 defmodule  DNS do
+
+  @server {8,8,8,8}
+  @port 53
+  @local 5300
 \end{verbatim}
 
 \begin{verbatim}
-def start(port, server) ->
-    spawn(fn() -> init(port, server) end)
-end
+  def start() do
+    start(@local, @server, @port)
+  end
+
+  def start(local, server, port) do
+    spawn(fn() -> init(local, server, port) end)
+  end
 \end{verbatim}
 
 \vspace{10pt}\pause
 {\em The server is the DNS server to which queries are routed.}
+\end{frame}
 
-\pause
+\begin{frame}[fragile]{two datagram sockets}
 
 \begin{verbatim}
-def init(port, server) do
-   case gen_udp:open(port, [{:active, true}, :binary]) do
-      {:ok, socket} ->
-           dns(socket, server);
-      {:error, _error} ->
-           IO.puts("dns: error opening server socket")
-           :ok
-   end
-end
+  def init(local, server, port) do
+    case :gen_udp.open(local, [{:active, true}, :binary]) do
+      {:ok, local} ->
+        case :gen_udp.open(0, [{:active, true}, :binary]) do
+          {:ok, remote} ->
+            dns(local, remote, server, port)
+          error ->
+            :io.format("DNS error opening remote socket: ~w~n", [error])
+        end
+      error ->
+        :io.format("DNS error opening local socket: ~w~n", [error])
+    end
+  end
 \end{verbatim}
-
 
 \end{frame}
 
 \begin{frame}[fragile]{the server loop}
 
 \begin{verbatim}
-def dns(socket, server) do
+  def dns(local, remote, server, port) do
     receive do
-        {:udp, ^socket, ip, port, packet} ->
-            Handler.handle(packet, ip, port, socket, server)
-            dns(socket, server)
-        :stop ->
-            io:format("by by~n", [])
-            :ok
-        strange ->
-            io:format("strange message ~w~n", [strange])
-            dns(socket, server)
+      {:udp, ^local, _client, _client_port, _msg} ->
+        dns(local, remote, server, port)
+      :stop ->
+        :ok
+      :update ->
+        DNS.dns(local, remote, server, port)
+      strange ->
+        :io.format("strange message ~w~n", [strange])
+        dns(local, remote, server, port)
     end
-end
-\end{verbatim}
-
-\end{frame}
-
-
-\begin{frame}[fragile]{handle a request}
-
-\pause
-\begin{verbatim}
-defmodule Handler do
-
-def handle(packet, ip, port, _socket, _server) do
-    :io.format("received request from ~w/~w: ~w~n", [ip, port, packet])
-end
+  end
 \end{verbatim}
 
 \vspace{20pt}\pause{\em Let's try.}
 
 \end{frame}
-
-
-\begin{frame}[fragile]{forward it}
-
-\pause
-Let's forward the request to the DNS server above us.
-
-\pause
-
-\begin{verbatim}
-def handle(packet, ip, port, socket, server) do
-    case forward(packet, server) do
-        {:ok, reply} ->
-            gen_udp:send(socket, ip, port, reply)
-        {:error, error} ->
-            :io.format("error in forward ~w~n", [error])
-    end
-end
-\end{verbatim}
-
-\end{frame}
-
-\begin{frame}[fragile]{forward a request}
-
-\begin{verbatim}
-def forward(request, server) do
-  case gen_udp:open(0, [{:active, true}, :binary]) of
-    {:ok, client} ->
-      gen_udp:send(client, server, ?port, request)
-      result = receive do
-                 {:udp, ^client, _ip, _port, reply} ->
-                    {:ok, reply}
-                 after ?timeout ->
-                    {:error, :timeout}
-                 end
-      gen_udp:close(client)
-      result
-    error ->
-      {:error, error}
-    end
-end
-\end{verbatim}
-
-\end{frame}
-
-
-\begin{frame}{deep inside}
-
-
-\vspace{10pt}\pause
-{\em Deep inside the resolver we hard code that we should use UDP packets.}
-
-\end{frame}
-
-
-
-\begin{frame}[fragile]{abstractions}
-
-Hide the details, let the server module decide how things are done.
-
-\vspace{10pt}\pause
- 
-\begin{verbatim}
-        {:udp, socket, ip, port, packet} ->
-\end{verbatim}\pause
-\begin{verbatim}
-            reply = fn(rep) ->  reply(rep, socket, ip, port) end
-\end{verbatim}\pause
-\begin{verbatim}
-            forward =  fn(req) -> forward(req, server) end
-\end{verbatim}\pause
-\begin{verbatim}
-            Handler.handle(packet, reply, forward)
-\end{verbatim}\pause
-\begin{verbatim}
-            dns(socket, server)
-\end{verbatim}
-
-\end{frame}
-
-\begin{frame}[fragile]{an alternative}
-
-The handler process:
-\pause
-\begin{verbatim}
-handle(packet, reply, forward) ->    
-    case forward.(packet) of
-        {:ok, msg} ->
-            reply(msg);
-        {:error, error} ->
-            io:format("error in forward ~w~n", [error])
-    end
-end
-\end{verbatim}
-
-\vspace{10pt}\pause
-{\em Separation of knowledge - a need to know basis.}
-
-\end{frame}
-
-
-\begin{frame}{increase throughput}
-
-How do we increase throughput?
-
-\end{frame}
-
-
-\begin{frame}[fragile]{the server loop}
-
-\begin{verbatim}
-def dns(socket, server) do
-  receive do
-     {:udp, ^socket, ip, port, packet} ->
-        reply = fn(rep) ->  reply(rep, socket, ip, port) end
-        forward =  fn(req) -> forward(req, server) end
-        Handler.start(packet, reply, forward),
-        dns(socket, server)
-     :stop ->
-        :io.format("by by~n", []),
-        :ok
-     error ->
-        :io.format("strange message ~w~n", [error]),
-        dns(socket, server)
-    end
-end
-\end{verbatim}
-
-\end{frame}
-
-
-\begin{frame}[fragile]{handle a request}
-
-\pause
-
-\begin{verbatim}
-defmodule Handler do
-\end{verbatim}
-
-\pause
-\begin{verbatim}
-def start(packet, reply, forward) do
-   spawn(fn() -> handle(packet, reply, forward) end)
-end
-\end{verbatim}
-
-\pause
-{\em Let's try.}
-\end{frame}
-
-\begin{frame}{encapsulation}
-
-Encapsulation of the handling of a request in a process gives us something more than throughput - what?
-
-\end{frame}
-
 
 \begin{frame}[fragile]{let's decode the message}
 
@@ -398,17 +240,18 @@ A query consists of a sequence of queries (we know from the header how many).
 
 <name> ::= <empty> | <label> <name>
 
-<empty> ::=  0 
+<empty> ::=  {\em 8 bits} 0 
 
-<label> ::=  <byte representing length n> <byte sequence of length n> \\
+<label> ::=  <length> <byte sequence of length> \\
 
-<query type> ::= {\em 16 bits}
+<query type> ::= {\em 16 bits}  (1 = A, ... 15 = MX, 16 = TXT, ...)
 
-<query class> ::= {\em 16 bits}
+<query class> ::= {\em 16 bits} (1 = Internet)
+
+<length> ::= {\em 8 bits}  (0..63 i.e. the two highest bits are set to zero)
 
 \end{grammar}
 
-{\em The length is maximum 63 i.e. the top two bits are set to zero.}
 
 \end{frame}
 
@@ -416,13 +259,13 @@ A query consists of a sequence of queries (we know from the header how many).
 
 \begin{verbatim}
 def decode_query(0, body, _) do
-    {[], body}
+  {[], body}
 end
 def decode_query(n, body, raw) do
-    {name, <<qtype::16, qclass::16, rest::binary>>} = 
-          decode_name(body, raw),
-    {decoded, rest} = decode_query(n-1, rest, raw),
-    {[{name, qtype, qclass} | decoded], rest}.
+  {name, <<qtype::16, qclass::16, rest::binary>>} = decode_name(body, raw),
+  {decoded, rest} = decode_query(n-1, rest, raw),
+  {[{name, qtype, qclass} | decoded], rest}
+end
 \end{verbatim}
 
 \end{frame}
@@ -432,14 +275,14 @@ def decode_query(n, body, raw) do
 
 \begin{verbatim}
 def decode_name(label, raw) do
-    decode_name(label, [], raw)
+  decode_name(label, [], raw)
 end
 \end{verbatim}
 \vspace{20pt}\pause
 
 \begin{verbatim}
 def decode_name(<<0::1, 0::1, _::6, _::binary>>=label, names, raw) do
-    decode_label(label, names, raw)
+  decode_label(label, names, raw)
 end
 \end{verbatim}
 \end{frame}
@@ -449,10 +292,10 @@ end
 
 \begin{verbatim}
 def decode_label(<<0::8, rest::binary>>, names, _) do
-    {Enum.reverse(names), rest}
+  {Enum.reverse(names), rest}
 end
 def decode_label(<<n::8, rest::binary>>, names, raw) do
-    decode_label(n, rest, [], names, raw)
+  decode_label(n, rest, [], names, raw)
 end
 \end{verbatim}
 
@@ -460,10 +303,11 @@ end
 
 \begin{verbatim}
 decode_label(0, rest, sofar, names, raw) ->
-    decode_name(rest, [lists:reverse(sofar)|names], raw);
-
+  decode_name(rest, [Enum.reverse(sofar)|names], raw)
+end
 decode_label(n, <<char::8, rest::binary>>, sofar, names, raw) ->
-    decode_label(n-1, rest, [char|sofar], names, raw).
+  decode_label(n-1, rest, [char|sofar], names, raw)
+end
 \end{verbatim}
 
 \end{frame}
@@ -499,8 +343,11 @@ Assume we have encoded {\tt www.kth.se} and need to encode {\tt
 \vspace{20pt} \pause
 
 \begin{grammar}
-<label> ::=  <byte representing length n> <byte sequence of length n> | \\
-             <two bytes representing an offset \underline{ from the start of the message}>
+<label> ::=  <length> <byte sequence of length n> | \\
+             <offset>
+
+<offset> ::= {\em 16 bits} (two highest bits set to ones)
+
 \end{grammar}
 
 
@@ -519,10 +366,10 @@ def decode_name(<<0::1, 0::1, _::6, _::binary>>=label, names, raw) do
     decode_label(label, names, raw)
 end
       
-def decode_name(<<1::1, 1::1, n::14, rest::binary>>, names, raw) do
+def decode_name(<<1::1, 1::1, offset::14, rest::binary>>, names, raw) do
     ## offset encoding
-    offset = 8*n
-    <<_:offset, section/binary>> = raw
+    bits = 8*offset
+    <<_::bits, section::binary>> = raw
     {name, _} = decode_label(section, names, raw)
     {name, rest}
 end
@@ -553,19 +400,10 @@ All answer sections have the same basic structure:
 
 \begin{frame}{let's try}
 
-Same proxy that forwards the requests but now with an effort to decode the messages.
 
 \end{frame}
 
-\begin{frame}{things to do}
-
-We're wasting UDP ports - a new port is used for each query, could we do better?
-
-\vspace{20pt}\pause
-
-We of course want to cache the replies so that we can generate a respons directly.
-
-
+\begin{frame}{forward the reply}
 
 \end{frame}
 
