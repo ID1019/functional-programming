@@ -273,44 +273,27 @@ end
 
 \begin{frame}[fragile]{decode a name}
 
+  
 \begin{verbatim}
 def decode_name(label, raw) do
   decode_name(label, [], raw)
 end
 \end{verbatim}
-\vspace{20pt}\pause
-
 \begin{verbatim}
-def decode_name(<<0::1, 0::1, _::6, _::binary>>=label, names, raw) do
-  decode_label(label, names, raw)
-end
-\end{verbatim}
-\end{frame}
-
-
-\begin{frame}[fragile]{decode a label}
-
-\begin{verbatim}
-def decode_label(<<0::8, rest::binary>>, names, _) do
+def decode_name(<<0::1, 0::1, 0::6, rest::binary>>, names, _raw) do  
   {Enum.reverse(names), rest}
 end
-def decode_label(<<n::8, rest::binary>>, names, raw) do
-  decode_label(n, rest, [], names, raw)
-end
 \end{verbatim}
-
-\vspace{20pt}\pause
 
 \begin{verbatim}
-decode_label(0, rest, sofar, names, raw) ->
-  decode_name(rest, [Enum.reverse(sofar)|names], raw)
-end
-decode_label(n, <<char::8, rest::binary>>, sofar, names, raw) ->
-  decode_label(n-1, rest, [char|sofar], names, raw)
+def decode_name(<<0::1, 0::1, n::6, _::binary>> = label, names, raw) do
+  <<name::binary-size(n), rest::binary>> = label
+  decode_name(rest, [name|names], raw)
 end
 \end{verbatim}
-
 \end{frame}
+
+
 
 \begin{frame}[fragile]{query example}
 
@@ -326,7 +309,7 @@ end
 \vspace{20pt} \pause
   Decoded query:
 \begin{verbatim}
-  {1036,0,0,0,0,1,0,0,{[{["www","kth","se"],1,1}],[],[],[]}}
+  {1036,0,0,0,0,1,0,0,{[{['www','kth','se'],1,1}],[],[],[]}}
 \end{verbatim}  
 
 \end{frame}
@@ -360,18 +343,14 @@ Assume we have encoded {\tt www.kth.se} and need to encode {\tt
 
 \begin{frame}[fragile]{offset encoding}
 
+
 \begin{verbatim}
-def decode_name(<<0::1, 0::1, _::6, _::binary>>=label, names, raw) do
-    ## regular name encoding
-    decode_label(label, names, raw)
-end
-      
-def decode_name(<<1::1, 1::1, offset::14, rest::binary>>, names, raw) do
+  def decode_names(<<1::1, 1::1, n::14, rest::binary>>, names, raw) do
     ## offset encoding
-    bits = 8*offset
-    <<_::bits, section::binary>> = raw
-    {name, _} = decode_label(section, names, raw)
+    <<_::binary-size(n), section::binary>> = raw
+    {name, _} = decode_names(section, names, raw)
     {name, rest}
+  end
 end
 \end{verbatim}
 
