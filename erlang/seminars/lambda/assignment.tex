@@ -53,7 +53,7 @@ In the dawn of computers the only programming language was the language of
 the hardware i.e. assembler. In the late fifties computers were
 however powerful enough to allow programs, written in high-level
 languages, to be compiled to machine code. One of the first high-level
-languages that were defined was Lisp. It was developed by John
+languages that was defined was Lisp. It was developed by John
 McCarthy in 1958 and was directly based on \lamc. It introduced many
 features of programming languages that we now take for granted.
 
@@ -141,7 +141,7 @@ A \betar\ is what we do when we apply a \lama\ to an argument. We will
 write substitution using the following notation $$(2x + 5)[x/3]$$ We
 can write down some formal rules for what it means to do substitution
 but it is all quite simple. The only thing we have to be careful
-about is when we want to substitute one variable by another. This
+about is when we want to substitute one variable for another. This
 could of course lead to very strange situations. 
 
 If we have the abstraction
@@ -309,12 +309,12 @@ $$\lambda x \rightarrow (\lambda y \rightarrow x + y )$$
 Applying one argument after the other is rather complicated and
 therefor any functional programming language have a syntax that allows more arguments. The
 important thing to note is, that we do not have to change or add any
-rules to the calulus. It is all just syntactic sugar that is it makes
+rules to the calulus. It is all just syntactic sugar that makes
 things easier to read and write.
 
-While using several arguments to a function make life easier the
+While using several arguments to a function makes life easier,
 we sometimes want to do the opposite. We want to
-turn a function of several parameters to a sequence of functions of
+turn a function of several parameters into a sequence of functions of
 one parameter each. This is so important that it has been given a
 name, {\em currying}, after the mathematician Haskell B. Curry (who also
 gave name to the language Haskell).
@@ -352,7 +352,7 @@ following function in Erlang.
 \end{center}
 \vspace{10pt}
 
-How is this translated into \lamc? There is nothing called a sequence
+How is this translated into \lamc? There is no such thing as a sequence
 in \lamc\ so we have to rewrite it in terms of regular language
 constructs. We rewrite the abstraction as follows:
 
@@ -402,7 +402,7 @@ so common to use infinite structures that it is provided by default.
 
 Haskell is as we mentioned a language that uses lazy-evaluation so it
 is more natural to work with infinite structures. Working with
-infinite structures is quite fun and you can write very nice program
+infinite structures is quite fun and you can write very nice programs
 (that are mind-boggling) but in Erlang it is not allowed (or rather we
 have to construct them manually).
 
@@ -687,7 +687,7 @@ try the following:
  :
 \end{verbatim}
 
-I you think this was complicated you're right! Church never figured
+If you think this was complicated you're right! Church never figured
 out how to express the predecessor function. It one of his students,
 Stephen Kleene, that four years later showed his professor that the
 \lamc\ could express something as simple as the predecessor function. 
@@ -793,7 +793,7 @@ otherwise get.
 \section{Summary}
 
 If you have implemented the Church numerals I think that you have a
-better understanding of what the \lamc\ is. I also hope that you're a
+better understanding of what \lamc\ is. I also hope that you're a
 little bit better in working with functions as arguments and return
 values. This is something that you will not use very much in the
 beginning but once you get use to it you will realize how powerful it
