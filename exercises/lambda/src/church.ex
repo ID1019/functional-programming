@@ -47,7 +47,7 @@ defmodule Church do
       ( n.(                                    # n is a Church numeral
          fn(g) -> fn(h) -> h.(g.(f)) end end,  #  apply this function n times 
          fn(_) -> x end)                       #  to this function 
-      ).(fn(u) -> u end)                       # apply it to thee identity function
+      ).(fn(u) -> u end)                       # apply it to the identity function
     end
   end
 
