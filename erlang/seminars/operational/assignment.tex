@@ -30,26 +30,26 @@ any room for interpretation since the description is what defines the
 language.
 
 The operational semantics should preferably be described in a way that
-it also captures the time and memory complexity of an execution. It
+also capture the time and memory complexity of an execution. It
 does not have to be a detailed description of how things are actually
 implemented but it should give an understanding of the execution to
 allow a programmer to reason about the efficiency of a particular
 program.
 
-The operational semantics of a language can also serve as a
+The operational semantics of a language can also serve as an
 architecture for an abstract machine for the language or as the design
 criteria for a compiler. The observable properties of a program
 execution should conform to the properties one can derive from the
 description of the operational semantics.
 
-There are many ways to describe an operational semantics of a
+There are many ways to describe operational semantics of a
 programming language and we will use a strategy called {\em big-step
   semantics}. We will describe the semantics as a set of rewrite rules
-or evaluation relation; given an expression in the language we ill
+or evaluation relation; given an expression in the language we will
 describe the rule of how to evaluate the expression to obtain an
 answer.
 
-This description of an operational semantics for our small functional
+This description of operational semantics for our small functional
 programming language will serve our purposes in that we will be able
 to talk and reason about program execution. We will also be able to
 use it when we implement an interpreter for the langauge.
@@ -59,7 +59,7 @@ use it when we implement an interpreter for the langauge.
 
 Our language is a very small functional programming language. We will
 in the beginning only have a handful of data types and program
-constructions but will the extend the language to look more like a
+constructions but will then extend the language to look more like a
 proper language. To start with our language will only consist of the
 constructs to express a sequence of pattern matching expressions
 followed by a single expression.
@@ -133,7 +133,7 @@ There is of course a equivalence relation between our atoms in the
 language and the atoms in the domain. You might wonder if they are not
 the same but there is a difference between expressions in our language
 and elements in our domain. Think about the written number ``12'' or
-in Roman ``XII'' and the number twelve. We will have expression that
+in Roman ``XII'' and the number twelve. We will have expressions that
 look like {\tt \{foo, \{bar, zot\}\}} and data structures that we
 write {\em c(foo, c(bar, zot))}. If everything works out fine, the
 {\em evaluation} of an expression will return the corresponding data
@@ -149,7 +149,7 @@ matching expressions.
 
 An environment is represented as a set of bindings $v/s$. Here $v$ is
 a variable (and we will typically use $v$ or $x$, $y$ etc when we talk
-about variables) and $t$ is a data structure. An environment that
+about variables) and $s$ is a data structure. An environment that
 binds X to a and Y to b would then be written:
 
 $$\{X/a, Y/b\}$$
@@ -462,7 +462,7 @@ $$\frac{E\sigma(e) \rightarrow v_1, \ldots:{\rm seq}:\theta \qquad E\sigma(e_i) 
 E\sigma(e(e_1, \ldots)) \rightarrow s}$$ 
 
 Note that the closure that we get, $v_1, \ldots:{\rm seq}:\theta$
-consist of a sequence of variables $v_1, \ldots$, that are all
+consists of a sequence of variables $v_1, \ldots$, that are all
 distinct. This is why we can simply add the bindings
 $v_i/s_i$ to $\theta$, there will not be any duplicate bindings.
 
