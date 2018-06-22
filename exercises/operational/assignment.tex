@@ -264,7 +264,7 @@ $$\frac{P\sigma(p_1, s_1) \rightarrow \sigma' \wedge P\sigma'(p_2, s_2) \rightar
 
 As an exercise you should do the pattern matching of the expression
 {\tt \{x, \{x, :c\}\}} and the data structure {\em \{a, \{b, c\}\}}. Note
-how we first add {\em x/a} as a binding and then {\em shadow} this binding when
+how we first add {\em x/a} as a binding and then fail when
 we match {\tt \{x, :c\}} and {\em \{b,c\}}.
 
 The remaining alternative, the case where we have a cons expression and

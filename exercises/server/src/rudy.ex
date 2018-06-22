@@ -5,7 +5,11 @@ defmodule Rudy do
   end
 
   def stop() do
-    Process.exit(Process.whereis(:rudy), "Time to die!")
+    case Process.whereis(:rudy) do
+      nil -> :ok
+      pid ->
+	Process.exit(pid, "Time to die!")
+    end
   end
 
   # Initialize the server, takes a port number, open a listening socket 
@@ -48,8 +52,9 @@ defmodule Rudy do
 
     case recv do
       {:ok, str} ->
-        request = HTTP.parse_request(str)
+        request = HTTP.parse_request(str) 
         response = reply(request)
+        ##response = dummy()	
         :gen_tcp.send(client, response)
 
       {:error, error} ->
@@ -61,7 +66,14 @@ defmodule Rudy do
 
   # Decide what to reply and how to turn the reply into a well formed 
   # HTTP reply.
-  defp reply({{:get, uri, _}, _, _}) do
+  defp reply({{:get, _uri, _}, _, _}) do
+    ## IO.puts("request #{uri}")
+    :timer.sleep(10)
+    HTTP.ok("Hello!")
+  end
+
+  defp dummy() do
+    ## IO.puts("request #{uri}")
     :timer.sleep(10)
     HTTP.ok("Hello!")
   end
