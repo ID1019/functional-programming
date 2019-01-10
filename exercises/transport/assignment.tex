@@ -1,15 +1,13 @@
 \documentclass[a4paper,11pt]{article}
 
-\usepackage[latin1]{inputenc}
+\input ../include/preamble.tex
 
 \usepackage{tikz}
 \usetikzlibrary{automata,arrows,topaths,calc,positioning}
 
-
 \usepackage{subcaption}
 
 \usepackage{changepage}
-
 
 \usepackage{listings}
 
@@ -31,23 +29,18 @@
 
 \lstset{language=elixir}
 
-\newcommand{\nnsection}[1]{
-\section*{#1}
-\addcontentsline{toc}{section}{#1}
-}
-
 \begin{document}
 
-\begin{center}
-\vspace{20pt}
-\textbf{\large An exercise in communication}\\
-\vspace{10pt}
-\textbf{Johan Montelius}\\
-\vspace{10pt}
-\today{}
-\end{center}
+\title{
+    \textbf{An exercise in communication}\\
+    \large{Programming II - Elixir Version}
+}
+\author{Johan Montelius}
+\date{Spring Term 2018}
+\maketitle
+\defaultpagestyle
 
-\nnsection{Introduction}
+\section*{Introduction}
 
 This exercise is partly about breaking up a problem in layers of
 abstractions and implement each layer as a process or a set of
@@ -224,7 +217,7 @@ The Elixir implementation is given in Appendix \ref{app:link}. Before
 we continue we write a small test program and connect two nodes
 together.
 
-\begin{lstlisting}
+\begin{minted}{elixir}
   def test_link() do
     sender = spawn(fn() -> sender() end)
     receiver = spawn(fn() -> receiver() end)
@@ -236,7 +229,7 @@ together.
     send(receiver, {:connect, lr})
     :ok
   end
-\end{lstlisting}  
+\end{minted}
 
 This program will start two processes, the {\tt sender} and the {\tt
   receiver};  note the order in which we have to start the
@@ -248,7 +241,7 @@ the master processes to the link processes.
 The {\tt link\_sender} process could look like follows. Implement the
 corresponding receive process and see if your systems runs.
 
-\begin{lstlisting}
+\begin{minted}{elixir}
 def sender() do
   receive do
     {:connect, lnk} ->
@@ -257,7 +250,7 @@ def sender() do
       send(lnk, {:send, :hello})
   end
 end            
-\end{lstlisting}
+\end{minted}
 
 \section{a hub}
 
@@ -328,7 +321,7 @@ modifying the network layer.
                          edge       []             node       {:quit}                   (final)
                 (net)    edge       [loop above, every loop/.append style={looseness=10,in=20, out=80 }]   node[anchor=west] {\%Netw\{dst: id, msg: msg\}}(net)
                          edge       [loop above, every loop/.append style={looseness=10,in=100, out=160 }] node[anchor=east] {\{:send, to, msg\}}    (net)
-                         edge       [loop below, every loop/.append style={looseness=6,in=340, out=280 }]  node              {\&Netw\{\}}             (net)
+                         edge       [loop below, every loop/.append style={looseness=6,in=340, out=280 }]  node[anchor=north west] {\%Netw\{\}}             (net)
                          edge       []                                                                     node              {:quit}                 (final);
     
 \end{tikzpicture}
@@ -509,7 +502,7 @@ complications that we will discuss later.
                          edge       [bend right]  node[anchor=east]             {:quit}                   (final)                   
                 (send)   edge       [loop above, every loop/.append style={looseness=6,in=20, out=70 }]   node[anchor=west]    {\{:send, msg\}} (send)
                          edge       [loop below, every loop/.append style={looseness=6,in=310, out=0 }]   node[anchor=west]    {timeout}        (send)   
-                         edge       [loop above, every loop/.append style={looseness=6,in=230, out=170 }] node[anchor=north]   {\%Ack{}}        (send)
+                         edge       [loop above, every loop/.append style={looseness=6,in=230, out=170 }] node[anchor=north east]   {\%Ack{}}        (send)
                          edge       [bend left]   node  {\%Ack\{seq: a\}}  (ready)
                          edge       [bend left]   node  {:quit}            (final);
 \end{tikzpicture}
@@ -640,7 +633,7 @@ While you at it you can give the hub a {\em loss} rate that
 determines how often it should loose a frame. The following code will
 get you going:
 
-\begin{verbatim}
+\begin{minted}{elixir}
   %Frame{} = frm ->
     if :rand.uniform(100) <= loss do
        IO.puts("nub: throwing away #{frm}")
@@ -649,7 +642,7 @@ get you going:
        Enum.each(connected, fn({_,pid}) -> send(pid, frm) end)
     end
     hub(loss, connected)
-\end{verbatim}
+\end{minted}
 
 \subsection{a switch}
 

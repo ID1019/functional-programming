@@ -32,3 +32,15 @@ problems and pros and cons of alternative solutions
 
 - [The seminars for spring 2018](Seminars2018.md)
 
+
+### Generating pdf:s
+
+In this repository you will find only the latex source. In order to
+generate the pdf:s you will need the following pakages in Ubuntu:
+
+- latexmk
+- pdflatex
+- texlive-latex-extra
+- texlive-science
+- texlive-extra-utils
+- python-pygments

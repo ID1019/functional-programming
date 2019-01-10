@@ -1,4 +1,5 @@
 DIRS =  avl \
+	bitonic \
 	concurrency \
 	derivative \
 	huffman \
