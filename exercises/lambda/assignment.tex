@@ -1,30 +1,6 @@
 \documentclass[a4paper,11pt]{article}
 
-% Packages for page layout
-\usepackage[utf8]{inputenc}
-\usepackage{fancyhdr}
-\usepackage{lastpage}
-
-% Minted for syntax highlighting
-\usepackage{minted}
-\usemintedstyle{tango}
-
-% Represent abstract language syntax
-\usepackage{syntax}
-
-% Custom paragraph indentation
-\setlength{\parindent}{0em}
-\setlength{\parskip}{1em}
-  
-% Headers/footers styling
-\pagestyle{fancy}
-\fancyhf{}
-\renewcommand{\headrulewidth}{0pt}
-
-% Footer
-\lfoot{ID1019}
-\cfoot{KTH}
-\rfoot{\thepage \hspace{1pt} / \pageref{LastPage}}
+\input ../include/preamble.tex
 
 % Custom commands declarations
 \newcommand{\lamc}[0]{$\lambda$-calculus}
@@ -57,7 +33,7 @@
 \author{Johan Montelius}
 \date{Spring Term 2018}
 \maketitle
-\thispagestyle{fancy}
+\defaultpagestyle
 
 
 % ================================================== %
@@ -793,15 +769,15 @@ more insight into Church numerals you can try the following challenges:
 
 \item Boolean value: represent {\em true} as a function that takes two
   arguments and returns the first, and {\em false} as a function that
-  returns the second.  Implement the Elixir functions {\tt church_true/0} and
-  {\tt church_false/0} that return these functions.
+  returns the second.  Implement the Elixir functions {\tt church\_true/0} and
+  {\tt church\_false/0} that return these functions.
   
-\item Boolean check: implement a function, {\tt to_boolean/2},  that takes a Church Boolean
+\item Boolean check: implement a function, {\tt to\_boolean/2},  that takes a Church Boolean
   and returns {\tt true} if it is true and {\tt false} if it is false
   (the solution is very simple).
   
 \item Boolean and, or, not: implement the basic Boolean operators. You have to
-  call them something like {\tt church_and/2} etc since {\tt and},
+  call them something like {\tt church\_and/2} etc since {\tt and},
   {\tt or} and {\tt not} are the predefined Boolean operators.
 
 \item is\_zero : implement a function that returns true if the argument
@@ -825,15 +801,15 @@ will work.
 
 
 \begin{itemize}
-\item If then else: implement a function {\tt if_then_else/3} that
+\item If then else: implement a function {\tt if\_then\_else/3} that
   does what it is called. Think like this - a Church Boolean takes two
   arguments and returns either the first or second depending on if it
-  is true or false. Our first argument to {\tt if_then_else/3} is the
+  is true or false. Our first argument to {\tt if\_then\_else/3} is the
   Church Boolean that we should use to either return {\tt Then} or {\tt Else}. 
 \end{itemize}
 
 If you implemented it as simple as possible it should be a one line
-function, I told you it was simple. Now let's use {\tt if_then_else/3}
+function, I told you it was simple. Now let's use {\tt if\_then\_else/3}
 to implement subtraction is a new way. Fill in the blanks in this code
 (let's call it {\tt manos/2}) and give it a try:
 
@@ -853,7 +829,7 @@ Could not be easier, give it a try (define the Church numerals {\tt
 
 Hmm, something is not quite right - what is going on and why? In what
 order do we evaluate the function?  Can we rewrite the {\tt
-  if_then_else/3} in any way to avoid the problem? Do we actually want
+  if\_then\_else/3} in any way to avoid the problem? Do we actually want
 to be slaves under the eager evaluation strategy? How would this work
 in Haskell?  Maybe we need a construct in Elixir that avoids the eager
 evaluation order? Should we have special function that does not

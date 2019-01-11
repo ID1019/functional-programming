@@ -1,28 +1,21 @@
 \documentclass[a4paper,11pt]{article}
 
-\usepackage[latin1]{inputenc}
-
-\newcommand{\nnsection}[1]{
-\section*{#1}
-\addcontentsline{toc}{section}{#1}
-}
+\input ../include/preamble.tex
 
 \usepackage{syntax}
 
 
 \begin{document}
 
-\begin{center}
-\vspace{20pt}
-\textbf{\large Operational semantics of a small functional programming language.}\\
-\vspace{10pt}
-\textbf{Johan Montelius}\\
-\vspace{10pt}
-\today{}
-\end{center}
+\title{
+    \textbf{ Operational semantics of a small functional programming language.}\\
+}
+\author{Johan Montelius}
+\date{Spring Term 2019}
+\maketitle
+\defaultpagestyle
 
-
-\nnsection{Introduction}
+\section*{Introduction}
 
 The operational semantics of a language should answer the question
 what an expression will evaluate to. The description should not leave
