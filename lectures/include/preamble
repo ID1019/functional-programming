@@ -12,7 +12,27 @@
 \usepackage{bytefield}
 
 \usepackage{listings}
-\lstset{language=Erlang} 
+
+\lstdefinelanguage{elixir}{
+    morekeywords={case,catch,def,do,else,false,%
+        use,alias,receive,timeout,defmacro,defp,%
+        for,if,import,defmodule,defprotocol,%
+        nil,defmacrop,defoverridable,defimpl,%
+        super,fn,raise,true,try,end,with,%
+        unless},
+    otherkeywords={<-,->, |>, \%\{, \}, \{, \, (, )},
+    sensitive=true,
+    morecomment=[l]{\#},
+    morecomment=[n]{/*}{*/},
+    morecomment=[s][\color{purple}]{:}{\ },
+    morestring=[s][\color{orange}]"",
+    commentstyle=\color{commentgreen},
+    keywordstyle=\color{eminence},
+    stringstyle=\color{red},
+    showstringspaces=false,
+}
+
+\lstset{language=elixir} 
 
 \usepackage{tikz}
 \usetikzlibrary{automata,arrows,topaths,calc,positioning}
@@ -21,7 +41,7 @@
 \grammarindent=2cm
 
 
-\newcommand\semester{VT17}
+\newcommand\semester{VT19}
 
 \usetheme{Warsaw}
 

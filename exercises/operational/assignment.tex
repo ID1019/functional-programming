@@ -38,8 +38,8 @@ description of the operational semantics.
 There are many ways to describe an operational semantics of a
 programming language and we will use a strategy called {\em big-step
   semantics}. We will describe the semantics as a set of rewrite rules
-or evaluation relation; given an expression in the language we ill
-describe the rule of how to evaluate the expression to obtain an
+or evaluation relations; given an expression in the language, we will
+describe the rules of how to evaluate the expression to obtain an
 answer.
 
 This description of an operational semantics for our small functional
@@ -52,25 +52,24 @@ use it when we implement an interpreter for the language.
 
 Our language is a very small functional programming language that
 should behave similar to Elixir. We will in the beginning only have a
-handful of data types and program constructions but will the extend
+handful of data types and program constructions but will then extend
 the language to look more like a proper language. To start with our
 language will only consist of the constructs to express a sequence of
 pattern matching expressions followed by a single expression.
 
 \begin{figure}[ht]
 \center
-{\tt x = :foo, y = :nil, \{z,_\} = \{:bar,:grk\}, \{x,\{z,y\}\}.}
+{\tt x = :foo; y = :nil; \{z,_\} = \{:bar,:grk\}; \{x,\{z,y\}\}.}
 \caption{a simple sequence}
 \label{fig:seq1}
-\end{figure}
+\end{figure}p
 
 The expressions that we allow are simple {\em term expressions}
-i.e. no function calls, {\em case} or {\em if expressions}. We define
+i.e. no function calls, {\em case} nor {\em if expressions}. We define
 this language using a BNF grammar.
 
 We assume that we have two lexical constructs, {\em atoms} and {\em
-  variables} that consist of all words written in with an initial
-lowercase, atoms, and initial uppercase letters, variables.  We also
+  variables} where atoms are written with an initial colon (:). We also
 have one compound expression called a {\em cons}, a simple binary
 construct that holds two expressions.
 
@@ -102,7 +101,7 @@ be called {\em don't care}.
 \end{grammar}
 
 An expression is just a syntactical construct, the grammar presented
-does not give any meaning to the expressions that we can write bit it
+does not give any meaning to the expressions that we can write but it
 defines which sequences of characters are legal sequences, patterns
 and expressions.
 
@@ -137,8 +136,8 @@ matching expressions.
 
 An environment is represented as a set of bindings $v/s$. Here $v$ is
 a variable (and we will typically use $v$ or $x$, $y$ etc when we talk
-about variables) and $t$ is a data structure. An environment that
-binds X to a and Y to b would then be written:
+about variables) and $s$ is a data structure. An environment that
+binds x to a and y to b would then be written:
 
 $$\{x/a, y/b\}$$
 
@@ -159,7 +158,7 @@ When we describe our rules for evaluation we will use
 $$\frac{{\rm prerequisite}}{E\sigma({\rm expression}) \rightarrow {\rm result}}$$
 
 In this description $E$ is the evaluation function, and we will also
-have rules for other functions and $\sigma$ an environment. The result
+have rules for other functions, and $\sigma$ an environment. The result
 of applying the function is a data structure or $\perp$. The symbol
 $\perp$ represents the failed execution.
 
@@ -176,8 +175,9 @@ expression consisting of a simple atom.
 $$\frac{a \equiv s}{E\sigma(a) \rightarrow s}$$  
 
 This mean that if we have an atom, for example {\tt :foo} then this is
-evaluated to the corresponding data structure {\em foo}. The
-environment $\sigma$, is in this case not relevant. 
+evaluated to the corresponding data structure {\em foo} (since {\tt
+  :foo} $\equiv$ {\em foo}). The environment, $\sigma$, is in this case
+not relevant.
 
 A variable is of course different since we then need to consult the
 environment for a binding of the variable.
