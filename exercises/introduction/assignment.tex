@@ -353,11 +353,9 @@ def isort(l) do
   isort(l, ...)
 end
 
-def isort(x, l) do
+def isort(l, sorted) do
   case ... do
     [] -> 
-      ...
-    [h | t] when h < x ->
       ...
     [h | t] ->
       ...
@@ -367,7 +365,6 @@ end
 
 Try also to rewrite the {\tt isort} function using the clause syntax;
 same-same but different.
-
 
 \subsection{Merge sort}
 
