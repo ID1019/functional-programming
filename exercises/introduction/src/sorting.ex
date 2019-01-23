@@ -5,19 +5,20 @@ defmodule Sorting do
   # ================================================== #
 
   def isort(l) do isort(l, []) end
+
   def isort([], sorted) do sorted end
   def isort([head | tail], sorted) do
     isort(tail, insert(head, sorted))
   end
 
-  # Returns a lise where x has been inserted into the first
+  # Returns a list where x has been inserted into the first
   # place where it is smaller then the next integer.
   def insert(x, []) do [x] end
-  def insert(x, [head | tail]) when x < head do
-    [x, head | tail]
+  def insert(x, [head | tail]) when x > head do
+    [head | insert(x, tail)]   
   end
-  def insert(x, [head | tail]) do
-    [head | insert(x, tail)]
+  def insert(x, larger) do
+    [x | larger]
   end
 
   # ================================================== #
