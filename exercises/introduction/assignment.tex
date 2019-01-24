@@ -1,29 +1,6 @@
 \documentclass[a4paper,11pt]{article}
 
-% Packages for page layout
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{fancyhdr}
-\usepackage{lastpage}
-
-% Minted for syntax highlighting
-\usepackage{minted}
-\usemintedstyle{tango}
-
-% Custom paragraph indentation
-\setlength{\parindent}{0em}
-\setlength{\parskip}{1em}
-  
-% Headers/footers styling
-\pagestyle{fancy}
-\fancyhf{}
-\renewcommand{\headrulewidth}{0pt}
-
-% Footer
-\lfoot{ID1019}
-\cfoot{KTH}
-\rfoot{\thepage \hspace{1pt} / \pageref{LastPage}}
-
+\input ../include/preamble.tex
 
 % SECTIONS
 %
@@ -48,9 +25,9 @@
     \large{Programming II - Elixir Version}
 }
 \author{Johan Montelius}
-\date{Spring Term 2018}
+\date{Spring Term 2019}
 \maketitle
-\thispagestyle{fancy}
+\defaultpagestyle
 
 
 % ================================================== %
@@ -293,7 +270,7 @@ know by heart.
 In the above examples, what is the value of the variables after the
 pattern matching expressions?
 
-subsection{Simple functions on list}
+\subsection{Simple functions on list}
 
 These are some simple functions that you should implement. They will
 all use recursion so first try to formulate in words what the
@@ -645,9 +622,7 @@ do you think you can compute if you start now and let your machine run
 until the seminar? First make a guess, don't try to do the calculation
 in your head just make a wild guess, then try to estimate how long
 time that would take using your arithmetic function, would you be able
-to make it? 
-
-Calculate a Fibonacci number as high as you possibly can.
+to make it? Calculate a Fibonacci number as high as you possibly can.
 
 \end{document}
   
