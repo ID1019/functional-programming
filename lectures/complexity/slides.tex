@@ -334,7 +334,7 @@ end
 \begin{frame}[fragile]{complexity of quick-sort}
 
 \begin{columns}
-   \begin{column}{.6\linewidth}
+   \begin{column}{.5\linewidth}
     \begin{verbatim}
 def qsort([]) do [] end
 def qsort([h]) do [h] end
@@ -346,7 +346,7 @@ def qsort(all) do
 end
     \end{verbatim}
    \end{column}
-   \begin{column}{.4\linewidth}
+   \begin{column}{.5\linewidth}
     \begin{itemize}
       \pause \item What is done in each iteration?
       \pause \item How many iterations do we have?       
@@ -359,19 +359,20 @@ end
 
 \begin{frame}{the recurence relation}
 
-  \begin{equation}  
-  \begin{split}
-T_n & = 2 \times T_{n/2} + nc \\
+\begin{equation}  
+\begin{split}
+    T_1 & = a \\
+\\
+T_n & = 2 \times T_{n/2} + nc \\ 
     & = 2 \times ( 2 \times T_{n/4} + (n/2)c ) + nc \\
     & = 4 \times T_{n/4} + 2 \times nc\\
     & = 8 \times T_{n/8} + 3 \times nc\\
     & : \\
-    & = 2^k \times T_0 + k \times nc \\
+    & = 2^k \times T_1 + k \times nc \\
     & = 2^{lg(n)} \times a  + lg(n) \times nc \\
     & = n \times a + lg(n)n \times c\\
-  \end{split} 
+  \end{split}
 \end{equation}
-
 
 \end{frame}
 
@@ -465,7 +466,7 @@ What if we run qsort on a already ordered list?
 \begin{frame}[fragile]{complexity of merge-sort}
 
 \begin{columns}
-   \begin{column}{.6\linewidth}
+   \begin{column}{.5\linewidth}
     \begin{verbatim}
 def msort([]) do [] end
 def msort(l) do
@@ -476,7 +477,7 @@ def msort(l) do
 end
    \end{verbatim}
    \end{column}
-   \begin{column}{.4\linewidth}
+   \begin{column}{.5\linewidth}
     \begin{itemize}
       \pause \item What is done in each iteration?
       \pause \item How many iterations do we have?       
@@ -491,7 +492,7 @@ end
 \begin{frame}[fragile]{complexity of fibonacci}
 
 \begin{columns}
-   \begin{column}{.6\linewidth}
+   \begin{column}{.5\linewidth}
     \begin{verbatim}
 def fib(0) do 0 end
 def fib(1) do 1 end
@@ -500,7 +501,7 @@ def fib(n) do
 end
     \end{verbatim}
    \end{column}
-   \begin{column}{.4\linewidth}
+   \begin{column}{.5\linewidth}
     \begin{itemize}
       \pause \item What is done in each iteration?
       \pause \item How many iterations do we have?       
@@ -518,6 +519,8 @@ end
 
     \begin{equation}  
   \begin{split}
+    T_0 & = a \\
+    \\
 T_n & = 2 \times T_{n-1} + c \\
     & = 2 \times ( 2 \times T_{n-2} + c ) + c \\
     & = 4 \times T_{n-2} + 3 \times c \\

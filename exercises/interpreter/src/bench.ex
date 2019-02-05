@@ -41,7 +41,7 @@ defmodule Bench do
   end
 
   def list(0) do
-    {:atm, :nil}
+    {:atm, []}
   end
   def list(n) do
     {:cons, {:atm, n}, list(n-1)}

@@ -1,15 +1,15 @@
 defmodule Eager do
 
   @type atm :: {:atm, atom()}
-  @type var :: {:var, atom()}
+  @type variable :: {:var, atom()}
   @type ignore :: :ignore
 
-  @type lambda :: {:lambda, [var], [var], seq}
+  @type lambda :: {:lambda, [variable], [variable], seq}
 
   @type cons(e) :: {:cons, e, e}
-  @type expr :: atm | var | lambda | call | case | cons(expr)
+  @type expr :: atm | variable | lambda | call | case | cons(expr)
 
-  @type pattern :: atm | var | ignore | cons(pattern)
+  @type pattern :: atm | variable | ignore | cons(pattern)
 
   @type match :: {:match, pattern, expr}
   @type seq :: [expr] | [match | seq]
@@ -19,19 +19,20 @@ defmodule Eager do
   @type case :: {:case, expr, [clause]}
 
   # Expressions are evaluated to structures.
-  @type closure :: {:closure, [var], seq, env}
+  @type closure :: {:closure, [variable], seq, env}
   @type str :: atom() | [str] | closure
 
-  # An environment is a key-value of variable to structure.
-  @type env :: [{var, str}]
+  # An environment is a key-value of variableiable to structure.
+  @type env :: [{variable, str}]
 
   # A program is a list of named functions
-  @type prgm :: [{atom(), [var], seq}]
+  @type prgm :: [{atom(), [variable], seq}]
 
   @doc """
   Evaluate a sequence given a program.
   """
   @spec eval(seq, prgm) :: {:ok, str} | :fail
+
   def eval(seq, prg) do
     # a new environment is created
     eval_seq(seq, Env.new(), prg)
@@ -41,6 +42,7 @@ defmodule Eager do
   Evaluate a sequence given an environment and a program. 
   """
   @spec eval_seq([expr], env, prgm) :: {:ok, str} | :error
+
   def eval_seq([exp], env, prg) do
     eval_expr(exp, env, prg)
   end
@@ -185,6 +187,7 @@ defmodule Eager do
   and a program. 
   """
   @spec eval_cls(str, [clause], env, prgm) :: {:ok, str} | :error
+
   def eval_cls([], _, _, _) do
     :error
   end
@@ -207,6 +210,7 @@ defmodule Eager do
   a list of the resulting structures is returned.
   """
   @spec eval_args([expr], env, prgm) :: [str] | :error
+
   def eval_args([], _, _) do [] end
   def eval_args([expr | exprs], env, prg) do
     case eval_expr(expr, env, prg) do
@@ -224,12 +228,14 @@ defmodule Eager do
     end
   end
 
-  @spec extract_vars(pattern) :: [var]
+  @spec extract_vars(pattern) :: [variable]
+
   def extract_vars(pattern) do
     extract_vars(pattern, [])
   end
 
-  @spec extract_vars(pattern, [var]) :: [var]
+  @spec extract_vars(pattern, [variable]) :: [variable]
+
   def extract_vars({:atm, _}, vars) do vars end
   def extract_vars(:ignore, vars) do vars end
   def extract_vars({:var, var}, vars) do
