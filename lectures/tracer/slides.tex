@@ -662,9 +662,7 @@ defmodule Tracer do
 
   def tracer(camera=%Camera{}, objects) do
     {w, h} = camera.size
-    xs = Enum.to_list(1..w)
-    ys = Enum.to_list(1..h)
-    for y <- ys, do: for(x <- xs, do: trace(x, y, camera, objects))
+    for y <- 1..h, do: for(x <- 1..w, do: trace(x, y, camera, objects))
   end
 
   def trace(x, y, camera, objects) do
