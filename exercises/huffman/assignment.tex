@@ -184,7 +184,7 @@ single character and a node as a simple tuple with two branches: {\tt
 
 If you turn your table into an ordered sequence of leafs where each
 leaf represents a character and its frequency. The ``foo'' example
-above would correspond to the sequence {\tt [\{`f', 1\},\{`o', 2\}]}.
+above would correspond to the sequence {\tt [\{?f, 1\},\{?o, 2\}]}.
 You could also view this as a frequency table where each entry is a
 tuple {\tt \{tree, freq\}}, after all, a single character is a leaf.
 
@@ -211,7 +211,7 @@ character ({\em left}, {\em left}, {\em right}, {\em left} or {\em
 Traverse the tree, and collect the characters in the leafs. Keep track
 of the path to the leaf and record this path as a sequence of zeros
 and ones. When you're done you should have something like
-{\tt [\{`f', [1, 1, 0]\}, \{`o', [1, 0, 1, 0]\}, ...]}, or whatever the tree
+{\tt [\{?f, [1, 1, 0]\}, \{?o, [1, 0, 1, 0]\}, ...]}, or whatever the tree
 looks like.
 
 Start by writing a function that only collects the characters, once
@@ -223,7 +223,7 @@ this is mastered you can start to keep track of the path.
 
 Half-way there might be an exaggeration but at lest you're now done
 with the first part, you have a mapping from characters to Huffman
-codes. It's represented by a list of tuples {\tt \{`f', [1, 1, 0]\}},
+codes. It's represented by a list of tuples {\tt \{?f, [1, 1, 0]\}},
 one for each characters. Time to use this table in the encoding and
 decoding.
 
@@ -299,9 +299,10 @@ def decode_char(seq, n, table) do
 end
 \end{minted}
 
-I'm using some functions from the {\em Lists} and {\em Enum} libraries, you should look
-these up and understand how they work. If you fill in the blanks
-you're up and running, you have your first Huffman encoder/decoder.
+I'm using some functions from the {\em Lists} and {\em Enum}
+libraries, you should look these up and understand how they work. If
+you fill in the blanks you're up and running, you have your first
+Huffman encoder/decoder.
 
 Make sure that it works correctly, by testing the smaller functions
 and make sure that they behave correctly, then work your way

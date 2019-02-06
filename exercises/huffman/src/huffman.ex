@@ -32,6 +32,7 @@ defmodule Huffman do
   # Compute the frequencies of all the characters in the
   # sample text and return a list of tuples {char, freq}.
   def freq(sample), do: freq(sample, [])
+
   def freq([], freq), do: freq
   def freq([char | rest], freq) do
     freq(rest, update(char, freq))

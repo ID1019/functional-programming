@@ -85,7 +85,7 @@ What types do we have:
 Singletons, the types of individual data structures:
 \begin{itemize}
 \item  1, 2 or 42
-\item ':foo', ':bar' or ':atom'
+\item :foo, :bar or :atom
 \item  \{:foo, 42\}
 \end{itemize}
 \pause\vspace{10pt}
@@ -190,22 +190,22 @@ The type {\tt any()}, defines the union of all types.
 
 \begin{frame}[fragile]{defining types}
 
-The type list(T) is the type of lists containing elements of type T.
+The type list(t) is the type of lists containing elements of type t.
 \pause
 
 \begin{verbatim}
- @type list(T) :: [] | [T|list(T)].
+ @type list(t) :: [] | [t|list(t)]
 \end{verbatim}
 
 \pause
 \begin{verbatim}
- @type string() :: list(char()).
+ @type string() :: list(char())
 \end{verbatim}
 
 Define the type of a deck of cards.
 \pause
 \begin{verbatim}
- @type deck() :: list(card()).
+ @type deck() :: list(card())
 \end{verbatim}
 
 \end{frame}
@@ -367,7 +367,7 @@ def car_brand_model( {:car, brand, prop} ) do
       nil -> 
          brand
       {:model, model} ->
-           "#{brand} #{model}"
+         "#{brand} #{model}"
     end
 end
 \end{verbatim}

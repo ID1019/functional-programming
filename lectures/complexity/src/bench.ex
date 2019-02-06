@@ -36,6 +36,23 @@ defmodule Bench do
     Enum.each(ns, bench)
   end
 
+  def map() do
+    r = 100000
+    :io.format("# Benchmark of map operations, (~w runs), times in ms~n#~n", [r])
+    :io.format("# n * 1000 is size of map~n", [])
+    :io.format("#~7s ~8s ~8s~n", ["n", "lookup", "modify"])
+    ns = [1000,2000,4000,8000,16000,32000,64000,128000,256000,512000,1024000]
+
+    bench = fn(n) ->
+      map = init_map(n)
+      ops = init_ops(r,n)
+      tl  = time(fn() ->  Enum.each(ops, fn(s) -> Map.get(map, s, nil)  end) end)
+      tm  = time(fn() ->  Enum.each(ops, fn(s) -> Map.replace!(map, s, :foo) end) end)
+      :io.format("~8w ~8w ~8w ~n", [div(n,1000), tl, tm])
+    end
+    Enum.each(ns, bench)
+  end
+
   def comp() do
     r = 100000
     :io.format("# Benchmark of tree vs tuple, modify operations, (~w runs), times in ms~n#~n", [r])
@@ -65,18 +82,25 @@ defmodule Bench do
     List.foldl(seq, empty, fn(s, t) -> Tree.insert(t, s, :na) end)
   end
 
+  def init_map(n) do
+    Map.new(Enum.map(:lists.seq(0,n-1), fn(n) -> {n, :na} end))
+  end
+  
+
   def init_ops(r,n) do
     random(r,n)
   end
 
+
+  
   ## a list of random number 0..(n-1)
   def random(0,_) do  [] end
   def random(r,n) do [:rand.uniform(n)-1 | random(r-1, n)] end
 
   def time(f) do
-    t1 = System.monotonic_time(:milliseconds)
+    t1 = System.monotonic_time(:millisecond)
     f.()
-    t2 = System.monotonic_time(:milliseconds)
+    t2 = System.monotonic_time(:millisecond)
     t2 - t1
   end
 

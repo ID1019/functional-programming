@@ -1,42 +1,47 @@
 defmodule Env do
 
   @type value :: any()
-  @type var :: atom()
-  @type env :: [{var, value}]
+  @type key :: atom()
+  @type env :: [{key, value}]
 
   @spec new() :: []
+
   def new() do
     []
   end
 
-  @spec add(var, value, env) :: env
-  def add(id, str, env) do
-    [{id, str} | env]
+  @spec add(key, value, env) :: env
+
+  def add(key, str, env) do
+    [{key, str} | env]
   end
 
-  @spec lookup(var, env) :: value | nil
-  def lookup(id, env) do
-    List.keyfind(env, id, 0)
+  @spec lookup(key, env) :: value | nil
+
+  def lookup(key, env) do
+    List.keyfind(env, key, 0)
   end
 
-  @spec remove([var], env) :: env
-  def remove(ids, env) do
-    List.foldr(ids, env, fn id, env ->
-      List.keydelete(env, id, 0)
+  @spec remove([key], env) :: env
+
+  def remove(keys, env) do
+    List.foldr(keys, env, fn(key, env) ->
+      List.keydelete(env, key, 0)
     end)
   end
 
-  @spec closure([var], env) :: env | :error
-  def closure(ids, env) do
-    List.foldr(ids, [], fn id, acc ->
+  @spec closure([key], env) :: env | :error
+
+  def closure(keyss, env) do
+    List.foldr(keyss, [], fn(key, acc) ->
       case acc do
         :error ->
           :error
 
         cls ->
-          case lookup(id, env) do
-            {id, value} ->
-              [{id, value} | cls]
+          case lookup(key, env) do
+            {key, value} ->
+              [{key, value} | cls]
 
             nil ->
               :error
@@ -45,9 +50,10 @@ defmodule Env do
     end)
   end
 
-  @spec args([var], [value], env) :: env
-  def args(prm, args, env) do
-    List.zip([prm, args]) ++ env
+  @spec args([key], [value], env) :: env
+
+  def args(pars, args, env) do
+    List.zip([pars, args]) ++ env
   end
 
 end

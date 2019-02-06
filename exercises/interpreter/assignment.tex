@@ -208,7 +208,7 @@ environment as a list of key-value tuples. The environment {\em
   \{x/foo, y/bar\}} could be represented as:
 \verb+[{:x, :foo}, {:y, :bar}]+ . The variables are represented by
 atoms, and we have here chosen to name them {\tt :x} and {\tt :y} but
-we could as well have chosen other atoms ({\tt x12}, {\tt
+we could as well have chosen other atoms ({\tt :x12}, {\tt
   :variable\_x}) or integers ({\tt 1} and {\tt 2}), the important
 thing is that they all have unique names.
 
@@ -332,7 +332,7 @@ Here are some examples that you should be able to handle.
 
 \begin{itemize}
 \item {\tt eval\_expr(\{:atm, :a\}, [])} : returns {\tt \{:ok, :a\}}
- \item {\tt eval\_expr(\{:var, :x\},  [\{:x, :\}])} : returns {\tt \{:ok, :a\}}
+ \item {\tt eval\_expr(\{:var, :x\},  [\{:x, :a\}])} : returns {\tt \{:ok, :a\}}
  \item {\tt eval\_expr(\{:var, :x\},  [])} : returns {\tt :error}
  \item {\tt eval\_expr(\{:cons, \{:var, :x\}, \{:atm, :b\}\},  [\{:x, :a\}])} : returns {\tt \{:a, :b\}} 
 \end{itemize}
