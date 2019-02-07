@@ -52,8 +52,7 @@ defmodule Eager do
         :error
 
       {:ok, str} ->
-        vars = extract_vars(ptr)
-        env = Env.remove(vars, env)
+	env = eval_scope(ptr, env)
 
         case eval_match(ptr, str, env) do
           :fail ->
@@ -128,6 +127,8 @@ defmodule Eager do
             env = Env.args(par, strs, closure)
             eval_seq(seq, env, prg)
         end
+      {:ok, _} ->
+	:error
     end
   end
   def eval_expr({:call, id, args}, env, prg) when is_atom(id) do
@@ -182,6 +183,17 @@ defmodule Eager do
     :fail
   end
 
+  @doc """ Create a new scope, remove all variables in the pattern
+  from the given environment
+  """
+
+  @spec eval_scope(pattern, env) :: env
+
+  def eval_scope(ptr, env) do
+    Env.remove(extract_vars(ptr), env)
+  end
+  
+  
   @doc """
   Evaluate a list of clauses given a structure an environment
   and a program. 
@@ -192,8 +204,8 @@ defmodule Eager do
     :error
   end
   def eval_cls([{:clause, ptr, seq} | cls], str, env, prg) do
-    vars = extract_vars(ptr)
-    env = Env.remove(vars, env)
+
+    env = eval:scope(ptr, env)
 
     case eval_match(ptr, str, env) do
       :fail ->

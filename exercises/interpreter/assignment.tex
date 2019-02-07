@@ -334,13 +334,13 @@ Here are some examples that you should be able to handle.
 \item {\tt eval\_expr(\{:atm, :a\}, [])} : returns {\tt \{:ok, :a\}}
  \item {\tt eval\_expr(\{:var, :x\},  [\{:x, :a\}])} : returns {\tt \{:ok, :a\}}
  \item {\tt eval\_expr(\{:var, :x\},  [])} : returns {\tt :error}
- \item {\tt eval\_expr(\{:cons, \{:var, :x\}, \{:atm, :b\}\},  [\{:x, :a\}])} : returns {\tt \{:a, :b\}} 
+ \item {\tt eval\_expr(\{:cons, \{:var, :x\}, \{:atm, :b\}\},  [\{:x, :a\}])} : returns {\tt \{:ok, \{:a, :b\}\}} 
 \end{itemize}
 
 Note that {\tt eval\_expr/2} returns a data structure if successful
 i.e. {\em :a}, {\em :foo}, or {\em \{:a, :b\}}.  The last test is an
 effect of representing the binary tuples in our source program {\tt
-  \{a, b\}}, with the internal representation {\tt \{:cons, \{:atm,
+  \{:a, :b\}}, with the internal representation {\tt \{:cons, \{:atm,
   :a\}, \{:atm, :b\}\}} that when evaluated will return the
 data structure {\it \{:a, :b\}}.
 
@@ -431,6 +431,7 @@ end
 Complete the implementation and try the examples give before.
 
 \subsection{Sequences}
+
 We now have all the pieces of the puzzle to implement the evaluation
 of a sequence. We represent a sequence as list, the first elements
 will of course be pattern matching expressions but the last element is
@@ -442,9 +443,12 @@ expression on the right hand side is evaluated returning a data
 structure. The pattern on the left hand side is then match to the data
 structure resulting in an extended environment.
 
-It is important to understand how the environment is extended. We
-first need to remove all bindings of variables that occur in the
-pattern. The evaluation of the following sequence should result in {\em \{c, b\}}.
+Before we perform the match operation we have to create a new
+environment that looks like the existing environment, with the
+exeption that we have removed all bindings for variables that we find
+in the pattern.  It is important to understand how the environment is
+extended. The evaluation of the following sequence should result in
+{\em \{c, b\}}.
 
 \begin{minted}{elixir}
 x = :a; y = :b; x = :c; {x, y}
@@ -453,6 +457,12 @@ x = :a; y = :b; x = :c; {x, y}
 Here is some skeleton code that Will get you started. You need to
 implement the function {\tt extract_vars/1} that returns a list of all
 variables in the pattern.
+
+\begin{minted}{elixir}
+def eval_scope(..., ...) do
+  Env.remove(extract_vars(...), ...)
+end
+\end{minted}
 
 \begin{minted}{elixir}
 def eval_seq([exp], env) do
@@ -464,8 +474,7 @@ def eval_seq([{:match, ..., ...} | ...], ...) do
     ... ->
       ...
     ... ->
-      vars = extract_vars(...)
-      env = Env.remove(vars, ...)
+      ... = eval_scope(..., ...)
 
       case eval_match(..., ..., ...) do
         :fail ->
