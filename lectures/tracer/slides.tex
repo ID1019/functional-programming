@@ -229,19 +229,19 @@ defmodule Ray do
 
  \begin{itemize}
   \item a vector: {\tt \{2, 3, 1\}}
-  \item a ray:  {\tt \%Ray\{pos: \{3,4,0\}, dir: \{0.447, 0.894, 0\}\}}
+  \item a ray:  {\tt \%Ray\{pos: \{3, 4, 0\}, dir: \{0.447, 0.894, 0\}\}}
  \end{itemize}
 
 \pause\vspace{20pt}
 
 \pause \vspace{10pt}
-\verb+%Ray{pos: {3, 2, 4}, dir: {0.447, 0.894, 0}}+
+\verb+foo = %Ray{pos: {3, 2, 4}, dir: {0.447, 0.894, 0}}+
 
 \pause \vspace{10pt}
-\verb+%Ray{pos: pos} = Ray+
+\verb+%Ray{pos: pos} = foo+
 
 \pause \vspace{10pt}
-\verb+p = ray.pos+
+\verb+p = foo.pos+
 
 \end{frame}
 
@@ -662,9 +662,7 @@ defmodule Tracer do
 
   def tracer(camera=%Camera{}, objects) do
     {w, h} = camera.size
-    xs = Enum.to_list(1..w)
-    ys = Enum.to_list(1..h)
-    for y <- ys, do: for(x <- xs, do: trace(x, y, camera, objects))
+    for y <- 1..h, do: for(x <- 1..w, do: trace(x, y, camera, objects))
   end
 
   def trace(x, y, camera, objects) do
@@ -695,16 +693,17 @@ defmodule Tracer do
 
 \begin{verbatim}
   def intersect(ray, objects) do
-    List.foldl(objects, {:inf, nil}, fn (object, sofar) ->
-      {dist, _} = sofar
+    List.foldl(objects, {:inf, nil}, 
+       fn (object, sofar) ->
+            {dist, _} = sofar
 
-      case Object.intersect(object, ray) do
-        {:ok, d} when d < dist ->
-          {d, object}
-        _ ->
-          sofar
-      end
-    end)
+            case Object.intersect(object, ray) do
+              {:ok, d} when d < dist ->
+                {d, object}
+              _ ->
+                sofar
+            end
+       end)
   end
 \end{verbatim}
 
