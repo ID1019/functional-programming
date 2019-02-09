@@ -1,12 +1,12 @@
 defmodule TracerColor do
-
+  
   @black {0, 0, 0}
 
+  require Camera
+  
   def tracer(camera, objects) do
-    {w, h} = camera.size
-    xs = Enum.to_list(1..w)
-    ys = Enum.to_list(1..h)
-    for y <- ys, do: for(x <- xs, do: trace(x, y, camera, objects))
+    {w, h} = Camera.camera(camera,:size)
+    for y <- 1..h, do: for(x <- 1..w, do: trace(x, y, camera, objects))
   end
 
   def trace(x, y, camera, objects) do
@@ -18,8 +18,8 @@ defmodule TracerColor do
       {:inf, _} ->
         @black
 
-      {_, sphere} ->
-        sphere.color
+      {_, object} ->
+        Object.color(object)
     end
   end
 

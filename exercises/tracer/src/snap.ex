@@ -1,5 +1,7 @@
 defmodule Snap do
 
+  require World
+  
   def snap(0) do
     camera = Camera.normal({800, 600})
 
@@ -33,11 +35,10 @@ defmodule Snap do
     light2 = %Light{pos: {800, 800, 0}, color: {0.3, 1.0, 0.3}}
     light3 = %Light{pos: {800, -800, 0}, color: {0.3, 0.3, 1.0}}
 
-    world =
-      %World{objects: [obj1, obj2, obj3],
-	     lights: [light1, light2, light3],
-             background: {0.0, 0.0, 0.0},
-             ambient: {0.6, 0.6, 0.6}}
+    world = World.world(objects: [obj1, obj2, obj3],
+      lights: [light1, light2, light3],
+      background: {0.0, 0.0, 0.0},
+      ambient: {0.6, 0.6, 0.6})
     image = TracerLight.tracer(camera, world)
     PPM.write("snap2.ppm", image)
   end
@@ -53,10 +54,10 @@ defmodule Snap do
     light2 = %Light{pos: {800, 800, 0}, color: {0.3, 1.0, 0.3}}
     light3 = %Light{pos: {800, -800, 0}, color: {0.3, 0.3, 1.0}}    
 
-    world = %World{objects: [obj1, obj2, obj3],
-		   lights: [light1, light2, light3],
-		   background: {0.0, 0.0, 0.0},
-		   ambient: {0.1, 0.1, 0.1}}
+    world = World.world(objects: [obj1, obj2, obj3],
+      lights: [light1, light2, light3],
+      background: {0.0, 0.0, 0.0},
+      ambient: {0.1, 0.1, 0.1})
 
     image = TracerReflection.tracer(camera, world)
     PPM.write("snap3.ppm", image)
@@ -73,11 +74,11 @@ defmodule Snap do
     light2 = %Light{pos: {800, 800, 0}, color: {0.1, 1.0, 0.0}}
     light3 = %Light{pos: {800, -800, 0}, color: {0.0, 0.0, 1.0}}
 
-    world = %World{objects: [obj1, obj2, obj3],
-		   lights: [light1, light2, light3],
-		   background: {0.0, 0.0, 0.0},
-		   ambient: {0.1, 0.1, 0.1},
-		   depth: 3}
+    world = World.world(objects: [obj1, obj2, obj3],
+      lights: [light1, light2, light3],
+      background: {0.0, 0.0, 0.0},
+      ambient: {0.1, 0.1, 0.1},
+      depth: 3)
 
     image = TracerReflection.tracer(camera, world)
     PPM.write("snap4.ppm", image)
@@ -95,11 +96,11 @@ defmodule Snap do
     light3 = %Light{pos: {800, -800, 0}, color: {0.3, 0.3, 1.0}}
 
 
-    world = %World{objects: [obj1, obj2, obj3],
-		   lights: [light1, light2, light3],
-		   background: {0.0, 0.0, 0.0},
-		   ambient: {0.1, 0.1, 0.1},
-		   depth: 3}    
+    world = World.world(objects: [obj1, obj2, obj3],
+      lights: [light1, light2, light3],
+      background: {0.0, 0.0, 0.0},
+      ambient: {0.1, 0.1, 0.1},
+      depth: 3)
 
     image = TracerReflection.tracer(camera, world)
     PPM.write("snap5.ppm", image)
