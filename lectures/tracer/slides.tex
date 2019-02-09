@@ -218,30 +218,33 @@ We now define how to represent object and rays.
 \begin{verbatim}
 defmodule Ray do
 
-  defstruct pos: {0, 0, 0}, dir: {0, 0, 1}
+  require Record
+  Record.defrecord(:ray, pos: {0, 0, 0}, dir: {0, 0, 1})
 \end{verbatim}
 
   \end{column}
  \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{tuples and structs}
+\begin{frame}[fragile]{tuples and records}
 
  \begin{itemize}
   \item a vector: {\tt \{2, 3, 1\}}
-  \item a ray:  {\tt \%Ray\{pos: \{3, 4, 0\}, dir: \{0.447, 0.894, 0\}\}}
+  \item a ray:  a tuple with named properties  (actually {\tt \{:ray, \{0,0,0\}, \{0,0,1\}}, but don't count on it.
  \end{itemize}
 
-\pause\vspace{20pt}
+ \pause\vspace{20pt}
+
+ A number of macros defined to help us handle properties of rays.
+ 
+\pause \vspace{10pt}
+\verb+foo = Ray.ray(pos: {3, 2, 4}, dir: {0.447, 0.894, 0})+
 
 \pause \vspace{10pt}
-\verb+foo = %Ray{pos: {3, 2, 4}, dir: {0.447, 0.894, 0}}+
+\verb+Ray.ray(pos: pos) = foo+
 
 \pause \vspace{10pt}
-\verb+%Ray{pos: pos} = foo+
-
-\pause \vspace{10pt}
-\verb+p = foo.pos+
+\verb+p = Ray.ray(foo, :pos)+
 
 \end{frame}
 
@@ -294,7 +297,9 @@ A sphere is defined by:
 \pause
  \begin{column}{0.7\linewidth}
 \begin{verbatim}
-defmodule Sphere do
+defmodule Sphere do 
+
+  require Ray
 
   defstruct pos: {0, 0, 0}, radius: 2
 
@@ -306,6 +311,28 @@ end
 
 \vspace{20pt}\pause
 {\em more properties will be added later}
+\end{frame}
+
+\begin{frame}[fragile]{maps and structs}
+
+  Structs are named maps.
+
+  Gives us a nice syntax to handle the objects.
+
+  \pause\vspace{20pt}
+
+\pause \vspace{10pt}
+\verb+foo = %Sphere{pos: {3, 2, 4}, dir: {0.447, 0.894, 0}}+
+
+\pause \vspace{10pt}
+\verb+%Sphere{pos: pos} = foo+
+
+\pause \vspace{10pt}
+\verb+p = foo.pos+
+  
+\pause \vspace{10pt}
+Note, access is lg(n) of number of properties, not as efficent as tuples nor records.
+
 \end{frame}
 
 \begin{frame}{intersection}
@@ -380,8 +407,9 @@ end
 defimpl Object do
 
  def intersect(sphere, ray) do
-   k = Vector.sub(sphere.pos, ray.pos)
-   a = Vector.dot(ray.dir, k)
+   Ray.ray(ray, pos: o, dir: l)
+   k = Vector.sub(sphere.pos, o)
+   a = Vector.dot(l, k)
    a2 = :math.pow(a, 2)
    k2 = :math.pow(Vector.norm(k), 2)
    r2 = :math.pow(sphere.radius, 2)
@@ -551,7 +579,10 @@ What properties do we have?
 \begin{verbatim}
 defmodule Camera do
 
-  defstruct pos: nil, corner: nil, right: nil, down: nil, size: nil
+  require Record
+
+  Record.defrecord(:camera, pos: nil, corner: nil, 
+                            right: nil, down: nil, size: nil)
 
 \end{verbatim}
 
@@ -569,7 +600,7 @@ defmodule Camera do
     pos = {0, 0, 0}
     right = {1, 0, 0}
     down = {0, -1, 0}
-    %Camera{pos: pos, corner: corner, .... )
+    Camera.camera(pos: pos, corner: corner, .... )
   end
 \end{verbatim}
 
@@ -585,14 +616,16 @@ the \{col,row\} position of the canvas.
 \begin{columns}
  \begin{column}{0.5\linewidth}
 \begin{verbatim}
-def ray(camera = %Camera{}, col, row) do
-  o = camera.pos
-  x = Vector.smul(camera.right, col)
-  y = Vector.smul(camera.down, row)
+def ray(camera, col, row) do
+  Camera.camera(camera, 
+       pos: o, right: r, down: d, 
+       corner: c) = camera
+  x = Vector.smul(r, col)
+  y = Vector.smul(d, row)
   v = Vector.add(x, y)
-  p = Vector.add(camera.corner, v)
+  p = Vector.add(c, v)
   d = Vector.normalize(p)
-  %Ray{pos: o, dir: d}
+  Ray.ray(pos: o, dir: d)
 end
 \end{verbatim}
  \end{column}
@@ -660,8 +693,8 @@ defmodule Tracer do
   @black {0, 0, 0}
   @white {1, 1, 1}
 
-  def tracer(camera=%Camera{}, objects) do
-    {w, h} = camera.size
+  def tracer(camera, objects) do
+    {w, h} = Camera.camera(camera, :size)
     for y <- 1..h, do: for(x <- 1..w, do: trace(x, y, camera, objects))
   end
 
@@ -740,21 +773,38 @@ end
 \begin{frame}[fragile]{colors}
 
 \pause Let's add some colors to the spheres.
-
 \begin{verbatim}
-  @color {1.0, 0.4, 0.4}
-
-  defstruct radius: 2, pos: {0, 0, 0}, color: @color 
+defprotocol Object do
+  def intersect(object, ray)
+  def color(object)
+end
 \end{verbatim}
 
 \pause
+
+\begin{verbatim}
+@color {1.0, 0.4, 0.4}
+
+defstruct radius: 2, pos: {0, 0, 0}, color: @color 
+
+defimpl Object do
+    :
+  def color(sphere) do
+    sphere.color
+  end
+end
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{colors}
+
 \begin{verbatim}
 def trace(ray, objects) do
   case intersect(ray, objects) do
     {:inf, _} ->
       @black
     {_, object} ->
-      object.color
+      Object.color(object)
   end
 end
 \end{verbatim}
@@ -839,11 +889,13 @@ defmodule World do
   @background {0, 0, 0}
   @ambient {0.3, 0.3, 0.3}
 
-  defstruct objects: [],
+  require Record
+
+  Record.defrecord(:world, objects: [],
             lights: [],
             background: @background,
-            ambient: @ambient
-end
+            ambient: @ambient)
+  end
 \end{verbatim}
 
 \pause A more convenient way to handle lack of  globally accessible data structures.
@@ -863,11 +915,10 @@ end
   {:inf, _} ->
       @black
   {d, obj} ->
-     o = ray.pos
-     l = ray.dir
+     Ray.ray(pos: o, dir: l) = ray
      i = Vector.add(o, Vector.smul(l, d - @delta))
      normal = Object.normal(obj,i)
-     visible = visible(i, world.lights, objects)
+     visible = visible(i, World.world(world, :lights), objects)
      illumination = Light.combine(i, normal, visible)
      Light.illuminate(obj, illumination, world)
  \end{verbatim}
@@ -901,11 +952,11 @@ The color of an intersection point depends on:
 \pause 
 \begin{verbatim}
   defp trace(_ray, 0, world) do
-    world.background
+    World.world(world, :background)
   end
 
   defp trace(ray, depth, world) do
-    objects = world.objects
+    objects = World.world(world, :objects)
 
         :
         :

@@ -798,8 +798,7 @@ defp trace(ray, world) do
     {:inf, _} ->
       World.world(world,:background)
     {dist, obj} ->
-      pos = Ray.ray(ray, :pos)
-      dir = Ray,ray(ray, :dir)
+      Ray.ray(:pos pos, dir: dir) =  ray
       point = Vector.add(pos, Vector.smul(dir, dist - @delta))
       normal = Sphere.normal(point, obj)
       visible = visible(point, World.world(world,:lights), objects)

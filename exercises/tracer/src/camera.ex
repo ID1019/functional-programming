@@ -14,15 +14,15 @@ defmodule Camera do
     corner = {-h, v, d}
     right = {1, 0, 0}
     down = {0, -1, 0}
-    Camera.camera(pos: pos, corner: corner, right: right, down: down, size: size)
+    camera(pos: pos, corner: corner, right: right, down: down, size: size)
   end
 
 
   def ray(camera, x, y) do
-    pos = Camera.camera(camera,:pos)
-    x_pos = Vector.smul(Camera.camera(camera,:right), x)
-    y_pos = Vector.smul(Camera.camera(camera,:down), y)
-    pixle = Vector.add(Camera.camera(camera,:corner), Vector.add(x_pos, y_pos))
+    camera(pos: pos, right: right, down: down, corner: corner)  = camera
+    x_pos = Vector.smul(right, x)
+    y_pos = Vector.smul(down, y)
+    pixle = Vector.add(corner, Vector.add(x_pos, y_pos))
     dir = Vector.normalize(pixle)
     Ray.ray(pos: pos, dir: dir)
   end

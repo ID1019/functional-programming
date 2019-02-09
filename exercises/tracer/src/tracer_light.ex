@@ -5,6 +5,7 @@ defmodule TracerLight do
   require Ray
   require World
   require Camera
+  require Light
 
   def tracer(camera, world) do
     {w, h} = Camera.camera(camera,:size)
@@ -23,8 +24,7 @@ defmodule TracerLight do
         World.world(world, :background)
 
       {d, obj} ->
-        o = Ray.ray(ray, :pos)
-        l = Ray.ray(ray, :dir)
+        Ray.ray(pos: o, dir: l) = ray
         i = Vector.add(o, Vector.smul(l, d - @delta))
         normal = Object.normal(obj,i)
         visible = visible(i, World.world(world,:lights), objects)
@@ -48,7 +48,7 @@ defmodule TracerLight do
   end
 
   defp visible(point, lights, objs) do
-    Enum.filter(lights, fn light -> clear(point, light.pos, objs) end)
+    Enum.filter(lights, fn light -> clear(point, Light.light(light,:pos), objs) end)
   end
 
   defp clear(point, origin, objs) do

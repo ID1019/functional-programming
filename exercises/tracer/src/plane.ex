@@ -43,7 +43,7 @@ defmodule Plane do
 
   end
 
-  def intersect(_plane = %Plane{}, _ray) do
+  def intersect(_plane, _ray) do
     ## When does a ray intersect a plane - and in our case, is it
     ## within the boundries of the extent of the surface. 
     :no

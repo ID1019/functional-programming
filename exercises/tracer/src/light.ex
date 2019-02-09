@@ -33,7 +33,7 @@ defmodule Light do
   def combine(point, normal, lights) do
     List.foldl(lights, {0, 0, 0},
       fn(light, contr) ->
-         mul(contribute(point, normal, Light.light(light, :pos), Light.light(light, :color)), contr)
+         mul(contribute(point, normal, light(light, :pos), light(light, :color)), contr)
       end)
   end
 

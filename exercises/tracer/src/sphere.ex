@@ -39,9 +39,10 @@ defmodule Sphere do
 
   end
 
-  def intersect(sphere = %Sphere{}, ray) do
-    k = Vector.sub(sphere.pos, Ray.ray(ray, :pos))
-    a = Vector.dot(Ray.ray(ray, :dir), k)
+  def intersect(sphere, ray) do
+    Ray.ray(pos: pos, dir: dir)  = ray
+    k = Vector.sub(sphere.pos, pos)
+    a = Vector.dot(dir, k)
     a2 = :math.pow(a, 2)
     k2 = :math.pow(Vector.norm(k), 2)
     r2 = :math.pow(sphere.radius, 2)
