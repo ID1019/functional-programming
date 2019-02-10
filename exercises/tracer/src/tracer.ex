@@ -3,8 +3,10 @@ defmodule Tracer do
   @black {0, 0, 0}
   @white {1, 1, 1}
 
-  def tracer(camera=%Camera{}, objects) do
-    {w, h} = camera.size
+  require Camera
+
+  def tracer(camera, objects) do
+    {w, h} = Camera.camera(camera,:size)
     for y <- 1..h, do: for(x <- 1..w, do: trace(x, y, camera, objects))
   end
 

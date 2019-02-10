@@ -2,11 +2,14 @@ defmodule TracerLight do
 
   @delta 0.001
 
+  require Ray
+  require World
+  require Camera
+  require Light
+
   def tracer(camera, world) do
-    {w, h} = camera.size
-    xs = Enum.to_list(1..w)
-    ys = Enum.to_list(1..h)
-    for y <- ys, do: for(x <- xs, do: trace(x, y, camera, world))
+    {w, h} = Camera.camera(camera,:size)
+    for y <- 1..h, do: for(x <- 1..w, do: trace(x, y, camera, world))
   end
 
   defp trace(x, y, camera, world) do
@@ -14,18 +17,17 @@ defmodule TracerLight do
     trace(ray, world)
   end
   defp trace(ray, world) do
-    objects = world.objects
+    objects = World.world(world, :objects)
 
     case intersect(ray, objects) do
       {:inf, _} ->
-        world.background
+        World.world(world, :background)
 
       {d, obj} ->
-        o = ray.pos
-        l = ray.dir
+        Ray.ray(pos: o, dir: l) = ray
         i = Vector.add(o, Vector.smul(l, d - @delta))
         normal = Object.normal(obj,i)
-        visible = visible(i, world.lights, objects)
+        visible = visible(i, World.world(world,:lights), objects)
         illumination = Light.combine(i, normal, visible)
         Light.illuminate(obj, illumination, world)
     end
@@ -46,7 +48,7 @@ defmodule TracerLight do
   end
 
   defp visible(point, lights, objs) do
-    Enum.filter(lights, fn light -> clear(point, light.pos, objs) end)
+    Enum.filter(lights, fn light -> clear(point, Light.light(light,:pos), objs) end)
   end
 
   defp clear(point, origin, objs) do
@@ -58,7 +60,7 @@ defmodule TracerLight do
           false
 
         true ->
-          case Object.intersect(obj, %Ray{pos: point, dir: dir}) do
+          case Object.intersect(obj, Ray.ray(pos: point, dir: dir)) do
             :no ->
               true
 

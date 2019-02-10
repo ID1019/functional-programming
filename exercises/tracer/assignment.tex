@@ -194,25 +194,36 @@ solution but unfortunately a very convenient solution.
 We will however create a more proper data structure to represent a {\em ray}. 
 A ray has an origin, represented by a vector, and a direction,
 represented by a normalized vector. When we implement rays we will use
-Elixir structs. A struct is always associated with a module and gives
-us a convenient way of referencing elements of a data structure. Instead
+Elixir records. A record is a named tuple and is always associated with a module and gives
+us a convenient way of referencing the elements of the elements of the tuple. Instead
 of having to remember which element of a tuple a particular element
 is we can refer to them by name. 
 
-Create a module {\tt Ray} and define the following struct. We provide
+Create a module {\tt Ray} and define the following record. We provide
 a default position {\tt \{0,0,0\}} and direction {\tt \{1,1,1\}}. If
 none is given when we create a ray the default values will be used.
 
 \begin{minted}{elixir}
 defmodule Ray do
 
-  defstruct pos: {0, 0, 0}, dir: {1, 1, 1}
+  require Record
+
+  Record.defrecord(:ray, pos: {0, 0, 0}, dir: {1, 1, 1})
   
 end
 \end{minted}
 
-We now have the mathematical tools to describe a world of obkects.
+Modules that qork with records need to reauire the {\tt Ray} module
+(to use the defined macros defined) and can then access the elements
+of the ray usng the following constructs.
 
+\begin{minted}{elixir}
+  r = Ray.ray(pos: {0,0,0}, dir: {0,0,1})  # create a new ray
+  p =  Ray.ray(r, :pos)                    # extract the position
+  d =  Ray.ray(r, :dir)                    # extract the direction
+\end{minted}
+
+We now have the mathematical tools to describe a world of objects.
 
 
 % ================================================== %
@@ -258,8 +269,9 @@ we model our objects in a Cartesian space we will be able to
 determine intersections quite easily.
 
 A sphere will have an position and a radius. The position is
-represented by a vector and the radius by a number. We create a
-struct with two properties and default values.
+represented by a vector and the radius by a number. We create a struct
+with two properties and default values. The struct construct allows us
+to add more properties later, even dynamically during execution. 
 
 \begin{minted}{elixir}
 defmodule Sphere do
@@ -354,16 +366,20 @@ value since this is the surface that we will actually see.
 Implement the function {\tt intersect/2} that checks if ray intersects
 a sphere; return {\tt :no} if it does not and {\tt \{:ok, d\}}, where
 {\tt d} is the closest distance, if it does. We implement the function
-in the {\tt Sphere} module but use the {\tt defimpl} construct to
+in the {\tt Sphere} module and use the {\tt defimpl} construct to
 declare this as the {\tt Object} protocol implementation.
 
 \begin{minted}{elixir}
  defimpl Object do
 
-   def intersect(sphere = %Sphere{}, ray = %Ray{}) do
-     :
-     :
+   def intersect(sphere, ray) do
+      Sphere.intersect(sphere, ray)
    end
+ end
+
+ def intersect(sphere, ray) do
+     :
+     :
  end
 \end{minted}
 
@@ -483,17 +499,20 @@ we talk about images we often count the rows going down so this will
 makes things easier. We also keep the size of the canvas so we know
 which rays that we should produce.
 
-Open up a module {\tt Camera} and defined the following struct.
+Open up a module {\tt Camera} and defined the following default camera struct. 
 
 \begin{minted}{elixir}
 defmodule Camera do
 
-  defstruct pos: nil, corner: nil, right: nil, down: nil, size: nil
+  require Record
+  require Ray
+
+  Record.defrecord(:camera, pos: nil, corner: nil, right: nil, down: nil, size: nil)
   
 end
 \end{minted}
 
-It will also be very handy to have a function that returns a default
+It will be very handy to have a function that returns a default
 camera so that we don't have to think about the different
 parameters. This default camera can be positions at
 $\langle 0,0,0\rangle$ and point straight forward (in the z
@@ -510,7 +529,7 @@ def normal(size) do
   corner = ...
     :
     :
-  %Camera{pos: {0, 0, 0}, corner: corner, ..., ..., size: size)
+  Camera.camera(pos: {0, 0, 0}, corner: corner, ..., ..., size: size)
 end
 \end{minted}
 
@@ -519,26 +538,31 @@ given coordinate or pixel. This should be straight forward given that
 we created our representation with this in mind.
 
 \begin{minted}{elixir}
+
 def ray(camera, x, y) do
   origin = ...   # the origin of the ray
   x_pos = ...    # a vector from the corner to the x column
   y_pos = ...    # a vector from the corner to the y row
   pixle = ...    # a vector from origin to the pixle
   dir = ...      # the normalized vector
-  %Ray{pos: origin, dir: dir}
+  Ray.ray(pos: origin, dir: dir)
 end
 \end{minted}
 
 
 \subsection*{The world}
 
-The world is simply a list of objects. We will extend the world to also
-hold other things but for our first test this will be sufficient.
+The world is simply a list of objects. We will extend the world to
+also hold other things but for our first test this will be
+sufficient. We again use the record construct to give us some macros
+to handle world objects.
 
 \begin{minted}{elixir}
 defmodule World do
 
-  defstruct objects: []
+  require Record  
+
+  Record.defrecord(:world, objects: [])
 
 end
 \end{minted}
@@ -584,14 +608,15 @@ point of intersection. We will here use the higher order construct
 
 \begin{minted}{elixir}
 def intersect(ray, objects) do
-  List.foldl(objects, {:inf, nil}, fn(object, sofar) ->
-    {dist, _} = sofar
+  List.foldl(objects, {:inf, nil},
+     fn(object, sofar) ->
+      {dist, _} = sofar
 
-    case Object.intersect(object, ray) do
-      {:ok, d} when d < dist ->
-        {d, object}
-      _ ->
-        sofar
+      case Object.intersect(object, ray) do
+        {:ok, d} when d < dist ->
+           {d, object}
+        _ ->
+           sofar
     end
   end)
 end
@@ -647,7 +672,7 @@ rgb values that describes the image.
 
 \begin{minted}{elixir}
 def tracer(camera, objects) do
-  {w, h} = camera.size
+  {w, h} = Camera.camera(camera,:size)
   for y <- 1..h, do: for(x <- 1..w, do: trace(x, y, camera, objects))
 end
 \end{minted}
@@ -709,7 +734,6 @@ all we extend the {\tt Sphere} struct structure to also include a
 color element. We can have a default color if we want, so that all
 spheres have colors.
 
-
 \begin{minted}{elixir}
 @color {1.0, 0.4, 0.4}
 
@@ -768,17 +792,16 @@ light sources and the color of the object.
 
 \begin{minted}{elixir}
 defp trace(ray, world) do
-  objects = world.objects
+  objects = Word.world(wordl,:objects)
 
   case intersect(ray, objects) do
     {:inf, _} ->
-      world.background
+      World.world(world,:background)
     {dist, obj} ->
-      pos = ray.pos
-      dir = ray.direction
+      Ray.ray(:pos pos, dir: dir) =  ray
       point = Vector.add(pos, Vector.smul(dir, dist - @delta))
       normal = Sphere.normal(point, obj)
-      visible = visible(point, world.lights, objects)
+      visible = visible(point, World.world(world,:lights), objects)
       illumination = Light.combine(point, normal, visible)
       Light.illuminate(obj, illumination, world)
   end
