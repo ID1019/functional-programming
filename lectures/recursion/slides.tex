@@ -63,7 +63,7 @@ def foo(x, y) do
           rescue
               error ->
                   {:caught, error}
-          end,
+          end
     {x, y, res}
 end
 \end{verbatim}
@@ -296,7 +296,7 @@ end
 \pause\hspace{60pt}{\tt [:c]}\\
 \pause\hspace{40pt}{\tt [:b|z']}\\
 \pause\hspace{20pt}{\tt [:a|z]}\\
-\pause$[:a,:b,:c]$
+\pause{\tt [:a,:b,:c]}
 \end{column}
 \begin{column}{0.5\textwidth}
 \pause{\tt tailr([:a,:b], [:c])})\\
@@ -305,7 +305,7 @@ end
 \pause\hspace{60pt}{\tt [:b,:a:,:c]}\\
 \pause\hspace{40pt}{\tt [:b,:a:,:c]}\\
 \pause\hspace{20pt}{\tt [:b,:a:,:c]}\\
-\pause$[:b,:a,:c]$
+\pause{\tt [:b,:a,:c]}
 \end{column}
 \end{columns}
 
