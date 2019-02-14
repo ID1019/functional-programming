@@ -62,7 +62,7 @@ defmodule PNG do
     chunk("IHDR", data)
   end
 
-  @spec ihdr(list(list(Color.color)), PNG_Config.t) :: binary
+  @spec idats(list(list(Color.color)), PNG_Config.t) :: binary
   def idats(rows, %PNG_Config{} = config) do
     bit_depth = config.bit_depth
     raw = List.foldl rows, <<>>, fn(row, data) ->
