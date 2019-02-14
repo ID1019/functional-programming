@@ -164,10 +164,10 @@ An actor:
 We introduce one additional data structure:
 \pause\vspace{10pt}
 
-$${\rm Structures} = \{\rm Process identifiers\} \cup {\rm Atoms} \cup \{\{s_1, s_2\} | s_i \in {\rm Structures}\}$$
+$${\rm Structures} = \{\rm Process\ identifiers\} \cup {\rm Atoms} \cup \{\{s_1, s_2\} | s_i \in {\rm Structures}\}$$
 
 \pause\vspace{20pt} 
-{\em There is no term nor pattern that corresponds to an identifier.}
+{\em There is no term, nor pattern, that corresponds to an identifier.}
 \end{frame}
 
 \begin{frame}[fragile]{spawn}
@@ -245,21 +245,16 @@ end
 In a {\em pure functional} program, the only effect of evaluating an
  expressions is the returned value \pause - not any more.
 
-\pause\vspace{10pt}
-\begin{verbatim}
-  pid = spawn(fn() -> foo() end)
-     :
-  x = bar(pid, 42)
-  y = bar(pid, 32)
-      :
-  a = foo()
-  b = foo()
-\end{verbatim}
-
-\pause\vspace{10pt}
-
-\begin{columns}
+\pause
+\begin{columns}[t]
   \begin{column}{0.5\linewidth}
+\begin{verbatim}
+     :
+  bar(pid, 42)
+  bar(pid, 32)
+     :
+\end{verbatim}
+\pause\vspace{20pt}
 \begin{verbatim}
 def bar(pid, msg) do
     send(pid,{:hello, msg})
@@ -269,9 +264,16 @@ end
   \pause
   \begin{column}{0.5\linewidth}
 \begin{verbatim}
-def foo() do
+     :
+  x = foo(2)
+  y = foo(2)
+     :
+\end{verbatim}
+\pause\vspace{20pt}
+\begin{verbatim}
+def foo(x) do
    receive do
-     {:hello, msg} -> msg
+     {:hello, msg} -> msg + x
    end
 end
 \end{verbatim}
@@ -281,23 +283,6 @@ end
 \end{frame}
 
 
-\begin{frame}[fragile]{side effects}
-
-  In a {\em pure functional} program, the order of execution is not
-  important (modulo infinity and failing computations) \pause - not any more.
-
-\pause\vspace{10pt}
-\begin{verbatim}
-def bar(X,Y) do
-    z = this(x,y),
-    q = that(x),
-    {z,q}.
-\end{verbatim}
-
-
-\end{frame}
-
- 
 \begin{frame}[fragile]{Who am I?}
 
 One more built-in function:
@@ -357,8 +342,8 @@ Message passing is: unreliable FIFO.
 Process one:
 \begin{verbatim}
    :
-send(pid, {:one, 1}
-send(pid, {:one, 2}
+send(pid, {:one, 1})
+send(pid, {:one, 2})
    :
 \end{verbatim}
     \end{column}
@@ -366,12 +351,11 @@ send(pid, {:one, 2}
 Process two:
 \begin{verbatim}
    :
-send(pid, {:two, 1}
-send(pid, {:two, 2}
+send(pid, {:two, 1})
+send(pid, {:two, 2})
    :
 \end{verbatim}
     \end{column}
-    
   \end{columns}
   
 \end{frame}
@@ -404,11 +388,11 @@ Assume we spawn a process given the expression {\tt fn() -> sum(10) end}, \pause
 \begin{columns}
  \begin{column}{0.5\linewidth}
 \begin{verbatim}
-def closed(s) do
+def closed(s) do 
   receive 
     {:add, x} -> closed(s + x)
     :open -> open(s)
-    :done -> :ok
+    :done -> {:ok, s}
   end
 end
 \end{verbatim}
@@ -434,7 +418,7 @@ Assume we spawn {\tt fn() -> closed(4) end} and the sequence of messages is:
 
 \vspace{10pt}
 
-{\tt \{:sub, 4\}, \{:mul, 4\}, :open, \{:add, 2\}, \{:add, 2\}, :close}
+{\tt \{:sub, 4\}, :open, \{:mul, 4\}, \{:add, 2\}, :close \{:add, 2\}, :done}
 
 \pause\vspace{10pt}
 
@@ -447,22 +431,18 @@ In every receive expression we start from the beginning of the queue.
 
 {\em Selective receive}: we specify which messages we are willing to accept.
 
+\pause\vspace{20pt}
+
 {\em Implicit deferral}: messages that we do not explicitly receive, remain in the message queue.
 
 \pause\vspace{20pt}
-
-We could have chosen {\em explicit deferral} i.e. we would have to
-state which messages that should be handled later.
-
-\pause\vspace{20pt}
-
-We could have chosen {\em explicit deferral} i.e. we would have to
-state which messages that should be handled later.
-
-\pause\vspace{20pt}
-
 We coudl have chosen {\em fifo receive} i.e. messages must be received
 in the order they have in the message queue (Actors model).
+
+\pause\vspace{20pt}
+
+We could have chosen {\em explicit deferral}, but then we would have to
+state which messages that should be handled later.
 
 \end{frame}
 
@@ -480,7 +460,7 @@ in the order they have in the message queue (Actors model).
 
 
 
-\begin{frame}{finite state machine}
+\begin{frame}{finite state machine - FSM}
 
 
 \begin{tikzpicture}[>=stealth', node distance=3cm, semithick, auto]
@@ -500,9 +480,9 @@ in the order they have in the message queue (Actors model).
 \end{frame}
 
 
-\begin{frame}{finite state automata}
+\begin{frame}{finite state machine - FSM}
 
-Erlang receive statements are not a direct realization of a finite state machine.
+Elixir receive statements are not a direct realization of a finite state machine.
 
 \pause\vspace{10pt}
 
@@ -596,6 +576,14 @@ early.
 
 \end{tikzpicture}
   
+\end{frame}
+
+\begin{frame}{flow-based programming}
+
+\begin{figure}
+\includegraphics[scale=0.4]{fbp.png}
+\caption{from J Paul Morrison www.jpaulmorrison.com}
+\end{figure}
 \end{frame}
 
 
