@@ -4,6 +4,11 @@ defmodule Cell do
     {:cell, spawn_link(fn() -> init(val) end)}
   end
 
+  def remote(node, val) do
+    {:cell, Node.spawn_link(node, fn() -> init(val) end)}
+  end
+  
+  
   def read({:cell, cell}) do
     send(cell , {:read, self()})
     receive do

@@ -5,6 +5,12 @@ defmodule Memory do
     {:mem, List.to_tuple(cells)}
   end
 
+  def remote(node, list) do
+    cells = Enum.map(list, fn(e) -> Cell.remote(node, e) end)
+    {:mem, List.to_tuple(cells)}
+  end
+
+  
   def read({:mem, mem}, n) do
     cell = elem(mem, n)
     Cell.read(cell)
