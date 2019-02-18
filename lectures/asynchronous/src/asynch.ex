@@ -25,7 +25,12 @@ defmodule Asynch do
       {:ok, ^ref} ->
 	:ok
     end
-  end  
+  end
+
+  def quit({:asynch, cell}) do
+    send(cell, :quit)
+  end
+  
 
   def init(val) do        ## things to do in the child process
     cell(val)
@@ -41,6 +46,8 @@ defmodule Asynch do
       {:write, w, ref, pid} ->
 	send(pid, {:ok, ref})
 	cell(w)
+      :quit ->
+	:ok
     end
   end
 
