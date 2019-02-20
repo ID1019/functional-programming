@@ -183,7 +183,7 @@ connect the process with a destination link layer process.
     \path[->]   (init)   edge       [bend left]     node      {\{:connect, dest\}}       (link)
                          edge       [bend right]    node      {:quit}          (final) 
                 (link)   edge       [loop above]    node      {\{:send, msg\}}          (link)
-                         edge       [loop right]    node      {\%Frame\{data: msg\}}           (link)
+                         edge       [loop right]    node      {frame(data: msg)}           (link)
                          edge       [bend left]     node      {:quit}          (final);
 \end{tikzpicture}
 
@@ -207,7 +207,7 @@ The link layer should be able to handle the following messages:
     msg}, to the destination process. The message is wrapped in a {\em
     Frame} and sent using the regular Elixir send primitive.
 
-  \item {\tt \%Frame\{data: msg\}}: A frame from the peer  link
+  \item {\tt frame(data: msg)}: A frame from the peer  link
     process. This message should be forwarded to the master process
     using the regular Elixir send primitive. The message is sent as
     is, {\tt msg}, without being wrapped in any special data structure.
@@ -281,7 +281,7 @@ processes are connected using a hub.
     
     \path[->]   (hub)   edge       [loop above, every loop/.append style={looseness=20,in=100, out=160 }]    node[anchor=south east]      {\{:connect, dest\}}       (hub)
                         edge       [loop below, every loop/.append style={looseness=20,in=260, out=200 }]    node[anchor=north east]      {\{:disconnect, dest\}}    (hub)
-                        edge       [loop above, every loop/.append style={looseness=20,in=20,  out=80 }]     node[anchor=south west]      {\%Frame\{\}}              (hub)
+                        edge       [loop above, every loop/.append style={looseness=20,in=20,  out=80 }]     node[anchor=south west]      {frame()}              (hub)
                         edge       [loop below, every loop/.append style={looseness=20,in=340, out=280 }]    node[anchor=north west]      {:DOWN}                    (hub)
                         edge       []                                                                        node      {:quit}                    (final);
     
@@ -319,10 +319,10 @@ modifying the network layer.
     
     \path[->]   (init)   edge       [bend left]     node      {\{:connect, lnk\}}       (net)
                          edge       []             node       {:quit}                   (final)
-                (net)    edge       [loop above, every loop/.append style={looseness=10,in=20, out=80 }]   node[anchor=west] {\%Netw\{dst: id, msg: msg\}}(net)
+                (net)    edge       [loop above, every loop/.append style={looseness=10,in=20, out=80 }]   node[anchor=west] {netw(dst: id, msg: msg)}(net)
                          edge       [loop above, every loop/.append style={looseness=10,in=100, out=160 }] node[anchor=east] {\{:send, to, msg\}}    (net)
-                         edge       [loop below, every loop/.append style={looseness=6,in=340, out=280 }]  node[anchor=north west] {\%Netw\{\}}             (net)
-                         edge       []                                                                     node              {:quit}                 (final);
+                         edge       [loop below, every loop/.append style={looseness=6,in=340, out=280 }]  node[anchor=north west] {netw()}      (net)
+                         edge       []                                                                     node              {:quit}           (final);
     
 \end{tikzpicture}
 \caption{The network layer.}
@@ -386,10 +386,10 @@ Elixir process.
     \path[->]   (init)   edge       [bend left]  node                          {\{:connect, lnk\}}   (ready)
                          edge       [bend right] node[anchor=east]             {:quit}               (final)
                 (ready)  edge       []           node[anchor=west, near start] {\{:send, msg\}}      (send)
-                         edge       [loop above] node                          {\%Ack\{\}}         (ready)
+                         edge       [loop above] node                          {ack()}         (ready)
                          edge       [bend right] node[anchor=east]             {:quit}               (final)                   
                 (send)   edge       [loop below, every loop/.append style={looseness=6,in=340, out=30 }] node[anchor=west] {timeout}  (send)   
-                         edge       [bend left]  node[near start, anchor=east]              {\%Ack\{seq: i\}}          (ready)
+                         edge       [bend left]  node[near start, anchor=east]              {ack(seq: i)}          (ready)
                          edge       [bend left]  node                          {:quit}               (final);
 \end{tikzpicture}}
 \subcaption{sending process}
@@ -462,13 +462,13 @@ The sender can now receive the following messages:
   message with its corresponding sequence number as the last element in
   the buffer. The sequence number is then updated.
 
-\item {\tt \%Ack\{seq: a\}}: if $a$
+\item {\tt ack(seq: a)}: if $a$
   is equal to the sequence number of the first element in the buffer
   then this element is removed from the buffer.If we receive an
   acknowledgment and remove the last element from the buffer we move
   to the {\em ready} state.
 
-\item {\tt \%Ack\{seq: a\}}: if $a$ is less than the sequence number
+\item {\tt ack(seq: a)}: if $a$ is less than the sequence number
   of the first element in the buffer, this is a duplicate
   acknowledgment and can be ignored.
 
@@ -498,12 +498,12 @@ complications that we will discuss later.
     \path[->]   (init)   edge       [bend left]   node                          {\{:connect, net\}}       (ready)
                          edge       [bend right]  node[anchor=east]             {:quit}                   (final)
                 (ready)  edge       []            node[anchor=west, near start] {\{:send, msg\}}          (send)
-                         edge       [loop above]  node                          {\%Ack\{\}}               (ready)
+                         edge       [loop above]  node                          {ack()}               (ready)
                          edge       [bend right]  node[anchor=east]             {:quit}                   (final)                   
                 (send)   edge       [loop above, every loop/.append style={looseness=6,in=20, out=70 }]   node[anchor=west]    {\{:send, msg\}} (send)
                          edge       [loop below, every loop/.append style={looseness=6,in=310, out=0 }]   node[anchor=west]    {timeout}        (send)   
-                         edge       [loop above, every loop/.append style={looseness=6,in=230, out=170 }] node[anchor=north east]   {\%Ack{}}        (send)
-                         edge       [bend left]   node  {\%Ack\{seq: a\}}  (ready)
+                         edge       [loop above, every loop/.append style={looseness=6,in=230, out=170 }] node[anchor=north east]   {ack()}        (send)
+                         edge       [bend left]   node  {ack(seq: a)}  (ready)
                          edge       [bend left]   node  {:quit}            (final);
 \end{tikzpicture}
 \caption{The ordering process: multiple outstanding messages.}
@@ -568,7 +568,7 @@ how many more messages it can send.
     
     \path[->]   (init)   edge       [bend left]  node               {\{:connect, net\}}       (ready)
                          edge       [bend right] node[anchor=east]  {:quit}                   (final)
-                (ready)  edge       [bend right] node[anchor=east]  {\%Syn\{\}}               (send)
+                (ready)  edge       [bend right] node[anchor=east]  {syn()}               (send)
                          edge       [bend right] node[anchor=east]  {:quit}                   (final)                   
                 (send)   edge       [bend right] node[anchor=west]  {\{send, Msg, Pid\}}  (ready)
                          edge       [loop below, every loop/.append style={looseness=6,out=80, in=10 }]   node[anchor=east]  {}              (send)   
@@ -634,9 +634,9 @@ determines how often it should loose a frame. The following code will
 get you going:
 
 \begin{minted}{elixir}
-  %Frame{} = frm ->
+  frame() = frm ->
     if :rand.uniform(100) <= loss do
-       IO.puts("nub: throwing away #{frm}")
+       :io.format("nub: throwing away ~w\n", [frm])
        :ok
     else
        Enum.each(connected, fn({_,pid}) -> send(pid, frm) end)
@@ -695,24 +695,12 @@ forward error correction code can be used this is the task to take on.
 \section{hub.ex} \label{app:hub}
 \lstinputlisting{src/hub.ex}
 \pagebreak
-
 \section{network.ex} \label{app:net}
 \lstinputlisting{src/network.ex}
 \pagebreak
 \section{order.ex} \label{app:order}
 \lstinputlisting{src/order.ex}
 \pagebreak
-\section{frame.ex} \label{app:frame}
-\lstinputlisting{src/frame.ex}
-\section{netw.ex} \label{app:netw}
-\lstinputlisting{src/netw.ex}
-\section{ack.ex} \label{app:ack}
-\lstinputlisting{src/ack.ex}
-\section{ord.ex} \label{app:ord}
-\lstinputlisting{src/ord.ex}
-\section{syn.ex} \label{app:syn}
-\lstinputlisting{src/syn.ex}
-\section{msg.ex} \label{app:msg}
-\lstinputlisting{src/msg.ex}
+
 
 \end{document}

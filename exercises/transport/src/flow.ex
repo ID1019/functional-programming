@@ -1,5 +1,10 @@
 defmodule Flow do
 
+  require Record
+
+  Record.defrecord(:msg, data: nil)
+  Record.defrecord(:syn, add: 0)
+  
   def start(size) do
     {:ok, spawn(fn() -> init(size) end)}
   end
@@ -9,14 +14,14 @@ defmodule Flow do
     receive do
       {:connect, netw} ->
 	:io.format("flow ~w connecting to ~w~n", [self(), netw])
-	send(netw, {:send, %Syn{add: size}})
+	send(netw, {:send, syn(add: size)})
 	flow(size, 0, [], netw)
     end
   end
     
   def flow(s, 0, buffer, netw) do
     receive do
-      %Syn{add: t} ->
+      syn(add: t) ->
 	flow(s, t, buffer, netw)
     end
   end
@@ -24,14 +29,14 @@ defmodule Flow do
     receive do
 
       {:send, msg, pid} ->
-	send(netw, {:send, %Msg{data: msg}})
+	send(netw, {:send, msg(data: msg)})
 	send(pid, :ok)
 	flow(s, t-1, [], netw)
 
-      %Msg{data: msg} ->
+      msg(data: msg) ->
 	flow(s-1, t, [msg], netw)
 
-      %Syn{add: a} ->
+      syn(add: a) ->
 	flow(s, t+a, [], netw)
 
     end
@@ -40,20 +45,20 @@ defmodule Flow do
     receive do
 
       {:send, msg, pid} ->
-	send(netw, {:send, %Msg{data: msg}})
+	send(netw, {:send, msg(data: msg)})
 	send(pid, :ok)
 	flow(s, t-1, buffer, netw)
 
       {:read, n, pid} ->
 	{i, deliver, rest} = read(n, buffer)
 	send(pid, {:ok, i, deliver})
-	send(netw, {:send, %Syn{add: i}})
+	send(netw, {:send, syn(add: i)})
 	flow(s+i, t, rest, netw)
 
-      %Msg{data: msg} ->
+      msg(data: msg) ->
 	flow(s-1, t, buffer++[msg], netw)
 
-      %Syn{add: a} ->
+      syn(add: a) ->
 	flow(s, t+a, buffer, netw)
 
     end

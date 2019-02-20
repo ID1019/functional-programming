@@ -1,5 +1,7 @@
 defmodule Hub do
 
+  require Link
+  
   def start() do
     {:ok, spawn(fn() -> init() end)}
   end
@@ -25,7 +27,7 @@ defmodule Hub do
 	:io.format("hub ~w: died ~w~n", [self(), ref])
 	hub(List.keydelete(connected, ref, 0))
 
-      %Frame{} = frm ->
+      Link.frame() = frm ->
 	Enum.each(connected, fn({_,pid}) -> send(pid, frm) end)
 	hub(connected)
 	

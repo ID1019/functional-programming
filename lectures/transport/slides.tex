@@ -110,7 +110,7 @@ Each layers provides an {\em abstraction} that the layer above can make use of.
 
     \path[->, bend right]  (master)   edge        node[anchor=east]          {\{:send, msg\}}       (link1);
     \path[->, bend right]  (link1)   edge        node[anchor=west]          {msg}       (master);
-    \path[<->]  (link1)   edge        node[above]          {\%Frame\{data: msg\}}       (link2);    
+    \path[<->]  (link1)   edge        node[above]          {\frame(data: msg)}       (link2);    
 \end{tikzpicture}
 
 \end{frame}
@@ -126,7 +126,7 @@ Each layers provides an {\em abstraction} that the layer above can make use of.
     \path[->]   (init)   edge       [bend left]     node      {\{:connect, dest\}}       (link)
                          edge       [bend right]    node      {:quit}          (final) 
                 (link)   edge       [loop above]    node[near start, anchor=east]   {\{:send, msg\}}          (link)
-                         edge       [loop right]    node      {\%Frame\{data: msg\}}           (link)
+                         edge       [loop right]    node      {frame(data: msg)}           (link)
                          edge       [bend left]     node      {:quit}          (final);
 \end{tikzpicture}
 
@@ -136,6 +136,10 @@ Each layers provides an {\em abstraction} that the layer above can make use of.
 \begin{frame}[fragile]{the link process}
 
 \begin{verbatim}
+  require Record
+
+  Record.defrecord(:frame, data: nil)
+
   def start(master) do
     {:ok, spawn(fn() -> init(master) end)}
   end
@@ -156,10 +160,10 @@ Each layers provides an {\em abstraction} that the layer above can make use of.
   def link(master, dest) do
     receive  do
       {:send, msg} ->
-        send(dest, %Frame{data: msg})
+        send(dest, frame(data: msg))
         link(master, dest)
 
-      %Frame{data: msg} = frm ->
+      frame(data: msg) ->
         send(master, msg)
         link(master, dest)
 
@@ -207,9 +211,9 @@ end
     
     \path[->, bend right]  (master)   edge  node[anchor=east]  {\{:connect, lnk\}}    (hub);
     \path[->, bend left]  (master)   edge   node[anchor=west]  {\{:disconnect, lnk\}} (hub);
-    \path[<->]  (hub)   edge        node[near end, above, anchor=north west]  {\%Frame\{data: msg\}}       (link1);    
-    \path[<->]  (hub)   edge        node[above]          {\%Frame\{data: msg\}}       (link2);
-    \path[<->]  (hub)   edge        node[near end, above, anchor=south west]  {\%Frame\{data: msg\}}       (link3);        
+    \path[<->]  (hub)   edge        node[near end, above, anchor=north west]  {frame(data: msg)}       (link1);    
+    \path[<->]  (hub)   edge        node[above]          {frame(data: msg)}       (link2);
+    \path[<->]  (hub)   edge        node[near end, above, anchor=south west]  {frame(data: msg)}       (link3);        
 \end{tikzpicture}
 
 \end{frame}
@@ -225,7 +229,7 @@ end
     
     \path[->]   (hub)   edge       [loop above, every loop/.append style={looseness=20,in=100, out=160 }]    node[anchor=south east]      {\{:connect, dest\}}       (hub)
                         edge       [loop below, every loop/.append style={looseness=20,in=260, out=200 }]    node[anchor=north east]      {\{:disconnect, dest\}}    (hub)
-                        edge       [loop above, every loop/.append style={looseness=20,in=20,  out=80 }]     node[anchor=south west]      {\%Frame\{\}}              (hub)
+                        edge       [loop above, every loop/.append style={looseness=20,in=20,  out=80 }]     node[anchor=south west]      {frame()}              (hub)
 
                         edge       []                                                                        node      {:quit}                    (final);
     
@@ -245,7 +249,7 @@ end
       {:disconnect, pid} ->
         hub(List.delete(connected, pid))
 
-      %Frame{} = frm ->
+      frame() = frm ->
         Enum.each(connected, fn(pid) -> send(pid, frm) end)
         hub(connected)
         
@@ -313,8 +317,8 @@ end
 
     \path[->, bend right]  (master)  edge  node[anchor=east]          {\{:send, to,  msg\}}                      (network);
     \path[->, bend right]  (network) edge  node[anchor=west]          {msg}                                      (master);
-    \path[->, bend right]  (network) edge  node[anchor=east]          {\{:send, \%Netw\{dst: to,  data: msg\}\}} (link);
-    \path[->, bend right]  (link)    edge  node[anchor=west]          {\%Netw\{dst: id,  data: msg\}\}}          (network);    
+    \path[->, bend right]  (network) edge  node[anchor=east]          {\{:send, netw(dst: to,  data: msg)\}} (link);
+    \path[->, bend right]  (link)    edge  node[anchor=west]          {netw(dst: id,  data: msg)}          (network);    
 \end{tikzpicture}
 
 
@@ -335,9 +339,9 @@ end
     
     \path[->]   (init)   edge       [bend left]     node      {\{:connect, lnk\}}       (net)
                          edge       []             node       {:quit}                   (final)
-                (net)    edge       [loop above, every loop/.append style={looseness=10,in=20, out=80 }]   node[anchor=west] {\%Netw\{dst: id, msg: msg\}}(net)
+                (net)    edge       [loop above, every loop/.append style={looseness=10,in=20, out=80 }]   node[anchor=west] {netw(dst: id, msg: msg)}(net)
                          edge       [loop above, every loop/.append style={looseness=10,in=100, out=160 }] node[anchor=east] {\{:send, to, msg\}}    (net)
-                         edge       [loop below, every loop/.append style={looseness=6,in=340, out=280 }]  node              {\&Netw\{\}}             (net)
+                         edge       [loop below, every loop/.append style={looseness=6,in=340, out=280 }]  node              {netw()}             (net)
                          edge       []                                                                     node              {:quit}                 (final);
     
 \end{tikzpicture}
@@ -349,14 +353,14 @@ end
 def network(master, id, link) do
    receive do
      {:send, to, msg} ->
-       send(link, {:send, %Netw{src: id, dst: to,  data: msg}})
+       send(link, {:send, netw(src: id, dst: to,  data: msg)})
        network(master, id, link)
 
-     %Netw{dst: ^id, data: msg} ->
+     netw(dst: ^id, data: msg) ->
        send(master, msg)
        network(master, id, link)
 
-     %Netw{} ->
+     netw() ->
        network(master, id, link)
 
      :quit ->
@@ -399,9 +403,9 @@ def network(master, id, link) do
     \path[->, bend right]  (master)   edge     node[anchor=east]    {\{:send, msg\}}                            (order);
     \path[->, bend right]  (order)    edge     node[anchor=west]    {msg}                                       (master);
 
-    \path[->, bend right=65, looseness=1.4]  (order)    edge     node[anchor=east]    {\{:send, to, \%Ord\{seq: n, data: msg\}\}} (network);
-    \path[->, bend right=65, looseness=3]  (network)  edge     node[anchor=west]    {\%Ord\{seq: i,  data: msg\}}               (order);    
-    \path[->, bend left]              (network)  edge     node[anchor=west]    {\%Ack\{seq: a\}}                          (order);    
+    \path[->, bend right=65, looseness=1.4]  (order)    edge     node[anchor=east]    {\{:send, to, ord(seq: n, data: msg)\}} (network);
+    \path[->, bend right=65, looseness=3]  (network)  edge     node[anchor=west]    {ord(seq: i,  data: msg)}               (order);    
+    \path[->, bend left]              (network)  edge     node[anchor=west]    {ack(seq: a)}                          (order);    
 \end{tikzpicture}
 
 \pause
@@ -421,11 +425,11 @@ def network(master, id, link) do
     
     \path[->]   (init)   edge       [bend left]  node                                  {\{:connect, lnk\}}   (ready)
                          edge       [bend right] node[anchor=east]                     {:quit}               (final)
-                (ready)  edge       []           node[anchor=south west, near start]   {\{:send, msg\}}      (send)
-                         edge       [loop above] node                                  {\%Ack\{\}}           (ready)
+                (ready)  edge       [bend left]  node[anchor=south west, near start]   {\{:send, msg\}}      (send)
+                         edge       [loop above] node                                  {ack()}           (ready)
                          edge       [] node[anchor=east]                               {:quit}               (final)              
                 (send)   edge       [loop below, every loop/.append style={looseness=6,in=340, out=30 }] node[anchor=west] {timeout}  (send)   
-                         edge       [bend left]  node[near start, anchor=north east]   {\%Ack\{seq: i\}}     (ready)
+                         edge       [bend left]  node[near start, anchor=north east]   {ack(seq: i)}     (ready)
                          edge       [bend left]  node                                  {:quit}               (final);
 \end{tikzpicture}
   
@@ -442,8 +446,8 @@ def network(master, id, link) do
     
     \path[->]   (init)   edge       [bend left]                  node              {\{:connect, lnk\}}   (receive)
                          edge       [below, bend right]          node[anchor=east] {:quit}               (final)
-               (receive)   edge     [loop above, every loop/.append style={looseness=6,in=20, out=80}]   node[anchor=west] {\%Ord\{seq: i\}} (receive)
-                         edge       [loop below, every loop/.append style={looseness=6,in=340, out=280}] node[anchor=west] {\%Ord\{seq: j\} if $j<i$}  (receive)
+               (receive)   edge     [loop above, every loop/.append style={looseness=6,in=20, out=80}]   node[anchor=west] {ord(seq: i)} (receive)
+                         edge       [loop below, every loop/.append style={looseness=6,in=340, out=280}] node[anchor=west] {ord(seq: j) if $j<i$}  (receive)
                          edge       []                                                                   node              {:quit}                   (final);
 \end{tikzpicture}
   
@@ -455,16 +459,16 @@ def network(master, id, link) do
 \begin{verbatim}
   def order(master, to, n, i, [], netw) do
     receive do
-      %Ord{seq: ^i, data: msg} ->
-        send(netw, {:send, to, %Ack{seq: i}})
+      ord(seq: ^i, data: msg) ->
+        send(netw, {:send, to, ack(seq: i)})
         send(master, msg)
         order(master, to, n, i+1, [], netw)
         
       :
          
       {:send, msg} ->
-        send(netw, {:send, to, %Ord{seq: n, data: msg}})
-        order(master, to, n+1, I, [{n,Msg}], netw);
+        send(netw, {:send, to, ord(seq: n, data: msg)})
+        order(master, to, n+1, I, [{n, msg}], netw);
     end
   end
 \end{verbatim}
@@ -477,7 +481,7 @@ def network(master, id, link) do
   def order(master, to, n, i, [{a,res}|rest]=buffer, netw) do
     receive do
        :
-      %Ack{seq: ^a} ->
+      ack(seq: ^a) ->
         order(master, to, n, i, rest, netw)
 
        :
@@ -485,7 +489,7 @@ def network(master, id, link) do
        :
                 
     after 10 ->
-        dgr = %Ord{seq: a, data: res}
+        dgr = ord(seq: a, data: res)
         send(netw, {:send, to, dgr})
         order(master, to, n, i, buffer, netw)
     end
@@ -512,9 +516,9 @@ def network(master, id, link) do
   \item {\tt \{:read, n, pid\}} 
 
 
-  \item {\tt \%Msg\{data: msg\}}
+  \item {\tt msg(data: msg)}
 
-  \item {\tt \%Syn\{add: a\}}
+  \item {\tt syn(add: a)}
 
       
 \end{itemize}
@@ -539,9 +543,9 @@ def network(master, id, link) do
     \path[->, bend left]  (master)  edge     node[anchor=east]    {\{:read, n, pid\}}                         (flow);    
     \path[->, bend right=65, looseness=3]  (flow)    edge     node[anchor=west]    {\{:ok, i, [msg]\}}                          (master);
 
-    \path[->, bend right=65, looseness=1.4]  (flow)    edge     node[anchor=east]    {\{:send, \%Msg\{data: msg\}\}} (order);
-    \path[->, bend right=65, looseness=3]  (order)  edge     node[anchor=west]    {\%Msg\{data: msg\}}               (flow);    
-    \path[->, bend left]              (order)  edge     node[anchor=west]    {\%Syn\{add: a\}}                          (flow);    
+    \path[->, bend right=65, looseness=1.4]  (flow)    edge     node[anchor=east]    {\{:send, msg(data: msg)\}} (order);
+    \path[->, bend right=65, looseness=3]  (order)  edge     node[anchor=west]    {msg(data: msg)}               (flow);    
+    \path[->, bend left]              (order)  edge     node[anchor=west]    {syn(add: a)}                          (flow);    
 \end{tikzpicture}
   
   
@@ -558,11 +562,11 @@ def network(master, id, link) do
     
     \path[->]   (init)   edge       [bend left]  node               {\{:connect, net\}}       (ready)
                          edge       [bend right] node[anchor=east]  {:quit}                   (final)
-                (ready)  edge       [bend right] node[anchor=east]  {\%Syn\{\}}               (send)
+                (ready)  edge       [bend right] node[anchor=east]  {syn()}               (send)
                          edge       [bend right] node[anchor=east]  {:quit}                   (final)                   
-                (send)   edge       [bend right] node[anchor=west]  {\{send, Msg, Pid\}}      (ready)
-                         edge       [loop below, every loop/.append style={looseness=6,out=80, in=10 }]   node[anchor=west, near end]  {{\{send, Msg, Pid\}}}   (send)   
-                         edge       [loop below, every loop/.append style={looseness=6,out=340, in=280 }] node[anchor=north west] {\%Syn\{\}}     (send)
+                (send)   edge       [bend right] node[anchor=west]  {\{send, msg, pid\}}      (ready)
+                         edge       [loop below, every loop/.append style={looseness=6,out=80, in=10 }]   node[anchor=west, near end]  {{\{send, msg, pid\}}}   (send)   
+                         edge       [loop below, every loop/.append style={looseness=6,out=340, in=280 }] node[anchor=north west] {syn()}     (send)
                          edge       [bend left]               node  {quit}    (final);
 \end{tikzpicture}
   
@@ -579,7 +583,7 @@ def network(master, id, link) do
     
     \path[->]   (init)   edge  [bend left]     node                  {\{:connect, net\}}        (receive)
                          edge  [below, bend right] node[anchor=east] {:quit}                    (final)
-              (receive)  edge  [loop above, every loop/.append style={looseness=6,in=20, out=80 }] node[anchor=west]   {\%Msg\{data: msg\}}   (receive)
+              (receive)  edge  [loop above, every loop/.append style={looseness=6,in=20, out=80 }] node[anchor=west]   {msg(data: msg)}   (receive)
                          edge  [loop above, every loop/.append style={looseness=6,in=300, out=0 }] node[anchor=west]   {\{:read, n, pid\}}     (receive)
                          edge  []              node                  {:quit}                    (final);
 \end{tikzpicture}
