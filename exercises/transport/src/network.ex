@@ -1,5 +1,10 @@
 defmodule Network do
 
+  require Record
+
+  Record.defrecord(:netw, src: 0, dst: 0, data: nil)
+
+  
  def start(master, id) do
    con = spawn(fn() -> init(master, id) end)
    {:ok, con}
@@ -19,16 +24,16 @@ defmodule Network do
  def network(master, id, link) do
    receive do
      {:send, to, msg} ->
-       ##IO.puts("network #{id} sending #{msg} to #{to}")
-       send(link, {:send, %Netw{src: id, dst: to,  data: msg}})
+       ##:io.format("network ~w sending ~w to ~w\n", [id, msg, to])
+       send(link, {:send, netw(src: id, dst: to,  data: msg)})
        network(master, id, link)
 
-     %Netw{dst: ^id, data: msg} ->
-       ##IO.puts("network #{id} receiving #{msg}")
+     netw(dst: ^id, data: msg) ->
+       ##:io.puts("network ~w receiving ~w\n", [id, msg])
        send(master, msg)
        network(master, id, link)
 
-     %Netw{} ->
+     netw() ->
        network(master, id, link)
 
      {:master, new} ->

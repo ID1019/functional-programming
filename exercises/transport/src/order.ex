@@ -1,6 +1,12 @@
 defmodule Order do
 
+  require Record
 
+  Record.defrecord(:ord, seq: 0, data: nil)
+
+  Record.defrecord(:ack, seq: 0)
+  Record.defrecord(:dgr, seq: 0, data: [])
+  
   def start(master, to) do
     {:ok, spawn(fn() -> init(master, to) end)}
   end
@@ -17,20 +23,20 @@ defmodule Order do
   def order(master, to, n, i, [], netw) do
     receive do
 	
-      %Ord{seq: ^i, data: msg} ->
-	send(netw, {:send, to, %Ack{seq: i}})
+      ord(seq: ^i, data: msg) ->
+	send(netw, {:send, to, ack(seq: i)})
 	send(master, msg)
 	order(master, to, n, i+1, [], netw)
 	
-     %Ord{seq: j} when j < i ->
-	send(netw, {:send, to, %Ack{seq: j}})
+     ord(seq: j) when j < i ->
+	send(netw, {:send, to, ack(seq: j)})
 	order(master, to, n, i, [], netw)
 
-      %Ack{} ->
+      ack() ->
 	order(master, to, n, i, [], netw)
 
       {:send, msg} ->
-	send(netw, {:send, to, %Ord{seq: n, data: msg}})
+	send(netw, {:send, to, ord(seq: n, data: msg)})
 	order(master, to, n+1, i, [{n,msg}], netw);
 
       {:master, new} ->
@@ -40,31 +46,31 @@ defmodule Order do
   def order(master, to, n, i, [{a,res}|rest]=buffer, netw) do
     receive do
 
-      %Ord{seq: ^i, data: msg} ->
-	send(netw, {:send, to, %Ack{seq: i}})
+      ord(seq: ^i, data: msg) ->
+	send(netw, {:send, to, ack(seq: i)})
 	send(master, msg)
 	order(master, to, n, i+1, buffer, netw)
 
-      %Ord{seq: j} when j < i ->
-	send(netw, {:send, to, %Ack{seq: j}})	    
+      ord(seq: j) when j < i ->
+	send(netw, {:send, to, ack(seq: j)})
 	order(master, to, n, i, buffer, netw)
 
-      %Ack{seq: ^a} ->
+      ack(seq: ^a) ->
 	order(master, to, n, i, rest, netw)
 
-      %Ack{seq: b} when b < a ->
+      ack(seq: b) when b < a ->
 	order(master, to, n, i, buffer, netw);
 
       {:send, msg} ->
-	send(netw,{:send, to, %Ord{seq: n, data: msg}})
+	send(netw,{:send, to, ord(seq: n, data: msg)})
 	order(master, to, n+1, i, buffer++[{n,msg}], netw)
 
       {:master, new} ->
 	order(new, to, n, i, buffer, netw)
 		
     after 10 ->
-	dgr = %Ord{seq: a, data: res}
-	##IO.puts("order to #{to} resending #{dgr}")
+	dgr = ord(seq: a, data: res)
+	##:io.format("order to ~w resending ~w\", [to, dgr])
 	send(netw, {:send, to, dgr})
 	order(master, to, n, i, buffer, netw)
     end

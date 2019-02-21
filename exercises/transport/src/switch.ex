@@ -1,9 +1,10 @@
 defmodule Switch do
 
+  require Network
+  
   def start() do
     {:ok, spawn(fn() -> init() end)}
   end
-
 
   def new(switch) do
     send(switch, {:new, self()})
@@ -36,10 +37,10 @@ defmodule Switch do
       {:frw, src, dst, from, msg} ->
 	case List.keyfind(cache, dst, 0) do
 	  {^dst, to} ->
-	    IO.puts("switch: forward msg #{msg}")
+	    :io.formats("switch: forward msg ~w\n", [msg])
 	    send(to, {:frw, msg})
 	  nil ->
-	    IO.puts("switch: broadcast #{msg}")
+	    :io.format("switch: broadcast ~w\n", [msg])
  	    Enum.each(all, fn(cn) -> send(cn, {:frw, msg}) end)
 	end
 	rest = List.keydelete(cache, src, 0)
@@ -66,7 +67,7 @@ defmodule Switch do
   def connection(switch, lnk) do
     receive do
 
-      %Netw{src: src, dst: dst}=msg ->
+      Network.netw(src: src, dst: dst)=msg ->
 	##:io.format("switch connection received: ~w~n", [msg])
 	send(switch, {:frw, src, dst, self(), msg})
 	connection(switch, lnk)

@@ -1,5 +1,7 @@
 defmodule Nub do
 
+  require Link
+  
   def start() do
     {:ok, spawn(fn() -> init(0) end)}
   end
@@ -30,9 +32,9 @@ defmodule Nub do
 	:io.format("nub ~w: died ~w~n", [self(), ref])
 	hub(loss, List.keydelete(connected, ref, 0))
 
-      %Frame{} = frm ->
+      Link.frame() = frm ->
 	if :rand.uniform(100) <= loss do
-	    ##IO.puts("nub: throwing away #{frm}")
+	    :io.format("nub: throwing away ~w\n", [frm])
 	    :ok
 	else
 	  Enum.each(connected, fn({_,pid}) -> send(pid, frm) end)

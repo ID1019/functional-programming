@@ -1,5 +1,9 @@
 defmodule Link do
 
+  require Record
+
+  Record.defrecord(:frame, data: nil)
+
   def start(master) do
     {:ok, spawn(fn() -> init(master) end)}
   end
@@ -17,11 +21,11 @@ defmodule Link do
   def link(master, lnk) do
     receive  do
       {:send, msg} ->
-	send(lnk, %Frame{data: msg})
+	send(lnk, frame(data: msg))
 	link(master, lnk)
 
-      %Frame{data: msg} = frm ->
-	##IO.puts("link receiving #{frm}")
+      frame(data: msg) ->
+	##:io.format("link receiving ~w\n", [frm])
 	send(master, msg)
 	link(master, lnk)
 

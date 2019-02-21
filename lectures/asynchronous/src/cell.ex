@@ -4,6 +4,11 @@ defmodule Cell do
     {:cell, spawn_link(fn() -> init(val) end)}
   end
 
+  def remote(node, val) do
+    {:cell, Node.spawn_link(node, fn() -> init(val) end)}
+  end
+  
+  
   def read({:cell, cell}) do
     send(cell , {:read, self()})
     receive do
@@ -20,6 +25,10 @@ defmodule Cell do
     end
   end
 
+  def quit({:cell, cell}) do
+    send(cell, :quit)
+  end  
+  
   def init(val) do        ## things to do in the child process
     cell(val)
   end
@@ -32,6 +41,8 @@ defmodule Cell do
       {:write, w, pid} ->
 	send(pid, :ok)
 	cell(w)
+      :quit ->
+	:ok
     end
   end
 

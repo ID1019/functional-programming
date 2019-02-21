@@ -126,7 +126,7 @@ defmodule Test do
   
   def sender_flow(0, _) do :ok end
   def sender_flow(i, n) do
-    IO.puts("sender sending #{i} ")
+    :io.format("sender sending ~w\n", [i])
     send(n, {:send, "message #{i}" , self()})
     receive  do
       :ok ->
@@ -139,7 +139,7 @@ defmodule Test do
     send(n, {:read, 1, self()})
     receive do
       {:ok, l, msg} ->
-	IO.puts("receiver received #{l}  #{msg}")
+	:io.format("receiver received ~w\n", [msg])
 	receiver_flow(i-l,n)
     end
   end
@@ -155,14 +155,14 @@ defmodule Test do
   def receiver_order(i,n) do
     receive do
       msg ->
-	IO.puts("receiver received #{msg}")
+	:io.format("receiver received ~w\n", [msg])
 	receiver_order(i-1,n)
     end
   end
 
   def sender_netw(0, _, _) do :ok end
   def sender_netw(i, t, n) do
-    IO.puts("sender sending #{i} ")
+    :io.format("sender sending ~w\n", [i])
     send(n, {:send, t, i})
     sender_netw(i-1, t, n)
   end
@@ -171,7 +171,7 @@ defmodule Test do
   def receiver_netw(i, t, n) do
     receive do
       msg ->
-	IO.puts("receiver received #{msg}")
+	:io.format("receiver received ~w\n", [msg])
 	receiver_netw(i-1, t, n)
     end
   end
@@ -187,7 +187,7 @@ defmodule Test do
   def receiver_link(i, n) do
     receive do
       msg ->
-	IO.puts("receiver received #{msg}")
+	:io.format("receiver received ~w\n", [msg])
 	receiver_link(i-1, n)
     end
   end
