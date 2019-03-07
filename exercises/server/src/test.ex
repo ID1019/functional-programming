@@ -1,6 +1,6 @@
 defmodule Test do
 
-  @number_requests 100
+  @number_requests 100  ## per client
   @number_clients 4
 
   def parse(n) do
@@ -17,33 +17,45 @@ defmodule Test do
 
   
   def bench(host, port) do
-    bench(host, port, @number_requests)
+    bench(host, port, @number_requests * @number_clients)
   end
   
   def bench(host, port, requests) do
     t0 = :erlang.monotonic_time(:millisecond)
-    run(requests, host, port)
-    t1 = :erlang.monotonic_time(:millisecond)
-    IO.puts("Benchmark: #{requests} requests in #{t1-t0} ms")
+    case  run(requests, host, port) do
+      :ok ->
+	t1 = :erlang.monotonic_time(:millisecond)
+	IO.puts("Benchmark: #{requests} requests in #{t1-t0} ms")
+      :error ->
+	IO.puts("Benchmark: failed")
+    end
   end
 
   defp run(0, _host, _port), do: :ok
   defp run(n, host, port) do
-    request(host, port)
-    run(n - 1, host, port)
+    case request(host, port) do
+      :ok ->
+	run(n - 1, host, port)
+      :error ->
+	:error
+    end
   end
 
   defp request(host, port) do
     opt = [:list, active: false, reuseaddr: true]
-    {:ok, server} = :gen_tcp.connect(host, port, opt)
-    :gen_tcp.send(server, HTTP.get("foo"))
-    case :gen_tcp.recv(server, 0) do
-      {:ok, _reply} ->
-	:ok
+    case :gen_tcp.connect(host, port, opt) do
+      {:ok, server} ->
+	:gen_tcp.send(server, HTTP.get("/foo.html"))
+	case :gen_tcp.recv(server, 0) do
+	  {:ok, _reply} ->
+	    :ok
+	  {:error, _reason} ->
+	    :error
+	end
+	:gen_tcp.close(server)
       {:error, _reason} ->
-	:hmm
+	:error
     end
-    :gen_tcp.close(server)
   end
 
   def parallel(host, port) do
@@ -56,7 +68,7 @@ defmodule Test do
     par(clients, host, port, requests, me)
     all = barrier(clients, [])
     t1 = :erlang.monotonic_time(:millisecond)
-    IO.puts("Benchmark: #{@number_clients} clients, #{@number_requests} requests in #{t1-t0} ms")
+    IO.puts("Benchmark: #{clients} clients, #{requests} requests each, in #{t1-t0} ms")
     all
 end    
   

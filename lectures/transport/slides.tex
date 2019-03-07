@@ -110,7 +110,7 @@ Each layers provides an {\em abstraction} that the layer above can make use of.
 
     \path[->, bend right]  (master)   edge        node[anchor=east]          {\{:send, msg\}}       (link1);
     \path[->, bend right]  (link1)   edge        node[anchor=west]          {msg}       (master);
-    \path[<->]  (link1)   edge        node[above]          {\frame(data: msg)}       (link2);    
+    \path[<->]  (link1)   edge        node[above]          {frame(data: msg)}       (link2);    
 \end{tikzpicture}
 
 \end{frame}
@@ -468,7 +468,7 @@ def network(master, id, link) do
          
       {:send, msg} ->
         send(netw, {:send, to, ord(seq: n, data: msg)})
-        order(master, to, n+1, I, [{n, msg}], netw);
+        order(master, to, n+1, i, [{n, msg}], netw);
     end
   end
 \end{verbatim}
@@ -564,8 +564,8 @@ def network(master, id, link) do
                          edge       [bend right] node[anchor=east]  {:quit}                   (final)
                 (ready)  edge       [bend right] node[anchor=east]  {syn()}               (send)
                          edge       [bend right] node[anchor=east]  {:quit}                   (final)                   
-                (send)   edge       [bend right] node[anchor=west]  {\{send, msg, pid\}}      (ready)
-                         edge       [loop below, every loop/.append style={looseness=6,out=80, in=10 }]   node[anchor=west, near end]  {{\{send, msg, pid\}}}   (send)   
+                (send)   edge       [bend right] node[anchor=west]  {\{:send, msg, pid\}}      (ready)
+                         edge       [loop below, every loop/.append style={looseness=6,out=80, in=10 }]   node[anchor=west, near end]  {{\{:send, msg, pid\}}}   (send)   
                          edge       [loop below, every loop/.append style={looseness=6,out=340, in=280 }] node[anchor=north west] {syn()}     (send)
                          edge       [bend left]               node  {quit}    (final);
 \end{tikzpicture}

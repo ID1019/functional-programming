@@ -1,6 +1,6 @@
 defmodule Trudy do
 
-  @handlers 4
+  @handlers 8
   @name :trudy
 
   def start(port) do
@@ -91,13 +91,11 @@ defmodule Trudy do
     case recv do
       {:ok, str} ->
         request = HTTP.parse_request(str)
-        response = reply_file(request)
+        response = reply(request)
         :gen_tcp.send(client, response)
-
       {:error, error} ->
         IO.puts("RUDY ERROR: #{error}")
     end
-
     :gen_tcp.close(client)
   end
 
@@ -110,14 +108,7 @@ defmodule Trudy do
 
 
   defp reply_file({{:get, uri, _}, _, _}) do
-    IO.puts("request #{uri}")
-    [?/ | file] = uri
-    case File.read(file) do
-      {:ok, body} ->
-	HTTP.ok(body);
-      _ ->
-	HTTP.fourofour()
-    end
+    Web.reply(uri)
   end
 
 end

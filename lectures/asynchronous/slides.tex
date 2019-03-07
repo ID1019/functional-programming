@@ -42,7 +42,7 @@ defmodule Mem do
 \end{verbatim} \pause
 \begin{verbatim}
   def read({:mem, mem}, n) do
-    elemt(mem, n)
+    elem(mem, n)
   end
 \end{verbatim} \pause
 \begin{verbatim}
@@ -439,11 +439,11 @@ end
 
 \begin{frame}[fragile]{asynchronous communication}
 
-Messages in Erlang is a form of {\em asynchronous communication}.
+Messages in Elixir/Erlang is a form of {\em asynchronous communication}.
 
 \pause\vspace{20pt}
 \begin{verbatim}
-  send(pid, {:take, self()}
+  send(pid, {:take, self()})
 \end{verbatim}
 
 \pause\vspace{20pt}
@@ -455,7 +455,7 @@ The sender does not block and wait for the receiver to accept the message.
 \begin{frame}[fragile]{synchronous communication}
 
 We can implement {\em synchronous communication}
-\pause\vspace{20pt}
+\pause\vspace{5pt}
 
 \begin{columns}
  \begin{column}{0.5\linewidth}
@@ -549,10 +549,11 @@ def cell(v) do
     {:read, ref, pid} ->
        send(pid, {:value, ref, v})
        cell(v)
-    {:write, w, pid} ->
+    {:write, w, ref, pid} ->
+       send(pid, {:ok, ref})
        cell(w)
     :quit ->
-       ok
+       :ok
   end
 end
 \end{verbatim}
@@ -562,6 +563,8 @@ end
 
 \begin{frame}[fragile]{an asynchrounous memory}
 
+\begin{columns}
+ \begin{column}{0.6\linewidth}  
 \begin{verbatim}
 def redrum({:cell, cell}) do
   ref = make_ref()
@@ -578,8 +581,20 @@ def murder(ref) do
   end
 end
 \end{verbatim}
+ \end{column}
+ \pause
+ \begin{column}{0.4\linewidth}
+\begin{verbatim}  
+   :
+ ref = redrum(cell) 
+   :
+   :
+ val = murder(ref)
+   :
+\end{verbatim}
 
-
+ \end{column}
+\end{columns}
 \end{frame}
 
 
