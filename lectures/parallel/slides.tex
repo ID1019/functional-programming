@@ -216,7 +216,7 @@ def fix(n, _) do fib(n) end
 \begin{frame}[fragile]{finding the granularity}
 
 \begin{verbatim}
-> Fib.bench(2).
+> Fib.bench(40,20).
 fib(40)  sequential: 7000 ms
 fix(40,38) : 2900 ms
 fix(40,36) : 1100 ms
@@ -247,7 +247,7 @@ ok
 \pause
 \begin{column}{0.5\linewidth}
 \begin{verbatim}
-> fib:bench(2).
+> Fib.bench(40,20).
 fib(40)  sequential: 7000 ms
 fix(40,38) : 0 ms
 fix(40,36) : 0 ms
