@@ -9,6 +9,7 @@ DIRS = 	asynchronous \
 	higher \
 	interpreter \
 	introduction \
+	lambda \
 	overview \
 	parallel \
 	recursion \
