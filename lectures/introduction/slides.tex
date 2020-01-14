@@ -24,13 +24,13 @@
      \pause \item {variables:} {\tt x}, {\tt y}, {\tt foo}, ..
      \pause \item {integer:} {\tt 1}, {\tt 23}, ..
      \pause \item {float:} {\tt 1.0}, {\tt 23.45}, ..
-     \pause \item {bool:} {\tt true}, {\tt false}, ..
+     \pause \item {bool:} {\tt true}, {\tt false} 
    \end{itemize}
  \end{column}
  \begin{column}{0.6\linewidth}
   \begin{itemize}
     \pause \item {binary operations:} {\tt +},{\tt -},{\tt *},{\tt /}, ..
-    \pause \item {arithmetic functions:} {\tt div/2},{\tt rem/2},{\tt *}, ..   
+    \pause \item {arithmetic functions:} {\tt div/2}, {\tt rem/2}, {\tt *}, ..   
     \pause \item {comparison:} {\tt ==}, {\tt !=}, ..
     \pause \item {boolean operators:} {\tt and}, {\tt or}, ..
   \end{itemize}
@@ -54,9 +54,9 @@
 \vspace{20pt}{\em Can we give names to functions?}  
 \end{frame}
 
-\begin{frame}{Moudles}
+\begin{frame}[fragile]{Modules}
 
-  \begin{code}
+  \begin{verbatim}
     defmodule Test do
 
     def to_celsius(fahren) do
@@ -64,23 +64,54 @@
     end
 
     end
-  \end{code}
-  
-
+  \end{verbatim}
 
 \end{frame}
 
+\begin{frame}[fragile]{recursion}
+
+\begin{verbatim}
+  def fib(n) do 
+      :
+      :
+  end
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{atoms}
+
+\begin{verbatim}
+ def roman(number) do 
+   case number of
+     :i -> 1
+     :v -> 5
+     :x -> 10
+   end
+ end   
+\end{verbatim}
+\end{frame}
 
 
+\begin{frame}{tuples}
 
-
-
-\begin{frame}{compound structures}
  \begin{itemize}
   \pause \item {tuples:} {\tt \{\}, \{:foo, :bar\}, \{:a, 42, true\}}
-  \pause \item {lists:} [], [1|[]], [1,:a,3,4]  (more on this later)
  \end{itemize}
+
 \end{frame}
+
+
+\begin{frame}[fragile]{patterns}
+
+\begin{verbatim}
+   def name({:person, name, number} do name end
+
+   def number({:person, name, number} do number end
+\end{verbatim}
+
+\end{frame}
+
 
 
 \end{document}
