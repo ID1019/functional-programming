@@ -246,7 +246,7 @@ the first matching that must be consisting with the second matching.
 
 $$\frac{P\sigma(p_1, s_1) \rightarrow \sigma' \wedge P\sigma'(p_2, s_2) \rightarrow \theta}{P\sigma(\lbrace p_1, p_2 \rbrace  , \lbrace s_1, s_2 \rbrace) \rightarrow \theta}$$
 
-We here implicity state that the pattern matching succeeds. If the first matching fails the matching of the whole structure fails.
+We here implicitly state that the pattern matching succeeds. If the first matching fails the matching of the whole structure fails.
 
 $$\frac{P\sigma(p_1, s_1) \rightarrow {\rm fail} }{P\sigma(\lbrace p_1, p_2 \rbrace  , \lbrace s_1, s_2 \rbrace) \rightarrow {\rm fail}}$$
 
@@ -312,9 +312,9 @@ $$\frac{
 
 A sequence consist of one or more patter matching expressions followed
 by an expression, so the rule will terminate once we reach the final
-expression. Note that we also here implicity require that the
+expression. Note that we also here implicitly require that the
 evaluation of $e$ succeeds i.e. $t \in Structs$. If the evaluation
-returns $\perp$ the whole evalation fails.
+returns $\perp$ the whole evaluation fails.
 
 
 $$\frac{   
@@ -481,8 +481,8 @@ $${\rm Closures} = \{\langle p:s:e \rangle \quad | \quad p \in {\rm Par} \wedge 
 
 $${\rm Structures} = {\rm Closures} \cup ..$$
 
-We have not formally defined what the set of paramters, sequences nor
-environmens are but the informal description will work for our
+We have not formally defined what the set of parameters, sequences nor
+environments are but the informal description will work for our
 purposes.
 
 The environment of a closure is constructed by taking the bindings of
