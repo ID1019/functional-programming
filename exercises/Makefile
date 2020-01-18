@@ -13,6 +13,7 @@ DIRS =  avl \
 	operational \
 	philosophers \
 	server \
+	semantics \
 	splay \
 	tracer \
 	transport \
