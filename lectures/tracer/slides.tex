@@ -103,7 +103,7 @@ We first need a module to handle vector arithmetic:
   \begin{itemize}
    \item $\|\vec{x}\|$ : norm, or length, of a vector
    \item $\vec{x} \cdot \vec{y}$ : scalar product (dot product)
-   \item $|\vec{x}|$ : normalized vector $|\vec{x}| = \vec{x}/\|\vec{x}\|$
+   \item $\hat{x}$ : normalized vector $\hat{x} = \vec{x}/\|\vec{x}\|$
   \end{itemize}
   \end{column}
  \end{columns}
@@ -111,7 +111,7 @@ We first need a module to handle vector arithmetic:
 \vspace{40pt}
 
 \pause {\em The notation for a normalized vector differ, sometimes it
-  is written as $\hat{x}$}
+  is written as $|\vec{x}|$}
 
 \end{frame}
 
@@ -205,7 +205,7 @@ We now define how to represent object and rays.
     \draw[axis] (-1,0)  -- (10,0) node(xline)[right] {$x$};
     \draw[axis] (0,-1) -- (0,10) node(yline)[above] {$y$};
     \draw[fill] (3,4) node(o)[below left]{$\vec{o}$} circle (4pt);
-    \draw[pile] (3,4)  -- (4,6) node()[right]{$\vec{l}$};
+    \draw[pile] (3,4)  -- (4,6) node()[right]{$\hat{l}$};
     \draw[dashed] (3,4) -- (7,12);
    \end{tikzpicture}
   \end{figure}  
@@ -355,7 +355,7 @@ Note, access is lg(n) of number of properties, not as efficent as tuples nor rec
 
     \draw<2-|handout:1> [dashed](4,-3) -- (11,11); 
 
-    \draw<3-|handout:1> [thick,pile](4,-3) -- (5,-1) node(l)[right]{$\vec{l}$};  
+    \draw<3-|handout:1> [thick,pile](4,-3) -- (5,-1) node(l)[right]{$\hat{l}$};  
 
     \draw<4-|handout:1>  (7,3) node(i1)[below right]{$\vec{i_1}$};
     \draw<4-|handout:1>  (9,6) node(i1)[right]{$\vec{i_2}$};
@@ -385,11 +385,11 @@ Note, access is lg(n) of number of properties, not as efficent as tuples nor rec
   \pause
   \begin{itemize}
    \uncover<6-|handout:1>{\item $\vec{k} =  \vec{c} - \vec{o}$}
-   \uncover<7-|handout:1>{\item $a = \vec{l}\cdot\vec{k}$}
+   \uncover<7-|handout:1>{\item $a = \hat{l}\cdot\vec{k}$}
    \uncover<9-|handout:1>{\item $\|k\|^2 = a^2 + h^2$}
    \uncover<12-|handout:1>{\item ${r}^2 =  h^2 + t^2$}
    \uncover<13-|handout:1>{\item $ t^2 = {a}^2  - \|k\|^2   + {r}^2 $}
-   \uncover<14-|handout:1>{\item $\vec{i} = \vec{o} + d \vec{l}$}
+   \uncover<14-|handout:1>{\item $\vec{i} = \vec{o} + d \hat{l}$}
    \uncover<15-|handout:1>{\item $ d_i = a\pm t$}
    \uncover<16-|handout:1>{\item if $d_i < 0$ then $\vec{i_i}$ is {\em behind} the origin $\vec{o}$}
   \end{itemize}
@@ -426,7 +426,7 @@ end
 \pause
  \begin{column}{0.4\linewidth}
 $$\vec{k} =  \vec{c} - \vec{o}$$
-$$a = \vec{l}\cdot\vec{k}$$
+$$a = \hat{l}\cdot\vec{k}$$
 
 $${t}^2 = {a}^2 - \|k\|^2 + {r}^2 $$
  \end{column}

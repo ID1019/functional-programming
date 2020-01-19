@@ -137,7 +137,7 @@ following operations.
  \item $\vec{x} + \vec{y}$ : addition
  \item $\|\vec{x}\|$ : norm, or length, of a vector
  \item $\vec{x} \cdot \vec{y}$ : scalar product (dot product)
- \item $|\vec{x}|$ : normalized vector
+ \item $\hat{x}$ : normalized vector
 \end{itemize}
 
 If we restrict the system to only work with three dimensional vectors
@@ -182,7 +182,7 @@ $$\|\vec{x}\| = \sqrt{x_1^2 + x_2^2 + x_3^2}$$
 
 $$ \vec{x} \cdot \vec{y} = \langle x_1\cdot y_1 + x_2\cdot y_2 + x_3\cdot y_3\rangle $$ 
 
-$$ |\vec{x}| = \vec{x}/\|\vec{x}\|$$
+$$ \hat{x} = \vec{x}/\|\vec{x}\|$$
 
 In this implementation we actually expose the representation of a
 vector i.e. the users of this module will know that vectors are
@@ -304,7 +304,7 @@ linear algebra.
 
     \draw [dashed](4,-3) -- (11,11); 
 
-    \draw [thick,pile](4,-3) -- (5,-1) node(l)[right]{$\vec{l}$};  
+    \draw [thick,pile](4,-3) -- (5,-1) node(l)[right]{$\hat{l}$};  
 
     \draw  (6,2) node(i1)[below right]{$\vec{i_1}$};
     \draw  (9.5,8) node(i2)[right]{$\vec{i_2}$};
@@ -333,8 +333,8 @@ linear algebra.
 In Fig.~\ref{fig:intersection} we see a ray intersecting a circle. We
 want to find the intersection points $\vec{i_1}$ and $\vec{i_1}$.We
 can do this by first calculate the length $a$ and this is done by taking
-the dot product of $\vec{k}$ and $\vec{l}$. The dot product will
-project the vector $\vec{k}$ on $\vec{l}$ thus giving us the
+the dot product of $\vec{k}$ and $\hat{l}$. The dot product will
+project the vector $\vec{k}$ on $\hat{l}$ thus giving us the
 length $a$. The vector $\vec{k}$ is of course easily calculated since we
 know the origin of the ray $\vec{o}$ and the center of the circle
 $\vec{c}$.
