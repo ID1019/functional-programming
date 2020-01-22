@@ -108,12 +108,12 @@ An evaluation can also result in $\perp$, called ``bottoms'', this represents a 
 For every atom {\tt a}, there is a corresponding structure $s$.
 
 \vspace{10pt}
-\hspace{40pt}We write ${\rm a} \equiv s$.
+\hspace{40pt}We write ${\rm a} \mapsto s$.
 
 \pause \vspace{10pt}
-\hspace{40pt} {\tt :foo} $\equiv foo$
+\hspace{40pt} {\tt :foo} $\mapsto foo$
 
-\hspace{40pt} {\tt :gurka} $\equiv gurka$
+\hspace{40pt} {\tt :gurka} $\mapsto gurka$
 
 
 \pause \vspace{20pt}
@@ -153,7 +153,7 @@ where {\em result} is a {\em structure}.
 
 We have the following rules for evaluation of expressions:
 
-\vspace{10pt}\pause Evaluation of an atom: $$\frac{a \equiv s}{E\sigma(a) \rightarrow s}$$
+\vspace{10pt}\pause Evaluation of an atom: $$\frac{a \mapsto s}{E\sigma(a) \rightarrow s}$$
 
 \vspace{10pt}\pause Evaluation of a variable: $$\frac{v/s \in \sigma}{E\sigma(v) \rightarrow s}$$
 
@@ -192,7 +192,7 @@ We have the following rules for evaluation of expressions:
   where $\theta$ (theta) is the extended environment.
 
 \pause\vspace{5pt} Match an atom:
-$$\frac{a \equiv s}{P\sigma(a, s) \rightarrow \sigma}$$ 
+$$\frac{a \mapsto s}{P\sigma(a, s) \rightarrow \sigma}$$ 
 
 \pause\vspace{5pt} Match an unbound variable:
 $$\frac{v/t \not\in \sigma}{P\sigma(v, s) \rightarrow \lbrace v/s \rbrace \cup \sigma}$$
@@ -207,16 +207,16 @@ $$\frac{}{P\sigma(\_, s) \rightarrow \sigma}$$
 
 \begin{frame}{matching failure}
 
-\pause\vspace{20pt} What do we do with $P\sigma(a,s)$ when $a \not\equiv s$?
+\pause\vspace{20pt} What do we do with $P\sigma(a,s)$ when $a \not\mapsto s$?
 
 \pause\vspace{20pt}
 
-$$\frac{a \not\equiv s}{P\sigma(a, s) \rightarrow {\rm fail}}$$ 
+$$\frac{a \not\mapsto s}{P\sigma(a, s) \rightarrow {\rm fail}}$$ 
 
 \pause\vspace{20pt}
 
 $$\frac{
-v/t \in \sigma \qquad  t \not\equiv s
+v/t \in \sigma \qquad  t \not\mapsto s
 }{P\sigma(v, s) \rightarrow {\rm fail}}$$ 
 
 
@@ -486,7 +486,7 @@ been done differently.
 
 \vspace{20pt}{\em This is not allowed in our language, \texttt{z} in
   \texttt{\{y,z\}} is a free variable. However .... \pause is allowed
-  in Erlang and was untill changed allowed in Elixir (fixed in v1.5).}
+  in Erlang and was until changed allowed in Elixir (fixed in v1.5).}
 
 \end{frame}
  
