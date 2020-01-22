@@ -41,7 +41,7 @@
 \grammarindent=2cm
 
 
-\newcommand\semester{VT19}
+\newcommand\semester{VT20}
 
 \usetheme{Warsaw}
 
