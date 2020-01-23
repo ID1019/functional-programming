@@ -216,7 +216,7 @@ $$\frac{a \not\mapsto s}{P\sigma(a, s) \rightarrow {\rm fail}}$$
 \pause\vspace{20pt}
 
 $$\frac{
-v/t \in \sigma \qquad  t \not\mapsto s
+v/t \in \sigma \qquad  t \not\equiv s
 }{P\sigma(v, s) \rightarrow {\rm fail}}$$ 
 
 
@@ -270,7 +270,7 @@ We will use failing to guide the program execution, more on this later.
 
   \vspace{10pt}\pause
 
-$$\frac{\sigma' = \sigma \setminus \lbrace v/t \quad | \quad v/t \in \sigma \quad \wedge \quad  v \quad {\rm in} \quad p\rbrace}{S(\sigma, p) \rightarrow \sigma'}$$
+$$\frac{\sigma' = \sigma \setminus \lbrace v/t \quad | \quad v/t \in \sigma \quad \wedge \quad  v \quad {\rm in} \quad p\rbrace}{S\sigma(p) \rightarrow \sigma'}$$
   
 \vspace{10pt}\pause
 
@@ -278,7 +278,7 @@ A sequence is evaluated one pattern matching expression after the other.
 
 $$\frac{   
   E\sigma(e) \rightarrow t
-  \qquad S(\sigma, p) \rightarrow \sigma' 
+  \qquad S\sigma(p) \rightarrow \sigma' 
   \qquad P\sigma'(p, t) \rightarrow \theta
   \qquad E\theta({\rm sequence}) \rightarrow s
 }{E\sigma(p = e; {\rm sequence}) \rightarrow s}$$ 
@@ -368,7 +368,7 @@ $$\frac{E\sigma(e) \rightarrow t \qquad C\sigma(t, {\rm clauses}) \rightarrow s 
 \begin{frame}{selection of a clause}
 
 $$\frac{
-  S(\sigma, p) \rightarrow \sigma' \qquad
+  S\sigma(p) \rightarrow \sigma' \qquad
   P\sigma'(p, s) \rightarrow \theta \qquad
   \theta \not = {\rm fail} \qquad
   E\theta({\rm sequence}) \rightarrow s}{
@@ -377,7 +377,7 @@ C\sigma(s, p \;{\rm ->}\;    {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
 \pause \vspace{10pt}
 
 $$\frac{
-  S(\sigma, p) \rightarrow \sigma'   \qquad
+  S\sigma(p) \rightarrow \sigma'   \qquad
   P\sigma'(p, s) \rightarrow {\rm fail} \qquad
   C\sigma(s, {\rm clauses}) \rightarrow s}{
 C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence} ; {\rm clauses}) \rightarrow s}$$
@@ -385,7 +385,7 @@ C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence} ; {\rm clauses}) \rightarro
 \pause \vspace{10pt}
 
 $$\frac{
-  S(\sigma, p) \rightarrow \sigma' \qquad
+  S\sigma(p) \rightarrow \sigma' \qquad
   P\sigma'(p, s) \rightarrow {\rm fail} }{
 C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence}) \rightarrow \perp}$$
 
