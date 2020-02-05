@@ -5,9 +5,9 @@ defmodule Plane do
   @transparency 0
   @refraction 1.5
 
-  require Ray
   
-  defstruct(pos: {0, 0, 0},
+  defstruct(
+    pos: {0, 0, 0},
     dir1: {1,0,0},
     dir2: {0,1,0},
     ext1: 200,
@@ -16,7 +16,8 @@ defmodule Plane do
     color: @color,
     brilliance: @brilliance,
     transparency: @transparency,
-    refraction: @refraction)
+    refraction: @refraction
+  )
     
 
   defimpl Object do
@@ -25,18 +26,6 @@ defmodule Plane do
       Plane.intersect(plane, ray)
     end
 
-    def color(plane) do
-      plane.color
-    end
-
-    def brilliance(plane) do
-      plane.brilliance
-    end
-
-    def transparency(plane) do
-      plane.transparency
-    end
-    
     def normal(plane, _pos) do
       plane.normal
     end

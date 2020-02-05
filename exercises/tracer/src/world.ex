@@ -5,14 +5,13 @@ defmodule World do
   @ambient {0.3, 0.3, 0.3}
   @refraction 1
 
-  require Record
-  
-  Record.defrecord(:world,
+  defstruct(
     objects: [],
     lights: [],
     background: @background,
     depth: @depth,
     ambient: @ambient,
-    refraction: @refraction)
+    refraction: @refraction
+  )
 
 end
