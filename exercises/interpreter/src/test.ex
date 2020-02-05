@@ -8,14 +8,14 @@ defmodule Test do
   def test(module, 1) do
     seq = [{:atm, :a}]
     prgm = []
-    IO.write("should result in {:ok, :a}\n")
+    IO.write("atom: \n    :a  \nshould result in {:ok, :a}\n")
     apply(module, :eval, [seq, prgm])
   end
 
   def test(module, 2) do
     seq = [{:match, {:var, :x}, {:atm, :a}}, {:cons, {:var, :x}, {:atm, :b}}]
     prgm = []
-    IO.write("should result in {:ok, [:a | :b]}\n")
+    IO.write("sequence:\n  x = :a; [x|:b]\nshould result in {:ok, [:a | :b]}\n")
     apply(module, :eval, [seq, prgm])
   end
 
@@ -27,7 +27,7 @@ defmodule Test do
       {:var, :z}
     ]
     prgm = []
-    IO.write("should result in {:ok, :b}\n")
+    IO.write("sequence:\n x = :a; y = [ x | :b ];  [_ | z] = y; z\n   should result in {:ok, :b}\n")
     apply(module, :eval, [seq, prgm])
   end
 
@@ -38,7 +38,7 @@ defmodule Test do
        [{:clause, {:atm, :b}, [{:atm, :ops}]}, {:clause, {:atm, :a}, [{:atm, :yes}]}]}
     ]
     prgm = []
-    IO.write("should result in {:ok, :yes}\n")
+    IO.write("case expression: \n x = :a; case x do :b -> :ops; :a -> :yes end \nshould result in {:ok, :yes}\n")
     apply(module, :eval, [seq, prgm])
   end
 
@@ -52,7 +52,7 @@ defmodule Test do
        ]}
     ]
     prgm = []
-    IO.write("testing case expression, should result in {:ok, :a}\n")
+    IO.write("case expression: \n   x = [a]; case x do [] -> :ops; [hd|tl] -> hd end\n should result in {:ok, :a}\n")
     apply(module, :eval, [seq, prgm])
   end
 
@@ -63,14 +63,14 @@ defmodule Test do
       {:apply, {:var, :f}, [{:atm, :b}]}
     ]
     prgm = []
-    IO.write("testing lambda expression, should result in {:ok, [:a | :b]}\n")
+    IO.write("lambda expression: x = :a; f = fn(y) -> [x|y] end; f.(:b)  should result in {:ok, [:a | :b]}\n")
     apply(module, :eval, [seq, prgm])
   end
 
   def test(module, 7) do
     seq = [{:call, :append, [{:atm, []}, {:atm, []}]}]
     prgm = prg()
-    IO.write("testing function application, should result in {:ok, []}\n")
+    IO.write("function call: \n    append([], []) \n should result in {:ok, []}\n")
     apply(module, :eval, [seq, prgm])
   end
 
@@ -81,7 +81,7 @@ defmodule Test do
       {:call, :append, [{:var, :x}, {:var, :y}]}
     ]
     prgm = prg()
-    IO.write("testing recursive function, should result in {:ok, [:a, :b, :c, :d]}\n")
+    IO.write("recursive function: \n   x = [:a, :b]; y = [:c, :d]; append(x, y) \nshould result in {:ok, [:a, :b, :c, :d]}\n")
     apply(module, :eval, [seq, prgm])
   end
 
@@ -91,7 +91,7 @@ defmodule Test do
       {:call, :nreverse, [{:var, :x}]}
     ]
     prgm = prg()
-    IO.write("nreverse of [a, b], should result in {:ok, [:b, :a]}\n")
+    IO.write("recursive function: \n x = [:a,:b]; nreverse(x)\n should result in {:ok, [:b, :a]}\n")
     apply(module, :eval, [seq, prgm])
   end
 
@@ -103,7 +103,7 @@ defmodule Test do
       {:call, :map, [{:var, :f}, {:var, :x}]}
     ]
     prgm = prg()
-    IO.write("higher order, x = [:a, :b]; y = []; f = fn(p) -> [p | y] end; map(f,(x)), should result in {:ok, [[:a] [:b]]}\n")
+    IO.write("higher order\n   x = [:a, :b]; y = []; f = fn (p) -> [p | y] end; map(f,(x))\n should result in {:ok, [[:a] [:b]]}\n")
     apply(module, :eval, [seq, prgm])
   end
 
