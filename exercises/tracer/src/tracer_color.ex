@@ -2,10 +2,9 @@ defmodule TracerColor do
   
   @black {0, 0, 0}
 
-  require Camera
   
   def tracer(camera, objects) do
-    {w, h} = Camera.camera(camera,:size)
+    {w, h} = camera.size
     for y <- 1..h, do: for(x <- 1..w, do: trace(x, y, camera, objects))
   end
 
@@ -18,8 +17,8 @@ defmodule TracerColor do
       {:inf, _} ->
         @black
 
-      {_, object} ->
-        Object.color(object)
+      {_, obj} ->
+         obj.color	
     end
   end
 

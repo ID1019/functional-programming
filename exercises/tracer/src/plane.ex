@@ -5,18 +5,16 @@ defmodule Plane do
   @transparency 0
   @refraction 1.5
 
-  require Ray
   
-  defstruct(pos: {0, 0, 0},
-    dir1: {1,0,0},
-    dir2: {0,1,0},
-    ext1: 200,
-    ext2: 100,
-    normal: {0,0,1},
+  defstruct(
+    pos0: {0, 0, 0},
+    pos1: {1, 0, 0},
+    pos2: {0, 1, 0},
     color: @color,
     brilliance: @brilliance,
     transparency: @transparency,
-    refraction: @refraction)
+    refraction: @refraction
+  )
     
 
   defimpl Object do
@@ -25,38 +23,64 @@ defmodule Plane do
       Plane.intersect(plane, ray)
     end
 
-    def color(plane) do
-      plane.color
-    end
-
-    def brilliance(plane) do
-      plane.brilliance
-    end
-
-    def transparency(plane) do
-      plane.transparency
-    end
-    
-    def normal(plane, _pos) do
-      plane.normal
+    def normal(plane, ray, _pos) do
+      #  this is not correct, we need to know from which way we're looking
+      dir01 = Vector.sub(plane.pos1, plane.pos0)
+      dir02 = Vector.sub(plane.pos2, plane.pos0)      
+      norm1 = Vector.normalize(Vector.cross(dir01, dir02))
+      norm2 = Vector.normalize(Vector.cross(dir02, dir01))
+      if Vector.norm(Vector.add(ray.dir,norm1)) < Vector.norm(Vector.add(ray.dir,norm2)) do
+	norm1
+      else
+	norm2
+      end
     end
 
   end
 
-  def intersect(_plane, _ray) do
-    ## When does a ray intersect a plane - and in our case, is it
-    ## within the boundries of the extent of the surface. 
-    :no
-  end
+  def intersect(plane, ray) do
 
-  def surface(_pos, _with, _height) do
-    ## Define a plane that has one corner in pos and extend in the
-    ## direction width and height. You will have to calculate the two
-    ## unit vectors dir1 and dir2, the extent of the surface and the
-    ## normal vector.
+    p0 = plane.pos0
+    p1 = plane.pos1
+    p2 = plane.pos2    
+
+    p01 = Vector.sub(p1,p0)
+    p02 = Vector.sub(p2,p0)
+
+    pos = ray.pos
+
+    dir = ray.dir
+
+    neg = Vector.smul(dir, -1)
     
+    det = Vector.dot(neg, Vector.cross(p01, p02))
+
+    org = Vector.sub(pos,p0)
+    
+    if det != 0 do
+      t = Vector.dot(Vector.cross(p01, p02), org) / det
+      #IO.write("t =  #{t} \n")
+      if t > 0 do
+	u = Vector.dot(Vector.cross(p02, neg), org) / det
+	v = Vector.dot(Vector.cross(neg, p01), org) / det
+
+	#IO.write("u =  #{u} \n")
+	#IO.write("v =  #{v} \n")	
+	if 0 < u and u < 1 and 0 < v and v < 1  and (u + v) <= 1  do
+	  # we have an intersection
+	  {:ok, t }
+	else
+	  :no
+	end
+      else
+	# behind the camera
+	:no
+      end
+    else
+      # parallel or in plane
+      :no
+    end
   end
-    
 
 
   

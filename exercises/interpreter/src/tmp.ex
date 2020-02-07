@@ -15,13 +15,15 @@ defmodule Tmp do
     case x do
       :hello -> z = 2
       :goodby ->  z = 3
+      :danger -> :no
     end
-    z
+    case z do
+      nil -> :stange
+      _ -> {:what, z}
+    end
+    
   end
 
 
-  def loop() do loop() end
-
-  def ops(n) do 4/n end
 
 end

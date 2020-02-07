@@ -218,34 +218,32 @@ We now define how to represent object and rays.
 \begin{verbatim}
 defmodule Ray do
 
-  require Record
-  Record.defrecord(:ray, pos: {0, 0, 0}, dir: {0, 0, 1})
+  defstruct( pos: {0, 0, 0}, dir: {0, 0, 1})
+end
 \end{verbatim}
 
   \end{column}
  \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{tuples and records}
+\begin{frame}[fragile]{tuples and structs}
 
  \begin{itemize}
   \item a vector: {\tt \{2, 3, 1\}}
-  \item a ray:  a tuple with named properties  (actually {\tt \{:ray, \{0,0,0\}, \{0,0,1\}}, but don't count on it.
+  \item a ray:  %Ray{pos: {0,0,0}, dir: {0,0,1}}
  \end{itemize}
 
  \pause\vspace{20pt}
 
- A number of macros defined to help us handle properties of rays.
- 
-\pause \vspace{10pt}
-\verb+foo = Ray.ray(pos: {3, 2, 4}, dir: {0.447, 0.894, 0})+
+\verb+ p = ray.pos +
+\verb+ d = ray.dir +
+
+ \pause\vspace{10pt}
+
+\verb+ %Ray{pos: p, dir: d} + 
 
 \pause \vspace{10pt}
-\verb+Ray.ray(pos: pos) = foo+
-
-\pause \vspace{10pt}
-\verb+p = Ray.ray(foo, :pos)+
-
+Note, access is lg(n) of number of properties, not as efficent as tuples.
 \end{frame}
 
 
@@ -299,9 +297,7 @@ A sphere is defined by:
 \begin{verbatim}
 defmodule Sphere do 
 
-  require Ray
-
-  defstruct pos: {0, 0, 0}, radius: 2
+  defstruct( pos: {0, 0, 0}, radius: 2 )
 
 end
 \end{verbatim}
@@ -313,27 +309,6 @@ end
 {\em more properties will be added later}
 \end{frame}
 
-\begin{frame}[fragile]{maps and structs}
-
-  Structs are named maps.
-
-  Gives us a nice syntax to handle the objects.
-
-  \pause\vspace{20pt}
-
-\pause \vspace{10pt}
-\verb+foo = %Sphere{pos: {3, 2, 4}, dir: {0.447, 0.894, 0}}+
-
-\pause \vspace{10pt}
-\verb+%Sphere{pos: pos} = foo+
-
-\pause \vspace{10pt}
-\verb+p = foo.pos+
-  
-\pause \vspace{10pt}
-Note, access is lg(n) of number of properties, not as efficent as tuples nor records.
-
-\end{frame}
 
 \begin{frame}{intersection}
 
@@ -407,9 +382,8 @@ Note, access is lg(n) of number of properties, not as efficent as tuples nor rec
 defimpl Object do
 
  def intersect(sphere, ray) do
-   Ray.ray(ray, pos: o, dir: l)
-   k = Vector.sub(sphere.pos, o)
-   a = Vector.dot(l, k)
+   k = Vector.sub(sphere.pos, ray.pos)
+   a = Vector.dot(ray.dir, k)
    a2 = :math.pow(a, 2)
    k2 = :math.pow(Vector.norm(k), 2)
    r2 = :math.pow(sphere.radius, 2)
@@ -579,10 +553,8 @@ What properties do we have?
 \begin{verbatim}
 defmodule Camera do
 
-  require Record
-
-  Record.defrecord(:camera, pos: nil, corner: nil, 
-                            right: nil, down: nil, size: nil)
+  defstruct( pos: nil, corner: nil, 
+             right: nil, down: nil, size: nil)
 
 \end{verbatim}
 
@@ -600,7 +572,7 @@ defmodule Camera do
     pos = {0, 0, 0}
     right = {1, 0, 0}
     down = {0, -1, 0}
-    Camera.camera(pos: pos, corner: corner, .... )
+    %Camera{pos: pos, corner: corner, .... }
   end
 \end{verbatim}
 
@@ -617,15 +589,12 @@ the \{col,row\} position of the canvas.
  \begin{column}{0.5\linewidth}
 \begin{verbatim}
 def ray(camera, col, row) do
-  Camera.camera(camera, 
-       pos: o, right: r, down: d, 
-       corner: c) = camera
-  x = Vector.smul(r, col)
-  y = Vector.smul(d, row)
+  x = Vector.smul(camera.right, col)
+  y = Vector.smul(camera.down, row)
   v = Vector.add(x, y)
-  p = Vector.add(c, v)
-  d = Vector.normalize(p)
-  Ray.ray(pos: o, dir: d)
+  p = Vector.add(camera.corner, v)
+  dir = Vector.normalize(p)
+  %Ray{pos: camera.pos, dir: dir}
 end
 \end{verbatim}
  \end{column}
@@ -693,8 +662,9 @@ defmodule Tracer do
   @black {0, 0, 0}
   @white {1, 1, 1}
 
+
   def tracer(camera, objects) do
-    {w, h} = Camera.camera(camera, :size)
+    {w, h} = camera.size
     for y <- 1..h, do: for(x <- 1..w, do: trace(x, y, camera, objects))
   end
 
@@ -717,7 +687,6 @@ defmodule Tracer do
       {_, _} ->
         @white
     end
-  end
 \end{verbatim}
 
 \end{frame}
@@ -773,26 +742,13 @@ end
 \begin{frame}[fragile]{colors}
 
 \pause Let's add some colors to the spheres.
-\begin{verbatim}
-defprotocol Object do
-  def intersect(object, ray)
-  def color(object)
-end
-\end{verbatim}
-
-\pause
 
 \begin{verbatim}
 @color {1.0, 0.4, 0.4}
 
 defstruct radius: 2, pos: {0, 0, 0}, color: @color 
 
-defimpl Object do
-    :
-  def color(sphere) do
-    sphere.color
-  end
-end
+
 \end{verbatim}
 \end{frame}
 
@@ -804,7 +760,7 @@ def trace(ray, objects) do
     {:inf, _} ->
       @black
     {_, object} ->
-      Object.color(object)
+      object.color
   end
 end
 \end{verbatim}
@@ -881,6 +837,30 @@ Will come in handy when we calculate reflection and illumination.
 
 \end{frame}
 
+\begin{frame}[fragile]{extend Object protocol}
+\begin{verbatim}
+defprotocol Object do
+  def intersect(object, ray)
+  def normal(object, ray, pos) 
+end
+\end{verbatim}
+\vspace{10pt}\pause
+\begin{verbatim}
+  defimpl Object do                    
+    def intersect(sphere, ray) do
+      Sphere.intersect(sphere, ray)
+    end
+
+    def normal(sphere, _, pos) do
+      Vector.normalize(Vector.sub(pos, sphere.pos))
+    end
+  end
+\end{verbatim}
+
+\end{frame}
+
+
+
 \begin{frame}[fragile]{the world}
 
 \begin{verbatim}
@@ -889,13 +869,11 @@ defmodule World do
   @background {0, 0, 0}
   @ambient {0.3, 0.3, 0.3}
 
-  require Record
-
-  Record.defrecord(:world, objects: [],
+  defstruct(objects: [],
             lights: [],
             background: @background,
             ambient: @ambient)
-  end
+end
 \end{verbatim}
 
 \pause A more convenient way to handle lack of  globally accessible data structures.
@@ -905,23 +883,25 @@ defmodule World do
 \begin{frame}[fragile]{calculating the color}
 
   Find all visible lights from the point of intersection; combine the
-  lights \underline{give the normal vector} and illuminate the
-  surface.  \pause
+  lights \underline{given the normal vector} and illuminate the
+  surface.  
+
+\vspace{10pt} \pause
 
   In the tracer, when we have found an intersecting object:
 
 \begin{verbatim}
- case intersect(ray, objects) do
-  {:inf, _} ->
-      @black
-  {d, obj} ->
-     Ray.ray(pos: o, dir: l) = ray
-     i = Vector.add(o, Vector.smul(l, d - @delta))
-     normal = Object.normal(obj,i)
-     visible = visible(i, World.world(world, :lights), objects)
-     illumination = Light.combine(i, normal, visible)
-     Light.illuminate(obj, illumination, world)
- \end{verbatim}
+    case intersect(ray, objects) do
+      {:inf, _} ->
+        world.background
+      {d, obj} ->
+        i = Vector.add(ray.pos, Vector.smul(ray.dir, d - @delta))
+        normal = Object.normal(obj, ray, i)
+        visible = visible(i, world.lights, objects)
+        illumination = Light.combine(i, normal, visible)
+        Light.illuminate(obj, illumination, world)
+    end
+\end{verbatim}
 
 \end{frame}
 
@@ -952,19 +932,18 @@ The color of an intersection point depends on:
 \pause 
 \begin{verbatim}
   defp trace(_ray, 0, world) do
-    World.world(world, :background)
+    world.background
   end
 
   defp trace(ray, depth, world) do
-    objects = World.world(world, :objects)
-
+    case intersect(world.objects) do
         :
-        :
-      reflection = trace(r, depth - 1, world)
-      Light.illuminate(obj, reflection, illumination, world)
+      {d, obj} ->
+          :
+         reflection = trace(r, depth - 1, world)
+         Light.illuminate(obj, reflection, illumination, world)
     end
   end
-
 \end{verbatim}
 
 \end{frame}
@@ -990,7 +969,8 @@ This was only scratching the surface of ray tracing.
  \pause \item divide program into areas of responsibility
  \pause \item think about abstractions
  \pause \item modules are similar to class definitions
- \pause \item a static type system would have helped us (structa are only halfway)
+ \pause \item a static type system would have helped us (structs are only halfway)
+ \pause \item can we add a new object without rewriting the tracer
 \end{itemize}
 
 \end{frame}

@@ -2,38 +2,30 @@ defmodule Light do
 
   @white {1.0, 1.0, 1.0}
 
-  require Record
-  require World
-  
-  Record.defrecord(:light, pos: nil, color: @white)
+  defstruct(
+    pos: nil,
+    color: @white
+  )
 
   def illuminate(obj, ill, world) do
-    color = Object.color(obj)
-    ambient = World.world(world, :ambient)
-    ill(color, mul(ill, ambient))
+    color = obj.color
+    ill(color, mul(ill, world.ambient))
   end
 
   def illuminate(obj, refl, ill, world) do
-    color = Object.color(obj)
-    bril = Object.brilliance(obj)
-    ambient = World.world(world, :ambient)
-    surface = ill(color, mul(ill, ambient))
-    mul(surface, mod(refl, bril))
+    surface = ill(obj.color, mul(ill, world.ambient))
+    mul(surface, mod(refl, obj.brilliance))
   end
 
   def illuminate(obj, refl, refr, ill, world) do
-    color = Object.color(obj)
-    bril = Object.brilliance(obj)
-    transp = Object.transparency(obj)
-    ambient = World.world(world, :ambient)
-    surface = ill(color, mul(ill, ambient))
-    mul(add(surface, refr, transp), mod(refl, bril))
+    surface = ill(obj.color, mul(ill, world.ambient))
+    mul(add(surface, refr, obj.transparency), mod(refl, obj.brilliance))
   end
 
   def combine(point, normal, lights) do
     List.foldl(lights, {0, 0, 0},
       fn(light, contr) ->
-         mul(contribute(point, normal, light(light, :pos), light(light, :color)), contr)
+         mul(contribute(point, normal, light.pos, light.color), contr)
       end)
   end
 

@@ -1,9 +1,12 @@
 defmodule Camera do
 
-  require Record
-  require Ray
-  
-  Record.defrecord(:camera, pos: nil, corner: nil, right: nil, down: nil, size: nil)
+  defstruct(
+    pos: nil,
+    corner: nil,
+    right: nil,
+    down: nil,
+    size: nil
+  )
 
   def normal(size) do
     {width, height} = size
@@ -14,17 +17,16 @@ defmodule Camera do
     corner = {-h, v, d}
     right = {1, 0, 0}
     down = {0, -1, 0}
-    camera(pos: pos, corner: corner, right: right, down: down, size: size)
+    %Camera{pos: pos, corner: corner, right: right, down: down, size: size}
   end
 
 
-  def ray(camera, x, y) do
-    camera(pos: pos, right: right, down: down, corner: corner)  = camera
+  def ray(%Camera{pos: pos, right: right, down: down, corner: corner}, x, y) do
     x_pos = Vector.smul(right, x)
     y_pos = Vector.smul(down, y)
     pixle = Vector.add(corner, Vector.add(x_pos, y_pos))
     dir = Vector.normalize(pixle)
-    Ray.ray(pos: pos, dir: dir)
+    %Ray{pos: pos, dir: dir}
   end
 
 end

@@ -2,15 +2,8 @@ defprotocol Object do
 
   def intersect(object, ray)
 
-  def color(object)
+  def normal(object, ray, pos) 
 
-  def transparency(object)
-
-  def brilliance(object)    
-  
-  def normal(object, pos) 
-
-  
 end
 
   

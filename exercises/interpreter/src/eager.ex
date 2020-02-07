@@ -1,12 +1,12 @@
 defmodule Eager do
 
-  @type atm :: {:atm, atom()}
-  @type variable :: {:var, atom()}
+  @type atm :: {:atm, atom}
+  @type variable :: {:var, atom}
   @type ignore :: :ignore
 
-  @type lambda :: {:lambda, [variable], [variable], seq}
+  @type lambda :: {:lambda, [atom], [atom], seq}
 
-  @type cons(e) :: {:cons, e, e}
+  @type cons(t) :: {:cons, t, t}
   @type expr :: atm | variable | lambda | call | case | cons(expr)
 
   @type pattern :: atm | variable | ignore | cons(pattern)
@@ -19,14 +19,14 @@ defmodule Eager do
   @type case :: {:case, expr, [clause]}
 
   # Expressions are evaluated to structures.
-  @type closure :: {:closure, [variable], seq, env}
-  @type str :: atom() | [str] | closure
+  @type closure :: {:closure, [atom], seq, env}
+  @type str :: atom | [str] | closure
 
   # An environment is a key-value of variableiable to structure.
-  @type env :: [{variable, str}]
+  @type env :: [{atom, str}]
 
   # A program is a list of named functions
-  @type prgm :: [{atom(), [variable], seq}]
+  @type prgm :: [{atom, [atom], seq}]
 
   @doc """
   Evaluate a sequence given a program.
@@ -91,7 +91,7 @@ defmodule Eager do
             :error
 
           {:ok, ts} ->
-            {:ok, [hs | ts]}
+            {:ok, [hs | ts]}   # what? why not {hs, ts} 
         end
     end
   end
@@ -183,10 +183,10 @@ defmodule Eager do
     :fail
   end
 
-  @doc """ Create a new scope, remove all variables in the pattern
-  from the given environment
+  @doc """
+  Create a new scope, remove all variables in the pattern
+  from the given environment.
   """
-
   @spec eval_scope(pattern, env) :: env
 
   def eval_scope(ptr, env) do
@@ -205,7 +205,7 @@ defmodule Eager do
   end
   def eval_cls([{:clause, ptr, seq} | cls], str, env, prg) do
 
-    env = eval:scope(ptr, env)
+    env = eval_scope(ptr, env)
 
     case eval_match(ptr, str, env) do
       :fail ->

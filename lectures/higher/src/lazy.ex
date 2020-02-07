@@ -5,16 +5,35 @@ defmodule Lazy do
     reduce(r, {:cont, 0}, fn(x,a) -> {:cont, x+a} end) 
   end
 
+
+
+  
+  
   def take(r, n) do
-   reduce(r, {:cont, {:sofar, 0, []}},
-      fn(x,{:sofar, s, a}) ->
-	if s == n do
-	  {:halt, Enum.reverse(a)}
-	else
-	  {:cont, {:sofar, s+1, [x|a]}}
-	end
+    case tk(r,n) do
+     {:halted, taken} -> Enum.reverse(taken)
+     {:done, {:sofar, _, taken}} -> Enum.reverse(taken)
+   end
+  end
+
+
+
+
+  
+  def tk(r,n) do
+    reduce(r,
+	  {:cont, {:sofar, 0, []}},
+	 fn(x,{:sofar, s, a}) ->
+	   s = s+1
+	   if s >= n do
+	     {:halt, [x|a]}
+	   else
+	     {:cont, {:sofar, s, [x|a]}}
+	   end
       end)
-  end    
+  end
+  
+    
 
   def head(r) do
     reduce(r, {:cont, nil},

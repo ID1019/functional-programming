@@ -291,7 +291,7 @@ We introduce a new data structure: a closure
 
   \begin{tabular}{r l l}
    {\em Atoms} & = & \{a, b, c, \ldots\} \\
-   {\em Closures} & = & \{<p:s:e> | p $\in $ Parameters $\wedge$ s $\in $ Sequences $\wedge$  e $\in $ Environments \}\\
+   {\em Closures} & = & \{<p:s:$\theta$> | p $\in $ Parameters $\wedge$ s $\in $ Sequences $\wedge$  $\theta \in $ Environments \}\\
    {\em Structures} & = & {\em Closures} $\cup$ {\em Atoms} $\cup$ \{ \{a, b\} \textbar a $\in$ {\em Structures}  $\wedge$  b $\in$ {\em Structures} \}
   \end{tabular}
 
@@ -356,8 +356,8 @@ E\sigma(\texttt{fn (} {\rm parameters}\;  \texttt{) ->}\; {\rm sequence}\; \text
 
 \begin{frame}[fragile]{evaluation of a function application}
 
-$$\frac{E\sigma(e) \rightarrow <v_1, \ldots:{\rm seq}:\theta > \qquad E\sigma(e_i) \rightarrow s_i \qquad E\{v_1/s_1, \ldots\}\cup\theta({\rm seq}) \rightarrow s}{
-E\sigma(e.(e_1, \ldots)) \rightarrow s}$$ 
+$$\frac{E\sigma(f) \rightarrow <v_1, \ldots:{\rm seq}:\theta > \qquad E\sigma(e_i) \rightarrow s_i \qquad E\{v_1/s_1, \ldots\}\cup\theta({\rm seq}) \rightarrow s}{
+E\sigma(f.(e_1, \ldots)) \rightarrow s}$$ 
 
 \vspace{20pt}\pause
 \begin{verbatim}
@@ -669,10 +669,11 @@ end
   def take(r, n) do
     reduce(r, {:cont, {:sofar, 0, [] }},
       fn(x,{:sofar, s, a}) ->
-        if s == n do
-          {:halt, Enum.reverse(a)}
+        s = s+1
+        if s >= n do
+          {:halt, [x|a]}
         else
-          {:cont, {:sofar, s+1, [x|a]}}
+          {:cont, {:sofar, next, [x|a]}}
         end
       end)
   end    
@@ -743,14 +744,13 @@ Are functions considered to be ``first-class citizen''?
   \vspace{20pt}Not really - look at this.
     
 \begin{verbatim}
- f = fn() -> :ok end
- g = fn() -> :ok end
- case f do
-   ^g -> :equal
-   _ -> :no
- end
+ f = fn(x) -> x + 1end
+ g = fn(y) -> y + 1 end
 \end{verbatim}
-
+\vspace{20pt}\pause
+\begin{verbatim}
+\end{verbatim}
+  f == g 
 \end{frame}
 
 

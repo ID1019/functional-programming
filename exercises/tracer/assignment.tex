@@ -194,33 +194,30 @@ solution but unfortunately a very convenient solution.
 We will however create a more proper data structure to represent a {\em ray}. 
 A ray has an origin, represented by a vector, and a direction,
 represented by a normalized vector. When we implement rays we will use
-Elixir records. A record is a named tuple and is always associated with a module and gives
-us a convenient way of referencing the elements of the elements of the tuple. Instead
+Elixir structs. A struct is a named map and it is always associated with a module. It gives
+us a convenient way of referencing the elements of the elements of the ray. Instead
 of having to remember which element of a tuple a particular element
 is we can refer to them by name. 
 
-Create a module {\tt Ray} and define the following record. We provide
+Create a module {\tt Ray} and define the following struct. We provide
 a default position {\tt \{0,0,0\}} and direction {\tt \{1,1,1\}}. If
 none is given when we create a ray the default values will be used.
 
 \begin{minted}{elixir}
 defmodule Ray do
 
-  require Record
-
-  Record.defrecord(:ray, pos: {0, 0, 0}, dir: {1, 1, 1})
+  defstruct(pos: {0, 0, 0}, dir: {1, 1, 1})
   
 end
 \end{minted}
 
-Modules that qork with records need to reauire the {\tt Ray} module
-(to use the defined macros defined) and can then access the elements
-of the ray usng the following constructs.
+Using structs we have a convinient way of working with rays.
+
 
 \begin{minted}{elixir}
-  r = Ray.ray(pos: {0,0,0}, dir: {0,0,1})  # create a new ray
-  p =  Ray.ray(r, :pos)                    # extract the position
-  d =  Ray.ray(r, :dir)                    # extract the direction
+  r =  %Ray{pos: {0,0,0}, dir: {0,0,1}}  # create a new ray
+  p =  ray.pos                           # extract the position
+  d =  ray.dir                           # extract the direction
 \end{minted}
 
 We now have the mathematical tools to describe a world of objects.
@@ -504,10 +501,7 @@ Open up a module {\tt Camera} and defined the following default camera struct.
 \begin{minted}{elixir}
 defmodule Camera do
 
-  require Record
-  require Ray
-
-  Record.defrecord(:camera, pos: nil, corner: nil, right: nil, down: nil, size: nil)
+  defstruct(pos: nil, corner: nil, right: nil, down: nil, size: nil)
   
 end
 \end{minted}
@@ -554,15 +548,13 @@ end
 
 The world is simply a list of objects. We will extend the world to
 also hold other things but for our first test this will be
-sufficient. We again use the record construct to give us some macros
-to handle world objects.
+sufficient. We again use the struct construct to give us easy access to its 
+components.
 
 \begin{minted}{elixir}
 defmodule World do
 
-  require Record  
-
-  Record.defrecord(:world, objects: [])
+  defstruct(objects: [])
 
 end
 \end{minted}
@@ -796,12 +788,12 @@ defp trace(ray, world) do
 
   case intersect(ray, objects) do
     {:inf, _} ->
-      World.world(world,:background)
+      world.background
     {dist, obj} ->
-      Ray.ray(:pos pos, dir: dir) =  ray
+      %Ray{:pos pos, dir: dir} =  ray
       point = Vector.add(pos, Vector.smul(dir, dist - @delta))
-      normal = Sphere.normal(point, obj)
-      visible = visible(point, World.world(world,:lights), objects)
+      normal = Sphere.normal(point, ray, obj)
+      visible = visible(point, world.lights, objects)
       illumination = Light.combine(point, normal, visible)
       Light.illuminate(obj, illumination, world)
   end
