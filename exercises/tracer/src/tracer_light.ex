@@ -20,7 +20,7 @@ defmodule TracerLight do
 
       {d, obj} ->
 	i = Vector.add(ray.pos, Vector.smul(ray.dir, d - @delta))
-        normal = Object.normal(obj,i)
+        normal = Object.normal(obj,ray,i)
         visible = visible(i, world.lights, objects)
         illumination = Light.combine(i, normal, visible)
         Light.illuminate(obj, illumination, world)

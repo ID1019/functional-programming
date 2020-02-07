@@ -21,7 +21,8 @@ defmodule Sphere do
       Sphere.intersect(sphere, ray)
     end
 
-    def normal(sphere, pos) do
+    def normal(sphere, _, pos) do
+      # assuming we always hit it from the outside
       Vector.normalize(Vector.sub(pos, sphere.pos))
     end
 

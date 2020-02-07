@@ -21,7 +21,7 @@ defmodule TracerReflection do
 
       {d, obj} ->
         i = Vector.add(ray.pos, Vector.smul(ray.dir, d - @delta))
-        normal = Object.normal(obj, i)
+        normal = Object.normal(obj, ray, i)
         visible = visible(i, world.lights, world.objects)
         illumination = Light.combine(i, normal, visible)
         r = %Ray{pos: i, dir: reflection(ray.dir, normal)}

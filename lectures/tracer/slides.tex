@@ -841,7 +841,7 @@ Will come in handy when we calculate reflection and illumination.
 \begin{verbatim}
 defprotocol Object do
   def intersect(object, ray)
-  def normal(object, pos) 
+  def normal(object, ray, pos) 
 end
 \end{verbatim}
 \vspace{10pt}\pause
@@ -851,7 +851,7 @@ end
       Sphere.intersect(sphere, ray)
     end
 
-    def normal(sphere, pos) do
+    def normal(sphere, _, pos) do
       Vector.normalize(Vector.sub(pos, sphere.pos))
     end
   end
@@ -896,7 +896,7 @@ end
         world.background
       {d, obj} ->
         i = Vector.add(ray.pos, Vector.smul(ray.dir, d - @delta))
-        normal = Object.normal(obj,i)
+        normal = Object.normal(obj, ray, i)
         visible = visible(i, world.lights, objects)
         illumination = Light.combine(i, normal, visible)
         Light.illuminate(obj, illumination, world)
