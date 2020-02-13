@@ -1,8 +1,5 @@
 defmodule Bench do
 
-
-
-
   def bench(img, size, depth) do
     {t, _} = :timer.tc( fn() -> 
       {x, y, xn} = image(img)
@@ -11,24 +8,6 @@ defmodule Bench do
     end)
     IO.write("#{trunc(t/1000)} ms\n")
   end  
-
-
-
-
-
-  
-
-  
-  def server() do
-    server(:waves, :small, 255, "wave.ppm")
-  end
-
-  def server(img, size, depth, name) do
-    {x, y, xn} = image(img)
-    {width, height, k} = size(size, x, xn)
-    {:ok, server} = Server.start(width, height, x, y, k, depth, name)
-    :global.re_register_name(:server, server)
-  end
 
   def sky(img, size, depth) do 
     parallel(1, img, size, depth)
@@ -80,14 +59,18 @@ defmodule Bench do
   def print(img, size, depth) do
     {x, y, xn} = image(img)
     {width, height, k} = size(size, x, xn)
-    image = Mandel.mandelbrot(width, height, x, y, k, depth)
     file = "#{to_string(img)}-#{to_string(size)}.ppm"
-    PPM.write(file, image)
+    {t, _} = :timer.tc( fn() ->
+      image = Mandel.mandelbrot(width, height, x, y, k, depth)
+      PPM.write(file, image)
+    end)
+    IO.puts("picture generated and printed in #{trunc(t/1000)} ms")    
   end
-    
-  
-  
-  def print({x, y}, {width, height, k}, depth, file) do
+
+  def printp(img, size, depth) do
+    {x, y, xn} = image(img)
+    {width, height, k} = size(size, x, xn)
+    file = "#{to_string(img)}-#{to_string(size)}.ppm"
     {t, _} = :timer.tc( fn() ->
       image = Mandelp.mandelbrot(width, height, x, y, k, depth)
       PPM.write(file, image)

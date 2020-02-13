@@ -1,15 +1,36 @@
 defmodule Server do
 
   def small() do
-    start(960, 540, -0.136, 0.85, -0.134, 255, "forest.ppm") 
+    width = 960
+    height = 540
+    x0 = -0.136
+    y0 = 0.85
+    xn = -0.134
+    k = (xn - x0)/ width
+    depth = 255
+    start(width, height, x0, y0 , k, depth, "forest.ppm") 
   end
 
   def large() do
-    start(1920, 1080, -0.136, 0.85, -0.134, 255, "forest.ppm") 
+    width = 1920
+    height = 1080
+    x0 = -0.136
+    y0 = 0.85
+    xn = -0.134
+    k = (xn - x0)/ width
+    depth = 255
+    start(width, height, x0, y0 , k, depth, "forest.ppm") 
   end
 
   def huge() do
-    start(3840, 2160, -0.136, 0.85, -0.134, 255, "forest.ppm") 
+    width = 3840
+    height = 2160
+    x0 = -0.136
+    y0 = 0.85
+    xn = -0.134
+    k = (xn - x0)/ width
+    depth = 255
+    start(width, height, x0, y0 , k, depth, "forest.ppm") 
   end  
   
   # The start/7 process will start a mandel server and a print process.

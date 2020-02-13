@@ -1,0 +1,185 @@
+\input{../include/preamble}
+
+\title[ID1019 Parallel programming]{The Mandelbrot set}
+ 
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}[fragile]{Mandelbrot}
+
+\begin{verbatim}
+  defp rows(_, 0, _, _, rows), do: rows
+  defp rows(w, h, tr, depth, rows) do
+    row = row(w, h, tr, depth, [])
+    rows(w, h - 1, tr, depth, [row | rows])
+  end
+\end{verbatim}
+
+\pause\vspace{20pt}{\em How do we speed this up?}
+\end{frame}
+
+\begin{frame}[fragile]{Mandelbrot}
+
+\begin{verbatim}
+  def mandelbrot(width, height, x, y, k, depth) do
+    trans = fn(w,h) -> {x + k*(w-1), y-k*(h-1)} end
+    rows(width, height, trans, depth, ... )
+    .....
+  end
+
+  def rows( _, 0, _, _, _) do
+    :ok
+  end
+  def rows(w, h, tr, depth, ....) do
+    ... apply the function but also ...
+    rows(w, h-1, tr, depth, ...)
+  end
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{Mandelbrot}
+
+\begin{verbatim}
+  def mandelbrot(width, height, x, y, k, depth) do
+    trans = fn(w,h) -> {x + k*(w-1), y-k*(h-1)} end
+    rows(width, height, trans, depth, self())
+    collect(height, [])
+  end
+  def rows( _, 0, _, _, _) do
+    :ok
+  end
+  def rows(w, h, tr, depth, ctrl) do
+    spawn(fn() -> report(w, h, tr, depth, ctrl) end)
+    rows(w, h-1, tr, depth, ctrl)
+  end
+\end{verbatim}
+
+\pause\vspace{20pt}{\em Write collect/2 and report/5, and give it a spin.}
+
+\end{frame}
+
+\begin{frame}[fragile]{collect the result}
+
+\begin{verbatim}
+  def collect(0, rows) do rows end
+  def collect(h, rows) do
+    receive do
+      {:row, ^h, row} ->
+        collect(h-1, [row|rows])
+    end
+  end
+\end{verbatim}
+\end{frame}
+
+\begin{frame}{benchmark}
+
+Can we do better?
+
+\end{frame}
+
+\begin{frame}[fragile]{distributed computing}
+
+{\em To start an elixir shell in distributed mode:}
+
+\begin{verbatim}
+iex --name brot@130.229.158.31 --cookie secret
+\end{verbatim}
+\pause\vspace{10pt}
+
+\pause
+{\em in the Elixir shell}
+
+\begin{verbatim}
+p = spawn(fn()-> receive x -> :io.format("wow ~w~n", [x]) end end)
+\end{verbatim}
+\pause
+\begin{verbatim}
+Process.register(p, :wow).
+\end{verbatim}
+\pause
+\pause\vspace{10pt}
+
+{\em in another Elixir shell (also started in distributed mode)}
+
+\begin{verbatim}
+send({:wow, :"brot@130.163.10.23"}, :hello)
+\end{verbatim}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{the server}
+
+\begin{verbatim}
+  defp rows(_, 0, _, _, _) do  done()  end
+  defp rows(w, h, tr, depth, ctrl) do
+    receive do
+      {:request, from} ->
+        send(from, {:task, w, h, tr, depth, ctrl})
+        send(ctrl, :go)
+        rows(w, h - 1, tr, depth, ctrl)
+
+      :stop ->
+        :ok
+    end
+  end
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{the client}
+
+\begin{verbatim}
+  defp client(server, n) do
+    send(server, {:request, self()})
+
+    receive do
+      {:task, w, h, {:trans, x, y, k}, depth, ctrl} ->
+        tr = fn(a, b) -> Cmplx.new(x + k * (a - 1), y - k * (b - 1))  end
+
+        row = row(w, h, tr, depth, [])
+        send(ctrl, {:row, h, row})
+        client(server, n + 1)
+
+      :done ->
+        IO.puts("Client completed #{n} rounds") 
+    end
+  end
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{start the system}
+
+{\em in one Elixir shell started in distributed mode}
+
+\begin{verbatim}
+{:ok, p} = Server:start(600,400,-2.6,1.2,0.004,64,"demo.ppm").
+
+Process.register(p, :server)
+\end{verbatim}
+
+{\em in anothe Elixir shell started in distributed mode}
+
+\begin{verbatim}
+Client.start(:"gold@130.229.158.31", :server).
+\end{verbatim}
+
+\vspace{20pt}
+{\em note - the client must have access to cmplx, color and brot, the server to print and ppm}
+
+\end{frame}
+
+\end{document}
+
+
+

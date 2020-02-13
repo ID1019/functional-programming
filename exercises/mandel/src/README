@@ -3,4 +3,11 @@ The native interface is compiled like follows:
 
 > gcc -o depth.so -I/usr/lib/erlang/usr/include -fpic -shared depth.c
 
-This will be loaded as the module depth.erl is loaded.
+This will be loaded as the module Depth is loaded.
+
+The depth.ex file can not be re-compiled since this will trigger
+another load operation of the module. When you compile the file make
+sure that you do not have previous compiled veriosn i.e. a
+Elixir.Depth.beam in your directory.
+
+> elixirc depth.ex
