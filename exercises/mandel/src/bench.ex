@@ -1,5 +1,24 @@
 defmodule Bench do
 
+
+
+
+  def bench(img, size, depth) do
+    {t, _} = :timer.tc( fn() -> 
+      {x, y, xn} = image(img)
+      {width, height, k} = size(size, x, xn)
+      Mandel.mandelbrot(width, height, x, y, k, depth)
+    end)
+    IO.write("#{trunc(t/1000)} ms\n")
+  end  
+
+
+
+
+
+  
+
+  
   def server() do
     server(:waves, :small, 255, "wave.ppm")
   end
@@ -21,6 +40,15 @@ defmodule Bench do
     parallel(16, img, size, depth)
   end
 
+  def trout(img, size, depth) do
+    parallel(1, img, size, depth)
+    parallel(2, img, size, depth)    
+    parallel(3, img, size, depth)    
+    parallel(4, img, size, depth)
+    parallel(6, img, size, depth)    
+    parallel(8, img, size, depth)    
+  end
+  
   def pro(img, size, depth) do
     parallel(1, img, size, depth)
     parallel(2, img, size, depth)    
@@ -44,19 +72,20 @@ defmodule Bench do
     IO.write("#{trunc(t/1000)} ms\n")
   end
 
-  def bench(img, size, depth) do
-    {t, _} = :timer.tc( fn() -> 
-      {x, y, xn} = image(img)
-      {width, height, k} = size(size, x, xn)
-      Mandel.mandelbrot(width, height, x, y, k, depth)
-    end)
-    IO.write("#{trunc(t/1000)} ms\n")
-  end  
 
   ### Given the upper left corner, the size information, the depth and a
   ### name this procedure will calculate an image and print it to a .ppm
   ### file.
 
+  def print(img, size, depth) do
+    {x, y, xn} = image(img)
+    {width, height, k} = size(size, x, xn)
+    image = Mandel.mandelbrot(width, height, x, y, k, depth)
+    file = "#{to_string(img)}-#{to_string(size)}.ppm"
+    PPM.write(file, image)
+  end
+    
+  
   
   def print({x, y}, {width, height, k}, depth, file) do
     {t, _} = :timer.tc( fn() ->
@@ -72,34 +101,34 @@ defmodule Bench do
   ### has the 16:9 ratio. The k value is the step factor for each
   ### pixle.
 
-  def size(:small, x, x1) do
+  def size(:small, x, xn) do
     width = 960
     height = 540
-    k = (x1 - x)/width
+    k = (xn - x)/width
     {width, height, k}
   end
-  def size(:large, x,x1) do
+  def size(:large, x, xn) do
     width = 1920
     height = 1080
-    k = (x1 - x)/width
+    k = (xn - x)/width
     {width, height, k}
   end
-  def size(:long, x, x1) do
+  def size(:long, x, xn) do
     width = 2560
     height = 1080
-    k = (x1 - x)/width
+    k = (xn - x)/width
     {width, height, k}
   end
-  def size(:huge, x, x1) do
+  def size(:huge, x, xn) do
     width = 3840
     height = 2160
-    k = (x1 - x)/width
+    k = (xn - x)/width
     {width, height, k}
   end
 
 
-  ### image(name) -> {x,y,x1} where x,y is the upper left corner and
-  ### x1 the rightermost position.
+  ### image(name) -> {x,y,xn} where x,y is the upper left corner and
+  ### xn the rightermost position.
 
   def image(:mandel) do
     {-2.6,1.2,1.6}

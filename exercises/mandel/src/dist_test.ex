@@ -5,7 +5,7 @@ defmodule DistTest do
     {x, y, x1} = image(img)
     {width, height, k} = size(size, x, x1)
     {:ok, server} = Server.start(width, height, x, y, k, depth, file)
-    Process.register(:server, server)
+    Process.register(server, :server)
   end
 
   defp sky(img, size, depth) do
