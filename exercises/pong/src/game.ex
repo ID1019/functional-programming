@@ -14,6 +14,8 @@ defmodule Game do
   @dy  0
   @dx 10
 
+  
+  
   def player(name) do
     y = trunc( (@field_height - @paddle_height) / 2)
     {name, y, 0}

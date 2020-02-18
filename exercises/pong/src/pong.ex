@@ -47,7 +47,6 @@ defmodule Pong do
     receive  do
 
       {:player1, :down} ->
-	#:io.format("msg down from player 1\n")
 	case Game.down(player1) do
 	  {:ok, player1} ->
 	    broadcast(sessions, {:player1, :down})
@@ -57,7 +56,6 @@ defmodule Pong do
 	end
 
       {:player1, :up}->
-	#:io.format("msg down from player 1\n")
 	case Game.up(player1) do
 	  {:ok, player1} ->
 	    broadcast(sessions, {:player1, :up})
@@ -67,7 +65,6 @@ defmodule Pong do
 	end
 
       {:player2, :down} ->
-	#:io.format("msg down from player 2\n")
 	case Game.down(player2) do
 	  {:ok, player2} ->	
 	    broadcast(sessions, {:player2, :down})
@@ -78,7 +75,6 @@ defmodule Pong do
 
 
       {:player2, :up} ->
-	#:io.format("msg down from player 2\n")
 	case Game.up(player2) do
 	  {:ok, player2} ->
 	    broadcast(sessions, {:player2, :up})

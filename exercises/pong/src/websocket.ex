@@ -8,19 +8,18 @@ defmodule WebSocket do
   # processes. 
 
   defp init(port, sessions) do
-    opt = [:binary, active: true, reuseaddr: true]
+    opt = [:binary, {:active, false}, {:reuseaddr, true}]
     case :gen_tcp.listen(port, opt) do
       {:ok, listen} ->
-	handlers = Enum.map(sessions, fn(session) -> spawn_link(fn() -> connect(listen, session) end) end)
+	Enum.map(sessions, fn(session) -> spawn_link(fn() -> connect(listen, session) end) end)
 	receive do
 	  :stop ->
 	    # the socket process must live as long as the sessions last
-	    Enum.each(handlers, fn(handler) -> send(handler, :stop) end)
 	    :io.format("ws: server stopped ~n")
-	    :ok
+	    Process.exit(self(), :done)
 	end
       {:error, error} ->
-        error
+       error
     end
   end
 
@@ -32,11 +31,11 @@ defmodule WebSocket do
     case :gen_tcp.accept(listen) do
       {:ok, socket} ->
 	{:ok, {ip, port}} = :inet.peername(socket)
-	:io.format("ws: new connection from ~w ~w ~n", [ip, port])
-	case handshake(socket) do
+	:io.format("ws: new connection from ~w ~w ~w ~n", [ip, port, socket])
+	case handshake(socket, <<>>) do
 	  :ok ->
-	    send(session, {:ws,  self(), :open})
-	    session(socket, session)
+	    handler = spawn_link(fn() -> init_handler(socket, session) end)
+	    decoder(socket,  handler, <<>>)
 	    :gen_tcp.close(socket)
 	  {:error, reason} ->
 	    :io.format("ws: session failed ~w~n", [reason])
@@ -46,58 +45,86 @@ defmodule WebSocket do
     end
   end
 
-  ## This is the handler for one session.
+  ## This is the decoder handler for one session.
 
-  defp session(socket, session) do
+  defp decoder(socket, handler, <<>>) do
+    case :gen_tcp.recv(socket,0) do
+      {:ok, more} ->
+	decoder(socket, handler, more)
+      {:error, reason} ->
+	:io.format("ws: socket closed by client (~w)~n", [reason])
+	Process.exit(self(), :done)
+    end
+  end
+  
+  defp decoder(socket, handler, sofar) do
+    case decode(sofar) do
+      {:ping, msg, rest} ->
+	:gen_tcp.send(socket, pong(msg))
+	decoder(socket, handler, rest)	    
+      {:pong, _msg, rest} ->
+	decoder(socket, handler, rest)
+      :closed ->
+	send(handler, :closed)
+      {:ok, msg, rest} ->
+	send(handler,  {:msg, msg})
+	decoder(socket, handler, rest)
+    end
+  end
+
+  defp init_handler(socket, session) do
+    send(session, {:ws, self(), :open})
+    handler(socket, session)
+  end
+  
+
+  def handler(socket, session) do
     receive do
-      {:tcp, ^socket, msg} ->
-	##:io.format("ws: session received messag~n")
-	case decode(msg) do
-	  {:ping, msg} ->
-	    :gen_tcp.send(socket, pong(msg))
-	    session(socket, session)	    
-	  {:pong, _msg} ->
-	    session(socket, session)	    
-	  :closed ->
-	    :io.format("ws: session closed by client~n")
-	    send(session, {:ws, self(), :closed})
-	  {:ok, msg} ->
-	    ##:io.format("ws session frw messag: ~w~n", [msg])
-	    send(session, {:ws, self(), {:msg, msg}})
-	    session(socket, session)
-	end
-      {:tcp_closed, ^socket} ->
-	:io.format("ws: socket closed by client~n")
-	send(session, {:ws, self(), :closed})
+      {:msg, msg} ->
+	send(session,  {:ws, self(), {:msg, msg}})
+	handler(socket, session)
+      :closed ->
+	send(session,  {:ws, self(), :closed})	
 
       {:frw, msg} ->
 	:gen_tcp.send(socket,  message(msg))
-	session(socket, session)
+	handler(socket, session)
+
       :stop ->
-	:io.format("ws: session stopped~n")
-	:ok
-      error ->
-	:io.format("ws: session error: ~w ~n", [error])
-	:ok	
+	:gen_tcp.send(socket,  close())
+	Process.exit(self(), :done)
+
+      strange ->
+	:io.format("ws: strange message: ~w ~n", [strange])
+	exit(:error)
     end
   end
 
   ## The websocket specific handshake and coding of messages.
   
-  defp handshake(socket) do
-    receive do
-      {:tcp, ^socket, request} ->
-	{request, headers, <<>>} = parse_request(request)
-	{:get, _uri, _ver} = request
-	##:io.format("\n\n ~p\n\n", [headers])
-        {"Upgrade", "websocket"} = List.keyfind(headers, "Upgrade", 0)
-	{"Sec-WebSocket-Protocol", "pong"} = List.keyfind(headers, "Sec-WebSocket-Protocol", 0)
-	{"Sec-WebSocket-Key", key} = List.keyfind(headers, "Sec-WebSocket-Key", 0)
-	respons = respons(key)
-	##:io.format("\n\n~s\n", [respons])
-	:gen_tcp.send(socket, respons)
-      {:tcp_closed, ^socket} ->
-	{:error, :closed}
+  defp handshake(socket, sofar) do
+    case :gen_tcp.recv(socket, 0) do
+      {:ok, more} ->
+	sofar = more <> sofar
+
+	case parse_request(sofar) do
+	  {request, headers} -> 
+	    {:get, _uri, _ver} = request
+	    ##:io.format("ws:\n\n ~p\n\n", [headers])
+            {"Upgrade", "websocket"} = List.keyfind(headers, "Upgrade", 0)
+	    {"Sec-WebSocket-Protocol", "pong"} = List.keyfind(headers, "Sec-WebSocket-Protocol", 0)
+	    {"Sec-WebSocket-Key", key} = List.keyfind(headers, "Sec-WebSocket-Key", 0)
+	    respons = respons(key)
+	    ##:io.format("ws:\n\n~s\n", [respons])
+	    :gen_tcp.send(socket, respons)
+	    :ok
+	  :more ->
+	    # more bytes required
+	    :io.format("ws: handshake, more bytes required\n")
+	    handshake(socket, sofar)
+	end
+      {:error, reason} ->
+	{:error, reason}
     end
   end
 
@@ -123,6 +150,8 @@ defmodule WebSocket do
   ## We will only handle non-fragmented messages that are fully
   ## contained in one frame.
 
+  ## One binary can however contain several full frames.
+
 
   def decode(<<_frag::4, op::4, _m::1, _len::7, _rest::binary >>) when op == 8 do
     :closed
@@ -132,14 +161,14 @@ defmodule WebSocket do
     1 = m      # masking turned on
     cond do
       len < 126 ->
-	<<mask::binary-size(4), payload::binary-size(len), _::binary>> = rest
-	{:ping, mask(payload, mask)}
+	<<mask::binary-size(4), payload::binary-size(len), rest::binary>> = rest
+	{:ping, mask(payload, mask), rest}
       len == 126 ->
-	<<len::16, mask::binary-size(4), payload::binary-size(len), _::binary>> = rest
-	{:ping, mask(payload, mask)}
+	<<len::16, mask::binary-size(4), payload::binary-size(len), rest::binary>> = rest
+	{:ping, mask(payload, mask), rest}
       true -> 
-	<<len::64, mask::binary-size(4), payload::binary-size(len), _::binary>> = rest
-	{:ping, mask(payload, mask)}
+	<<len::64, mask::binary-size(4), payload::binary-size(len), rest::binary>> = rest
+	{:ping, mask(payload, mask), rest}
     end
   end  
   def decode(<<frag::4, op::4, m::1, len::7, rest::binary >>) when op == 10 do
@@ -147,14 +176,14 @@ defmodule WebSocket do
     1 = m      # masking turned on
     cond do
       len < 126 ->
-	<<mask::binary-size(4), payload::binary-size(len), _::binary>> = rest
-	{:pong, mask(payload, mask)}
+	<<mask::binary-size(4), payload::binary-size(len), rest::binary>> = rest
+	{:pong, mask(payload, mask), rest}
       len == 126 ->
-	<<len::16, mask::binary-size(4), payload::binary-size(len), _::binary>> = rest
-	{:pong, mask(payload, mask)}
+	<<len::16, mask::binary-size(4), payload::binary-size(len), rest::binary>> = rest
+	{:pong, mask(payload, mask), rest}
       true -> 
-	<<len::64, mask::binary-size(4), payload::binary-size(len), _::binary>> = rest
-	{:pong, mask(payload, mask)}
+	<<len::64, mask::binary-size(4), payload::binary-size(len), rest::binary>> = rest
+	{:pong, mask(payload, mask), rest}
     end
   end  
 
@@ -163,25 +192,33 @@ defmodule WebSocket do
     1 = m      # masking turned on
     cond do
       len < 126 ->
-	<<mask::binary-size(4), payload::binary-size(len), _::binary>> = rest
-	{:ok, mask(payload, mask)}
+	<<mask::binary-size(4), payload::binary-size(len), rest::binary>> = rest
+	{:ok, mask(payload, mask), rest}
       len == 126 ->
 	<<len::16, mask::binary-size(4), payload::binary-size(len), _::binary>> = rest
-	{:ok, mask(payload, mask)}
+	{:ok, mask(payload, mask), rest}
       true -> 
 	<<len::64, mask::binary-size(4), payload::binary-size(len), _::binary>> = rest
-	{:ok, mask(payload, mask)}
+	{:ok, mask(payload, mask), rest}
     end
   end
+
 
   def message(data) do
     op = 2 # binary
     encode(op, data)
   end
+
   def pong(data) do
     op = 10 # pong
     encode(op, data)
-  end  
+  end
+
+  def close() do
+    op = 8 # close
+    encode(op, <<>>)
+  end
+
 
   def encode(op, data) do
     len = byte_size(data)
@@ -243,11 +280,16 @@ defmodule WebSocket do
   	
 	
   defp parse_request(request) do
-    [head, body] = :binary.split(request, "\r\n\r\n")
-    [request | headers] = :binary.split(head, "\r\n", [:global])
-    request = request_line(request)
-    headers = headers(headers)
-    {request, headers, body}
+    case :binary.part(request, byte_size(request), -4) do
+      "\r\n\r\n" ->
+	request = :binary.part(request, 0, byte_size(request) - 4)
+	[request | headers] = :binary.split(request, "\r\n", [:global])
+	request = request_line(request)
+	headers = headers(headers)
+	{request, headers}
+      _ ->
+	:more
+    end
   end
   
   defp request_line(line) do

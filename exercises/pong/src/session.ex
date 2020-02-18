@@ -17,13 +17,22 @@ defmodule Session do
 
   def session(name, server, ws) do
     receive do 
-      {:ws, ws, {:msg, <<?D, _::binary>>}} ->
+
+      ## Mesages from client
+	
+      {:ws, ^ws, {:msg, <<?D, _::binary>>}} ->
 	send(server, {name, :down})
 	session(name, server, ws)
-      {:ws, ws, {:msg, <<?U, _::binary>>}} ->
+
+      {:ws, ^ws, {:msg, <<?U, _::binary>>}} ->
 	send(server, {name, :up})
 	session(name, server, ws)
 
+      {:ws, ^ws, :closed} ->
+	:ok
+
+      ##  Messages from Pong engine
+	
       {:player1, :up} ->
 	send(ws, {:frw, <<?P,?U>>})
 	session(name, server, ws)
@@ -55,14 +64,21 @@ defmodule Session do
       {:ball, {bx, by}} ->
 	send(ws, {:frw, <<?B,bx::16,by::16>>})
 	session(name, server, ws)
+
+      :stop ->
+	send(ws, :stop)
+	:ok
 	
+      ## allows us to send arbirary message
+
       {:frw, msg} ->
-	## arbitary messages 
 	send(ws, {:frw, msg})
 	session(name, server, ws)
 
-      :stop ->
-	:ok
+      strange ->
+	:io.format("session: strange message ~w~n", [strange])
+	session(name, server, ws)	
+	
     end
     
   end
