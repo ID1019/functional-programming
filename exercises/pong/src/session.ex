@@ -47,8 +47,12 @@ defmodule Session do
       {:player2, :score, score} ->
 	send(ws, {:frw, <<?O,?S, score>>})
 	session(name, server, ws)
+
+      {:ball, :hide} ->
+	send(ws, {:frw, <<?B,0::16,0::16>>})
+	session(name, server, ws)
 	
-      {:ball, bx, by} ->
+      {:ball, {bx, by}} ->
 	send(ws, {:frw, <<?B,bx::16,by::16>>})
 	session(name, server, ws)
 	
