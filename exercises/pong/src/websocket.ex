@@ -5,7 +5,8 @@ defmodule WebSocket do
   end
 
   # Initialize the server: takes a port number and a set of session
-  # processes. 
+  # processes. As many handler processes as there are sessions will be
+  # created. If one of them dies , all processes will die.
 
   defp init(port, sessions) do
     opt = [:binary, {:active, false}, {:reuseaddr, true}]
@@ -16,7 +17,7 @@ defmodule WebSocket do
 	  :stop ->
 	    # the socket process must live as long as the sessions last
 	    :io.format("ws: server stopped ~n")
-	    Process.exit(self(), :done)
+	    Process.exit(self(), :kill)
 	end
       {:error, error} ->
        error
@@ -24,7 +25,10 @@ defmodule WebSocket do
   end
 
   
-  ## Listen to the socket for an incoming connection. 
+  ## Listen to the socket for an incoming connection. If handshake
+  ## succeeds a decoder process is spawned to parse incoming
+  ## messages. The messages are send to the handler process that then
+  ## sends them to the session process.
 
   def connect(listen, session) do
     :io.format("ws: session ready ~n")
@@ -34,49 +38,20 @@ defmodule WebSocket do
 	:io.format("ws: new connection from ~w ~w ~w ~n", [ip, port, socket])
 	case handshake(socket, <<>>) do
 	  :ok ->
-	    handler = spawn_link(fn() -> init_handler(socket, session) end)
-	    decoder(socket,  handler, <<>>)
+	    :io.format("ws: handshake completed ~n")	    
+	    me = self()
+	    spawn_link(fn() -> decoder(socket, me, <<>>) end)
+	    send(session, {:ws, self(), :open})
+	    handler(socket,  session)
 	    :gen_tcp.close(socket)
 	  {:error, reason} ->
-	    :io.format("ws: session failed ~w~n", [reason])
+	    :io.format("ws: handshake failed ~w~n", [reason])
 	end
       {:error, error} ->     
         error
     end
+    Process.exit(self(), :kill)
   end
-
-  ## This is the decoder handler for one session.
-
-  defp decoder(socket, handler, <<>>) do
-    case :gen_tcp.recv(socket,0) do
-      {:ok, more} ->
-	decoder(socket, handler, more)
-      {:error, reason} ->
-	:io.format("ws: socket closed by client (~w)~n", [reason])
-	Process.exit(self(), :done)
-    end
-  end
-  
-  defp decoder(socket, handler, sofar) do
-    case decode(sofar) do
-      {:ping, msg, rest} ->
-	:gen_tcp.send(socket, pong(msg))
-	decoder(socket, handler, rest)	    
-      {:pong, _msg, rest} ->
-	decoder(socket, handler, rest)
-      :closed ->
-	send(handler, :closed)
-      {:ok, msg, rest} ->
-	send(handler,  {:msg, msg})
-	decoder(socket, handler, rest)
-    end
-  end
-
-  defp init_handler(socket, session) do
-    send(session, {:ws, self(), :open})
-    handler(socket, session)
-  end
-  
 
   def handler(socket, session) do
     receive do
@@ -92,11 +67,10 @@ defmodule WebSocket do
 
       :stop ->
 	:gen_tcp.send(socket,  close())
-	Process.exit(self(), :done)
 
       strange ->
 	:io.format("ws: strange message: ~w ~n", [strange])
-	exit(:error)
+
     end
   end
 
@@ -127,6 +101,37 @@ defmodule WebSocket do
 	{:error, reason}
     end
   end
+  
+  
+  ## This is the decoder of a session handler. All decoded messages
+  ## will be sen to the handler.
+
+  defp decoder(socket, handler, <<>>) do
+    case :gen_tcp.recv(socket,0) do
+      {:ok, more} ->
+	decoder(socket, handler, more)
+      {:error, reason} ->
+	:io.format("ws: socket closed by client (~w)~n", [reason])
+	Process.exit(self(), :kill)	
+    end
+  end
+  
+  defp decoder(socket, handler, sofar) do
+    case decode(sofar) do
+      {:ping, msg, rest} ->
+	:gen_tcp.send(socket, pong(msg))
+	decoder(socket, handler, rest)	    
+      {:pong, _msg, rest} ->
+	decoder(socket, handler, rest)
+      :closed ->
+	send(handler, :closed)
+	Process.exit(self(), :kill)	
+      {:ok, msg, rest} ->
+	send(handler,  {:msg, msg})
+	decoder(socket, handler, rest)
+    end
+  end
+
 
      #  0                   1                   2                   3
      #  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
