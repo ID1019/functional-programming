@@ -39,6 +39,12 @@ defmodule Dinner do
     wait(5, [c1, c2, c3, c4, c5])
   end
 
+
+
+
+
+
+  
   defp init(n, seed, node) do
     c1 = Chopstick.start(node)
     c2 = Chopstick.start(node)
@@ -57,6 +63,7 @@ defmodule Dinner do
   
   defp wait(0, chopsticks) do
     Enum.each(chopsticks, fn(c) -> Chopstick.quit(c) end)
+    Process.unregister(:dinner)
   end
 
   defp wait(n, chopsticks) do
@@ -66,6 +73,7 @@ defmodule Dinner do
 
       :abort ->
 	## in order to kill all chopsticks and philosophers
+	:io.format("dinner aborted~")
         Process.exit(self(), :kill)
     end
   end

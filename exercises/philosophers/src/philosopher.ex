@@ -1,8 +1,10 @@
 defmodule Philosopher do
 
-  @dream 1000
-  @eat 50
-  @delay 200
+  @dream 400
+  @eat 100
+  @delay 50
+
+  @timeout 1000
 
   # Create a new philosopher process.
   def start(hunger, strength, left, right, name, ctrl, seed) do
@@ -11,7 +13,7 @@ defmodule Philosopher do
 
   defp init(hunger, strength, left, right, name, ctrl, seed) do
     gui = Gui.start(name)
-    :rand.seed(:exsplus, {seed, seed, seed})
+    :rand.seed(:exsss, {seed, seed, seed})
     dreaming(hunger, strength, left, right, name, ctrl, gui)
   end
 
@@ -27,8 +29,9 @@ defmodule Philosopher do
     send(ctrl, :done)
   end
   defp dreaming(hunger, strength, left, right, name, ctrl, gui) do
-    IO.puts("#{name} is dreaming...")
+    IO.puts("#{name} is dreaming!")
     delay(@dream)
+    IO.puts("#{name} wakes up")
     waiting(hunger, strength, left, right, name, ctrl, gui)
   end
 
@@ -36,15 +39,16 @@ defmodule Philosopher do
   defp waiting(hunger, strength, left, right, name, ctrl, gui) do
     send(gui, :waiting)
     IO.puts("#{name} is waiting, #{hunger} to go!")
-
     case Chopstick.request(left) do
       :ok ->
+	IO.puts("#{name} received left stick")
         delay(@delay)
-
         case Chopstick.request(right) do
           :ok ->
             IO.puts("#{name} received both sticks!")
             eating(hunger, strength, left, right, name, ctrl, gui)
+	    send(gui, :leave)
+	    dreaming(hunger, strength - 1, left, right, name, ctrl, gui)
         end
     end
   end
@@ -52,13 +56,14 @@ defmodule Philosopher do
   # Philosopher is eating.
   defp eating(hunger, strength, left, right, name, ctrl, gui) do
     send(gui, :enter)
-    IO.puts("#{name} is eating...")
+    #IO.puts("#{name} is eating...")
 
     delay(@eat)
 
     Chopstick.return(left)
     Chopstick.return(right)
 
+    #IO.puts("#{name} is dreaming...")
     send(gui, :leave)
     dreaming(hunger - 1, strength, left, right, name, ctrl, gui)
   end

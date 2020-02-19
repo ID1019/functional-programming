@@ -1,0 +1,180 @@
+\input{../include/preamble}
+
+\usepackage{pgf-umlsd}
+\usepgflibrary{arrows} % for pgf-umlsd
+
+\title[ID1019 A transport layer]{A game of Pong}
+
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{the classical game of Pong}
+
+
+\end{frame}
+
+\begin{frame}{architecture overview}
+
+
+\begin{figure}
+\begin{tikzpicture}
+
+  \coordinate (n0) at (0,6);
+  \coordinate (nn) at (0,-0.5);
+
+  \coordinate (a0) at (3, 3);
+  \coordinate (an) at (3,-0.5);
+
+  \coordinate (b0) at (5,4);
+  \coordinate (bn) at (5,-0.5);
+
+  \coordinate (c0) at (7,5);
+  \coordinate (cn) at (7,-0.5);
+
+  \coordinate (s0) at (12,6);
+  \coordinate (sn) at (12,-0.5);
+
+
+  \draw[->] (n0) to []  (nn);
+  \draw[->] (s0) to []  (sn);
+
+  \node[anchor=south] at (n0) {browser};
+  \node[anchor=south] at (s0) {pong server};
+
+  \pause
+
+  \pause
+  \coordinate (s2) at ($(s0)+(0,-1)$);
+  \draw[dashed] (s2) -- node[near start, above]{start(name, me)\ \ } (c0);
+  \node[anchor=south] at (c0) {ses1/2};  
+  \draw[->] (c0) to []  (cn);
+
+  \pause
+  
+  \coordinate (s3) at ($(s2)+(0,-1)$);
+  \draw[dashed] (s3) -- node[near start, above]{start(8080,[ses1, ses2])\ \ } (b0);
+  \node[anchor=south] at (b0) {srv};  
+  \draw[] (b0) to []  ($(b0)+(0,-2)$);
+
+  \pause
+
+  \coordinate (b1) at ($(b0)+(0,-1)$);
+  \draw[dashed] (b1) -- (a0);        
+  \node[anchor=south] at (a0) {hdlr1/2};  
+  \draw[->] (a0) to []  (an);  
+
+  \pause
+
+  \coordinate (n4) at ($(n0)+(0,-4)$);
+  \coordinate (a1) at ($(a0)+(0,-1)$);
+  \draw[dashed, ->, shorten <=0.2cm, shorten >=0.2cm] (n4) -- node[midway, above] {connect} (a1);
+
+  \pause
+  \coordinate (a2) at ($(a1)+(0,-1)$);
+  \coordinate (c2) at ($(c0)+(0,-4)$);
+  \draw[->, shorten <=0.2cm, shorten >=0.2cm] (a2) -- node[midway, above] {\{:ws, :open, pid\}} (c2);
+
+  \pause
+  \coordinate (c3) at ($(c2)+(0,-1)$);
+  \coordinate (s4) at ($(s3)+(0,-4)$);
+  \draw[->, shorten <=0.2cm, shorten >=0.2cm] (c3) -- node[midway, above] {\{:ready, name\}} (s4);  
+
+
+\end{tikzpicture}
+
+\end{figure}
+\end{frame}
+
+
+\begin{frame}{WebSocket interface}
+
+  The socket {\em handler process} is responsible for the websocket
+  handshake and will then do low level encoding of frames and
+  messages.  
+
+\vspace{10pt}  \pause
+
+\begin{itemize}
+\item {\tt \{:ws, pid, :open\}}  : a connection was establishes
+\item {\tt \{:ws, pid, :close\}}  : the connection was closed by the client
+\item {\tt \{:ws, pid, \{:msg,  <<byte encoded message>>\}\}} : message from the client
+\end{itemize}
+
+\vspace{10pt}  \pause
+
+\begin{itemize}
+\item {\tt \{:frw, <<byte encoded message>>\}}  : encode and send message to client
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{The session handler}
+
+  Works as a deocer/encoder of byte-encoded  messages and Elixir messages.
+
+\vspace{20pt}  \pause
+
+Messages from the client:
+
+\vspace{20pt}
+
+      \begin{itemize}
+      \item {\tt <<?U>>}  : player pressed up, {\tt \{name, :up\}}
+      \item {\tt <<?D>>}  : player pressed down, {\tt \{name, :down\}}        
+      \end{itemize}
+
+
+\end{frame}
+
+\begin{frame}{session handler}
+
+  Messages from pong server:
+
+  \vspace{20pt}
+      
+  \begin{itemize}
+  \item {\tt \{:player1, :up\}}  : player moved up -  {\tt <<?P,?U>>}
+  \item {\tt \{:player1, :down\}}  : player moved down - {\tt <<?P,?D>>}
+  \item {\tt \{:player1, :score, score\}}  : player moved up - {\tt <<?P,?S, score>>}
+  \item {\tt \{:player2, ... \}} same messages for opponent -  {\tt <<?O, ... >>}        
+  \item {\tt \{:ball, x, y \}} ball moved to new position - {\tt <<?B, x::16, y::16 >>}        
+  \item {\tt \{:frw, msg\}}  raw message to client - {\tt msg}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{the game engine}
+
+  The game server:
+  \vspace{10pt} \pause
+  \begin{itemize}
+  \item create two session handlers with unique names \pause
+  \item create a WebSocket process, give session handlers as arguments \pause
+  \item wait for session handlers to report \pause
+  \item sart the game \pause
+  \end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}{the game engine}
+
+  
+\end{frame}
+  
+  
+\end{frame}
+
+
+
+\end{document}
+
+
+
