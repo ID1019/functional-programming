@@ -15,7 +15,6 @@ defmodule Chopstick do
   # The synchronous version of requesting a chopstick.
   def request({:stick, pid}) do
     send(pid, {:request, self()})
-
     receive do
       :granted -> :ok
     end
@@ -27,7 +26,7 @@ defmodule Chopstick do
 
   
   # Using a timeout to detect deadlock, does it work?
-  def request({:stick, pid}, timeout) do
+  def request({:stick, pid}, timeout) when is_number(timeout) do
     send(pid, {:request, self()})
 
     receive do
@@ -39,17 +38,38 @@ defmodule Chopstick do
     end
   end
 
+
+
+
+
+  
+  
   # The better version, we keep track of requests.
+
+  def request({:stick, pid}, ref) do
+    send(pid, {:request, ref, self()})
+    wait(ref)
+  end
+
   def request({:stick, pid}, ref, timeout) do
     send(pid, {:request, ref, self()})
     wait(ref, timeout)
+  end
+
+  defp wait(ref) do
+    receive do
+    {:granted, ^ref} ->
+        :ok
+      {:granted, _} ->
+	## this is an old message that we must ignore
+        wait(ref)
+    end
   end
 
   defp wait(ref, timeout) do
     receive do
       {:granted, ^ref} ->
         :ok
-
       {:granted, _} ->
 	## this is an old message that we must ignore
         wait(ref, timeout)
@@ -64,6 +84,15 @@ defmodule Chopstick do
     send(pid, {:return, ref})
   end
   
+
+
+
+
+
+
+
+
+
   
   # A asynchronous request, divided into sending the
   # request and waiting for the reply.
@@ -72,10 +101,15 @@ defmodule Chopstick do
   end
 
   # Don't throw anything away (since there are no old messages)
-  def synch(ref) do
+  def synch(ref, timeout) do
     receive do
       {:granted, ^ref} ->
         :ok
+      {:granted, _} ->
+	## this is an old message that we must ignore
+        synch(ref, timeout)
+    after timeout ->
+	:no
     end
   end
   
