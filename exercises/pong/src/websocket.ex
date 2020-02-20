@@ -124,6 +124,7 @@ defmodule WebSocket do
       {:pong, _msg, rest} ->
 	decoder(socket, handler, rest)
       :closed ->
+	:io.format("ws: websocket closed by client\n")
 	send(handler, :closed)
 	Process.exit(self(), :kill)	
       {:ok, msg, rest} ->
@@ -227,21 +228,19 @@ defmodule WebSocket do
 
   def encode(op, data) do
     len = byte_size(data)
-    mask = <<1,2,3,4>>   # this should of course be random
-    xored = mask(data, mask)
     frag = 8      # single frame, no extensions
     op = op       # opcode
     flags = <<frag::4, op::4>>
-
-    mask = cond do
-      len < 126 ->
-	<<1::1, len::7, mask::binary-size(4)>>
-      len <= 65536 ->
-	<<1::1, 126::7, len::16, mask::binary-size(4)>>
-      true ->
-	<<1::1, 127::7, len::64, mask::binary-size(4)>>
-    end
-    flags <> mask <> xored
+    # data is not masked by the server
+    nomask = cond do
+       len < 126 ->
+     	<<0::1, len::7>>
+       len <= 65536 ->
+     	<<0::1, 126::7, len::16>>
+       true ->
+     	<<0::1, 127::7, len::64>>
+     end
+    flags <> nomask <> data
   end
 
   
