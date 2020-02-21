@@ -129,7 +129,7 @@ defmodule Pong do
       {:frw, msg} ->
 	## if we want to send anything else to the sessions
 	:io.format("msg to players: ~w\n", [msg])
-	broadcast(sessions, msg)
+	broadcast(sessions, {:frw, msg})
 	pong(player1, player2, ball, sessions)
 
 

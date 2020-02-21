@@ -57,8 +57,7 @@ defmodule Game do
 
   def move_ball(player1, player2, ball) do
 
-    {:ball, bx, by, dx
-     , dy}  = ball
+    {:ball, bx, by, dx, dy}  = ball
       {name1, y1, s1} = player1
       {name2, y2, s2} = player2
       

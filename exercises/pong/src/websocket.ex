@@ -154,61 +154,43 @@ defmodule WebSocket do
      # +---------------------------------------------------------------+
 
   ## We will only handle non-fragmented messages that are fully
-  ## contained in one frame.
+  ## contained in one frame i.e. frag == 8
 
   ## One binary can however contain several full frames.
-
 
   def decode(<<_frag::4, op::4, _m::1, _len::7, _rest::binary >>) when op == 8 do
     :closed
   end
-  def decode(<<frag::4, op::4, m::1, len::7, rest::binary >>) when op == 9 do
-    8 = frag   # first and only frame, no extensions
-    1 = m      # masking turned on
-    cond do
-      len < 126 ->
-	<<mask::binary-size(4), payload::binary-size(len), rest::binary>> = rest
-	{:ping, mask(payload, mask), rest}
-      len == 126 ->
-	<<len::16, mask::binary-size(4), payload::binary-size(len), rest::binary>> = rest
-	{:ping, mask(payload, mask), rest}
-      true -> 
-	<<len::64, mask::binary-size(4), payload::binary-size(len), rest::binary>> = rest
-	{:ping, mask(payload, mask), rest}
-    end
+  def decode(<<8::4, op::4, m::1, len::7, rest::binary >>) when op == 9 do
+    {data, rest} = demask(m, len, rest)
+    {:ping, data, rest}
   end  
-  def decode(<<frag::4, op::4, m::1, len::7, rest::binary >>) when op == 10 do
-    8 = frag   # first and only frame, no extensions
-    1 = m      # masking turned on
-    cond do
-      len < 126 ->
-	<<mask::binary-size(4), payload::binary-size(len), rest::binary>> = rest
-	{:pong, mask(payload, mask), rest}
-      len == 126 ->
-	<<len::16, mask::binary-size(4), payload::binary-size(len), rest::binary>> = rest
-	{:pong, mask(payload, mask), rest}
-      true -> 
-	<<len::64, mask::binary-size(4), payload::binary-size(len), rest::binary>> = rest
-	{:pong, mask(payload, mask), rest}
-    end
+  def decode(<<8::4, op::4, m::1, len::7, rest::binary >>) when op == 10 do
+    {data, rest} = demask(m, len, rest)    
+    {:pong, data, rest}
   end  
-
-  def decode(<<frag::4, op::4, m::1, len::7, rest::binary >>) when  (op ==1) or  (op == 2) do
-    8 = frag   # first and only frame, no extensions
-    1 = m      # masking turned on
-    cond do
-      len < 126 ->
-	<<mask::binary-size(4), payload::binary-size(len), rest::binary>> = rest
-	{:ok, mask(payload, mask), rest}
-      len == 126 ->
-	<<len::16, mask::binary-size(4), payload::binary-size(len), _::binary>> = rest
-	{:ok, mask(payload, mask), rest}
-      true -> 
-	<<len::64, mask::binary-size(4), payload::binary-size(len), _::binary>> = rest
-	{:ok, mask(payload, mask), rest}
-    end
+  def decode(<<8::4, op::4, m::1, len::7, rest::binary >>) when  (op ==1) or  (op == 2) do
+    {data, rest} = demask(m, len, rest)    
+    {:ok, data, rest}
   end
 
+  def demask(1, len, rest) when len < 126 do
+    <<mask::binary-size(4), payload::binary-size(len), rest::binary>> = rest
+    {mask(payload, mask), rest}
+  end
+  
+  def demask(1, 127, rest) do
+    <<len::16, mask::binary-size(4), rest::binary>> = rest
+    <<payload::binary-size(len), rest::binary>> = rest
+    {mask(payload, mask), rest}
+  end
+  def demask(1, 128, rest) do 
+    <<len::64, mask::binary-size(4), rest::binary>> = rest
+    <<payload::binary-size(len), rest::binary>> = rest
+    {mask(payload, mask), rest}
+  end
+
+  
 
   def message(data) do
     op = 2 # binary
