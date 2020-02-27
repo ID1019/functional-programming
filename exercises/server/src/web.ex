@@ -15,6 +15,9 @@ defmodule Web do
 	HTTP.fourofour()
     end
   end
+  def reply(_) do
+    HTTP.fourofour()
+  end
 
   ## make sure that they do not include "/../" in the path!
   

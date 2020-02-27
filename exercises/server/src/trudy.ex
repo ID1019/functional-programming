@@ -102,7 +102,7 @@ defmodule Trudy do
   # Decide what to reply and how to turn the reply into a well formed 
   # HTTP reply.
   defp reply({{:get, _uri, _}, _, _}) do
-    :timer.sleep(10)
+    ##:timer.sleep(10)
     HTTP.ok("Hello!")
   end
 
