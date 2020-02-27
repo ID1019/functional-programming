@@ -36,7 +36,7 @@ defmodule Rudy do
     ## :io.format("ready: ~n", [])
     case :gen_tcp.accept(listen) do
       {:ok, client} ->
-	#{:ok, {ip, port}} = :inet.peername(client)
+	{:ok, {ip, port}} = :inet.peername(client)
 	:io.format("new connection: ~w ~w ~n", [ip, port])
 	task(client)
 
@@ -62,11 +62,11 @@ defmodule Rudy do
     recv = :gen_tcp.recv(client, 0)
     case recv do
       {:ok, str} ->
-	#:io.format("request: ~s ~n", [str])
-        ##request = HTTP.parse_request(str) 
-	##:io.format("parsed: ~p ~n", [request])
-        ##response = reply(request)
-	##:io.format("response: ~s~n", [response])
+	:io.format("request: ~s ~n", [str])
+        request = HTTP.parse_request(str) 
+	:io.format("parsed: ~p ~n", [request])
+        response = reply(request)
+	:io.format("response: ~s~n", [response])
         response = dummy()	
         :gen_tcp.send(client, response)
 
