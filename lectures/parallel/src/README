@@ -1,0 +1,11 @@
+
+iex  --erl '+P 130000000'
+
+:erlang.system_info(:process_limit)
+
+:erlang.system_flag(:schedulers_online, 4)
+
+
+
+
+

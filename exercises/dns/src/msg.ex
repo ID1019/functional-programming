@@ -80,7 +80,7 @@ defmodule Msg do
     {:ptr, :int, name}
   end
   def decode_record(@txt, @int, rdata, _) do
-    {:txt, :int, :binary.binary_to_list(rdata)}
+    {:txt, :int, :binary.bin_to_list(rdata)}
   end
   def decode_record(@aaaa, @int, rdata, _) do
     {:ipv6, :int, rdata}
