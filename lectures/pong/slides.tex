@@ -18,7 +18,10 @@
 
 \begin{frame}{the classical game of Pong}
 
-
+  \begin{figure}
+    \includegraphics[scale=0.4]{pong.jpg}
+  \end{figure}
+  
 \end{frame}
 
 \begin{frame}{architecture overview}
@@ -75,12 +78,12 @@
 
   \coordinate (n4) at ($(n0)+(0,-4)$);
   \coordinate (a1) at ($(a0)+(0,-1)$);
-  \draw[dashed, ->, shorten <=0.2cm, shorten >=0.2cm] (n4) -- node[midway, above] {connect} (a1);
+  \draw[dashed, <->, shorten <=0.2cm, shorten >=0.2cm] (n4) -- node[midway, above] {websocket} (a1);
 
   \pause
   \coordinate (a2) at ($(a1)+(0,-1)$);
   \coordinate (c2) at ($(c0)+(0,-4)$);
-  \draw[->, shorten <=0.2cm, shorten >=0.2cm] (a2) -- node[midway, above] {\{:ws, :open, pid\}} (c2);
+  \draw[->, shorten <=0.2cm, shorten >=0.2cm] (a2) -- node[midway, above] {\{:ws, pid, :open\}} (c2);
 
   \pause
   \coordinate (c3) at ($(c2)+(0,-1)$);
@@ -96,9 +99,42 @@
 
 \begin{frame}{WebSocket interface}
 
-  The socket {\em handler process} is responsible for the websocket
-  handshake and will then do low level encoding of frames and
-  messages.  
+  The Javascript client communicte using a websocket interface. After
+  the initial HTTP handshake, a birectional message channel is
+  created. Each message consist of sequence of bytes.
+
+  \pause\vspace{10pt}
+  
+  
+  \begin{tikzpicture}[>=stealth', node distance=140pt, semithick, auto]
+
+        \tikzstyle{fbp} = [rectangle, rounded corners, minimum width=50pt, minimum height=20pt,text centered, draw=black]        
+
+        \node (brw1) [fbp] {browser};
+        \node (hdlr1) [fbp, right of=brw1] {handler};
+
+        \path[<->]  (brw1) edge   node      {websocket}       (hdlr1);
+        \pause
+        \node (ses1) [fbp, right of=hdlr1] {session};
+        \path[<->]  (hdlr1) edge   node      {\{:msg, <<bytes>>\}}       (ses1);
+
+\end{tikzpicture}
+
+  \pause\vspace{10pt}
+  
+  The websocket handler process will take care of the wesocket
+  internals and deliver a stream of messages to the session process.
+
+  \pause
+
+  Each client is connected through a unique handler process that is
+  communicating with a single session process.
+
+\end{frame}
+
+\begin{frame}{Session handler lower interface}
+
+Messages from the websocket handler process:
 
 \vspace{10pt}  \pause
 
@@ -110,8 +146,11 @@
 
 \vspace{10pt}  \pause
 
+Messages to the websocket handler process:
+
 \begin{itemize}
 \item {\tt \{:frw, <<byte encoded message>>\}}  : encode and send message to client
+\item {\tt :stop} : time to close the connection
 \end{itemize}
 
 \end{frame}
@@ -120,23 +159,23 @@
 
   Works as a deocer/encoder of byte-encoded  messages and Elixir messages.
 
-\vspace{20pt}  \pause
+  \vspace{20pt}  \pause
 
-Messages from the client:
+  Messages from the client forwarded to the pong game server:
 
-\vspace{20pt}
+  \vspace{20pt}
 
-      \begin{itemize}
-      \item {\tt <<?U>>}  : player pressed up, {\tt \{name, :up\}}
-      \item {\tt <<?D>>}  : player pressed down, {\tt \{name, :down\}}        
-      \end{itemize}
+  \begin{itemize}
+  \item {\tt <<?U>>}  : player pressed up -  {\tt \{name, :up\}}
+  \item {\tt <<?D>>}  : player pressed down -  {\tt \{name, :down\}}        
+  \end{itemize}
 
 
 \end{frame}
 
 \begin{frame}{session handler}
 
-  Messages from pong server:
+  Messages from pong server fowarded to the websocket handler:
 
   \vspace{20pt}
       
@@ -144,9 +183,9 @@ Messages from the client:
   \item {\tt \{:player1, :up\}}  : player moved up -  {\tt <<?P,?U>>}
   \item {\tt \{:player1, :down\}}  : player moved down - {\tt <<?P,?D>>}
   \item {\tt \{:player1, :score, score\}}  : player moved up - {\tt <<?P,?S, score>>}
-  \item {\tt \{:player2, ... \}} same messages for opponent -  {\tt <<?O, ... >>}        
-  \item {\tt \{:ball, x, y \}} ball moved to new position - {\tt <<?B, x::16, y::16 >>}        
-  \item {\tt \{:frw, msg\}}  raw message to client - {\tt msg}
+  \item {\tt \{:player2, ... \}} : same messages for opponent -  {\tt <<?O, ... >>}        
+  \item {\tt \{:ball, x, y \}} : ball moved to new position - {\tt <<?B, x::16, y::16 >>}        
+  \item {\tt \{:frw, msg\}}  : raw message to client - {\tt msg}
   \end{itemize}
 \end{frame}
 
@@ -166,12 +205,30 @@ Messages from the client:
 
 \begin{frame}{the game engine}
 
-  
-\end{frame}
-  
-  
-\end{frame}
+  The pong engine keeps a state consisting of:
 
+  \vspace{10pt} \pause
+  
+  \begin{itemize}
+  \item Two players ({\tt player1} and {\tt player2}) that have a {\em y-position} and a {\em score}. \pause
+  \item A ball that is defined by {\em x-} and {\em y-position}, and {\em x-} and {\em y-speed}.\pause
+  \item Two {\em session pids} to send messages to the players. 
+  \end{itemize}
+
+  \vspace{10pt} \pause
+
+  The pong engine is defined by two modules: 
+  
+  \vspace{10pt} \pause
+  \begin{itemize}
+  \item The Pong module that describes the server as a communicatng process. 
+  \item The Game module that describe the rules as functions. 
+  \end{itemize}
+  
+
+\end{frame}
+  
+  
 
 
 \end{document}

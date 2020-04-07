@@ -33,21 +33,28 @@ defmodule Rudy do
   # connected it passes the connection to request/1. When the request 
   # is handled the connection is closed.
   defp handler(listen) do
-    :io.format("ready: ~n", [])
+    ## :io.format("ready: ~n", [])
     case :gen_tcp.accept(listen) do
       {:ok, client} ->
 	{:ok, {ip, port}} = :inet.peername(client)
 	:io.format("new connection: ~w ~w ~n", [ip, port])
-	request(client)
-	:io.format("closing connection~n", [])
-        :gen_tcp.close(client)
-        handler(listen)
+	task(client)
 
+	#spawn(fn() -> task(client) end)
+        handler(listen)
       {:error, error} ->
         error
     end
   end
 
+  defp task(client) do
+    #:io.format("handle task~n", [])
+    request(client)
+    #:io.format("closing connection~n", [])
+    :gen_tcp.close(client)
+  end
+  
+  
   # Read the request from the client connection and parse it. It then 
   # parses the request using the http parser and pass the request to 
   # reply/1. The reply is then sent back to the client.
@@ -58,9 +65,9 @@ defmodule Rudy do
 	:io.format("request: ~s ~n", [str])
         request = HTTP.parse_request(str) 
 	:io.format("parsed: ~p ~n", [request])
-        response = Rudy.reply(request)
+        response = reply(request)
 	:io.format("response: ~s~n", [response])
-        ##response = dummy()	
+        response = dummy()	
         :gen_tcp.send(client, response)
 
       {:error, error} ->
@@ -75,8 +82,8 @@ defmodule Rudy do
   end
 
   defp dummy() do
-    ## IO.puts("request #{uri}")
-    :timer.sleep(10)
+    ## Fib.fib(30)
+    ##:timer.sleep(10)
     HTTP.ok("Hello!")
   end
 

@@ -70,8 +70,26 @@ defmodule Fib do
     end)
     :ok
   end
-  
+
+
+  def graph(p) do
+    {:ok, fd} = File.open("fib.dat", [:write])
+    IO.write(fd, "# fib(40,30), exeution time in ms\n")
+    IO.write(fd, "#proc\tmin\tq2\tq4\tmax\n")    
+    Enum.each(1..p, fn(p) -> graph(p, fd) end)
+    File.close(fd)
+  end
+
+  def graph(p, fd) do
+    :erlang.system_flag(:schedulers_online, p)
+    res = Enum.map(1..100, fn(_) -> {t,_} = :timer.tc(fn() -> comb(40,30) end); t end)
+    res = Enum.sort(res)
+    min = trunc(:lists.nth(1, res)/1000)
+    q2 = trunc(:lists.nth(25, res)/1000)
+    q4 = trunc(:lists.nth(75, res)/1000)
+    max = trunc(:lists.nth(100,res)/1000)
+    IO.write(fd, "#{p}\t#{min}\t#{q2}\t#{q4}\t#{max}\n")
+  end
 
   
-
 end

@@ -57,7 +57,7 @@ defmodule Game do
 
   def move_ball(player1, player2, ball) do
 
-      {:ball, bx, by, dx, dy}  = ball
+    {:ball, bx, by, dx, dy}  = ball
       {name1, y1, s1} = player1
       {name2, y2, s2} = player2
       
@@ -69,12 +69,12 @@ defmodule Game do
 	  #:io.format(" ball hits right paddle at: ~w ~w\n", [bx, by])
 	  {dx, dy} = spin(y2, by, dx, dy)
 
-	  {:moved, {bx, by}, {:ball, bx, by, dx, dy}}
+	  {:bounce, {bx, by}, {:ball, bx, by, dx, dy}}
 
 	dx < 0 and (bx <= (2*@paddle_width)) and  (by >= (y1-@ball_width) and by <= (y1 + @paddle_height)) ->
 	  #:io.format(" ball hits left paddle\n")
 	  {dx, dy} = spin(y1, by, dx, dy)
-	  {:moved, {bx, by}, {:ball, bx, by, dx, dy}}
+	  {:bounce, {bx, by}, {:ball, bx, by, dx, dy}}
 
 	bx >= (@field_width - @ball_width) ->
 	  s1 = s1+1

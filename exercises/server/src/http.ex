@@ -1,7 +1,7 @@
 defmodule HTTP do
 
   def parse_request(r0) do
-    flip()
+    ##flip()
     {request, r1} = request_line(r0)
     {headers, r2} = headers(r1)
     {body, _} = message_body(r2)
