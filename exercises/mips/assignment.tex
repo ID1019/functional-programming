@@ -230,15 +230,29 @@ this is something that we will ignore, we work under the assumption
 that all messages do arrive (which they will if we do not distribute
 the system over a network).
 
-To visualize the communication protocol we draw a sequence diagram.
+To visualize the communication protocol we draw a sequence diagram. In
+Fig.~\ref{fig:seq} we see all of the messages that are sent during one
+instruction cycle. All of these messages should be sent and a unit
+needs to receive them all. Note that the diagram only shows the
+logical time realtions. The Register unit can not send the values $a$
+and $b$ before receiving the register numbers from the Instuction
+unit. However, nothing prevents the immediat value from the
+Instruction unit to reach the ALU unit before the $a$ and $b$
+values. Moreover, all though in the diagram we have the register unit
+first send the valuses to teh ALU before sending the value to the
+memory unit but this order is not important. Messages can take
+arbitrary long time and as long as we're not sending two messages to
+the same reciever, the order is irrelevant. 
+
 
 \begin{figure}
   \centering 
-  \begin{tikzpicture}
+  \begin{tikzpicture}[frw/.style={xshift=0.2cm, yshift=-0.1, anchor= south west}, bkw/.style={xshift=-0.2cm, anchor= south east}]
+
     \node[]                 (instr) {Instr};
     \node[right = of instr] (ctrl)  {Ctrl};
     \node[right = of ctrl]  (reg)   {Reg};
-    \node[right = of reg]  (alu)   {ALU};    
+    \node[right = of reg]   (alu)   {ALU};    
     \node[right = of alu]   (nxt)   {Nxt};
     \node[right = of nxt]   (mem)   {Mem};    
     
@@ -250,47 +264,56 @@ To visualize the communication protocol we draw a sequence diagram.
     \draw[->, dashed] (nxt) -- ($ (nxt) - (0,8)$);    
     \draw[->, dashed] (mem) -- ($ (mem) - (0,8)$);    
     
-    \draw[->] ($(instr) - (0,1)$) node[xshift=0.2cm, anchor= south west]{rs,rs,rd} --  ($(reg)  - (0,1)$);
+    \draw[->] ($(instr) - (0,1)$) node[frw]{rs,rs,rd} --  ($(reg)  - (0,1)$);
 
-    \draw[->] ($(reg) - (0,1.5)$) node[xshift=0.2cm, anchor= south west]{a,b} --  ($(alu)  - (0,1.5)$);
+    \draw[->] ($(reg) - (0,1.5)$) node[frw]{a,b} --  ($(alu)  - (0,1.5)$);
 
-    \draw[->] ($(reg) - (0,2.0)$) node[xshift=0.2cm, anchor= south west]{b} --  ($(mem)  - (0,2.0)$);
+    \draw[->] ($(reg) - (0,2.0)$) node[frw]{b} --  ($(mem)  - (0,2.0)$);
     
 
-    \draw[->] ($(instr) - (0,2.5)$) node[xshift=0.2cm, anchor= south west]{imm} --  ($(alu)  - (0,2.5)$);
+    \draw[->] ($(instr) - (0,2.5)$) node[frw]{imm} --  ($(alu)  - (0,2.5)$);
 
-    \draw[->] ($(instr) - (0,3.0)$) node[xshift=0.2cm, anchor= south west]{op}  --   ($(ctrl)  - (0,3.0)$);
+    \draw[->] ($(instr) - (0,3.0)$) node[frw]{op}  --   ($(ctrl)  - (0,3.0)$);
 
-    \draw[->] ($(ctrl) - (0,3.5)$) node[xshift=0.2cm, anchor= south west]{fnct,src} --  ($(alu)  - (0,3.5)$);    
+    \draw[->] ($(ctrl) - (0,3.5)$) node[frw]{fnct,src} --  ($(alu)  - (0,3.5)$);    
 
-    \draw[->] ($(alu) - (0,4.0)$) node[xshift=0.2cm, anchor= south west]{result} --  ($(mem)  - (0,4.0)$);
+    \draw[->] ($(alu) - (0,4.0)$) node[frw]{result} --  ($(mem)  - (0,4.0)$);
 
-    \draw[->] ($(alu) - (0,4.5)$) node[xshift=0.2cm, anchor= south west]{zero} --  ($(nxt)  - (0,4.5)$);    
+    \draw[->] ($(alu) - (0,4.5)$) node[frw]{zero} --  ($(nxt)  - (0,4.5)$);    
 
-    \draw[->] ($(ctrl) - (0,5.0)$) node[xshift=0.2cm, anchor= south west]{branch} --  ($(nxt)  - (0,5.0)$);
+    \draw[->] ($(ctrl) - (0,5.0)$) node[frw]{branch} --  ($(nxt)  - (0,5.0)$);
 
-    \draw[->] ($(ctrl) - (0,5.5)$) node[xshift=0.2cm, anchor= south west]{rd-wr-noop} --  ($(mem)  - (0,5.5)$);    
+    \draw[->] ($(ctrl) - (0,5.5)$) node[frw]{rd-wr-no} -- ($(mem)  - (0,5.5)$);    
 
-    \draw[->] ($(instr) - (0,6.0)$) node[xshift=0.2cm, anchor= south west]{pc,imm} --  ($(nxt)  - (0,6.0)$);    
+    \draw[->] ($(instr) - (0,6.0)$) node[frw]{pc,imm} --  ($(nxt)  - (0,6.0)$);    
     
-    \draw[->] ($(ctrl) - (0,6.5)$) node[xshift=0.2cm, anchor= south west]{write}  -- ($(reg)  - (0,6.5)$);    
+    \draw[->] ($(ctrl) - (0,6.5)$) node[frw]{write}  -- ($(reg)  - (0,6.5)$);    
 
-    \draw[->] ($(mem) - (0,7.0)$) node[xshift=-0.2cm, anchor= south east]{return}  -- ($(reg)  - (0,7.0)$);
+    \draw[->] ($(mem) - (0,7.0)$) node[bkw]{return}  -- ($(reg)  - (0,7.0)$);
 
-    \draw[->] ($(nxt) - (0,7.5)$) node[xshift=-0.2cm, anchor= south east]{next}  -- ($(instr)  - (0,7.5)$);            
+    \draw[->] ($(nxt) - (0,7.5)$) node[bkw]{next}  -- ($(instr)  - (0,7.5)$);            
     
   \end{tikzpicture}
   \caption{The network protocoll of the CPU.} \label{fig:seq}
 \end{figure}
 
-
+Another thng that will be important for our implementation is that
+almost all messages travel left to right. There are only two messages
+that go from right to left: the return value from the memory unit tp
+the register unit and the next program counter from the next unit to
+the instruction unit. It turns out that we need to do a trick to get
+this circular structure working, not a big deal but now you know.
 
 So now when we have the over all undestanding of the emulator let's do
-some coding.
-
-
+some coding. But - if you did not follow what was describes so far, go
+back and study the original MIPS architecture as described by
+Patterson and Hennessy. Don't start coding before you know what we try
+to acheive.
 
 \section{The implementation}
+
+
+
 
 
 
