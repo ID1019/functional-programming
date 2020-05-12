@@ -209,16 +209,79 @@ the correspondng signals. These are the signals:
 
 \subsection{asynchronous pipeline}
 
-One thing that we have not mentione is how to time things, whwer is
-the clock puls and when should units proceed. The answer is that the
+One thing that we have not mentioned is how to time things, where is
+the clock pulse and when should units proceed. The answer is that the
 design is asynchronous and a unit can proceed as soon as it has the
-avaiable information.
+available information.
 
-Asynchrounous does not mean chaos so we need to think about how this
-shoudl work. One example where things could go wrong is if the Next
-unit decides to send the next program counter to the Instruction unit 
+Asynchronous does not mean chaos so we need to think about how this
+should work. One example where things could go wrong is if the Next
+unit decides to send the next program counter to the Instruction unit
+since it knows it's not a branch instruction being executed - why wait
+for the ALU if the zero information is not needed? The problem is if
+the next instruction is a branch instruction and the zero messge from
+the previous instructions is read. We need a way to keep things
+synchronized even though messages are sent asynchrounous. 
 
+To make this work we first of all rely on the ordered delivery of
+messages. What ever happen, messages will not be delivered out of
+order. Elixir does of course not guarantee that messages do arrive but
+this is something that we will ignore, we work under the assumption
+that all messages do arrive (which they will if we do not distribute
+the system over a network).
 
+To visualize the communication protocol we draw a sequence diagram.
+
+\begin{figure}
+  \centering 
+  \begin{tikzpicture}
+    \node[]                 (instr) {Instr};
+    \node[right = of instr] (ctrl)  {Ctrl};
+    \node[right = of ctrl]  (reg)   {Reg};
+    \node[right = of reg]  (alu)   {ALU};    
+    \node[right = of alu]   (nxt)   {Nxt};
+    \node[right = of nxt]   (mem)   {Mem};    
+    
+    
+    \draw[->, dashed] (instr) -- ($ (instr) - (0,8)$);
+    \draw[->, dashed] (reg) -- ($ (reg) - (0,8)$);
+    \draw[->, dashed] (ctrl) -- ($ (ctrl) - (0,8)$);
+    \draw[->, dashed] (alu) -- ($ (alu) - (0,8)$);
+    \draw[->, dashed] (nxt) -- ($ (nxt) - (0,8)$);    
+    \draw[->, dashed] (mem) -- ($ (mem) - (0,8)$);    
+    
+    \draw[->] ($(instr) - (0,1)$) node[xshift=0.2cm, anchor= south west]{rs,rs,rd} --  ($(reg)  - (0,1)$);
+
+    \draw[->] ($(reg) - (0,1.5)$) node[xshift=0.2cm, anchor= south west]{a,b} --  ($(alu)  - (0,1.5)$);
+
+    \draw[->] ($(reg) - (0,2.0)$) node[xshift=0.2cm, anchor= south west]{b} --  ($(mem)  - (0,2.0)$);
+    
+
+    \draw[->] ($(instr) - (0,2.5)$) node[xshift=0.2cm, anchor= south west]{imm} --  ($(alu)  - (0,2.5)$);
+
+    \draw[->] ($(instr) - (0,3.0)$) node[xshift=0.2cm, anchor= south west]{op}  --   ($(ctrl)  - (0,3.0)$);
+
+    \draw[->] ($(ctrl) - (0,3.5)$) node[xshift=0.2cm, anchor= south west]{fnct,src} --  ($(alu)  - (0,3.5)$);    
+
+    \draw[->] ($(alu) - (0,4.0)$) node[xshift=0.2cm, anchor= south west]{result} --  ($(mem)  - (0,4.0)$);
+
+    \draw[->] ($(alu) - (0,4.5)$) node[xshift=0.2cm, anchor= south west]{zero} --  ($(nxt)  - (0,4.5)$);    
+
+    \draw[->] ($(ctrl) - (0,5.0)$) node[xshift=0.2cm, anchor= south west]{branch} --  ($(nxt)  - (0,5.0)$);
+
+    \draw[->] ($(ctrl) - (0,5.5)$) node[xshift=0.2cm, anchor= south west]{rd-wr-noop} --  ($(mem)  - (0,5.5)$);    
+
+    \draw[->] ($(instr) - (0,6.0)$) node[xshift=0.2cm, anchor= south west]{pc,imm} --  ($(nxt)  - (0,6.0)$);    
+    
+    \draw[->] ($(ctrl) - (0,6.5)$) node[xshift=0.2cm, anchor= south west]{write}  -- ($(reg)  - (0,6.5)$);    
+
+    \draw[->] ($(mem) - (0,7.0)$) node[xshift=-0.2cm, anchor= south east]{return}  -- ($(reg)  - (0,7.0)$);
+
+    \draw[->] ($(nxt) - (0,7.5)$) node[xshift=-0.2cm, anchor= south east]{next}  -- ($(instr)  - (0,7.5)$);            
+    
+  \end{tikzpicture}
+  \caption{The network protocoll of the CPU.} \label{fig:seq}
+\end{figure}
 
 
 
@@ -235,3 +298,4 @@ some coding.
 
 
 \end{document}
+
