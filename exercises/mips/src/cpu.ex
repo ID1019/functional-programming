@@ -2,15 +2,14 @@ defmodule CPU do
   
   def start(code, data, out) do
     mem = Memory.start(data)
-    nxt = Next.start()
-    alu = ALU.start(mem, nxt, out)
+    brn = Branch.start()
+    alu = ALU.start(mem, brn, out)
     reg = Register.start(alu, mem)
-    ctrl = Controller.start(reg, alu, mem, nxt)
-    instr = Instruction.start(code, reg, alu, nxt, ctrl)
+    ctrl = Controller.start(reg, alu, mem, brn)
+    instr = Instruction.start(code, reg, alu, brn, ctrl)
 
     send(mem, {:init, reg})
-    send(nxt, {:init, instr})
-    send(instr, {:nxt, 0})
+    send(brn, {:init, instr})
   end
   
   

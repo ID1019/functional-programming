@@ -35,7 +35,7 @@ defmodule Memory do
 		send(reg, {:mem, 0})
 		memory(mem, reg)
 
-	      {:ctrl, :noop} ->
+	      {:ctrl, :frw} ->
 		send(reg, {:mem, addr})
 		memory(mem, reg)
 	    end

@@ -1,14 +1,14 @@
 defmodule Controller do
 
-  def start(reg, alu, mem, nxt) do
-    spawn_link(fn() -> init(reg, alu, mem, nxt) end)
+  def start(reg, alu, mem, brn) do
+    spawn_link(fn() -> init(reg, alu, mem, brn) end)
   end
 
-  def init(reg, alu, mem, nxt) do
-    controller(reg, alu, mem, nxt)
+  def init(reg, alu, mem, brn) do
+    controller(reg, alu, mem, brn)
   end
   
-  def controller(reg, alu, mem, nxt) do
+  def controller(reg, alu, mem, brn) do
     receive do
 
       # ALU operations
@@ -17,35 +17,44 @@ defmodule Controller do
 	:io.format("ctr: alu ~w~n", [fnct])
 	send(reg, {:ctrl, :wr_rd})
 	send(alu, {:ctrl, fnct, :reg})
-	send(mem, {:ctrl, :noop})
-	send(nxt, {:ctrl, false})
-	controller(reg, alu, mem, nxt)
+	send(mem, {:ctrl, :frw})
+	send(brn, {:ctrl, :nbr})
+	controller(reg, alu, mem, brn)
 
       # branch
       {:instr, 4, _} ->
-	:io.format("ctr: branch~n", [])
+	:io.format("ctr: beq~n", [])
 	send(reg, {:ctrl, :noop})
-	send(alu, {:ctrl, 34, :reg})
-	send(mem, {:ctrl, :noop})
-	send(nxt, {:ctrl, true})
+	send(alu, {:ctrl, 34, :reg})  # sub
+	send(mem, {:ctrl, :frw})
+	send(brn, {:ctrl, :beq})
+	controller(reg, alu, mem, brn)	
 
+      {:instr, 5, _} ->
+	:io.format("ctr: bne~n", [])
+	send(reg, {:ctrl, :noop})
+	send(alu, {:ctrl, 34, :reg})  # sub
+	send(mem, {:ctrl, :frw})
+	send(brn, {:ctrl, :bne})
+	controller(reg, alu, mem, brn)
+	
       # addi 
       {:instr, 8, _} ->
 	:io.format("ctr: addi~n", [])
 	send(reg, {:ctrl, :wr_rt})
 	send(alu, {:ctrl, 32, :imm})
-	send(mem, {:ctrl, :noop})
-	send(nxt, {:ctrl, false})
-	controller(reg, alu, mem, nxt)
+	send(mem, {:ctrl, :frw})
+	send(brn, {:ctrl, :nbr})
+	controller(reg, alu, mem, brn)
 	
 	# out
       {:instr, 13, _} ->
 	:io.format("ctr: out~n", [])
 	send(reg, {:ctrl, :noop})
 	send(alu, {:ctrl, :out})
-	send(mem, {:ctrl, :noop})
-	send(nxt, {:ctrl, false})
-	controller(reg, alu, mem, nxt)
+	send(mem, {:ctrl, :frw})
+	send(brn, {:ctrl, :nbr})
+	controller(reg, alu, mem, brn)
 
       # load 
       {:instr, 35, _} ->
@@ -53,8 +62,8 @@ defmodule Controller do
 	send(reg, {:ctrl, :wr_rt})
 	send(alu, {:ctrl, 32, :imm})
 	send(mem, {:ctrl, :read})
-	send(nxt, {:ctrl, false})
-	controller(reg, alu, mem, nxt)
+	send(brn, {:ctrl, :nbr})
+	controller(reg, alu, mem, brn)
 
       #store
       {:instr, 43, _} ->
@@ -62,15 +71,15 @@ defmodule Controller do
 	send(reg, {:ctrl, :noop})
 	send(alu, {:ctrl, 32, :imm})
 	send(mem, {:ctrl, :write})
-	send(nxt, {:ctrl, false})
-	controller(reg, alu, mem, nxt)	
+	send(brn, {:ctrl, :nbr})
+	controller(reg, alu, mem, brn)	
 
       # halt
       {:instr, 63, _} ->
 	send(reg, {:ctrl, :halt})
 	send(alu, {:ctrl, :halt})
 	send(mem, {:ctrl, :halt})
-	send(nxt, {:ctrl, :halt})
+	send(brn, {:ctrl, :halt})
 	:ok
 
       strange ->
