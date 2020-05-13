@@ -49,7 +49,7 @@ architecture and how the data path is implemented. We will only
 implement a small subset of the MIPS machine instructions but it will
 be possible to extend it.
 
-\section{MIPS}
+\section{MIPS architecture}
 
 There are of course many different ways a MIPS cpu can be designed but
 we will follow the description given in chapter four of ``Computer Organization and
@@ -57,12 +57,13 @@ Design'' by Patterson and Hennessy. If you have not studied their
 desciption you should do so before starting with the implementation,
 this is not a turiorial of the MIPS architecture.
 
-\subsection{high-level design}
+\subsection*{high-level design}
 
 We will divide the processor into five unitss, each unit will be
 implemented as an Elexir process and the data-paths will be Elixir
 messages. This might not be a straight forward way to implement an
-emulator but it more challenging and you will learn a lot about concurrency in Elixir.
+emulator but it more challenging and you will learn a lot about
+concurrency in Elixir.
 
 The units, which will also be Elixir modules, are:
 
@@ -71,7 +72,7 @@ The units, which will also be Elixir modules, are:
 \item {\bf Instruction} : instruction fetcher, will retrieve the next
   instruction, divide it into its parts and send them to other units.
 
-\item {\bf Register} : register unit, reads the contents of the registers
+\item {\bf Register} : reads the contents of the registers
   and passes the vakues to the ALU.
 
 \item {\bf ALU} : performs the arithmetic operations and passes the result to the memory unit.
@@ -79,7 +80,7 @@ The units, which will also be Elixir modules, are:
 \item {\bf Memory} : handles load and store operation and in the case
   of a store passes the read value to the register unit.
 
-\item {\bf Next} : the unit that will decide which instruction to
+\item {\bf Branch} : decides which instruction to
   execute next. In the begining this is simlpy the next instruction
   but when we introduce branch and jump instructions this unit will
   have more things to do.
@@ -92,25 +93,25 @@ The units, which will also be Elixir modules, are:
 In Fig.\ref{fig:flow} we see an overview of the CPU with the primary
 data flow. We have all units but the controll unit to simplify the
 image. The Instruction unit will fetch the next instruction and send the
-register identifiers to the Register unit. It will also send a
+register identifiers to the register unit. It will also send a
 possible immediate value directly to the ALU and an incremented
-program counter to the Next unit.
+program counter to the branch unit.
 
-The Register unit will send the content of the regiterst to the ALU
+The register unit will send the content of the registers to the ALU
 unit but also pass one value directly to the memory unit.  This will
-typiclaly be a value that should be stored. The ALU does its
+typically be a value that should be stored. The ALU does its
 computation and sends the result, and address, to the memory unit. It
-will also send a message to the Next unit describing the outcome of
+will also send a message to the branch unit describing the outcome of
 the operation i.e. if it was zero or not.
 
 The memory unit will, if it is a load instruction that is executed,
-send the retrieed value back to the register unit. The register unit
+send the retreived value back to the register unit. The register unit
 will then stor it in one of the registers.
 
-The Next unit will recieve both the incremented progroam counter from
-the Instruction unit and a value form the Register unit. Depending on the
-instruction, and the outcome of teh ALU operation, the next code
-address is selected and sen to the Instruction unit.
+The branch will recieve both the incremented program counter from
+the instruction unit and a value from the register unit. Depending on the
+instruction, and the outcome of the ALU operation, the next code
+address is selected and sent to the instruction unit.
 
 
 \begin{figure}
@@ -122,32 +123,32 @@ address is selected and sen to the Instruction unit.
 \node[unit]    (reg)       [right=of instr] {Register};
 \node[unit]    (alu)       [right=of reg]   {ALU};
 \node[unit]    (mem)       [right=of alu]   {Memory};
-\node[unit]    (nxt)       [above=of alu]   {Next};
+\node[unit]    (brn)       [above=of alu]   {Branch};
 
 %Lines 
 \draw[->] (instr.east) -- (reg.west);
 \draw[->] (reg.east) -- (alu.west);
 \draw[->] (alu.east) -- (mem.west);
-\draw[->] (alu.north) -- (nxt.south);
-\draw[->] (instr.north) .. controls +(up:1cm) and +(left:1cm) .. (nxt.west);
+\draw[->] (alu.north) -- (brn.south);
+\draw[->] (instr.north) .. controls +(up:1cm) and +(left:1cm) .. (brn.west);
 \draw[->] (instr.south) .. controls +(down:1cm) and +(down:1cm) .. (alu.south);
 
 \draw[->] (reg.south) .. controls +(down:1cm) and +(down:1cm) .. (mem.south);
-\draw[->] (nxt.north) .. controls +(up:2cm) and +(left:3cm) .. (instr.west);
+\draw[->] (brn.north) .. controls +(up:2cm) and +(left:3cm) .. (instr.west);
 \draw[->] (mem.north) .. controls +(up:1cm) and +(up:1cm) .. (reg.north);
 
   \end{tikzpicture}
   \caption{The data flow of the processor.} \label{fig:flow}
 \end{figure}
 
-What each unit shoudl do is of course determined by the Controller
-unit that is given the op code from the Instruction unit. The controller is
+What each unit should do is of course determined by the controller
+unit that is given the op code from the instruction unit. The controller is
 normally described as two units, one main controller and a separate
 ALU controller. We will combine these into one unit; nothing is gained
 by separating them.
 
 
-\subsection{signals}
+\subsection*{signals as messages}
 
 When you see the regular description of the CPU architecture you will
 see how for example the Instruction unit sends three different signals to
@@ -157,7 +158,7 @@ pass two values to the ALU i one message.  Our implementation is thus
 more focused on which information that is passed between the units
 rather than how this would realized in a hardware implementation.
 
-\subsection{the memory}
+\subsection*{the memory}
 
 We will make things a bit easier by separating the code from the main
 memory. In real life, the code is of course in the main memory but it
@@ -178,16 +179,16 @@ data structure that maximize read performance. The memory should be
 some data structure with efficient random read and write operations.
 
 
-\subsection{the controller}
+\subsection*{the controller}
 
 The Controller is of course the heart of teh system. It will receive
-one message from the Instruction unit with teh op code and ALU function
+one message from the instruction unit with the op code and ALU function
 code. It then determines what the different units should do and sends
 the correspondng signals. These are the signals:
 
 \begin{itemize}
 
-\item {\bf Register} : the Register unit can proceed and send the two
+\item {\bf Register} : the register unit can proceed and send the two
   values to the ALU but must then know if it should store the value
   returned from the Memory unit and which register to store it in.
 
@@ -195,19 +196,19 @@ the correspondng signals. These are the signals:
   perform but it must also know it it should use both values from the
   Register unit or if it should use the immediate value from the Instruction unit.
 
-\item {\bf Memory} : the Memory unit must know if it should perform a
+\item {\bf Memory} : the memory unit must know if it should perform a
   load, stor or no-op. If it is a load instrucktion the read value
   should be returned to the Register unit. If it is a store operation
   it does not matter what it outputs (but it must send a value)
   otherwise it sends the value it received from the ALU.
 
-\item {\bf Next} : the Next unit needs to know if the operation is a
+\item {\bf Next} : the next unit needs to know if the operation is a
   branch or jump instruction in order to determine how to select the
   next program counter.
   
 \end{itemize}
 
-\subsection{asynchronous pipeline}
+\subsection*{asynchronous pipeline}
 
 One thing that we have not mentioned is how to time things, where is
 the clock pulse and when should units proceed. The answer is that the
@@ -249,19 +250,19 @@ the same reciever, the order is irrelevant.
   \centering 
   \begin{tikzpicture}[frw/.style={xshift=0.2cm, yshift=-0.1, anchor= south west}, bkw/.style={xshift=-0.2cm, anchor= south east}]
 
-    \node[]                 (instr) {Instr};
-    \node[right = of instr] (ctrl)  {Ctrl};
-    \node[right = of ctrl]  (reg)   {Reg};
+    \node[]                 (instr) {Instruction};
+    \node[right = of instr] (ctrl)  {Controller};
+    \node[right = of ctrl]  (reg)   {Register};
     \node[right = of reg]   (alu)   {ALU};    
-    \node[right = of alu]   (nxt)   {Nxt};
-    \node[right = of nxt]   (mem)   {Mem};    
+    \node[right = of alu]   (brn)   {Branch};
+    \node[right = of brn]   (mem)   {Memory};    
     
     
     \draw[->, dashed] (instr) -- ($ (instr) - (0,8)$);
     \draw[->, dashed] (reg) -- ($ (reg) - (0,8)$);
     \draw[->, dashed] (ctrl) -- ($ (ctrl) - (0,8)$);
     \draw[->, dashed] (alu) -- ($ (alu) - (0,8)$);
-    \draw[->, dashed] (nxt) -- ($ (nxt) - (0,8)$);    
+    \draw[->, dashed] (brn) -- ($ (brn) - (0,8)$);    
     \draw[->, dashed] (mem) -- ($ (mem) - (0,8)$);    
     
     \draw[->] ($(instr) - (0,1)$) node[frw]{rs,rs,rd} --  ($(reg)  - (0,1)$);
@@ -279,39 +280,77 @@ the same reciever, the order is irrelevant.
 
     \draw[->] ($(alu) - (0,4.0)$) node[frw]{result} --  ($(mem)  - (0,4.0)$);
 
-    \draw[->] ($(alu) - (0,4.5)$) node[frw]{zero} --  ($(nxt)  - (0,4.5)$);    
+    \draw[->] ($(alu) - (0,4.5)$) node[frw]{zero} --  ($(brn)  - (0,4.5)$);    
 
-    \draw[->] ($(ctrl) - (0,5.0)$) node[frw]{branch} --  ($(nxt)  - (0,5.0)$);
+    \draw[->] ($(ctrl) - (0,5.0)$) node[frw]{branch} --  ($(brn)  - (0,5.0)$);
 
     \draw[->] ($(ctrl) - (0,5.5)$) node[frw]{rd-wr-no} -- ($(mem)  - (0,5.5)$);    
 
-    \draw[->] ($(instr) - (0,6.0)$) node[frw]{pc,imm} --  ($(nxt)  - (0,6.0)$);    
+    \draw[->] ($(instr) - (0,6.0)$) node[frw]{pc,imm} --  ($(brn)  - (0,6.0)$);    
     
     \draw[->] ($(ctrl) - (0,6.5)$) node[frw]{write}  -- ($(reg)  - (0,6.5)$);    
 
     \draw[->] ($(mem) - (0,7.0)$) node[bkw]{return}  -- ($(reg)  - (0,7.0)$);
 
-    \draw[->] ($(nxt) - (0,7.5)$) node[bkw]{next}  -- ($(instr)  - (0,7.5)$);            
+    \draw[->] ($(brn) - (0,7.5)$) node[bkw]{next}  -- ($(instr)  - (0,7.5)$);            
     
   \end{tikzpicture}
   \caption{The network protocoll of the CPU.} \label{fig:seq}
 \end{figure}
 
-Another thng that will be important for our implementation is that
+Another thing that will be important for our implementation is that
 almost all messages travel left to right. There are only two messages
-that go from right to left: the return value from the memory unit tp
-the register unit and the next program counter from the next unit to
+that go from right to left: the return value from the memory unit to
+the register unit and the next program counter from the branch unit to
 the instruction unit. It turns out that we need to do a trick to get
 this circular structure working, not a big deal but now you know.
 
-So now when we have the over all undestanding of the emulator let's do
+\subsection*{instructions}
+
+We will not implement the whole MIPS instruction set, only a hand full
+of instructions. In the folowing description, register numbers are
+written {\tt \$s}, {\tt \$t}, and {\tt \$d}.  The instructins that we
+will implement are the following:
+
+\begin{itemize}
+\item {\tt add \$d \$s \$t} : add the values of register {\tt \$s} and {\tt \$t} and place result in {\tt \$d}.
+\item {\tt  sub \$d \$s \$t} : subtract the values of register {\tt \$s} and {\tt \$t} and place result in {\tt \$d}.
+\item {\tt addi \$d \$t imm} : add the values of register {\tt \$t} and the immediat value {\tt imm} and place result in {\tt \$d}.
+\item {\tt lw \$d offset(\$t)} : load the value found at adress {\tt offset + \$t} and place it in {\tt \$d}.
+\item {\tt sw \$s offset(\$t)} : store the value in register {\tt \$s} at adress {\tt offset + \$t}. 
+\item {\tt beq \$s \$t offset} : branch to {\tt pc + offset} if values at {\tt \$s} and  {\tt \$t} are equal.
+\end{itemize}
+
+
+We will also implement the two following instrucktions that do not
+have any corresponding machine instructions but are very handy for our
+implementation.
+
+\begin{itemize}
+\item {\tt halt} : halt the execution (normally implemented as an enless loop bbut we will actually stop)
+\item {\tt out \$s} : output value at register location {\tt \$s}.
+\end{itemize}
+
+So now when we have the overall undestanding of the emulator let's do
 some coding. But - if you did not follow what was describes so far, go
 back and study the original MIPS architecture as described by
 Patterson and Hennessy. Don't start coding before you know what we try
 to acheive.
 
+
 \section{The implementation}
 
+
+
+\subsection*{the assembler }
+
+To make the system more complete we will include an
+assembler that takes a program and turns it into machine code. We will
+not start from a text file but rather from a Elixir data structure
+that represents the assembler program, we thus avoid the problem of
+reading and parsing a text file.
+
+Further more we will make life easy for us and 
 
 
 
