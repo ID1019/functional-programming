@@ -1,0 +1,62 @@
+\documentclass[a4paper,11pt]{article}
+
+\input ../include/preamble.tex
+
+\usepackage{tikz}
+\usetikzlibrary{automata,arrows,topaths,calc,positioning}
+
+\usepackage{subcaption}
+
+\usepackage{changepage}
+
+\usepackage{listings}
+
+\lstdefinelanguage{elixir}{
+	morekeywords={case,catch,def,do,else,false,%
+		use,alias,receive,timeout,defmacro,defp,%
+		for,if,import,defmodule,defprotocol,%
+		nil,defmacrop,defoverridable,defimpl,%
+		super,fn,raise,true,try,end,with,%
+		unless},
+	otherkeywords={<-,->},
+	sensitive=true,
+	morecomment=[l]{\#},
+	morecomment=[n]{/*}{*/},
+	morestring=[b]",
+	morestring=[b]',
+	morestring=[b]"""
+}
+
+\lstset{language=elixir}
+
+\begin{document}
+
+\title{
+  \textbf{A MIPS emulator - I}\\
+  \large{Programming II}
+}
+\author{Johan Montelius}
+\date{Spring Term 2021}
+\maketitle
+\defaultpagestyle
+
+\section*{Introduction}
+
+In this exercise we will combine your knowledge of computer
+architecture and functiona programming to implement an emulator for a 
+ subset of MIPS assembler. 
+
+
+\section{MIPS assembler}
+
+
+\section{The implementation}
+
+
+
+
+
+
+
+\end{document}
+
