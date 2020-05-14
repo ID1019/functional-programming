@@ -14,7 +14,7 @@ defmodule Test do
      {:sub, 4, 4, 5},      # $4 <- $4 - $5
      {:out, 4},            # out $4
      {:bne, 4, 0, -3},     # branch if not zero
-     {:halt}]
+     :halt]
   end
   
   

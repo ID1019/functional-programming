@@ -13,22 +13,22 @@ defmodule Program do
   def encode(instr) do
     case instr do
       ## R-type 
-      {:add, dst, a, b}  -> << 0::6, a::5, b::5, dst::5, 0::5, 32::6>>
-      {:sub, dst, a, b}  -> << 0::6, a::5, b::5, dst::5, 0::5, 34::6>>
+      {:add, rd, rs, rt}  -> << 0::6, rs::5, rt::5, rd::5, 0::5, 32::6>>
+      {:sub, rd, rs, rt}  -> << 0::6, rs::5, rt::5, rd::5, 0::5, 34::6>>
 
       ## Load, store, 
-      {:addi, dst, a, imm} -> << 8::6, a::5, dst::5, imm::16>>
+      {:addi, rt, rs, imm} -> << 8::6, rs::5, rt::5, imm::16>>
 
-      {:lw,   src, a, imm} -> <<35::6, a::5, src::5, imm::16>>
-      {:sw,   dst, a, imm} -> <<43::6, a::5, dst::5, imm::16>>
+      {:lw,   rt, rs, imm} -> <<35::6, rs::5, rt::5, imm::16>>
+      {:sw,   rt, rs, imm} -> <<43::6, rs::5, rt::5, imm::16>>
 
       ## Branch 
-      {:beq, a, b, imm} -> <<4::6, a::5, b::5, imm::16>>
-      {:bne, a, b, imm} -> <<5::6, a::5, b::5, imm::16>>			   
+      {:beq, rs, rt, imm} -> <<4::6, rs::5, rt::5, imm::16>>
+      {:bne, rs, rt, imm} -> <<5::6, rs::5, rt::5, imm::16>>			   
 
       ## extra instructions 
-      {:out, a}          -> <<13::6, a::5, 0::5, 0::16>>
-      {:halt}            -> <<63::6, 0::5, 0::5, 0::16>>	
+      {:out, rs}          -> <<13::6, rs::5, 0::5, 0::16>>
+      :halt               -> <<63::6, 0::5, 0::5, 0::16>>	
     end
   end
   

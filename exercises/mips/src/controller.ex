@@ -15,7 +15,7 @@ defmodule Controller do
 
       {:instr, 0, fnct} ->
 	:io.format("ctr: alu ~w~n", [fnct])
-	send(reg, {:ctrl, :wr_rd})
+	send(reg, {:ctrl, :wrd})
 	send(alu, {:ctrl, fnct, :reg})
 	send(mem, {:ctrl, :frw})
 	send(brn, {:ctrl, :nbr})
@@ -50,7 +50,7 @@ defmodule Controller do
 	# out
       {:instr, 13, _} ->
 	:io.format("ctr: out~n", [])
-	send(reg, {:ctrl, :noop})
+	send(reg, {:ctrl, :nop})
 	send(alu, {:ctrl, :out})
 	send(mem, {:ctrl, :frw})
 	send(brn, {:ctrl, :nbr})
@@ -59,7 +59,7 @@ defmodule Controller do
       # load 
       {:instr, 35, _} ->
 	:io.format("ctr: load~n", [])
-	send(reg, {:ctrl, :wr_rt})
+	send(reg, {:ctrl, :wrt})
 	send(alu, {:ctrl, 32, :imm})
 	send(mem, {:ctrl, :read})
 	send(brn, {:ctrl, :nbr})
@@ -68,7 +68,7 @@ defmodule Controller do
       #store
       {:instr, 43, _} ->
 
-	send(reg, {:ctrl, :noop})
+	send(reg, {:ctrl, :nop})
 	send(alu, {:ctrl, 32, :imm})
 	send(mem, {:ctrl, :write})
 	send(brn, {:ctrl, :nbr})

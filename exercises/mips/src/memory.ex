@@ -24,14 +24,14 @@ defmodule Memory do
 		:ok
 
 	      {:ctrl, :read} ->
-		data = Data.read(mem, addr)
+		data = read(mem, addr)
 		:io.format("mem: read ~w from ~w~n", [data, addr])
 		send(reg, {:mem, data})
 		memory(mem, reg)
 
 	      {:ctrl, :write} ->
 		:io.format("mem: store ~w at ~w~n", [val, addr])
-		mem = Data.write(mem, addr, val)
+		mem = write(mem, addr, val)
 		send(reg, {:mem, 0})
 		memory(mem, reg)
 
@@ -42,6 +42,27 @@ defmodule Memory do
 	end
     end
   end
-  
+
+
+  def new() do
+    new([])
+  end    
+
+  def new(segments) do
+    f = fn({start, data}, layout) ->
+      last = start +  length(data) -1      
+      Enum.zip(start..last, data) ++ layout
+    end
+    layout = List.foldr(segments, [], f)
+    {:data, Map.new(layout)}
+  end
+
+  def read({:data, data}, i) do
+    Map.get(data, i)
+  end
+
+  def write({:data, data}, i, val) do
+    {:data, Map.put(data, i, val)}
+  end  
 
 end

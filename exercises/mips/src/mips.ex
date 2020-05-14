@@ -3,20 +3,16 @@ defmodule MIPS do
 
   def run(prgm) do
     code = Program.assemble(prgm)
-    data = Data.new()
-    CPU.start(code, data, self())
-    collect([])
-  end
-
-
-  def collect(sofar) do
+    mem = Memory.new()
+    out = Out.start()
+    CPU.start(code, mem, out)
+    send(out, {:collect, self()})
     receive do
-      {:alu, :done} ->
-	Enum.reverse(sofar)
-      {:alu, val} ->
-	collect([val|sofar])
+      {:out, collected} ->
+	colected
     end
   end
+
   
   
 end

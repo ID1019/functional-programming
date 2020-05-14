@@ -36,9 +36,9 @@ defmodule Register do
     end
   end
 
-  def update(reg, :noop, _, _, _) do reg end
-  def update(reg, :wr_rt, rt, _, val) do write(reg, rt, val) end
-  def update(reg, :wr_rd, _, rd, val) do put_elem(reg, rd, val) end
+  def update(reg, :nop, _, _, _) do reg end
+  def update(reg, :wrt, rt, _, val) do write(reg, rt, val) end
+  def update(reg, :wrd, _, rd, val) do put_elem(reg, rd, val) end
   
   def read(  _, 0) do 0 end  
   def read(reg, i) do elem(reg, i) end
