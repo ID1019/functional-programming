@@ -8,23 +8,31 @@ defmodule Out do
     out([])
   end
 
+  def wait(out) do
+    ref = make_ref()
+    send(out, {:collect, ref, self()})
+    receive do
+      {:out, ^ref, collected} ->
+	collected
+    end
+  end
+
   def out(sofar) do
     receive do
-       :done ->
-	  done(Enum.reverse(sofar))
+      {:alu, :done} ->
+	done(Enum.reverse(sofar))
       {:alu, val} ->
 	out([val|sofar])
     end
   end
 
-
   def done(collected) do
     receive do
-      {:collect, client} ->
-	send(client, {:out, collected})
-	done(collected)
+      {:collect, ref, client} ->
+	send(client, {:out, ref, collected})
+	:ok
     end
   end
-  
 
 end
+

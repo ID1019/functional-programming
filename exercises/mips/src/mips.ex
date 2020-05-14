@@ -6,11 +6,7 @@ defmodule MIPS do
     mem = Memory.new()
     out = Out.start()
     CPU.start(code, mem, out)
-    send(out, {:collect, self()})
-    receive do
-      {:out, collected} ->
-	collected
-    end
+    Out.wait(out)
   end
 
   

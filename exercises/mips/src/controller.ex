@@ -24,7 +24,7 @@ defmodule Controller do
       # branch
       {:instr, 4, _} ->
 	:io.format("ctr: beq~n", [])
-	send(reg, {:ctrl, :noop})
+	send(reg, {:ctrl, :nop})
 	send(alu, {:ctrl, 34, :reg})  # sub
 	send(mem, {:ctrl, :frw})
 	send(brn, {:ctrl, :beq})
@@ -32,7 +32,7 @@ defmodule Controller do
 
       {:instr, 5, _} ->
 	:io.format("ctr: bne~n", [])
-	send(reg, {:ctrl, :noop})
+	send(reg, {:ctrl, :nop})
 	send(alu, {:ctrl, 34, :reg})  # sub
 	send(mem, {:ctrl, :frw})
 	send(brn, {:ctrl, :bne})
@@ -41,7 +41,7 @@ defmodule Controller do
       # addi 
       {:instr, 8, _} ->
 	:io.format("ctr: addi~n", [])
-	send(reg, {:ctrl, :wr_rt})
+	send(reg, {:ctrl, :wrt})
 	send(alu, {:ctrl, 32, :imm})
 	send(mem, {:ctrl, :frw})
 	send(brn, {:ctrl, :nbr})
@@ -67,7 +67,7 @@ defmodule Controller do
 
       #store
       {:instr, 43, _} ->
-
+	:io.format("ctr: store~n", [])
 	send(reg, {:ctrl, :nop})
 	send(alu, {:ctrl, 32, :imm})
 	send(mem, {:ctrl, :write})
@@ -76,7 +76,8 @@ defmodule Controller do
 
       # halt
       {:instr, 63, _} ->
-	send(reg, {:ctrl, :halt})
+	:io.format("ctr: halt~n", [])
+	send(reg, {:ctrl, :nop})
 	send(alu, {:ctrl, :halt})
 	send(mem, {:ctrl, :halt})
 	send(brn, {:ctrl, :halt})
