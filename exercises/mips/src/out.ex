@@ -21,7 +21,7 @@ defmodule Out do
   def done(collected) do
     receive do
       {:collect, client} ->
-	send(client, {:out, collected])
+	send(client, {:out, collected})
 	done(collected)
     end
   end

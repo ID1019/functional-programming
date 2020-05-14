@@ -9,7 +9,7 @@ defmodule MIPS do
     send(out, {:collect, self()})
     receive do
       {:out, collected} ->
-	colected
+	collected
     end
   end
 
