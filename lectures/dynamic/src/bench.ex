@@ -15,7 +15,8 @@ defmodule Bench do
   def memory(n)  do
     all = Enum.map(1..n, fn (x) -> {x * 1000, x * 200} end)
     {:ok, fd} = :file.open("memory.dat", [:write])
-    :io.format(fd, "%~9s ~10s ~10s ~10s ~10s~n", ["m", "t", "m x t", "search", "memory"])
+    :io.format(fd, "%~9s ~10s ~10s ~10s ~10s~n", ["m", "t", "m + t", "search", "memory"])
+    :io.format("%~9s ~10s ~10s ~10s ~10s~n", ["m", "t", "m + t", "search", "memory"])
     Enum.each( all,
       fn ({m,t}) ->
 	:erlang.garbage_collect()
@@ -23,14 +24,16 @@ defmodule Bench do
 	:erlang.garbage_collect()
       {t2, _} = :timer.tc(fn() -> Hinges.memory(m, t, {260, 40, 30}, {180, 60, 24}) end)
       :io.format(fd, "~10w ~10w ~10w ~10.2f ~10.2f~n", [m, t, (t+m), t1/1000, t2/1000])
+      :io.format("~10w ~10w ~10w ~10.2f ~10.2f~n", [m, t, (t+m), t1/1000, t2/1000])      
       end)
     :file.close(fd)
   end
 
   def map(n)  do
-    all = Enum.map(5..n, fn (x) -> {x * 1000, x * 200} end)
+    all = Enum.map(1..n, fn (x) -> {x * 1000, x * 200} end)
     {:ok, fd} = :file.open("map.dat", [:write])
-    :io.format(fd, "%~9s ~10s ~10s ~10s ~10s~n", ["m", "t", "m x t", "linear", "map"])
+    :io.format(fd, "%~9s ~10s ~10s ~10s ~10s~n", ["m", "t", "m + t", "linear", "map"])
+    :io.format("%~9s ~10s ~10s ~10s ~10s~n", ["m", "t", "m + t", "linear", "map"])
     Enum.each( all,
       fn ({m,t}) ->
 	:erlang.garbage_collect()
@@ -38,6 +41,7 @@ defmodule Bench do
 	:erlang.garbage_collect()
       {t2, _} = :timer.tc(fn() -> Enum.each(1..1000, fn(_) -> Hinges.map(m, t, {260, 40, 30}, {180, 60, 24}) end) end)
       :io.format(fd, "~10w ~10w ~10w ~10.2f ~10.2f~n", [m, t, (t+m), t1/1000, t2/1000])
+      :io.format("~10w ~10w ~10w ~10.2f ~10.2f~n", [m, t, (t+m), t1/1000, t2/1000])
       end)
     :file.close(fd)
   end

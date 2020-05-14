@@ -24,30 +24,32 @@ defmodule High do
 
   
   
-  def foldr(_op, acc, []) do  acc end
-  def foldr(op, acc, [h|t]) do 
-    op.(h, foldr(op, acc, t))
+  def foldr([], acc, _op) do  acc end
+  def foldr([h|t], acc, op) do 
+    op.(h, foldr(t, acc, op))
   end
 
-  def foldl(_op, acc, []) do acc end
-  def foldl(op, acc, [h|t]) do
-    foldl(op, op.(h, acc), t)
+  def foldl([], acc, _op) do acc end
+  def foldl([h|t], acc, op) do
+    foldl(t, op.(h, acc), op)
   end
     
 
 
 
 
-def appendl(l) do
-  f = fn(e,a) -> a ++ e end
-  foldl(f, [], l)
-end
-
-
 def appendr(l) do
   f = fn(e,a) -> e ++ a end
-  foldr(f, [], l)
+  foldr(l, [], f)
 end
+
+
+def appendl(l) do
+  f = fn(e,a) -> a ++ e end
+  foldl(l, [], f)
+end
+
+
 
 
 

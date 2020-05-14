@@ -46,6 +46,69 @@ defmodule Pong do
 
     receive  do
 
+      {:player1, :up} ->
+	case Game.up(player1) do
+	  {:ok, player1} ->
+	    broadcast(sessions, {:player1, :up})
+	    pong(player1, player2, ball, sessions)
+	  :no ->
+	    pong(player1, player2, ball, sessions)
+	end
+
+      {:player1, :down} ->
+	case Game.down(player1) do
+	  {:ok, player1} ->
+	    broadcast(sessions, {:player1, :down})
+	    pong(player1, player2, ball, sessions)
+	  :no ->
+	    pong(player1, player2, ball, sessions)
+	end
+
+      {:player2, :up} ->
+	case Game.up(player2) do
+	  {:ok, player2} ->
+	    broadcast(sessions, {:player2, :up})
+	    pong(player1, player2, ball, sessions)
+	  :no ->
+	    pong(player1, player2, ball, sessions)
+	end
+
+      {:player2, :down} ->
+	case Game.down(player2) do
+	  {:ok, player2} ->
+	    broadcast(sessions, {:player2, :down})
+	    pong(player1, player2, ball, sessions)
+	  :no ->
+	    pong(player1, player2, ball, sessions)
+	end
+
+      {:serve, turn} ->
+	{pos, ball} = Game.serve(turn, player1, player2)
+	broadcast(sessions, {:ball, pos})
+	:timer.send_after(@tick, self(), {:tick, @tick})
+	pong(player1, player2, ball, sessions)
+
+      {:tick, tick} ->
+	case Game.move_ball(player1, player2, ball) do
+	  {:bounce, pos, ball} ->
+	    broadcast(sessions, {:ball, pos})
+	    tick = if(tick > 40) do tick-5 else tick end
+	    :timer.send_after(tick, self(), {:tick, tick})
+	    pong(player1, player2, ball, sessions)
+	  {:moved, pos, ball} ->
+	    broadcast(sessions, {:ball, pos})
+	    :timer.send_after(tick, self(), {:tick, tick})
+	    pong(player1, player2, ball, sessions)
+	  {:score, :player1, score, player1} ->
+	    broadcast(sessions, {:player1, :score, score})
+	    :timer.send_after(@serve, self(), {:serve, :player1})
+	    pong(player1, player2, ball, sessions)
+	  {:score, :player2, score, player2} ->
+	    broadcast(sessions, {:player2, :score, score})
+	    :timer.send_after(@serve, self(), {:serve, :player2})
+	    pong(player1, player2, ball, sessions)
+	end
+
       {:player1, :close} ->
 	:io.format("player 1 closed connectio\n" )
 	:ok

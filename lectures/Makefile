@@ -12,6 +12,7 @@ DIRS = 	asynchronous \
 	lambda \
 	overview \
 	parallel \
+	pong \
 	recursion \
 	tracer \
 	transport \
@@ -21,7 +22,7 @@ DIRS = 	asynchronous \
 
 WWW =  ./www
 
-TRACER = ppm.erl test1.ppm vector.erl camera.erl objects.erl tracer.erl test.erl world.erl lights.erl tracer1.erl tracer2.erl tracer3.erl test.erl
+PONG = pong.ex websocket.ex game.ex session.ex pong.html pong.js
 
 all:
 	echo $(DIRS)
@@ -41,10 +42,12 @@ install:
         done
 
 
-itracer : 
-	for d in $(TRACER); \
-	    do cp ./tracer/$$d $(WWW)/tracer/$$d;\
+
+ipong : 
+	for f in $(PONG); do \
+             rsync -uL ./pong/src/$$f  $(WWW)/pong/$$f;\
         done
+
 
 
 clean : 

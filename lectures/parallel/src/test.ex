@@ -3,9 +3,11 @@ defmodule Test do
   def stream() do
     t0 = :erlang.monotonic_time(:millisecond)	
     ctrl = self()
-    out = PPM.writer("motion.ppm", ctrl)
-    out = Strm.start(Filter.rgb_motion(), out)
-    out = Strm.start(Filter.rgb_motion(), out)         
+    out = PPM.writer("stream.ppm", ctrl)
+    out = Strm.start(Filter.gray_invert(), out)
+    out = Strm.start(Filter.gray_edge(), out)    
+    out = Strm.start(Filter.gray_reduce(), out)
+    out = Strm.start(Filter.rgb_to_gray(), out)
     PPM.reader("hockey.ppm", out)
     t1 = receive do
            :done ->

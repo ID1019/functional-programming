@@ -673,8 +673,8 @@ def acc(saldo) do
     {:withdraw, money} ->
        acc(saldo - money)
     {:request, from} ->
-       send(pid, {:saldo, saldo})
-       acc(Saldo)
+       send(from, {:saldo, saldo})
+       acc(saldo)
   end
 end
 \end{verbatim}

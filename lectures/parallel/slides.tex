@@ -132,7 +132,7 @@ end
 \begin{frame}[fragile]{how do we exploit parallelism}
 
 \begin{columns}
- \begin{column}{0.6\linewidth}
+ \begin{column}{0.5\linewidth}
  \begin{verbatim}
 def fib(0) do 0 end
 def fib(1) do 1 end
@@ -148,20 +148,20 @@ end
 \end{verbatim}
  \end{column}
 \pause
- \begin{column}{0.4\linewidth}
+ \begin{column}{0.5\linewidth}
 \begin{verbatim}
 def parallel(fun, ref) ->
    self = self()
    spawn(fn() -> 
      res = fun.()
-     send(self ! {:ok, ref, res})
+     send(self, {:ok, ref, res})
      end)
 end 
 \end{verbatim}
 \begin{verbatim}
 def collect(ref) do
    receive  do
-      {:ok, ref, res} ->
+      {:ok, ^ref, res} ->
           res
    end
 end
@@ -315,16 +315,16 @@ reduce the color depth of the image.
 \begin{frame}{question}
 
   \begin{columns}
-    \begin{column}{0.3\linewidth}
-      \includegraphics[width=0.8\linewidth]{hockey.png}
+    \begin{column}{0.33\linewidth}
+      \includegraphics[width=0.9\linewidth]{hockey.png}
     \end{column}
     \pause
-    \begin{column}{0.3\linewidth}
-      \includegraphics[width=0.8\linewidth]{gray.png}
+    \begin{column}{0.33\linewidth}
+      \includegraphics[width=0.9\linewidth]{gray.png}
     \end{column}
     \pause
-    \begin{column}{0.3\linewidth}
-      \includegraphics[width=0.8\linewidth]{reduced.png}
+    \begin{column}{0.33\linewidth}
+      \includegraphics[width=0.9\linewidth]{reduced.png}
     \end{column}
 \end{columns}
 

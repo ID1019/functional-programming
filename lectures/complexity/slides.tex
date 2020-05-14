@@ -61,7 +61,7 @@ What are the run-time complexities of sum/1 and sum/2?
 def foo([]) do [] end
 def foo([h|t]) do
    z = foo(t)
-   bar(z, [h])
+   bar(z, h)
 end
        \end{verbatim}
       \end{block}
@@ -107,7 +107,7 @@ end
        \begin{verbatim}
 def reverse([], y) do y end
 def reverse([h|t], y) do 
-   z = cons(h, y)
+   z = [h | y]
    reverse(t, z)
 end
        \end{verbatim}
@@ -156,14 +156,14 @@ end
 
 \begin{equation}  
   \begin{split}
-T_n & = T_{n-1} + k(n-1) + b \\
-    & = T_{n-2} + k(n-2) + k(n-1) + 2b \\
-    & = T_{n-3} + k(n-3) + k(n-2) + k(n-1) + 2b \\
-    & : \\
-    & = T_{n-n} + k(n-n) + ...... (n-1)k  + nb \\
-    & = a + 0 + k + 2k + 3k ...... (n-1)k  + nb  \\
-    & = n\frac{(n-1)}{2}k + nb + a \\
-    & = (\frac{k}{2})n^2 - \frac{k}{2}n+ bn + a \\
+T_n & = T_{n-1} + k(n-1) + b \\ 
+    & \onslide<2->{ = T_{n-2} + k(n-2) + k(n-1) + 2b }\\
+    & \onslide<3->{= T_{n-3} + k(n-3) + k(n-2) + k(n-1) + 2b }\\ 
+    & \onslide<4->{:} \\
+    & \onslide<4->{= T_{n-n} + k(n-n) + ...... (n-1)k  + nb }\\
+    & \onslide<5->{= a + 0 + k + 2k + 3k ...... (n-1)k  + nb  }\\ 
+    & \onslide<6->{= n\frac{(n-1)}{2}k + nb + a }\\ 
+    & \onslide<7->{= (\frac{k}{2})n^2 - \frac{k}{2}n+ bn + a }\\
   \end{split} 
 \end{equation}
 
@@ -318,7 +318,7 @@ end
         \begin{verbatim}
 def reverse([], y) do y end
 def reverse([h|t], y) do 
-   z = cons(h, y)
+   z = [h | y]
    reverse(t, z)
 end
        \end{verbatim}
@@ -364,13 +364,13 @@ end
     T_1 & = a \\
 \\
 T_n & = 2 \times T_{n/2} + nc \\ 
-    & = 2 \times ( 2 \times T_{n/4} + (n/2)c ) + nc \\
-    & = 4 \times T_{n/4} + 2 \times nc\\
-    & = 8 \times T_{n/8} + 3 \times nc\\
-    & : \\
-    & = 2^k \times T_1 + k \times nc \\
-    & = 2^{lg(n)} \times a  + lg(n) \times nc \\
-    & = n \times a + lg(n)n \times c\\
+    &\onslide<2->{ = 2 \times ( 2 \times T_{n/4} + (n/2)c ) + nc }\\
+    &\onslide<3->{ = 4 \times T_{n/4} + 2 \times nc}\\
+    &\onslide<3->{ = 8 \times T_{n/8} + 3 \times nc}\\
+    &\onslide<3->{ : }\\
+    &\onslide<4->{ = 2^k \times T_1 + k \times nc }\\
+    &\onslide<5->{ = 2^{lg(n)} \times a  + lg(n) \times nc }\\
+    &\onslide<6->{ = n \times a + lg(n)n \times c}\\
   \end{split}
 \end{equation}
 
@@ -522,12 +522,12 @@ end
     T_0 & = a \\
     \\
 T_n & = 2 \times T_{n-1} + c \\
-    & = 2 \times ( 2 \times T_{n-2} + c ) + c \\
-    & = 4 \times T_{n-2} + 3 \times c \\
-    & = 8 \times T_{n-3} + 7 \times c\\
-    & : \\
-    & = 2^n \times T_0 +  (2^n -1) \times c \\
-    & = 2^n \times a +  2^n \times c  - c\\
+    &\onslide<2->{ = 2 \times ( 2 \times T_{n-2} + c ) + c }\\
+    &\onslide<3->{ = 4 \times T_{n-2} + 3 \times c }\\
+    &\onslide<4->{ = 8 \times T_{n-3} + 7 \times c}\\
+    &\onslide<4->{ : }\\
+    &\onslide<5->{ = 2^n \times T_0 +  (2^n -1) \times c }\\
+    &\onslide<6->{ = 2^n \times a +  2^n \times c  - c}\\
   \end{split}
 \end{equation}
 
