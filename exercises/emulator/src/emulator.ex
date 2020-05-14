@@ -1,8 +1,8 @@
 defmodule Emulator do
 
-  def run(code, mem) do
+  def run(code, mem, out) do
     reg = Register.new()
-    run(0, code, mem, reg, [])
+    run(0, code, mem, reg, out)
   end
 
 
@@ -13,16 +13,16 @@ defmodule Emulator do
     case next do
 
       {:halt} ->
-	Enum.reverse(out)
+	Out.close(out)
 
       {:out, rs} ->
 	a = Register.read(reg, rs)
-	run(pc+1, code, mem, reg, [a|out])
+	run(pc+1, code, mem, reg, Out.put(out,a))
 	
       {:add, rd, rs, rt} ->
 	a = Register.read(reg, rs)
 	b = Register.read(reg, rt)
-	reg = Register.write(reg, rd, a + b)
+	reg = Register.write(reg, rd, a + b)  # we're not handling overflow
 	run(pc+1, code, mem, reg, out)
 
       {:sub, rd, rs, rt} ->

@@ -1,7 +1,16 @@
 defmodule Memory do
 
   def new() do
-    {:mem, Map.new()}
+    new([])
+  end    
+
+  def new(segments) do
+    f = fn({start, data}, layout) ->
+      last = start +  length(data) -1      
+      Enum.zip(start..last, data) ++ layout
+    end
+    layout = List.foldr(segments, [], f)
+    {:mem, Map.new(layout)}
   end
 
   def read({:mem, mem}, i) do

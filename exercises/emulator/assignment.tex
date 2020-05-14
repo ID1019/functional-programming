@@ -32,7 +32,7 @@
 \begin{document}
 
 \title{
-  \textbf{A MIPS emulator - I}\\
+  \textbf{An emulator}\\
   \large{Programming II}
 }
 \author{Johan Montelius}
@@ -42,15 +42,219 @@
 
 \section*{Introduction}
 
-In this exercise we will combine your knowledge of computer
-architecture and functiona programming to implement an emulator for a 
- subset of MIPS assembler. 
+In this exercise we will combine your knowledge of assembly
+programming and functional programming to implement an emulator for a
+subset of MIPS assembler. You should have a basic understanding of
+assembly programming but we will not do very advanced programming so
+no need to know all instructions by heart. The idéa here is not to
+imlpement a complete emulator but to see how we can implement it in
+Elixir.
 
 
 \section{MIPS assembler}
 
+We will only implement a small subset of the MIPS instruction set. If
+we can emulate one arithmetic operation I think we could easily extend
+the emulator to handle all. The subset is however choosen to cover the
+various forms of instructions: arithmetic, load and store, branching
+etc. We will also inlcude some non-mips insructions that might be fun
+to have when we run our programs.
+
+
+These are the instructions that we will implement:
+
+\begin{itemize}
+\item {\tt add \$d \$s \$t} : add the values of register {\tt \$s} and {\tt \$t} and place result in {\tt \$d}.
+\item {\tt  sub \$d \$s \$t} : subtract the values of register {\tt \$s} and {\tt \$t} and place result in {\tt \$d}.
+\item {\tt addi \$d \$t imm} : add the values of register {\tt \$t} and the immediat value {\tt imm} and place result in {\tt \$d}.
+\item {\tt lw \$d offset(\$t)} : load the value found at adress {\tt offset + \$t} and place it in {\tt \$d}.
+\item {\tt sw \$s offset(\$t)} : store the value in register {\tt \$s} at adress {\tt offset + \$t}. 
+\item {\tt beq \$s \$t offset} : branch to {\tt pc + offset} if values at {\tt \$s} and  {\tt \$t} are equal.
+\end{itemize}
+
+
+We will also implement the two following instrucktions that do not
+have any corresponding machine instructions but are very handy for our
+implementation.
+
+\begin{itemize}
+\item {\tt halt} : halt the execution (normally implemented as an enless loop but we will actually stop)
+\item {\tt out \$s} : output value at register location {\tt \$s}.
+\end{itemize}
+
+When you normally write assembly programs you of course use an editor
+nd write you programs in a text file. A program could for example
+look like this:
+
+
+\begin{verbatim}
+	.text 	
+main:
+	li $t2, 42		# load 42 into reg $t2 
+	lw $t3, value		# load the word stored at address value into reg $t3
+	add $t4, $t2, $t3	# add $t2 and $t3, place result in $t4
+	sw $t4, result		# Store the answer at address result
+
+loop:   j loop
+
+	.data
+
+value:	.word 37
+
+result 	.word 0
+\end{verbatim}
+
+We could write a parser that would read a file and represents the
+program in a suitable data structure for our emulator but we will skip
+this step and start from a resonable data strucure that represents the
+program. We will represent our program in two structures, one that
+holds the data and one that holds the program. This is not really how
+things work but it's fine for our needs and it make things easier.
+
+The program will be a list of instructions where each instruction is a
+tuple hodling the name of the instruction and its arguments. The
+program above could be represented by the following list:
+
+\begin{verbatim}
+ [{:li, :t2, 42},
+  {:lw, :t3, 0},            # value will be at data address 0
+  {:add, :t4, :t2, :t3},
+  {:sw, :t4, 4},            # result will be at data address 4
+  {:j, -4}]                 # pc is allready pc+4 when we instruction is executed
+\end{verbatim}
+
+The data segment will in the sam way be represented as a sequence of
+value but we make it a bit flexible and present it as a sequence of
+segments, each with an initial address. We will make life a lot easier
+for us and limit memory operations to full word operations i.e. 4
+bytes. So the following would be the representation of a data area
+with two segment, one starting at address 0 and one starting at
+address 4.
+
+
+\begin{verbatim}
+ [ {0, [37]}, {4, [0]}]
+\end{verbatim}
+
+The data structures now presented are how the program and data area
+are presented to us. These structures might not be the best structures
+for our puproses but that is one of our first tasks of our
+implementation, find a suitable representation of this data.
 
 \section{The implementation}
+
+We start by doing an overall design of the system. This will give us
+insight into which moduels we will need an how data best is
+represented.
+
+\subsection{the state of the computation}
+
+The fisrt thning we should think through is what the state of the
+computation is. The program itself is of course part of the state but
+since we have separated the code from the data the code part is
+static. We will only read from the code using a {\em program
+  counter}. The program counter is thus somethning that is part of the
+state and it will of course change during the execution. The most
+normal operation is that the program counter is incremented by 4 to
+index the next instruction but it could also be set by a branch or
+jump instruction.
+
+The memmory is of course also part of the state and it will of course
+change with each store operation. We should be able to index it using
+addresses and let's assume that we only use addresses aligned by 4
+bytes (you could change this later and allow for byte addressing). So
+give that we should both be able to read from and write to this data
+structure we might choose somthing different from the code area.
+
+The final state of the computation are the registers of the CPU. In a
+MIPS architecture we have 32 general purpose registers (well, register
+0 always holds the value 0) but the MIPS assembler language has a
+convention of usage. Register 28 is pointing to the data area, 29 is
+used as a stackpointer, 30 as the frame base pointer etc.
+
+In the code example above we saw registers called {\tt \$t4} and these
+are temporary registers that are not preserved across a function
+call. Registers that are preserved are called {\tt \$s0}, {\tt \$s1}
+etc. How regsiters should be used is of course very important for the
+programmer or for the developer of the assembler but it is nothing
+that we need to consider. We should simply execute the instructions
+give to us so for all that we care we could view them as 32 general
+purpose registers (aprt from register 0).
+
+
+\subsection{the execution}
+
+When we start our emulation we will have a code area where we can read
+the next instruction referred to by the program counter. We will
+retreive the instruction, interpret it, possibly modify registers
+and/or memory and then determine how to update the program
+counter. Let's give it a try:
+
+\begin{minted}{elixir}
+
+  defmodule Emulator do
+  
+  def run(pc, code, reg, mem) do
+    next = Program.read(code, pc)
+    case next do
+
+      :halt ->  
+          :ok
+
+      {:add, rd, rs, rt} ->
+         pc = pc + 4
+         s = Register.read(reg, rs)
+         t = Register.read(reg, rt)
+         reg = Register.write(reg, rd, s + t) # well, almost
+         run(pc, code, reg, mem)
+      
+       :
+
+     end
+  end
+\end{minted}
+   
+Let's totally ignore the problem of overflow and that negative numbers
+should be represented as two's complement etc. This is not the course
+of data architecture, we're only doing this for fun.
+
+It should be rather simple to complete this piece of the
+emulator. Load and store instructions will simply us a Memory module
+that does the right thing and branch and jump instructions are simple.
+
+
+We add one thing that will collect the output generated from the {\tt
+  out} instruction. Let's keep keep the details hidden in a module. We
+also add a more convient way of calling the emulator, the registers
+are after all cleared when we start and let's always start with the
+program counter set to zero.
+
+
+\begin{minted}{elixir}
+  def run(code, mem, out) do
+     reg = Register.new() 
+     run(0, code, reg, mem, out)
+  end
+
+  def run(pc, code, reg, mem, out) do
+    next = Program.read(code, pc)
+    case next do
+
+       :halt ->
+          Out.close(out)
+    
+       {:out, rs} ->
+         pc = pc + 4
+         s = Register.read(reg, rs)
+         out = Out.put(out, s)
+         run(pc, code, reg, mem, out)
+
+       :
+ \end{minted}
+
+ That's it, all we have to do now is implement the supporting modules.
+
+ 
 
 
 

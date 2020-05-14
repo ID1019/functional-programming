@@ -2,8 +2,9 @@ defmodule Test do
 
   def test() do
     code = Program.assemble(demo())
-    mem = Memory.new()
-    Emulator.run(code, mem)
+    mem = Memory.new([])
+    out = Out.new()
+    Emulator.run(code, mem, out)
   end
 
   def demo() do
