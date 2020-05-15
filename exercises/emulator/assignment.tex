@@ -128,12 +128,10 @@ value but we make it a bit flexible and present it as a sequence of
 segments, each with an initial address. We will make life a lot easier
 for us and limit memory operations to full word operations i.e. 4
 bytes. So the following would be the representation of a data area
-with two segment, one starting at address 0 and one starting at
-address 4.
-
+with one segment starting at address 0 holding two words of data.
 
 \begin{verbatim}
- [ {0, [37]}, {4, [0]}]
+  [ {0, [37, 0]} ]
 \end{verbatim}
 
 The data structures now presented are how the program and data area
@@ -239,7 +237,7 @@ program counter set to zero.
   def run(pc, code, reg, mem, out) do
     next = Program.read(code, pc)
     case next do
-
+ 
        :halt ->
           Out.close(out)
     
@@ -254,7 +252,200 @@ program counter set to zero.
 
  That's it, all we have to do now is implement the supporting modules.
 
+ \subsection{the program}
+
+ The decission to separate the code from the general data segment was
+ not something that happend by accident. Since we know that the code
+ will not change we can focus on finding a representation that gives
+ us fast access. One could of course represent the sequence of
+ instructions as they are given to us i.e. as a list. This would work
+ but it would certainly have its drawbacks.
+
+ \begin{minted}{elixir}
+   def read(code, pc) do
+      Enum.at(code, pc)
+   end
+ \end{minted}
+
+ Looks ok - but what is done everytime we request an instruction?
+
+ Since we're not really accessing instructions randomly we could
+ rewrite our emulator to work directly on a list of instructions. In
+ nine cases out of ten we will step to the next instruction so we could do as follows:
+
+ \begin{minted}{elixir}
+   def emulate([instr|rest], reg, mem, out) do
+
+     case instr do
+        :
+        
+      {:add, rd, rs, rt} ->
+          :
+          :
+       emulate(rest, reg, mem, out)
+
+        :
+    end
+  end
+ \end{minted}
+
+ This would work as long as we move forward but how do we implement a
+ branch or jump instruction? One way would be to have an extra
+ argument that was the complete code and then use this when we
+ jump. This would still be expensive when we jump but it's a better
+ solution than we had before.
+
+ One interesting solution would be to have branch and jump
+ instructions to hold a reference to the code segment that we should
+ jump to. Take a look at the following representation of a program.
+
+ \begin{minted}{elixir}
+
+   def demo() do
+
+      label = [{:add, :t2, :t0, :t3},
+                :
+                :
+               :halt ]  
+      [{:lw, :t2, 123},
+          :
+       {:beq, :t3, :t5, label},
+          :
+          :
+       | label]
+   end
+ \end{minted}
+
+ If code was represented in this way (and we would have to arrange it
+ in this way) the branch instruction would be a piece of cake to implement.
+
+\begin{minted}{elixir}
+   def emulate([instr|rest], reg, mem, out) do
+
+     case instr do
+
+       {:beq, rd, rs, imm} ->
+         s = Register.read(reg, rs)
+         t = Register.read(reg, rt)
+         next = if d == t do imm else rest end
+         emulate(next, reg, mem, out)
+
+      :
+    end
+  end
+ \end{minted}
  
+ This is so beautiful, ... it's just that.... what is the problem?
+
+ Let's try something differently; this is the boring solution but very
+ efficient. Since we know that we will only read from the code segment
+ and we will use an integer as an index we might as well represent the
+ code as a tuple.
+
+ \begin{minted}{elixir}
+   defmodule Program do 
+
+     def assemble(prgm) do
+        {:code, List.to_tuple(prgm)}
+     end
+
+     def read({:code, code}, pc) do elem(pc, code) end
+   
+   end
+\end{minted}
+ 
+We are given the code as a list of instructions and simply convert it
+to a tuple. Tuples in Elixir are zero indexed so we even have the
+right addresses with out doing anything. There is a limitation on how
+large tuples can be but if you look it up you will realize that it's
+not a problem today. Why the detour of going through the solution
+using a list you may ask but we're here to explore alternatives and
+learn some Elixir programming, not copy a solution.
+
+\subsection{the registers}
+
+The registers are named things like: {\tt :zero}, {\tt :at}, {\tt
+  :v0}, {\tt :v1} etc. A list of tuples would work but this would give
+us a linear access time. This is not all that problematic since there
+are few and fixed number of registers. The implementation is simple
+and we even have library functions do to the work for us
+
+\begin{minted}{elixir}
+  defmodule Register do
+
+    def new() do [] end
+
+    def read(reg, key) do
+       {key, val} = List.keyfind(reg, key, 0, {key, 0})
+        val
+    end
+
+    def write(reg, :zero) do reg end
+    def write(reg, key, val) do List.keystore(reg, key, 0, {:key, val}) end
+
+  end
+\end{minted}
+
+Since we know that we are working with a key-value stire we might of
+course use the library that is optimised for this. Let's create a map
+and use this as the see what it would look like.
+
+\begin{minted}{elixir}
+  defmodule Register do
+
+    def new() do %{}end
+
+    def read(reg, key) do  Map.get(reg, key, 0) end
+
+    def write(reg, :zero) do reg end
+    def write(reg, key, val) do Map.put(reg, key, val) end
+
+  end
+\end{minted}
+
+Which one is more efficientyou may ask bbut before we try to answers
+that question we will look at a thirs alternative. This alternative is
+based on the fact that the keys of the regsiters are not arbitrary
+key. We know that the keys are only a convient way of expressing the
+numbers 0 to 31; there are only 32 registers.
+
+What if we could change our code in a way that the instructions use
+integers as a reference to registers instead of atoms. This would
+allow us to, as with the code, have direct access to the values. We
+simply use the buil-in functions {\tt elem/2} and {\tt put\_elem/3} and
+we're up and running.
+
+\begin{minted}{elixir}
+  defmodule Register do
+    def new() do
+      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+    end
+  
+    def read(reg, i) do elem(reg, i) end
+
+    def write(reg, 0, _) do reg end
+    def write(reg, i, val) do put_elem(reg, i, val) end  
+  end
+\end{minted}
+
+So, now we have three alternatives: a list, a map and a tuple. Which
+one is more efficient? Does it depend on the access pattern? How do we find out?
+
+\subsection{the memory}
+
+So now we come to the memory and now of course we know what
+alternatives we have. We know that the memory will be accessed using
+an integer as a reference. This might lead us to a solution similar to
+the code area but there is of course a huge difference. We will
+constantly read and write to the memory and a tuple is expensive to
+update. The only reason we still considered it when implementing the
+registeres was that there where few and fixed number of registers. The
+memory could be very large and we don't know from start how large.
+
+
+
+
+ \subsection{the }
 
 
 
