@@ -22,7 +22,7 @@
 
 \begin{itemize}
  \item {\tt @spec new([any]) :: memory} : creates a memory initialized with values from a list \pause
- \item {\tt @spec read(memory, integer) :: any } : returns the  value stored in the memory at position $n$ 
+ \item {\tt @spec read(memory, integer) :: any } : returns the value stored in the memory at position $n$ 
  \item {\tt @spec write(memory, n, any) -> :ok} : writes the value at position $n$ in the memory 
 \end{itemize}
 
@@ -42,7 +42,7 @@ defmodule Mem do
 \end{verbatim} \pause
 \begin{verbatim}
   def read({:mem, mem}, n) do
-    elem(mem, n)
+     elem(mem, n)
   end
 \end{verbatim} \pause
 \begin{verbatim}
@@ -416,7 +416,7 @@ end
 def free() do
   receive do
     {:take, pid} ->
-       self(pid, :taken)
+       send(pid, :taken)
        taken()
   end
 end

@@ -491,7 +491,7 @@ end
 \end{verbatim}
 \pause
 \begin{verbatim}
-def append_left(l) ->
+def append_left(l) do
   f = fn (e,a) -> a ++ e end
   foldl(l, [], f)
 end
@@ -744,7 +744,7 @@ Are functions considered to be ``first-class citizen''?
   \vspace{20pt}Not really - look at this.
     
 \begin{verbatim}
- f = fn(x) -> x + 1end
+ f = fn(x) -> x + 1 end
  g = fn(y) -> y + 1 end
 \end{verbatim}
 \vspace{20pt}\pause
