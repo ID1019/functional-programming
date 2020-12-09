@@ -7,7 +7,7 @@ slides: slides.pdf
 
 
 handout-nup.pdf: handout.pdf 
-	pdfnup --nup 2x2 --landscape  -- handout.pdf
+	pdfjam --nup 2x2 --landscape  --suffix nup handout.pdf
 
 handout.pdf: handout.tex slides.tex 
 	$(PDFLATEX) -output-directory=$(@D) handout.tex
