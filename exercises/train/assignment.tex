@@ -5,14 +5,18 @@
 \usepackage{tikz}
 \usetikzlibrary{automata,arrows,topaths,calc,positioning}
 
+\usepackage{caption}
+\usepackage{subcaption}
+
+
 \begin{document}
 
 \title{
     \textbf{Train shunting}\\
     \large{Programming II - Elixir Version}
 }
-\author{Christian Schulte}
-\date{Spring Term 2019}
+\author{Christian Schulte \\ \\ {\em adapted to Elixir by Johan Montelius}}
+\date{Spring Term 2021}
 \maketitle
 
 
@@ -40,7 +44,11 @@ situation in the shunting station is called \emph{state}. A
 \begin{figure}[h]
 \begin{center}
   \begin{tikzpicture}
-
+    \node(main) [rectangle, draw , minimum height=1cm, minimum width=3cm]{main};
+    \node(one) [rectangle, draw, minimum height=1cm, minimum width=3cm, above right = 0.5cm and 4cm of main ]{one};
+    \node(two) [rectangle, draw, minimum height=1cm, minimum width=3cm, below right = 0.5cm and 4cm of main]{two};
+    \draw[] (main) -- (one);
+    \draw[] (main) -- (two);    
   \end{tikzpicture}
 \end{center}  
 \caption{Train shunting station}
@@ -52,6 +60,7 @@ situation in the shunting station is called \emph{state}. A
 Our ultimate goal in this lab is to find a short sequence
 of moves that turn a train on the track ``main'' into another
 configuration of the train on ``main''.
+
 
 Before we attempt this goal we will fix the modeling of our
 problem and develop some list processing support.
@@ -72,8 +81,8 @@ this little puzzle.
 \paragraph{Trains, wagons, and states}
 
 Wagons are modeled as atoms and trains on tracks as lists of atoms. A
-train has no duplicate wagons (that is, \verb+[a,b]+ is a train,
-whereas \verb+[a,a]+ is not).
+train has no duplicate wagons (that is, \verb+[:a,:b]+ is a train,
+whereas \verb+[:a,:a]+ is not).
 
 A complete description of the state of a shunting station
 consists of three lists: a list describing the train on track
@@ -82,20 +91,22 @@ entire state is represented as a tuple with three elements, where
 the first element represents the train on track ``main'', the
 second the train on ``one'', and the third on track ``two''.
 
-\newcommand{\wagon}[3]{
-\rput(#1,#2){
-\psframebox[fillstyle=solid,fillcolor=lightgray,linecolor=white]{\small
-    $\strut$ #3}}}
- 
 \begin{figure}[h]
 \begin{center}
+  \begin{tikzpicture}
+    \node(main) [rectangle, draw , minimum height=1cm, minimum width=3cm]{{\tt [:a, :b]}};
+    \node(one) [rectangle, draw, minimum height=1cm, minimum width=3cm, above right = 0.5cm and 4cm of main ]{{\tt [ :c, :d] }};
+    \node(two) [rectangle, draw, minimum height=1cm, minimum width=3cm, below right = 0.5cm and 4cm of main]{{\tt [ :e, :f]}};
+    \draw[] (main) -- (one);
+    \draw[] (main) -- (two);    
+  \end{tikzpicture}
 \end{center}
 \caption{Example state displayed.}
 \label{fig:ex-state}
 \end{figure}
 
 
-The state \verb+{[:a,:b],[:c],[:d]}+
+The state \verb+{[:a,:b],[:c, :d],[:e, :f]}+
 is visualized in Figure~\ref{fig:ex-state}.
 
 \paragraph{Moves}
@@ -130,6 +141,41 @@ concerning track ``two''.
 
 \begin{figure}[h]
 \begin{center}
+\begin{tabular}{lr}
+  \begin{tikzpicture}
+    \node(main) [rectangle, draw , minimum height=0.5cm, minimum width=2cm]{{\tt [:a,:b]}};
+    \node(one) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, above right = 0.3cm and 2cm of main ]{{\tt [:c,:d] }};
+    \node(two) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, below right = 0.3cm and 2cm of main]{{\tt [:e,:f]}};
+    \draw[] (main) -- (one);
+    \draw[] (main) -- (two);    
+    \node(cap) [rectangle, above of=main] {a)};
+  \end{tikzpicture} &
+  \begin{tikzpicture}
+    \node(main) [rectangle, draw , minimum height=0.5cm, minimum width=2cm]{{\tt [:a]}};
+    \node(one) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, above right = 0.3cm and 2cm of main ]{{\tt [:b,:c,:d] }};
+    \node(two) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, below right = 0.3cm and 2cm of main]{{\tt [:e,:f]}};
+    \draw[] (main) -- (one);
+    \draw[] (main) -- (two);    
+    \node(cap) [rectangle, above of=main] {b)};
+  \end{tikzpicture}
+  \\[1cm]
+  \begin{tikzpicture}
+    \node(main) [rectangle, draw , minimum height=0.5cm, minimum width=2cm]{{\tt []}};
+    \node(one) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, above right = 0.3cm and 2cm of main ]{{\tt [:b,:c,:d] }};
+    \node(two) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, below right = 0.3cm and 2cm of main]{{\tt [:a,:e,:f]}};
+    \draw[] (main) -- (one);
+    \draw[] (main) -- (two);    
+    \node(cap) [rectangle, above of=main] {c)};
+  \end{tikzpicture} &
+  \begin{tikzpicture}
+    \node(main) [rectangle, draw , minimum height=0.5cm, minimum width=2cm]{{\tt [:b,:c]}};
+    \node(one) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, above right = 0.3cm and 2cm of main ]{{\tt [:d] }};
+    \node(two) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, below right = 0.3cm and 2cm of main]{{\tt [:a,:e,:f]}};
+    \draw[] (main) -- (one);
+    \draw[] (main) -- (two);    
+    \node(cap) [rectangle, above of=main] {d)};
+  \end{tikzpicture}
+\end{tabular}
 \end{center}
 \caption{Moves applied to states.}
 \label{fig:ex-moves}
