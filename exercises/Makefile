@@ -14,9 +14,10 @@ DIRS =  avl \
 	philosophers \
 	server \
 	semantics \
-	splay \
-	tracer \
-	transport \
+	splay\
+	tracer\
+	train\
+	transport\
 	twothree   
 
 
