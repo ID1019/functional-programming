@@ -3,6 +3,7 @@ PDFLATEX = pdflatex
 DIRS = 	asynchronous \
 	complexity \
 	concurrency \
+	derivative\
 	dns \
 	dynamic \
 	evaluation \

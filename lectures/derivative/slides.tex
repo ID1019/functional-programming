@@ -1,0 +1,132 @@
+\input{../include/preamble}
+
+\title[ID1019 Derivative]{Derivative}
+
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{derivative}
+
+$$f(x) =  3x^2 + 4x + 5$$
+\pause 
+
+$$f'(x) =  6x + 4$$
+\end{frame}
+
+
+\begin{frame}{representation}
+
+  How do we represent an expression? \pause
+
+  \begin{itemize}
+  \item numbers : $2$, $2.34$, \ldots \pause
+  \item variables : $x$, $y$ \ldots \pause
+  \item constants : $\pi$, \ldots \pause
+  \item operations :  $2 + x$, $2 * y$, $x^2$ \ldots \pause
+  \end{itemize}
+
+  \vspace{10pt}
+  {\em The representation should be easy to work with.}
+\end{frame}
+
+\begin{frame}[fragile]{How hard can it be?}
+
+  $3x^2 + 2x + \pi$ \pause
+
+  \vspace{20pt}
+  {\tt "3x\^{}2 + 2x + pi"} \pause
+
+  \vspace{20pt}
+  {\em We need an Abstract Syntax Tree (AST).}
+\end{frame}
+
+\begin{frame}[fragile]{AST: literals}
+
+  \begin{itemize}
+  \item numbers: {\tt \{:num, 124\}}, {\tt \{:num, 12.4\}} \ldots \pause
+  \item variables: {\tt \{:var, :x\}}, \ldots \pause
+  \item constants: {\tt \{:var, :pi\}}, \ldots 
+  \end{itemize}
+  
+\vspace{20pt}  \pause
+
+\begin{verbatim}
+@type literal() :: {:num, number()} 
+                 | {:var, atom()}
+\end{verbatim}
+
+
+\end{frame}
+
+\begin{frame}[fragile]{AST: expressions}
+
+  \begin{itemize}
+  \item addition: {\tt \{:add, \{:num, 124\}, \{:var, :pi\}\}}, \ldots \pause
+  \item multiplication: {\tt \{:mul, \{:num, 2\}, \{:var, :x\}\}}, \ldots 
+  \end{itemize}
+  
+  
+  \vspace{20pt}  \pause
+  
+\begin{verbatim}
+@type expr() :: {:add, expr(), expr()} 
+              | {:mul, expr(), expr()} 
+              | literal()
+\end{verbatim}  
+  
+\end{frame}
+
+\begin{frame}[fragile]{parsing}
+
+  {\tt "2x + 3"}
+
+  \vspace{20pt}\pause
+
+  {\tt \{:add, \{:mul, \{:const, 2\}, \{:var, :x\}\}, \{:const, 3\}\}}
+
+  \vspace{20pt}\pause
+  {\em Building the AST is the job of the parser - not out problem.}
+
+\end{frame}
+
+\begin{frame}{the rules}
+
+  These are the rules that we will use:
+  \vspace{20pt}\pause  
+
+\begin{itemize}
+\item $\frac{d}{dx} x \equiv 1$ \pause
+\item $\frac{d}{dx} c \equiv 0$  for any literal different from $x$ \pause
+\item $\frac{d}{dx} f + g \equiv  \frac{d}{dx} f + \frac{d}{dx} g$ \pause
+\item $\frac{d}{dx} f \cdot g \equiv  \frac{d}{dx} f \cdot  g + f \cdot \frac{d}{dx} g$ \pause
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{let's do some coding}
+
+\begin{verbatim}
+def deriv({:const, _}, _), do: ...
+
+def deriv({:var, v}, v), do: ...
+
+def deriv({:var, y}, _), do: ...
+
+def deriv({:mul, e1, e2}, v), do: ...
+
+def deriv({:add, e1, e2}, v), do: ...
+\end{verbatim}
+
+\end{frame}
+
+\end{document}
+
+

@@ -93,8 +93,7 @@ variables. We can limit ourselves to the domain of reals and a real
 number could of course be represented by an Elixir number. This is of
 course trivial but remember to separate the real number $2.34$ from the
 representation in Elixir by {\tt 2.34}. A variable could be represented
-as an atom so the variable $x$ is represented by the Elixir atom {\tt
-    :x}.
+as an atom so the variable $x$ is represented by the Elixir atom {\tt :x}.
 
 This simple mapping of elements in our domain to Elixir data structures
 is tempting to use but it has some disadvantages, we can not use
@@ -111,22 +110,22 @@ def derivative(n) when is_atom(n) do: ...
 We would also have to think twice when we want to include constants
 such as $\pi$, could we represent it using the atom {\tt :pi}?
 Moreover, when we derivatives, is it important to separate the
-constant $\pi$ from the constant $2.34$?
+constant $\pi$ from the constant $2.34$? Can we treat $\pi$ as a variable with a not so variable value? 
 
 A better approach (all though it will turn our expressions into huge
 data structures) is to be more explicit in our choice of
-representation. What if we choose to represent all constants using the
-tuple {\tt\{:const, c\}} where {\tt c} could be either an atom ({\tt
-    :pi}) or a number ({\tt 2.34}). Variables could, in the same way, be
-represented by tuples {\tt \{:var, v\}} where {\tt v} is a atom that
-identifies the variable.
+representation. What if we choose to represent all numbers using the
+tuple {\tt\{:num, c\}} where {\tt c} could be either an integer or a
+float. Variables could, in the same way, be represented by tuples {\tt
+  \{:var, v\}} where {\tt v} is a atom that identifies the
+variable. Let's represent ``constants'' such as $\pi$ as variables as
+well, it will simplify our code
 
-If constants and variables are our {\tt literals}, we have the
+If numbers and variables are our {\tt literals}, we have the
 following definition:
 
 \begin{minted}{elixir}
-@type literal() :: {:const, number()} 
-                | {:const, atom()} 
+@type literal() :: {:num, number()} 
                 | {:var, atom()}
 \end{minted}
 
@@ -154,7 +153,7 @@ expressions. The expression $2x + 3$ could for example be represented
 by the Elixir structure:
 
 \begin{minted}{elixir}
-{:add, {:mul, {:const, 2}, {:var, :x}}, {:const, 3}}
+{:add, {:mul, {:num, 2}, {:var, :x}}, {:num, 3}}
 \end{minted}
 
 \noindent As you see it it is not a syntax we would like to use when we write
@@ -208,11 +207,11 @@ derivative of sums and products, we are ready to implement the
 rules. This is a skeleton on what a function {\tt deriv/2} would look like:
 
 \begin{minted}{elixir}
-def deriv({:const, _}, _), do: ...
+def deriv({:num, _}, _), do: ...
 
 def deriv({:var, v}, v), do: ...
 
-def deriv({:var, y}, _), do: ...
+def deriv({:var, _}, _), do: ...
 
 def deriv({:mul, e1, e2}, v), do: ...
 
