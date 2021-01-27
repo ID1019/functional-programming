@@ -86,11 +86,11 @@ $$f'(x) =  6x + 4$$
 
 \begin{frame}[fragile]{parsing}
 
-  {\tt "2x + 3"}
+  {\tt "2 * x + 3"}
 
   \vspace{20pt}\pause
 
-  {\tt \{:add, \{:mul, \{:const, 2\}, \{:var, :x\}\}, \{:const, 3\}\}}
+  {\tt \{:add, \{:mul, \{:num, 2\}, \{:var, :x\}\}, \{:num, 3\}\}}
 
   \vspace{20pt}\pause
   {\em Building the AST is the job of the parser - not out problem.}
@@ -114,7 +114,7 @@ $$f'(x) =  6x + 4$$
 \begin{frame}[fragile]{let's do some coding}
 
 \begin{verbatim}
-def deriv({:const, _}, _), do: ...
+def deriv({:num, _}, _), do: ...
 
 def deriv({:var, v}, v), do: ...
 
