@@ -267,7 +267,7 @@ defmodule Huffman do
 
  # Get a suitable chunk of text to encode.
   def read(file, n) do
-   {:ok, fd} = File.open(file, [:read])
+   {:ok, fd} = File.open(file, [:read, :utf8])
     binary = IO.read(fd, n)
     File.close(fd)
 
