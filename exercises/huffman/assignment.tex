@@ -341,14 +341,14 @@ filter out a list with only the characters from your selected alphabet.
 To read a file you can use the following code:
 
 \begin{minted}{elixir}
-def read(file, n) do
-  {:ok, file} = File.open(file, [:read])
-  binary = IO.read(file, n)
+def read(file) do
+  {:ok, file} = File.open(file, [:read, :utf8])
+  binary = IO.read(file, :all)
   File.close(file)
   
   case :unicode.characters_to_list(binary, :utf8) do
     {:incomplete, list, _} ->
-      list;
+      list
     list ->
       list
   end

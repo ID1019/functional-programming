@@ -82,7 +82,7 @@ each node is on the form:
 {:node, character, left, right}
 \end{minted}
 
-An empty tree is represented by the {\tt nil} value and the root holds
+An empty tree is represented by the value {\tt :nil} and the root holds
 dummy value instead of a character; if everything works fine we
 will never have to see the nil nor the dummy value.
 
@@ -104,7 +104,7 @@ should only contain the dash, dot and space characters.
 \begin{verbatim}
   '.- .-.. .-.. ..-- -.-- --- ..- .-. ..-- 
     -... .- ... . ..-- .- .-. . ..-- 
-    -... . .-.. --- -. --. ..-- - --- ..-- ..- ... '
+    -... . .-.. --- -. --. ..-- - --- ..-- ..- ...'
 \end{verbatim}
 
 \begin{verbatim}
@@ -113,13 +113,13 @@ should only contain the dash, dot and space characters.
     --- -- .----- .-- .- - -.-. .... ..--.. ...- .----. 
     -.. .--.-- ..... .---- .-- ....- .-- ----. .--.-- 
     ..... --... --. .--.-- ..... ---.. -.-. .--.-- 
-    ..... .---- '
+    ..... .----'
 \end{verbatim}
 
 If you by accident have two spaces between to characters this might be
-decoded as {\tt na} which then will generate a string that is not a
+decoded as {\tt :na} which then will generate a string that is not a
 proper string. To solve this problem you might add a rule for the case
-where you're in the root of the tree (the character is {\tt na}) and
+where you're in the root of the tree (the character is {\tt :na}) and
 you hear a space. Then you simply do nothing and just start from the
 root again. The rule can be made general so that any unknown character
 will simply make the decoder start from the root.
@@ -200,13 +200,13 @@ then the value $v$ is the {\em i'th} element in the lists. If the {\em
 should be {\tt :na}.
 
 \begin{minted}{elixir}
-fill([{1, a}, {2, b}, {6, c}])
+fill([{1, :a}, {2, :b}, {6, :c}])
 \end{minted}
 
 should return:
 
 \begin{minted}{elixir}
-[:na, a, b, :na, :na, :na, c]
+[:na, :a, :b, :na, :na, :na, :c]
 \end{minted}
 
 If you do it right you can now create a tuple that will give you the
@@ -224,7 +224,7 @@ Doing the look-up operation in now simply doing a call to {\tt
   elem/2}.
   
 \begin{minted}{elixir}
-def lookup(char, table), do: elem(table, char)
+def lookup(char, table) do  elem(table, char) end
 \end{minted}
 
 If you do some benchmarks, you will see that you have managed to
