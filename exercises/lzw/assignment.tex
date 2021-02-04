@@ -67,6 +67,10 @@ that is represented as a list of words and codes.
 \begin{minted}{elixir}
 defmodule LZW do
 
+  @alphabet 'abcdefghijklmnopqrstuvwxyz '
+
+  def table(), do: table(@alphabet)
+
   def table(alphabet) do
     n = length(alphabet)
     words = Enum.map(alphabet, fn x -> [x] end)
@@ -230,12 +234,13 @@ the next code in the sequence.
 The function {\tt decode\_update/3} will take the next code in the
 sequence and do a lookup in the table. In most cases the word of the
 next code is {\tt found} and we there fore know what the encoder saw
-when it encoded the sequence. Id {\tt word} is {\tt 'banana'} (the word
+when it encoded the sequence. If {\tt word} is {\tt 'banana'} (the word
 found in {\tt decode/2}) and {\tt found} is {\tt 'rama'} then we know that
 
 \begin{itemize}
 \item The encoder read {\tt 'banana'} and had a code for it but then
-  read the first {\tt r} in {\tt 'rama'} but could not find a code for {\tt 'bananar'},
+  read the first {\tt r} in {\tt 'rama'} but could not find a code for
+  {\tt 'bananar'},
   
 \item The encoder used the code for {\tt 'banana'} but then also added
   {\tt 'bananar'} to the table of endoded words.
