@@ -1,28 +1,37 @@
 defmodule Morse do
 
   # Some test samples to decode.
-  def base(), do: '.- .-.. .-.. ..-- -.-- --- ..- .-. ..-- -... .- ... . ..-- .- .-. . ..-- -... . .-.. --- -. --. ..-- - --- ..-- ..- ... '
+  def base(), do: '.- .-.. .-.. ..-- -.-- --- ..- .-. ..-- -... .- ... . ..-- .- .-. . ..-- -... . .-.. --- -. --. ..-- - --- ..-- ..- ...'
 
-  def rolled(), do: '.... - - .--. ... ---... .----- .----- .-- .-- .-- .-.-.- -.-- --- ..- - ..- -... . .-.-.- -.-. --- -- .----- .-- .- - -.-. .... ..--.. ...- .----. -.. .--.-- ..... .---- .-- ....- .-- ----. .--.-- ..... --... --. .--.-- ..... ---.. -.-. .--.-- ..... .---- '
+  def rolled(), do: '.... - - .--. ... ---... .----- .----- .-- .-- .-- .-.-.- -.-- --- ..- - ..- -... . .-.-.- -.-. --- -- .----- .-- .- - -.-. .... ..--.. ...- .----. -.. .--.-- ..... .---- .-- ....- .-- ----. .--.-- ..... --... --. .--.-- ..... ---.. -.-. .--.-- ..... .----'
 
   def decode(signal) do
     table = decode_table()
-    decode(signal, table, table)
+    decode(signal, table)
   end
 
-  def decode([], _, _), do: []
-  def decode([?- | signal], {:node, _, long, _}, table) do
-    decode(signal, long, table)
+  def decode([], _) do  [] end
+  def decode(signal, table) do
+    {char, rest} = decode_char(signal, table)
+    [char | decode(rest, table)]
   end
-  def decode([?. | signal], {:node, _, _, short}, table) do
-    decode(signal, short, table)
+  
+  def decode_char([], {:node, char, _, _}), do: {char, []}
+
+  def decode_char([?- | signal], {:node, _, long, _}) do
+    decode_char(signal, long)
   end
-  def decode([?\s | signal], {:node, :na, _, _}, table) do
-    decode(signal, table, table)
+  def decode_char([?. | signal], {:node, _, _, short}) do
+    decode_char(signal, short)
   end
-  def decode([_ | signal], {:node, char, _, _}, table) do
-    [char | decode(signal, table, table)]
+  def decode_char([?\s | signal], {:node, :na, _, _}) do
+    ## if we end in the midle we return a * char
+    {?*, signal}
   end
+  def decode_char([?\s | signal], {:node, char, _, _}) do
+    {char, signal}
+  end
+
 
   def encode(text) do
     table = encode_table()
