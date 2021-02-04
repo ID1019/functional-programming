@@ -1,0 +1,15 @@
+name: Validate
+
+on: [push]
+
+jobs:
+  lint:
+    name: Lint
+    
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Run ChkTex linter on all LaTex files
+        uses: j2kun/chktex-action@1.0.3
