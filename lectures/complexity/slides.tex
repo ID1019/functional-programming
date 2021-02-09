@@ -158,12 +158,13 @@ end
   \begin{split}
 T_n & = T_{n-1} + k(n-1) + b \\ 
     & \onslide<2->{ = T_{n-2} + k(n-2) + k(n-1) + 2b }\\
-    & \onslide<3->{= T_{n-3} + k(n-3) + k(n-2) + k(n-1) + 2b }\\ 
+    & \onslide<3->{= T_{n-3} + k(n-3) + k(n-2) + k(n-1) + 3b }\\ 
     & \onslide<4->{:} \\
-    & \onslide<4->{= T_{n-n} + k(n-n) + ...... (n-1)k  + nb }\\
+    & \onslide<4->{= T_{n-n} + k(n-n) + ...... k(n-1)  + nb }\\
     & \onslide<5->{= a + 0 + k + 2k + 3k ...... (n-1)k  + nb  }\\ 
     & \onslide<6->{= n\frac{(n-1)}{2}k + nb + a }\\ 
     & \onslide<7->{= (\frac{k}{2})n^2 - \frac{k}{2}n+ bn + a }\\
+    & \onslide<8->{= (\frac{k}{2})n^2 + (b - \frac{k}{2})n+  a }\\    
   \end{split} 
 \end{equation}
 
@@ -175,7 +176,7 @@ T_n & = T_{n-1} + k(n-1) + b \\
 
   \vspace{10pt}\pause
 
-  $$T_n  = (\frac{k}{2})n^2 - \frac{k}{2}n+ bn + a $$
+  $$T_n  = (\frac{k}{2})n^2 + (b -\frac{k}{2})n+ a $$
 
   \vspace{20pt}\pause
 
@@ -531,7 +532,7 @@ T_n & = 2 \times T_{n-1} + c \\
   \end{split}
 \end{equation}
 
-\vspace{5pt}
+\vspace{5pt}\pause
 \pause  {\em The more precise answer is $O(1.6^n)$}
 
 
