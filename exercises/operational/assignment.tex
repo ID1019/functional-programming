@@ -196,7 +196,7 @@ The rule for a compound expression {\tt \{:foo, :bar\}} is straight
 forward Given that we can evaluate its two components we will of
 course be able to evaluate the compound expression.
 
-$$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow {s_1, s_2}}$$
+$$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow \lbrace s_1, s_2\rbrace}$$
 
 Note that we here implicitly require that $s_1$ and $s_2$ are
 structures ( $ s_i \in Structures$ ). If the evaluation of one of the expressions fail, the whole evaluation fails. 

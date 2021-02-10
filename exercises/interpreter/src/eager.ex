@@ -22,7 +22,7 @@ defmodule Eager do
   @type closure :: {:closure, [atom], seq, env}
   @type str :: atom | [str] | closure
 
-  # An environment is a key-value of variableiable to structure.
+  # An environment is a key-value of variable to structure.
   @type env :: [{atom, str}]
 
   # A program is a list of named functions
@@ -131,6 +131,17 @@ defmodule Eager do
 	:error
     end
   end
+  ## Experiment: let {:fun, id} identify a program function, works ok
+  def eval_expr({:fun, id}, _env, prg) do 
+    case List.keyfind(prg, id, 0) do
+      nil ->
+        :error
+
+      {_, par, seq} ->
+	{:ok, {:closure, par, [], seq}}
+    end
+  end
+  ## ... this part can then be removed.
   def eval_expr({:call, id, args}, env, prg) when is_atom(id) do
     case List.keyfind(prg, id, 0) do
       nil ->

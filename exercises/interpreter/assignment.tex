@@ -86,7 +86,7 @@ the language:
 
 \begin{figure}[h]
 \begin{minted}{elixir}
-x = _foo; y = :nil; {z, _} = {:bar, :grk}; {x, {z, y}}
+x = :foo; y = :nil; {z, _} = {:bar, :grk}; {x, {z, y}}
 \end{minted}
 \caption{a simple sequence}
 \label{fig:sequence}
@@ -119,14 +119,14 @@ It is important that we are clear on the terminology when we discuss
 our language. There is a difference between {\em terms}, {\em
   patterns} and {\em data structures}. In the sequence previously
 shown, the following constructs are terms: \verb+:foo+, \verb+:nil+,
-\verb+{:bar, :nil}+ and, \verb+{x, {y, z}}+. Terms are syntactical
+\verb+{:bar, :grk}+ and, \verb+{x, {y, z}}+. Terms are syntactical
 constructs that, {\em when evaluated}, will result in {\em data
   structures}; data structures are thus something that we handle
 during execution, the terms are only recipes for how these structures
 should be constructed.
 
 If we {\em evaluate} the sequence above we will obtain the data
-structure \textit{ \{:foo, \{:bar, :nil\}\}}. We will in this
+structure \textit{ \{foo, \{bar, nil\}\}}. We will in this
 text use {\it italics} when we refer to the data structures and
 \verb+teletype+ when we talk about the terms.
 
@@ -338,11 +338,11 @@ Here are some examples that you should be able to handle.
 \end{itemize}
 
 Note that {\tt eval\_expr/2} returns a data structure if successful
-i.e. {\em :a}, {\em :foo}, or {\em \{:a, :b\}}.  The last test is an
+i.e. {\em a}, {\em foo}, or {\em \{a, b\}}.  The last test is an
 effect of representing the binary tuples in our source program {\tt
   \{:a, :b\}}, with the internal representation {\tt \{:cons, \{:atm,
   :a\}, \{:atm, :b\}\}} that when evaluated will return the
-data structure {\it \{:a, :b\}}.
+data structure {\em \{a, b\}}.
 
 \subsection{Pattern matching}
 A pattern matching will take a pattern, a data structure and an
@@ -358,7 +358,7 @@ we're looking for.
  \item {\tt eval\_match(\{:var, :x\}, :a, [])} : returns {\tt \{:ok, [\{:x, :a\}]\}}
  \item {\tt eval\_match(\{:var, :x\}, :a, [\{:x, :a\}])} : returns {\tt \{:ok, [\{:x, :a\}]\}}
  \item {\tt eval\_match(\{:var, :x\}, :a, [\{:x, :b\}])} : returns {\tt :fail}
- \item {\tt eval\_match(\{:cons, \{:var, :x\} \{:var, :x\}\}, \{:cons, \{:atm, :a\} \{:atm, :b\}\}, [])} : returns {\tt :fail}
+ \item {\tt eval\_match(\{:cons, \{:var, :x\}, \{:var, :x\}\}, \{:cons, \{:atm, :a\}, \{:atm, :b\}\}, [])} : returns {\tt :fail}
 \end{itemize}
 
 Solving the cases where the pattern is an atom or variable is quite
@@ -572,7 +572,7 @@ seq = [{:match, {:var, :x}, {:atm, :a}},
           ]}
        ]
 
-Eager.eval_seq(seq, [])
+Eager.eval_seq(seq, Env.new())
 \end{minted}
 
 \subsection{Lambda expressions}
@@ -614,7 +614,7 @@ def eval_expr({:lambda, par, free, seq}, ...) do
 end
 \end{minted}
 
-The only thing we now have left is to function application i.e. when we
+The only thing we now have left is the function application i.e. when we
 apply a closure to a sequence of argument expressions. We need a way
 to represent this and the most natural way is the best. Note that we
 have an expression in the structure. The closure is something we will
@@ -636,7 +636,7 @@ def eval_expr({:apply, expr, args}, ...) do
     {:ok, {:closure, par, seq, closure}} ->
       case ... do
         :error ->
-          :foo
+          :error
         strs ->
           env = Env.args(par, strs, closure)
           eval_seq(seq, env)
@@ -660,7 +660,7 @@ seq = [{:match, {:var, :x}, {:atm, :a}},
        {:apply, {:var, :f}, [{:atm, :b}]}
       ]
       
-Eager.eval_seq(seq, [])
+Eager.eval_seq(seq, Env.new())
 \end{minted}
 
 \subsection{Named functions}
@@ -721,7 +721,7 @@ seq = [{:match, {:var, :x},
      {:call, :append, [{:var, :x}, {:var, :y}]}
     ]
     
-Eager.eval_seq(seq, [], prgm)
+Eager.eval_seq(seq, Env.new(), prgm)
 \end{minted}
 
 
