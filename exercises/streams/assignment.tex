@@ -49,7 +49,7 @@ integers. We don't do a simple calculation but recursively reduce the
 range to a value. 
 
 \begin{minted}{elixir}
-def sum({:range, to, to}) do n end  
+def sum({:range, to, to}) do to end  
 def sum({:range, from,  to}) do  from + sum({:range, from+1, to}) end  
 \end{minted}
 

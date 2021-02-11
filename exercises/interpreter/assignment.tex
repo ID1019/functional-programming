@@ -358,7 +358,7 @@ we're looking for.
  \item {\tt eval\_match(\{:var, :x\}, :a, [])} : returns {\tt \{:ok, [\{:x, :a\}]\}}
  \item {\tt eval\_match(\{:var, :x\}, :a, [\{:x, :a\}])} : returns {\tt \{:ok, [\{:x, :a\}]\}}
  \item {\tt eval\_match(\{:var, :x\}, :a, [\{:x, :b\}])} : returns {\tt :fail}
- \item {\tt eval\_match(\{:cons, \{:var, :x\}, \{:var, :x\}\}, \{:cons, \{:atm, :a\}, \{:atm, :b\}\}, [])} : returns {\tt :fail}
+ \item {\tt eval\_match(\{:cons, \{:var, :x\}, \{:var, :x\}\}, \{:a, :b\}, [])} : returns {\tt :fail}
 \end{itemize}
 
 Solving the cases where the pattern is an atom or variable is quite
