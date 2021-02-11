@@ -58,19 +58,19 @@ def lt({:card, :club, _}, _) do  true end
 \end{verbatim}
 \pause
 \begin{verbatim}
-def lt({:card, :diamond, _}, {:card, :heart, _}) do true
+def lt({:card, :diamond, _}, {:card, :heart, _}) do true end
 \end{verbatim}
 \pause
 \begin{verbatim}
-def lt({:card, :diamond, _}, {:card, :spade, _}) do true
+def lt({:card, :diamond, _}, {:card, :spade, _}) do true end
 \end{verbatim}
 \pause
 \begin{verbatim}
-def lt({:card, :heart, _}, {:card, :spade, _}) do   true
+def lt({:card, :heart, _}, {:card, :spade, _}) do true end
 \end{verbatim}
 \pause
 \begin{verbatim}
-def lt({:card, _, _}, {:card, _, _}) do  false
+def lt({:card, _, _}, {:card, _, _}) do false end
 \end{verbatim}
 
 \end{frame}
@@ -673,7 +673,7 @@ end
         if s >= n do
           {:halt, [x|a]}
         else
-          {:cont, {:sofar, next, [x|a]}}
+          {:cont, {:sofar, s, [x|a]}}
         end
       end)
   end    
@@ -695,7 +695,7 @@ end
 
 \begin{verbatim}
   def head(r) do
-    reduce(r, {:cont, nil},
+    reduce(r, {:cont, :na},
       fn (x, _) ->
         {:suspend, x}
       end)

@@ -16,10 +16,9 @@ defmodule Bench do
     lst = list(l)
     seq = [
       {:match, {:var, :x},  lst},
-      {:call, :nreverse, [{:var, :x}]}
+      {:apply, {:fun, :nreverse}, [{:var, :x}]}
     ]
-    prgm = prg()
-    rn = fn() -> Eager.eval(seq, prgm) end
+    rn = fn() -> Eager.eval(seq) end
     run(n, rn)
   end
 
@@ -41,42 +40,11 @@ defmodule Bench do
   end
 
   def list(0) do
-    {:atm, []}
+    {:atm, :nil}
   end
   def list(n) do
     {:cons, {:atm, n}, list(n-1)}
   end  
-
-
-  def prg() do
-    [
-      {:nreverse, [:x],
-       [
-         {:case, {:var, :x},
-          [
-            {:clause, {:atm, []}, [{:atm, []}]},
-            {:clause, {:cons, {:var, :hd}, {:var, :tl}},
-             [
-               {:call, :append,
-                [{:call, :nreverse, [{:var, :tl}]}, {:cons, {:var, :hd}, {:atm, []}}]}
-             ]}
-          ]}
-       ]},
-      {:append, [:x, :y],
-       [
-         {:case, {:var, :x},
-          [
-            {:clause, {:atm, []}, [{:var, :y}]},
-            {:clause, {:cons, {:var, :hd}, {:var, :tl}},
-             [{:cons, {:var, :hd}, {:call, :append, [{:var, :tl}, {:var, :y}]}}]}
-          ]}
-       ]}
-     ]
-   end	
-       
- 
-
-
 
 end
 

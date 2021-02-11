@@ -3,21 +3,22 @@ defmodule Eager do
   @type atm :: {:atm, atom}
   @type variable :: {:var, atom}
   @type ignore :: :ignore
-
-  @type lambda :: {:lambda, [atom], [atom], seq}
-
   @type cons(t) :: {:cons, t, t}
-  @type expr :: atm | variable | lambda | call | case | cons(expr)
 
-  @type pattern :: atm | variable | ignore | cons(pattern)
+  # Pattern matching
+  @type pattern :: atm | variable | ignore | cons(pattern)  
+  
+  @type lambda :: {:lambda, [atom], [atom], seq}
+  @type apply :: {:apply, expr, [expr]}  
+  @type case :: {:case, expr, [clause]}
+  @type clause :: {:clause, pattern, seq}
 
+  @type expr :: atm | variable | lambda | apply | case | cons(expr)
+
+  # Sequences
   @type match :: {:match, pattern, expr}
   @type seq :: [expr] | [match | seq]
-
-  @type call :: {:call, atom(), [expr]}
-  @type clause :: {:clause, pattern, seq}
-  @type case :: {:case, expr, [clause]}
-
+  
   # Expressions are evaluated to structures.
   @type closure :: {:closure, [atom], seq, env}
   @type str :: atom | [str] | closure
@@ -25,29 +26,26 @@ defmodule Eager do
   # An environment is a key-value of variableiable to structure.
   @type env :: [{atom, str}]
 
-  # A program is a list of named functions
-  @type prgm :: [{atom, [atom], seq}]
-
   @doc """
   Evaluate a sequence given a program.
   """
-  @spec eval(seq, prgm) :: {:ok, str} | :fail
+  @spec eval(seq) :: {:ok, str} | :fail
 
-  def eval(seq, prg) do
+  def eval(seq) do
     # a new environment is created
-    eval_seq(seq, Env.new(), prg)
+    eval_seq(seq, Env.new())
   end
 
   @doc """
   Evaluate a sequence given an environment and a program. 
   """
-  @spec eval_seq([expr], env, prgm) :: {:ok, str} | :error
+  @spec eval_seq([expr], env) :: {:ok, str} | :error
 
-  def eval_seq([exp], env, prg) do
-    eval_expr(exp, env, prg)
+  def eval_seq([exp], env) do
+    eval_expr(exp, env)
   end
-  def eval_seq([{:match, ptr, exp} | seq], env, prg) do
-    case eval_expr(exp, env, prg) do
+  def eval_seq([{:match, ptr, exp} | seq], env) do
+    case eval_expr(exp, env) do
       :error ->
         :error
 
@@ -59,7 +57,7 @@ defmodule Eager do
             :error
 
           {:ok, env} ->
-            eval_seq(seq, env, prg)
+            eval_seq(seq, env)
         end
     end
   end
@@ -67,11 +65,11 @@ defmodule Eager do
   @doc """
   Evaluate an expression given an environment and a program. 
   """
-  @spec eval_expr(expr, env, prgm) :: {:ok, str} | :error
-  def eval_expr({:atm, id}, _, _) do
+  @spec eval_expr(expr, env) :: {:ok, str} | :error
+  def eval_expr({:atm, id}, _) do
     {:ok, id}
   end
-  def eval_expr({:var, id}, env, _) do
+  def eval_expr({:var, id}, env) do
     case Env.lookup(id, env) do
       nil ->
         :error
@@ -80,31 +78,31 @@ defmodule Eager do
         {:ok, str}
     end
   end
-  def eval_expr({:cons, he, te}, env, prg) do
-    case eval_expr(he, env, prg) do
+  def eval_expr({:cons, he, te}, env) do
+    case eval_expr(he, env) do
       :error ->
         :error
 
       {:ok, hs} ->
-        case eval_expr(te, env, prg) do
+        case eval_expr(te, env) do
           :error ->
             :error
 
           {:ok, ts} ->
-            {:ok, [hs | ts]}   # what? why not {hs, ts} 
+            {:ok, {hs , ts}}   # what? why not [hs | ts] 
         end
     end
   end
-  def eval_expr({:case, expr, cls}, env, prg) do
-    case eval_expr(expr, env, prg) do
+  def eval_expr({:case, expr, cls}, env) do
+    case eval_expr(expr, env) do
       :error ->
         :error
 
       {:ok, str} ->
-        eval_cls(cls, str, env, prg)
+        eval_cls(cls, str, env)
     end
   end
-  def eval_expr({:lambda, par, free, seq}, env, _prg) do
+  def eval_expr({:lambda, par, free, seq}, env) do
     case Env.closure(free, env) do
       :error ->
         :error
@@ -113,40 +111,30 @@ defmodule Eager do
         {:ok, {:closure, par, seq, closure}}
     end
   end
-  def eval_expr({:apply, expr, args}, env, prg) do
-    case eval_expr(expr, env, prg) do
+  def eval_expr({:apply, expr, args}, env) do
+    case eval_expr(expr, env) do
       :error ->
         :error
 
       {:ok, {:closure, par, seq, closure}} ->
-        case eval_args(args, env, prg) do
+        case eval_args(args, env) do
           :error ->
             :error
 
           strs ->
             env = Env.args(par, strs, closure)
-            eval_seq(seq, env, prg)
+            eval_seq(seq, env)
         end
       {:ok, _} ->
 	:error
     end
   end
-  def eval_expr({:call, id, args}, env, prg) when is_atom(id) do
-    case List.keyfind(prg, id, 0) do
-      nil ->
-        :error
 
-      {_, par, seq} ->
-        case eval_args(args, env, prg) do
-          :error ->
-            :error
-
-          strs ->
-            env = Env.args(par, strs, [])
-            eval_seq(seq, env, prg)
-        end
-    end
+  def eval_expr({:fun, id}, _env) do 
+    {par, seq} = apply(Prgm, id, []) 
+    {:ok, {:closure, par, seq, []}}
   end
+  
 
   @doc """
   Evaluate a match of a pattern and structure given an environment
@@ -170,7 +158,7 @@ defmodule Eager do
   def eval_match(:ignore, _, env) do
     {:ok, env}
   end
-  def eval_match({:cons, hp, tp}, [hs | ts], env) do
+  def eval_match({:cons, hp, tp}, {hs, ts}, env) do
     case eval_match(hp, hs, env) do
       :fail ->
         :fail
@@ -195,24 +183,22 @@ defmodule Eager do
   
   
   @doc """
-  Evaluate a list of clauses given a structure an environment
-  and a program. 
+  Evaluate a list of clauses given a structure an environment.
   """
-  @spec eval_cls(str, [clause], env, prgm) :: {:ok, str} | :error
+  @spec eval_cls([clause], str, env) :: {:ok, str} | :error
 
-  def eval_cls([], _, _, _) do
+  def eval_cls([], _, _) do
     :error
   end
-  def eval_cls([{:clause, ptr, seq} | cls], str, env, prg) do
+  def eval_cls([{:clause, ptr, seq} | cls], str, env) do
 
     env = eval_scope(ptr, env)
-
     case eval_match(ptr, str, env) do
       :fail ->
-        eval_cls(cls, str, env, prg)
+        eval_cls(cls, str, env)
 
       {:ok, env} ->
-        eval_seq(seq, env, prg)
+        eval_seq(seq, env)
     end
   end
 
@@ -221,16 +207,16 @@ defmodule Eager do
   to :error then evaluation stops and an :error is returned, otherwise
   a list of the resulting structures is returned.
   """
-  @spec eval_args([expr], env, prgm) :: [str] | :error
+  @spec eval_args([expr], env) :: [str] | :error
 
-  def eval_args([], _, _) do [] end
-  def eval_args([expr | exprs], env, prg) do
-    case eval_expr(expr, env, prg) do
+  def eval_args([], _) do [] end
+  def eval_args([expr | exprs], env) do
+    case eval_expr(expr, env) do
       :error ->
         :error
 
       {:ok, str} ->
-        case eval_args(exprs, env, prg) do
+        case eval_args(exprs, env) do
           :error ->
             :error
 

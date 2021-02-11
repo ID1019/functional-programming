@@ -116,8 +116,10 @@ $${\rm Atoms} =  \{a,b,c, ...\}$$
 
 $${\rm Structures} = {\rm Atoms} \cup \{\{d_1, d_2\} | d_i \in {\rm Structures}\}$$
 
-We have a one-to-one mapping from our atoms in the
-language and the atoms in the domain. You might wonder if they are not
+We have a one-to-one mapping from our atoms in the language and the
+atoms in the domain. We will write this as ${\rm :a} \mapsto a$ or
+more general $a \mapsto s$ where $a$ is an atom and $s$ the
+corresponding atomic data structure. You might wonder if they are not
 the same but there is a difference between expressions in our language
 and elements in our domain. Think about the written number ``12'' or
 in Roman ``XII'' and the number twelve. We will have expression that
@@ -172,11 +174,11 @@ is easily turned into an implementation of the language.
 The simplest rule is the one that describes how we evaluate an
 expression consisting of a simple atom.
 
-$$\frac{a \equiv s}{E\sigma(a) \rightarrow s}$$  
+$$\frac{a \mapsto s}{E\sigma(a) \rightarrow s}$$  
 
 This mean that if we have an atom, for example {\tt :foo} then this is
 evaluated to the corresponding data structure {\em foo} (since {\tt
-  :foo} $\equiv$ {\em foo}). The environment, $\sigma$, is in this case
+  :foo} $\mapsto$ {\em foo}). The environment, $\sigma$, is in this case
 not relevant.
 
 A variable is of course different since we then need to consult the
@@ -194,7 +196,7 @@ The rule for a compound expression {\tt \{:foo, :bar\}} is straight
 forward Given that we can evaluate its two components we will of
 course be able to evaluate the compound expression.
 
-$$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow {s_1, s_2}}$$
+$$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow \lbrace s_1, s_2\rbrace}$$
 
 Note that we here implicitly require that $s_1$ and $s_2$ are
 structures ( $ s_i \in Structures$ ). If the evaluation of one of the expressions fail, the whole evaluation fails. 
@@ -216,14 +218,14 @@ The first two rules are simple; an atom will of course match its
 corresponding data structure and the don't care symbol will match
 anything.
 
-$$\frac{a \equiv s}{P\sigma(a, s) \rightarrow \sigma}$$ 
+$$\frac{a \mapsto s}{P\sigma(a, s) \rightarrow \sigma}$$ 
 
 $$\frac{}{P\sigma(\_,s) \rightarrow \sigma}$$
 
 If we try to match an atom to a data structure that is not the
 corresponding data structure then we fail.
 
-$$\frac{a \not\equiv s}{P\sigma(a, s) \rightarrow {\rm fail}}$$ 
+$$\frac{a \not\mapsto s}{P\sigma(a, s) \rightarrow {\rm fail}}$$ 
 
 If we have a unbound variable as a pattern then the variable is bound to a
 structure in the environment. 
@@ -236,7 +238,7 @@ we fail.
 
 $$\frac{v/s \in \sigma}{P\sigma(v, s) \rightarrow \sigma  }$$
 
-$$\frac{v/t \in \sigma \wedge t \not\equiv s}{P\sigma(v, s) \rightarrow  {\rm fail} }$$ 
+$$\frac{v/t \in \sigma \wedge t \not\mapsto s}{P\sigma(v, s) \rightarrow  {\rm fail} }$$ 
 
 Matching a cons expression is quite simple but note what the rules
 says about the environment. We need to do the pattern matching of the
