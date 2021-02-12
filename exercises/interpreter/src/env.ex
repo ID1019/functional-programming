@@ -16,7 +16,7 @@ defmodule Env do
     [{key, str} | env]
   end
 
-  @spec lookup(key, env) :: value | nil
+  @spec lookup(key, env) :: {key, value} | nil
 
   def lookup(key, env) do
     List.keyfind(env, key, 0)

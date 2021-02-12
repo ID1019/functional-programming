@@ -12,13 +12,21 @@ defmodule Meta  do
   end
 
   ## transform before evaluate
+  ## Meta.eval((x = :a; x))
   
   defmacro eval(body) do
     seq = encode_body(body)
     quote do Eager.eval(unquote(seq)) end
   end
 
-
+  ## transform a sequence 
+  ##  Meta.encode((x = :a; x))
+  
+  defmacro encode(body) do
+    seq = encode_body(body)
+    quote do unquote(seq) end
+  end
+  
 
   ## encoding Elixir AST as Meta AST
   
