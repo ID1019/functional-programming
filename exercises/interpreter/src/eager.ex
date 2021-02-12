@@ -72,6 +72,7 @@ defmodule Eager do
   def eval_expr({:var, id}, env) do
     case Env.lookup(id, env) do
       nil ->
+	IO.puts("variable binding for #{id} not present")
         :error
 
       {_, str} ->
@@ -87,9 +88,8 @@ defmodule Eager do
         case eval_expr(te, env) do
           :error ->
             :error
-
           {:ok, ts} ->
-            {:ok, {hs , ts}}   # what? why not [hs | ts] 
+            {:ok, {hs , ts}}   
         end
     end
   end
@@ -121,7 +121,7 @@ defmodule Eager do
           :error ->
             :error
 
-          strs ->
+          {:ok, strs} ->
             env = Env.args(par, strs, closure)
             eval_seq(seq, env)
         end
@@ -134,12 +134,18 @@ defmodule Eager do
     {par, seq} = apply(Prgm, id, []) 
     {:ok, {:closure, par, seq, []}}
   end
-  
+
+  def eval_expr(strange, _) do
+    IO.puts("strange expresion: ")
+    IO.inspect(strange)
+    :error
+  end
 
   @doc """
   Evaluate a match of a pattern and structure given an environment
   """
   @spec eval_match(pattern, str, env) :: {:ok, env} | :fail
+
   def eval_match({:atm, id}, id, env) do
     {:ok, env}
   end
@@ -148,8 +154,8 @@ defmodule Eager do
       nil ->
         {:ok, Env.add(id, str, env)}
 
-      {_, ^str} ->
-        {:ok, env}
+      {^id, ^str} ->
+        {:ok, env} 
 
       {_, _} ->
         :fail
@@ -164,7 +170,7 @@ defmodule Eager do
         :fail
 
       {:ok, env} ->
-        eval_match(tp, ts, env)
+        eval_match(tp, ts, env) 
     end
   end
   def eval_match(_, _, _) do
@@ -188,6 +194,7 @@ defmodule Eager do
   @spec eval_cls([clause], str, env) :: {:ok, str} | :error
 
   def eval_cls([], _, _) do
+    IO.puts("no more clauses")
     :error
   end
   def eval_cls([{:clause, ptr, seq} | cls], str, env) do
@@ -207,22 +214,19 @@ defmodule Eager do
   to :error then evaluation stops and an :error is returned, otherwise
   a list of the resulting structures is returned.
   """
-  @spec eval_args([expr], env) :: [str] | :error
+  @spec eval_args([expr], env) :: {:ok, [str]} | :error
 
-  def eval_args([], _) do [] end
-  def eval_args([expr | exprs], env) do
+  def eval_args(args, env) do
+    eval_args(args, env, [])
+  end
+  
+  def eval_args([], _, strs) do {:ok, Enum.reverse(strs)}  end
+  def eval_args([expr | exprs], env, strs) do
     case eval_expr(expr, env) do
       :error ->
         :error
-
       {:ok, str} ->
-        case eval_args(exprs, env) do
-          :error ->
-            :error
-
-          strs ->
-            [str | strs]
-        end
+        eval_args(exprs, env, [str|strs]) 
     end
   end
 

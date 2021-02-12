@@ -93,7 +93,7 @@ defmodule Test do
       {:match, {:var, :x}, {:cons, {:atm, :a}, {:cons, {:atm, :b}, {:atm, :nil}}}},
       {:match, {:var, :y}, {:atm, :nil}},
       {:match, {:var, :f}, {:lambda, [:p], [:y], [{:cons, {:var, :p}, {:var, :y}}]}},
-      {:apply, {:fun, :map}, [{:var, :f}, {:var, :x}]}
+      {:apply, {:fun, :map}, [ {:var, :x}, {:var, :f}]}
     ]
     IO.write("higher order\n   x = {:a, {:b,:nil}}; y = :nil; f = fn (p) -> {p, y} end; map(f,(x))\n should result in {:ok, {{:a,:nil}, {:b,:nil}}\n")
     apply(module, :eval, [seq])

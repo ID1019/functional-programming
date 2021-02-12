@@ -626,7 +626,9 @@ hopefully have as a result of evaluating the expression.
 
 The evaluation should first evaluate the expression. If this is indeed
 a closure we can evaluate the arguments and apply the closure to the
-resulting list of data structures.
+resulting list of data structures. The function {\tt eval_args/2}
+should return either {\tt :error} or {\tt \{:ok, strs\}} where {\tt
+  strs} is a list of structures.
 
 \begin{minted}{elixir}
 def eval_expr({:apply, expr, args}, ...) do
@@ -634,10 +636,10 @@ def eval_expr({:apply, expr, args}, ...) do
     :error ->
       :error
     {:ok, {:closure, par, seq, closure}} ->
-      case ... do
+      case eval_args(..., ...)  do
         :error ->
           :error
-        strs ->
+        {:ok, strs} ->
           env = Env.args(par, strs, closure)
           eval_seq(seq, env)
       end
@@ -664,64 +666,52 @@ Eager.eval_seq(seq, Env.new())
 \end{minted}
 
 \subsection{Named functions}
+
 You're now a small step from being able to handle named functions
-i.e. a program. What we need is a key-value store that given a
-function identifier (an atom), returns a structure that holds a list
-of parameters and a sequence. We store this in a list and can use the
-library function {\tt List.keyfind/3} to retrieve the right function.
-
-Since we now have a program we need to give each function access to
-this data structure. This means that we need to change the {\tt
-  eval_expr/2} function to take a third argument, the program. This
-value must also be passed to {\tt eval_seq/2} and {\tt eval_cls/3}. If
-you think this is a tedious task you have just encountered the
-downside of not having global data structures.
-
-Change the program and add the following clause to handle named
-functions.
-
-\pagebreak
+i.e. a program. We will add these in a very simple way. For each named
+function we will have a Elixir function that returns our
+representation of the parameters and its sequence. We add one new
+term, {\tt \{:fun, id\}}, to our languge that indicate that the
+identifier is a name of a function. We can then lookup the definition
+by making a fucntion call to the {\tt Prgm} module as shown in the code below:
 
 \begin{minted}{elixir}
-def eval_expr({:call, id, args}, env, prg) when is_atom(id) do
-  case List.keyfind(prg, id, 0) do
-    ... ->
-      ...
-    {_, par, seq} ->
-      case eval_args(..., ..., prg) do
-        :error ->
-          :error
-
-        strs ->
-          env = Env.args(..., ..., ...)
-          eval_seq(..., ..., prg)
-      end
-  end
+def eval_expr({:fun id}, env)  do
+   {par, seq} = apply(Prgm, id, [])
+   {:ok,  {:closure, par, [], seq}}
 end
 \end{minted}
 
-If everything works you should now be able to run the following program:
+Now we can define our wersion of {\tt append/2} in a module {\tt Prgm}:
 
 \begin{minted}{elixir}
-prgm = [{:append, [:x, :y],
-           [{:case, {:var, :x}, 
-               [{:clause, {:atm, []}, [{:var, :y}]},
-                {:clause, {:cons, {:var, :hd}, {:var, :tl}}, 
-                   [{:cons, 
-                      {:var, :hd}, 
-                      {:call, :append, [{:var, :tl}, {:var, :y}]}}]
-                }]
-            }]
-         }]
-         
+  defmodule Prgm do
+
+  def append() do
+    {[:x, :y],
+      [{:case, {:var, :x}, 
+        [{:clause, {:atm, []}, [{:var, :y}]},
+         {:clause, {:cons, {:var, :hd}, {:var, :tl}}, 
+          [{:cons, 
+            {:var, :hd}, 
+            {:call, :append, [{:var, :tl}, {:var, :y}]}}]
+        }]
+      }]
+    }
+  end
+\end{minted}
+
+If everything works you should now be able to evaluate the following:
+
+\begin{minted}{elixir}
 seq = [{:match, {:var, :x}, 
-       {:cons, {:atm, :a}, {:cons, {:atm, :b}, {:atm, []}}}},
-     {:match, {:var, :y}, 
-       {:cons, {:atm, :c}, {:cons, {:atm, :d}, {:atm, []}}}},
-     {:call, :append, [{:var, :x}, {:var, :y}]}
-    ]
+         {:cons, {:atm, :a}, {:cons, {:atm, :b}, {:atm, []}}}},
+       {:match, {:var, :y}, 
+          {:cons, {:atm, :c}, {:cons, {:atm, :d}, {:atm, []}}}},
+       {:apply, {:fun, :append}, [{:var, :x}, {:var, :y}]}
+      ]
     
-Eager.eval_seq(seq, Env.new(), prgm)
+Eager.eval_seq(seq, Env.new())
 \end{minted}
 
 
