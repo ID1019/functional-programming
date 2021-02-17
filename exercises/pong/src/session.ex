@@ -8,10 +8,10 @@ defmodule Session do
   def init(name, server) do
     receive do
     {:ws,  ws, :open} ->
-	:io.format("pong: player (~w)  connected\n", [self()])
+	:io.format("session: player (~w)  connected\n", [self()])
 	send(server, {:ready, name})
 	session(name, server, ws)
-	:io.format("pong: session stopped~n")
+	:io.format("session: player (~w) stopped~n", [self()])
     end
   end
 
