@@ -822,12 +822,12 @@ The normal vector $\vec{n}$ is easily calculate since we know the point
 of intersection $\vec{i}$ and the center of the sphere $\vec{c}$. If
 we have other objects we would of course have to do something else.
 
-$$ \vec{n} = |\vec{i} - \vec{c}| $$
+$$ \vec{n} = \widehat{\vec{i} - \vec{c}} $$
 
 The contribution $a$ of a light source at $\vec{s}$ to the point
 $\vec{i}$ on a surface with normal vector $\vec{n}$ is:
 
-$$a =  |\vec{s} - \vec{i}| \cdot \vec{n}$$
+$$a =  \widehat{\vec{s} - \vec{i}} \cdot \vec{n}$$
 
 What we are doing here is to first calculate the vector from $\vec{i}$
 to $\vec{s}$ and then normalize this. Then we do the dot product with
