@@ -1,6 +1,6 @@
 defmodule TracerLight do
 
-  @delta 0.001
+  @delta 0.01
 
 
   def tracer(camera, world) do
@@ -27,6 +27,8 @@ defmodule TracerLight do
     end
   end
 
+  
+  
   defp intersect(ray, objects) do
     List.foldl(objects, {:inf, nil}, fn (object, sofar) ->
       {dist, _} = sofar
@@ -48,7 +50,7 @@ defmodule TracerLight do
     Enum.filter(lights, fn light -> clear(point, light.pos, objs) end)
   end
 
-  defp clear(point, origin, objs) do
+  def clear(point, origin, objs) do
     dir = Vector.normalize(Vector.sub(origin, point))
 
     List.foldl(objs, true, fn (obj, acc) ->

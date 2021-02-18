@@ -7,6 +7,7 @@ defmodule Light do
     color: @white
   )
 
+  
   def illuminate(obj, ill, world) do
     color = obj.color
     ill(color, mul(ill, world.ambient))
@@ -25,14 +26,22 @@ defmodule Light do
   def combine(point, normal, lights) do
     List.foldl(lights, {0, 0, 0},
       fn(light, contr) ->
-         mul(contribute(point, normal, light.pos, light.color), contr)
+	next = contribute(point, normal, light.pos, light.color)
+        mul(next, contr)
       end)
   end
 
+  
   def contribute(point, normal, source, {r, g, b}) do
     direction = Vector.normalize(Vector.sub(source, point))
     cos = Vector.dot(direction, normal)
-    {r * cos, g * cos, b * cos}
+    if cos >= 0 do
+      {r * cos, g * cos, b * cos}
+    else
+      # this can happen around edges of planes
+      {0,0,0}
+    end
+    
   end
 
 
@@ -59,4 +68,10 @@ defmodule Light do
     {r1 * s + r2 * t, g1 * s + g2 * t, b1 * s + b2 * t}
   end
 
+
+  def check({r,g,b}) do
+    (r >= 0) and (r <= 255) and (g >= 0) and (g <= 255) and (b >= 0) and (b <= 255) 
+  end
+
 end
+

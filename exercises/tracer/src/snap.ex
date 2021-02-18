@@ -161,8 +161,36 @@ defmodule Snap do
     image = TracerReflection.tracer(camera, world)
     PPM.write("snap7.ppm", image)
   end
-  
 
 
+  def snap(8) do 
+    camera = Camera.normal({1920,1080})
+
+    obj1 = %Sphere{radius: 140, pos: {-50, 0, 700}, color: {1.0, 0.5, 0}, brilliance: 1}
+    obj2 = %Sphere{radius: 50, pos: {200, 0, 600}, color: {0, 0.8, 0.2}, brilliance: 1}
+    obj3 = %Sphere{radius: 50, pos: {-80, 0, 400}, color: {0.1, 0.1, 1.0}, brilliance: 1}
+
+    block = Block.block({{20,10,400}, {70,10,400}, {20,40,400}, {70,40,400}, {20,10,500}, {70,10,500}, {20,40,500}, {70,40,500}}, {1.0, 1.0, 1.0}, 1)
+
+
+    objects = [obj1, obj2, obj3 | block]
+
+    light1 = %Light{pos: {-1000, 1000, 700}, color: {1.0, 0.3, 0.3}}
+    light2 = %Light{pos: {800, 800, 0}, color: {0.3, 1.0, 0.3}}
+    light3 = %Light{pos: {800, -800, 0}, color: {0.8, 0.8, 1.0}}
+
+    lights = [light1, light2, light3]
+    
+    world = %World{
+      objects: objects,
+      lights: lights,
+      background: {0.0, 0.0, 0.0},
+      ambient: {0.2, 0.2, 0.2},
+      depth: 3
+    }
+
+    image = TracerReflection.tracer(camera, world)
+    PPM.write("snap8.ppm", image)
+  end
 
 end
