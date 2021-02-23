@@ -47,8 +47,6 @@ defmodule Philosopher do
           :ok ->
             IO.puts("#{name} received both sticks!")
             eating(hunger, strength, left, right, name, ctrl, gui)
-	    send(gui, :leave)
-	    dreaming(hunger, strength - 1, left, right, name, ctrl, gui)
         end
     end
   end
