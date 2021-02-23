@@ -231,7 +231,7 @@ def server(sum) do
   receive do
     {:add, x} ->
           server(sum + x)
-    {sub, x} ->
+    {:sub, x} ->
           server(sum - x)
   end
 end

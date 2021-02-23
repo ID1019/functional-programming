@@ -23,19 +23,10 @@ defmodule Plane do
       Plane.intersect(plane, ray)
     end
 
-    def normal(plane, ray, _pos) do
-      #  this is not correct, we need to know from which way we're looking
-      dir01 = Vector.sub(plane.pos1, plane.pos0)
-      dir02 = Vector.sub(plane.pos2, plane.pos0)      
-      norm1 = Vector.normalize(Vector.cross(dir01, dir02))
-      norm2 = Vector.normalize(Vector.cross(dir02, dir01))
-      if Vector.norm(Vector.add(ray.dir,norm1)) < Vector.norm(Vector.add(ray.dir,norm2)) do
-	norm1
-      else
-	norm2
-      end
+    def normal(plane, ray, pos) do
+      Plane.normal(plane, ray, pos)
     end
-
+    
   end
 
   def intersect(plane, ray) do
@@ -59,17 +50,15 @@ defmodule Plane do
     
     if det != 0 do
       t = Vector.dot(Vector.cross(p01, p02), org) / det
-      #IO.write("t =  #{t} \n")
       if t > 0 do
 	u = Vector.dot(Vector.cross(p02, neg), org) / det
 	v = Vector.dot(Vector.cross(neg, p01), org) / det
 
-	#IO.write("u =  #{u} \n")
-	#IO.write("v =  #{v} \n")	
-	if 0 < u and u < 1 and 0 < v and v < 1  and (u + v) <= 1  do
+	if 0 < u and u < 1 and 0 < v and v < 1 and (u + v) <= 1  do # 
 	  # we have an intersection
-	  {:ok, t }
+	  {:ok, t}
 	else
+	  # no intersection
 	  :no
 	end
       else
@@ -82,7 +71,18 @@ defmodule Plane do
     end
   end
 
-
+  def normal(plane, ray, _pos) do
+    dir01 = Vector.sub(plane.pos1, plane.pos0)
+    dir02 = Vector.sub(plane.pos2, plane.pos0)      
+    norm1 = Vector.normalize(Vector.cross(dir01, dir02))
+    norm2 = Vector.normalize(Vector.cross(dir02, dir01))
+    if Vector.norm(Vector.add(ray.dir,norm1)) < Vector.norm(Vector.add(ray.dir,norm2)) do
+      norm1
+    else
+      norm2
+    end
+  end
+  
   
 
   

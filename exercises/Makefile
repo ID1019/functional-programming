@@ -2,6 +2,7 @@ DIRS =  avl \
 	bitonic \
 	concurrency \
 	derivative \
+	dynamic \
 	huffman \
 	interpreter \
 	introduction \
