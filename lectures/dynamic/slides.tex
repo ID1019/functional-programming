@@ -886,7 +886,7 @@ How about this?
 
 \begin{frame}[fragile]{the graph}
 
-  Assume we represent a graph by a map indxed by nodes. Each node holds a key-value list of edges.
+  Assume we represent a graph by a map indexd by nodes. Each node holds a key-value list of edges.
 
 \begin{verbatim}
 defmodule Graph do
@@ -1005,11 +1005,11 @@ def dynamic(from, to, graph) do
 end
 \end{verbatim}
 
-\pause\vspace{10pt}
+\pause\vspace{5pt}
 
 {\em shortest(from, to, graph, mem) should return \{shortest path, updated memmory\}}
 
-\pause\vspace{10pt}
+\pause\vspace{5pt}
 \begin{verbatim}
 def shortest(from, from, _, mem) do
     {{0, []}, ...}

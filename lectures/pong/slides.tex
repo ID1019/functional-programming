@@ -2,6 +2,7 @@
 
 \usepackage{pgf-umlsd}
 \usepgflibrary{arrows} % for pgf-umlsd
+\usetikzlibrary{fit, positioning}
 
 \title[ID1019 A transport layer]{A game of Pong}
 
@@ -19,12 +20,57 @@
 \begin{frame}{the classical game of Pong}
 
   \begin{figure}
-    \includegraphics[scale=0.4]{pong.png}
+    \includegraphics[scale=0.1]{pong.png}
   \end{figure}
   
 \end{frame}
 
-\begin{frame}{architecture overview}
+\begin{frame}{architectur}
+
+\begin{figure}
+  \begin{tikzpicture}
+    \node[draw, thick, rounded corners] (server) at (0,0) {server};
+    \node[draw, thick, rounded corners, above left = of server] (ses1) {session 1};
+    \node[draw, thick, rounded corners, below left = of server] (ses2) {session 2};
+    \node[draw, thick, rounded corners, below left = of ses1, above left = of ses2] (socket) {socket};
+    \node[draw, thick, rounded corners, left = of ses1] (hdlr1) {handler 1};
+    \node[draw, thick, rounded corners, left = of ses2] (hdlr2) {handler 2};
+    \node[draw, thick, rounded corners, left = 4.0 cm of hdlr1] (brw1) {browser 1};
+    \node[draw, thick, rounded corners, left = 4.0 cm of hdlr2] (brw2) {browser 2};
+    \node[draw, thick, rounded corners, below = of server] (tmr) {timer};    
+
+    \node[draw, dashed, fit = (server), label=Pong] {};
+    \node[draw, dashed, fit = (ses1)(ses2), label=Session] {};
+    \node[draw, dashed, fit = (socket)(hdlr1)(hdlr2), label=WebSocket] {};
+    \node[draw, dashed, fit = (brw1)(brw2), label=pong.js] {};
+
+    \node[draw, dashed, rectangle, label=Game, above = of server, minimum size=2cm] {};
+    
+    \draw[o-,thick, red] (server.west) -- (socket);
+    \draw[o-,thick, red] (socket) -- (hdlr1);
+    \draw[o-,thick, red] (socket) -- (hdlr2);
+    \draw[o-,thick, red] (server.north west) -- (ses1);
+    \draw[o-,thick, red] (server.south west) -- (ses2);            
+
+    \draw[<->,dashed, black] (brw1) -- (hdlr1);
+    \draw[<->,dashed, black] (brw2) -- (hdlr2);                    
+
+    \draw[<->,dashed, black] (hdlr1) -- (ses1);    
+    \draw[<->,dashed, black] (hdlr2) -- (ses2);
+
+    \draw[<->,dashed, black] (ses1.east) to [out=0,in=90] (server.north);
+    \draw[<->,dashed, black] (ses2.east) to [out=0,in=270] (server.south);
+    \draw[<->,dashed, black] (server.south) to [out=270,in=90] (tmr.north);            
+
+
+    
+  \end{tikzpicture}
+\end{figure}
+
+\end{frame}
+
+
+\begin{frame}{sequence diagram}
 
 
 \begin{figure}
@@ -57,21 +103,21 @@
   \pause
   \coordinate (s2) at ($(s0)+(0,-1)$);
   \draw[dashed] (s2) -- node[near start, above]{start(name, me)\ \ } (c0);
-  \node[anchor=south] at (c0) {ses1/2};  
+  \node[anchor=south] at (c0) {session 1/2};  
   \draw[->] (c0) to []  (cn);
 
   \pause
   
   \coordinate (s3) at ($(s2)+(0,-1)$);
   \draw[dashed] (s3) -- node[near start, above]{start(8080,[ses1, ses2])\ \ } (b0);
-  \node[anchor=south] at (b0) {srv};  
+  \node[anchor=south] at (b0) {WebSocket};  
   \draw[] (b0) to []  ($(b0)+(0,-2)$);
 
   \pause
 
   \coordinate (b1) at ($(b0)+(0,-1)$);
   \draw[dashed] (b1) -- (a0);        
-  \node[anchor=south] at (a0) {hdlr1/2};  
+  \node[anchor=south] at (a0) {handler 1/2};  
   \draw[->] (a0) to []  (an);  
 
   \pause
@@ -99,42 +145,45 @@
 
 \begin{frame}{WebSocket interface}
 
-  The Javascript client communicte using a websocket interface. After
-  the initial HTTP handshake, a birectional message channel is
-  created. Each message consist of sequence of bytes.
+   
+  \onslide<1->{The Javascript client communicate using a websocket interface. After
+  the initial HTTP handshake, a bidirectional message channel is
+  created. Each message consist of sequence of bytes.}
 
-  \pause\vspace{10pt}
+  \vspace{10pt}
   
   
   \begin{tikzpicture}[>=stealth', node distance=140pt, semithick, auto]
 
         \tikzstyle{fbp} = [rectangle, rounded corners, minimum width=50pt, minimum height=20pt,text centered, draw=black]        
 
-        \node (brw1) [fbp] {browser};
-        \node (hdlr1) [fbp, right of=brw1] {handler};
+        \onslide<2->{
+          \node (brw1) [fbp] {browser};
+          \node (hdlr1) [fbp, right of=brw1] {handler};
 
-        \path[<->]  (brw1) edge   node      {websocket}       (hdlr1);
-        \pause
-        \node (ses1) [fbp, right of=hdlr1] {session};
-        \path[<->]  (hdlr1) edge   node      {\{:msg, <<bytes>>\}}       (ses1);
-
+          \path[<->]  (brw1) edge   node      {websocket}       (hdlr1);
+        }
+        \onslide<3-> {
+          \node (ses1) [fbp, right of=hdlr1] {session};
+          \path[<->]  (hdlr1) edge   node      {\{:msg, <<bytes>>\}}       (ses1);
+        }
 \end{tikzpicture}
 
-  \pause\vspace{10pt}
+  \vspace{10pt}
+
+  \onslide<3->{The handler process will take care of the WebSocket
+  internals and deliver a stream of messages to the session process.}
+
+  \vspace{10pt}
   
-  The websocket handler process will take care of the wesocket
-  internals and deliver a stream of messages to the session process.
-
-  \pause
-
-  Each client is connected through a unique handler process that is
-  communicating with a single session process.
+  \onslide<4->{Each client is connected through a unique handler process that is
+  communicating with a single session process.}
 
 \end{frame}
 
 \begin{frame}{Session handler lower interface}
 
-Messages from the websocket handler process:
+Messages from the websocket handler to the session handler:
 
 \vspace{10pt}  \pause
 
@@ -146,7 +195,7 @@ Messages from the websocket handler process:
 
 \vspace{10pt}  \pause
 
-Messages to the websocket handler process:
+Messages from the session handler to the websocket handler:
 
 \begin{itemize}
 \item {\tt \{:frw, <<byte encoded message>>\}}  : encode and send message to client
@@ -157,7 +206,7 @@ Messages to the websocket handler process:
 
 \begin{frame}{The session handler}
 
-  Works as a deocer/encoder of byte-encoded  messages and Elixir messages.
+  Works as a decoder/encoder of byte-encoded  messages and Elixir messages.
 
   \vspace{20pt}  \pause
 
@@ -175,14 +224,14 @@ Messages to the websocket handler process:
 
 \begin{frame}{session handler}
 
-  Messages from pong server fowarded to the websocket handler:
+  Messages from pong server forwarded to the websocket handler:
 
   \vspace{20pt}
       
   \begin{itemize}
   \item {\tt \{:player1, :up\}}  : player moved up -  {\tt <<?P,?U>>}
   \item {\tt \{:player1, :down\}}  : player moved down - {\tt <<?P,?D>>}
-  \item {\tt \{:player1, :score, score\}}  : player moved up - {\tt <<?P,?S, score>>}
+  \item {\tt \{:player1, :score, score\}}  : player scored - {\tt <<?P,?S, score>>}
   \item {\tt \{:player2, ... \}} : same messages for opponent -  {\tt <<?O, ... >>}        
   \item {\tt \{:ball, x, y \}} : ball moved to new position - {\tt <<?B, x::16, y::16 >>}        
   \item {\tt \{:frw, msg\}}  : raw message to client - {\tt msg}
@@ -197,7 +246,7 @@ Messages to the websocket handler process:
   \item create two session handlers with unique names \pause
   \item create a WebSocket process, give session handlers as arguments \pause
   \item wait for session handlers to report \pause
-  \item sart the game \pause
+  \item start the game \pause
   \end{itemize}
   
 \end{frame}
@@ -221,14 +270,43 @@ Messages to the websocket handler process:
   
   \vspace{10pt} \pause
   \begin{itemize}
-  \item The Pong module that describes the server as a communicatng process. 
+  \item The Pong module that describes the server as a communicating process. 
   \item The Game module that describe the rules as functions. 
   \end{itemize}
   
 
 \end{frame}
+
+
+\begin{frame}{Rules of the game}
+
+  \pause A player is represented as a tuple {\tt \{name, y-pos, score\}}.
+  \vspace{10pt}
+
+  \begin{itemize}
+  \item {\tt player(name) } : return a named {\tt player}
+  \item {\tt up(player) } : return either {\tt \{:ok, player\}} or {\tt :no}
+  \item {\tt down(player) } : return either {\tt \{:ok, player\}} or {\tt :no}
+  \end{itemize}
+  \vspace{10pt}      
+  \pause A ball is represented a as tuple {\tt \{:ball, x, y, dx, dy\}}. 
+  \vspace{10pt}      
+  \begin{itemize}
+  \item {\tt serve(name, player1, player2)} : return {\tt \{pos, ball\}}
+  \item {\tt move_ball(player1, player2, ball)} : return either
+    
+    \begin{itemize}
+      \item {\tt \{:bounce, pos, ball\}}  (increase speed)
+      \item {\tt \{:moved, pos, ball\}}
+      \item {\tt \{:score, name, score, player\}}
+    \end{itemize}
   
-  
+  \end{itemize}
+      
+    
+\end{frame}
+
+
 
 
 \end{document}
