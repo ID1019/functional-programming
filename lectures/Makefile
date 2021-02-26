@@ -23,7 +23,6 @@ DIRS = 	asynchronous \
 
 WWW =  ./www
 
-PONG = pong.ex websocket.ex game.ex session.ex pong.html pong.js
 
 all:
 	echo $(DIRS)
@@ -43,11 +42,6 @@ install:
         done
 
 
-
-ipong : 
-	for f in $(PONG); do \
-             rsync -uL ./pong/src/$$f  $(WWW)/pong/$$f;\
-        done
 
 
 
