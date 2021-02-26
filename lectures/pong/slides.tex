@@ -4,7 +4,7 @@
 \usepgflibrary{arrows} % for pgf-umlsd
 \usetikzlibrary{fit, positioning}
 
-\title[ID1019 A transport layer]{A game of Pong}
+\title[ID1019 A game of Pong]{A game of Pong}
 
 
 \author{Johan Montelius}
@@ -66,6 +66,47 @@
     
   \end{tikzpicture}
 \end{figure}
+
+\end{frame}
+
+\begin{frame}{layers of communication}
+
+\begin{tikzpicture}[>=stealth', semithick, auto]
+
+    \tikzstyle{fbp} = [rectangle, rounded corners, minimum width=50pt, minimum height=20pt, text centered, draw=black]        
+
+
+    \node (user)    [fbp]                               {user};
+    \node (server)  [fbp, right=4cm of user]            {pong server};            
+    
+    \node (ses1)    [fbp, below=1cm of user]            {pong.js};
+    \node (ses2)    [fbp, below=1cm of server]          {session};        
+
+    \node (ws1)     [fbp, below=1cm of ses1]            {WebSocket};
+    \node (ws2)     [fbp, below=1cm of ses2]            {handler};        
+
+    \node (http1)   [fbp, below=1cm of ws1]             {HTTP};
+    \node (http2)   [fbp, below=1cm of ws2]             {HTTP};
+
+    \node (tcp1)    [fbp, below=1cm of http1]           {TCP};
+    \node (tcp2)    [fbp, below=1cm of http2]           {TCP};    
+
+    \path[->]  (user)    edge        node          {key pressed}                         (ses1);
+    \path[<-]  (server)  edge        node          {{\tt \{:player1, :up\}}}             (ses2);
+    
+    \path[->]  (ses1)    edge        node          { "U" }                               (ws1);
+    \path[<-]  (ses2)    edge        node          { {\tt \{:ws, ws, \{:msg, <<?U>>\}}}  (ws2);
+    
+    \path[->]  (ws1)     edge        node          {130 1 85}                            (http1);
+    \path[<-]  (ws2)     edge        node          {<<130, 1, 85>>}                      (http2);
+
+    \path[->]  (http1)   edge        node          {GET ...}                             (tcp1);
+    \path[<-]  (http2)   edge        node          {GET ...}                             (tcp2);
+
+    \path[->]  (tcp1)    edge        node          {byte stream}                         (tcp2);
+
+\end{tikzpicture}
+
 
 \end{frame}
 
