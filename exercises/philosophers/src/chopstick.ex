@@ -7,8 +7,8 @@ defmodule Chopstick do
   end
 
   def start(node) do
-    ## We link to the dinner process inorder to avoid zombie chopsticks
-    stick = Node.spawn_link(node, fn -> init() end)
+    ## We don't want to crash if the network fails
+    stick = Node.spawn(node, fn -> init() end)
     {:stick, stick}
   end  
 
@@ -119,8 +119,22 @@ defmodule Chopstick do
   end
 
   # Initalizing the chopstick.
-  defp init(), do: available()
+  defp init() do
+    IO.puts("chopstick started")
+    local({:chopstick, self()})
+    available()
+  end
+  
+  def local(msg) do
+    case Process.whereis(:shell) do
+      nil ->
+	nil
+      pid ->
+	send(pid, msg)
+    end
+  end    
 
+      
   # The two states of the chopstick.
   defp available() do
     receive do
