@@ -6,27 +6,27 @@ defmodule Register do
   end
 
   def init(alu, mem) do
-    reg = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+    reg = register()
     register(reg, alu, mem)
   end
   
 
   def register(reg, alu, mem) do
+    :io.format("reg: ~w\n", [reg])
     receive do
 
-      {:instr, :halt} ->
-	:io.format("reg: halt~n", [])
-	send(alu, {:reg, :halt})
-	:ok
-
       {:instr, rs, rt, rd} ->
-	a = read(reg, rs)
-	b = read(reg, rt)
-	send(alu, {:reg, a, b})
-	send(mem, {:reg, b})
-	:io.format("reg: a ~w, b ~w~n", [a,b])
+	vs = read(reg, rs)
+	vt = read(reg, rt)
+	send(alu, {:reg, vs, vt})
+	send(mem, {:reg, vt})
+	:io.format("reg: vs ~w, vt ~w~n", [vs,vt])
 	receive do
+	  {:ctrl, :halt} ->
+	    :io.format("reg: halt~n", [])	    
+	    :ok
 	  {:ctrl, op} ->
+	    :io.format("reg: ctrl  ~w~n", [op])
 	    receive do
 	      {:mem, val} ->
 		:io.format("reg: val ~w~n", [val])
@@ -36,10 +36,17 @@ defmodule Register do
     end
   end
 
+  
   def update(reg, :nop, _, _, _) do reg end
   def update(reg, :wrt, rt, _, val) do write(reg, rt, val) end
   def update(reg, :wrd, _, rd, val) do put_elem(reg, rd, val) end
   
+
+  
+  def register() do
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+  end
+
   def read(  _, 0) do 0 end  
   def read(reg, i) do elem(reg, i) end
 

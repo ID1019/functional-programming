@@ -38,10 +38,13 @@ defmodule Rudy do
       {:ok, client} ->
 	{:ok, {ip, port}} = :inet.peername(client)
 	:io.format("new connection: ~w ~w ~n", [ip, port])
+
 	task(client)
 
 	#spawn(fn() -> task(client) end)
+
         handler(listen)
+
       {:error, error} ->
         error
     end
@@ -65,9 +68,10 @@ defmodule Rudy do
 	:io.format("request: ~s ~n", [str])
         request = HTTP.parse_request(str) 
 	:io.format("parsed: ~p ~n", [request])
-        response = reply(request)
+        #response = dummy()	
+        #response = echo(str)
+	response = reply(request)
 	:io.format("response: ~s~n", [response])
-        response = dummy()	
         :gen_tcp.send(client, response)
 
       {:error, error} ->
@@ -80,6 +84,11 @@ defmodule Rudy do
   def reply({{:get, uri, _}, _, _}) do
     Web.reply(uri)
   end
+
+  def echo(str) do
+    HTTP.ok(List.to_string('<html><body>' ++ str ++ '</body></html>'))
+  end
+  
 
   defp dummy() do
     ## Fib.fib(30)

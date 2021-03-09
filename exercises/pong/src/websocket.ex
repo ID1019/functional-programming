@@ -79,7 +79,8 @@ defmodule WebSocket do
   defp handshake(socket, sofar) do
     case :gen_tcp.recv(socket, 0) do
       {:ok, more} ->
-	sofar = more <> sofar
+	## add the read bytes to the end of what has been read sofar
+	sofar = sofar  <> more  
 
 	case parse_request(sofar) do
 	  {request, headers} -> 

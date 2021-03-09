@@ -1,13 +1,13 @@
 defmodule Memory do
 
-  def start(mem) do
-    spawn_link(fn() -> init(mem) end)
+  def start(data) do
+    spawn_link(fn() -> init(data) end)
   end
 
-  def init(mem) do
+  def init(data) do
     receive do
       {:init, reg} ->
-	memory(mem, reg)
+	memory(data, reg)
     end
   end
 
@@ -21,48 +21,46 @@ defmodule Memory do
 	    :io.format("mem: val ~w~n", [val])
 	    receive do
 	      {:ctrl, :halt} ->
+		:io.format("mem: halt~n", [])
+		send(reg, {:mem, 0})		
 		:ok
-
-	      {:ctrl, :read} ->
-		data = read(mem, addr)
-		:io.format("mem: read ~w from ~w~n", [data, addr])
-		send(reg, {:mem, data})
-		memory(mem, reg)
-
-	      {:ctrl, :write} ->
-		:io.format("mem: store ~w at ~w~n", [val, addr])
-		mem = write(mem, addr, val)
-		send(reg, {:mem, 0})
-		memory(mem, reg)
-
-	      {:ctrl, :frw} ->
-		send(reg, {:mem, addr})
+	      {:ctrl, rw} ->
+		{mem, val} = rw(mem, addr, val, rw)
+		send(reg, {:mem, val})
 		memory(mem, reg)
 	    end
 	end
     end
   end
+  
+  def rw(mem, addr, val, instr) do
+    case instr do 
 
+      :rword ->
+	val = Program.read_word(mem, addr)
+	:io.format("mem: read word ~w from ~w~n", [val, addr])
+	{mem, val}
 
-  def new() do
-    new([])
-  end    
+      :wword ->
+	:io.format("mem: store word ~w at ~w~n", [val, addr])
+	mem = Program.write_word(mem, addr, val)
+	{mem, 0}
 
-  def new(segments) do
-    f = fn({start, data}, layout) ->
-      last = start +  length(data) -1      
-      Enum.zip(start..last, data) ++ layout
+      :rbyte ->
+	val = Program.read_byte(mem, addr)
+	:io.format("mem: read byte ~w from ~w~n", [val, addr])
+	{mem, val}
+
+      :wbyte ->
+	:io.format("mem: store byte ~w at ~w~n", [val, addr])
+	mem = Program.write_byte(mem, addr, val)
+	{mem, 0}
+
+      :frw ->
+	:io.format("mem: frw ~w~n", [addr])
+	{mem, addr}
     end
-    layout = List.foldr(segments, [], f)
-    {:data, Map.new(layout)}
   end
 
-  def read({:data, data}, i) do
-    Map.get(data, i)
-  end
-
-  def write({:data, data}, i, val) do
-    {:data, Map.put(data, i, val)}
-  end  
 
 end

@@ -3,6 +3,8 @@ defmodule Test do
   @number_requests 100  ## per client
   @number_clients 4
 
+  @timeout 200
+  
   def parse(n) do
     req =  'GET /foo HTTP/1.1\r\n\r\n'
     parse(n, req)
@@ -46,7 +48,7 @@ defmodule Test do
     case :gen_tcp.connect(host, port, opt) do
       {:ok, server} ->
 	:gen_tcp.send(server, HTTP.get("/foo.html"))
-	case :gen_tcp.recv(server, 0) do
+	case :gen_tcp.recv(server, 0, @timeout) do
 	  {:ok, _reply} ->
 	    :ok
 	  {:error, _reason} ->
@@ -62,15 +64,12 @@ defmodule Test do
     parallel(host, port, @number_requests, @number_clients)
   end
 
-  def parallel(host, port, requests, clients) do
-    t0 = :erlang.monotonic_time(:millisecond)
-    me = self()
-    par(clients, host, port, requests, me)
-    all = barrier(clients, [])
-    t1 = :erlang.monotonic_time(:millisecond)
-    IO.puts("Benchmark: #{clients} clients, #{requests} requests each, in #{t1-t0} ms")
-    all
-end    
+  def parallel(host, port, requests, clients) do t0 =
+    :erlang.monotonic_time(:millisecond) me = self() par(clients,
+    host, port, requests, me) all = barrier(clients, []) t1 =
+    :erlang.monotonic_time(:millisecond)
+    IO.puts("Benchmark: #{clients} clients, #{requests} requests each,
+    in #{t1-t0} ms") all end
   
   def par(0, _host, _port, _req, _me) do
     :ok

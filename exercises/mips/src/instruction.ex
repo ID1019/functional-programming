@@ -11,23 +11,32 @@ defmodule Instruction do
   def instruction(code, reg, alu, brn, ctrl) do
     receive do
       {:brn, :halt} ->
+	:io.format("ins: halt~n", [])
 	:ok
 
       {:brn, pc} ->
-	instr = Program.read(code, pc)
+	instr = Program.read_instruction(code, pc)
 
-	# no decodeing is done, all instructions are equal (shamt is ignored for the tie being, only used in shift operations)
+	# no decodeing is done, all instructions are equal, shamt is
+	# ignored for the time being, only used in shift operations
 	<<op::6, rs::5, rt::5, rest::binary>>  = instr
-	<<rd::5, _::5, fnct::6>> = rest
-	<<imm::size(2)-big-integer-signed-unit(8)>>  = rest
+	<<rd::5, _shamt::5, fnct::6>> = rest
+	<<imm::integer-signed-16>>  = rest
 
 	:io.format("ins: pc ~w, op ~w, imm ~w ~n", [pc, op, imm])
 	
-	# funct is sent through the cntrl process rather than to a separate alu-controler
+
+	## to the register unit
 	send(reg,  {:instr, rs, rt, rd})	    
+
+	# funct is sent through the cntrl process 
 	send(ctrl, {:instr, op, fnct})
+
+	# ALU will be send the immediate value directly
 	send(alu,  {:instr, imm})
-	send(brn,  {:instr, pc+4, imm})
+
+	## immediate value is sign extended and shiftet 
+	send(brn,  {:instr, imm})
 
 	instruction(code, reg, alu, brn, ctrl)
     end
