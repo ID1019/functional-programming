@@ -246,10 +246,10 @@ To visualize the communication protocol we draw a sequence diagram. In
 Fig.~\ref{fig:seq} we see all of the messages that are sent during one
 instruction cycle. All of these messages should be sent and a unit
 needs to receive them all. Note that the diagram only shows the
-logical time relations. The Register unit can not send the values $a$
-and $b$ before receiving the register numbers from the Instruction
+logical time relations. The Register unit can not send the values $vs$
+and $vt$ before receiving the register numbers from the Instruction
 unit. However, nothing prevents the immediate value from the
-Instruction unit to reach the ALU unit before the $a$ and $b$
+Instruction unit to reach the ALU unit before the $va$ and $vt$
 values. Moreover, all though in the diagram we have the register unit
 first send the values to the ALU before sending the value to the
 memory unit but this order is not important. Messages can take
@@ -490,7 +490,7 @@ try the following in a terminal:
 
 If we store this value at address $12$ we need to decide which byte to
 return when reading a byte at address $12$. We can choose either the
-{\em big-} ($0x03) or {\tt little-end}
+{\em big-} ($0x03$) or {\tt little-end}
 ($0x00$), but we need to be consistent. This also effect how a
 sequence of bytes are stored; which byte is the first? How do we store
 "hell"?
@@ -993,7 +993,8 @@ output messages before we terminate.
 
 \section*{The MIPS computer}
 
-If we now have all pieces of the puzzle we can try to build a CPU and execute program. This is
+If we now have all pieces of the puzzle we can try to build a CPU and
+execute program. This is what the final program could look like:
 
 
 \begin{minted}{elixir}
