@@ -9,6 +9,7 @@ DIRS =  avl \
 	lambda \
 	lzw  \
 	mandel \
+	mips \
 	morse \
 	mutex \
 	operational \
@@ -24,8 +25,14 @@ DIRS =  avl \
 
 PONG = pong.ex ping.ex websocket.ex game.ex session.ex pong.html pong.js
 
-
 WWW =  ./www
+
+all:
+	echo $(DIRS)
+	for d in $(DIRS); do  echo ./$$d; cd $$d && make && cd ..; \
+        done
+
+install: pong assignments
 
 assignments: 
 	for d in $(DIRS); do \
@@ -39,15 +46,6 @@ pong:
 	for f in $(PONG); do \
              rsync -uL ./pong/src/$$f  $(WWW)/pong/src/$$f;\
         done
-
-
-
-all:
-	echo $(DIRS)
-	for d in $(DIRS); do  echo ./$$d; cd $$d && make && cd ..; \
-        done
-
-install: pong assignments
 
 
 
