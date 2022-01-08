@@ -26,12 +26,11 @@ defmodule Program do
 
   ## Give an assembler description of a program we create to data
   ## structure: one for the code segment and one for the data
-  ## segment. The code segment is read only so we can implement is a a
-  ## tuple indexed by instruction index (div(pc,4)). The memory is
-  ## implemented as a map addressed by byte address. 
+  ## segment. The code segment is read only so we can implement it as
+  ## a tuple indexed by instruction index (div(pc,4)). The memory is
+  ## implemented as a map addressed by byte address.
 
-  ## All instructions are encoded as 32-bit binaries. Values in the
-  ## data segment are encoded as integers. 
+  ## All instructions and values are encoded as 32-bit binaries. 
   
   def load({:prgm, code, data}) do
     {data, labels} = endata(data) 
@@ -56,28 +55,40 @@ defmodule Program do
   
   def read_word({:data, data}, i) do
     0 = rem(i,4)    ## addr must be amultiple of 4
-    Map.get(data, i)
+    <<val::32>> = Map.get(data, i)
+    val
   end
 
   def write_word({:data, data}, i, val) do
     0 = rem(i, 4)   ## addr must be amultiple of 4
+    val = <<val::32>>
     {:data, Map.put(data, i, val)}
   end  
 
   def read_byte({:data, data}, i) do
     j = rem(i,4)
     i = i - j
-    val =  Map.get(data, i)
-    mask =  0b11111111 <<< (j*8)
-    (val &&& mask) >>> (j*8)
+    <<a::8, b::8, c::8, d::8>> =  Map.get(data, i)
+    ## This is a big-endian decision
+    case j do
+      0 -> a
+      1 -> b
+      2 -> c
+      3 -> d
+    end
   end
 
   def write_byte({:data, data}, i, byte) do
     j = rem(i,4)
     i = i - j
-    val =  Map.get(data, i)
-    mask =  bnot(0b11111111 <<< (j*8))
-    val =  (val &&& mask) ||| (byte <<< (j*8))
+    <<a::8, b::8, c::8, d::8>> =  Map.get(data, i)
+    ## This is a big-endian decision
+    val = case j do
+	    0 -> <<byte::8, b::8, c::8, d::8>>
+	    1 -> <<a::8, byte::8, c::8, d::8>>
+	    2 -> <<a::8, b::8, byte::8, d::8>>
+	    3 -> <<a::8, b::8, c::8, byte::8>>
+	  end
     {:data, Map.put(data, i, val)}
   end    
   
@@ -86,7 +97,7 @@ defmodule Program do
   ## labels will then be used in the encoding of the code segment.
   ##
   ## The encoded data is reapresented as a list of tuples {addr, word}
-  ## where word is a 32 bit integer  
+  ## where word is a 32 bit binary.  
   
   def endata(data) do endata(data, 0, [], []) end
 
@@ -109,13 +120,14 @@ defmodule Program do
   def enspec({:word, values}, n, bytes, labels) when is_list(values) do
     {n, bytes} = List.foldl(values, {n, bytes},
       fn(val, {i, sofar}) ->
-        {i+4, [{i, val}|sofar]}
+        enword(val, i, sofar)
       end)
     {n, bytes, labels}
   end
 
   def enspec({:word, value}, n, bytes, labels) when is_integer(value) do
-    {n+4, [{n,value}|bytes], labels}
+    {n, bytes} = enword(value, n, bytes)
+    {n, bytes, labels}
   end
 
   def enspec({:byte, values}, n, bytes, labels) when is_list(values) do
@@ -132,10 +144,17 @@ defmodule Program do
     {n, bytes, labels}
   end
 
+  def enword(value, n, bytes) do
+    ## the integer value is stored as a 32-bit binary, the deault is big-endian
+    value = <<value::32>>
+    {n+4, [{n,value}|bytes]}
+  end
+
+
   def enbytes([], n, bytes) do {n, bytes} end  
   def enbytes([a,b,c,d|rest], n, bytes) do
     ## this is a big-endian litle-endian decission
-    <<value::32>> = <<d,c,b,a>>
+    value = <<a::8,b::8,c::8,d::8>>
     enbytes(rest, n+4, [{n, value}|bytes]) 
   end  
   def enbytes([a,b,c], n, bytes) do 
@@ -185,7 +204,7 @@ defmodule Program do
     collect(rest, n+4, [val|data],  labels)
   end
 
-  ## Encoding instructions usinag the labels collected.
+  ## Encoding instructions using the labels collected.
   
   def encode([], _, prgm, _) do prgm end
   def encode([instr| rest], n, prgm, labels) do

@@ -43,6 +43,7 @@ defmodule Memory do
 
       :wword ->
 	:io.format("mem: store word ~w at ~w~n", [val, addr])
+	## Convert from integer to binary. 
 	mem = Program.write_word(mem, addr, val)
 	{mem, 0}
 

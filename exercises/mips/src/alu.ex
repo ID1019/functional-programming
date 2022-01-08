@@ -48,8 +48,8 @@ defmodule ALU do
   end
 
   ## The result should be scaled to 32 bits 
-  def op(@add, a, b) do a + b end
-  def op(@sub, a, b) do a - b end
+  def op(@add, a, b) do a+b end
+  def op(@sub, a, b) do a-b end
   def op(@xor, a, b) do Bitwise.bxor(a, b) end  
 
 end
