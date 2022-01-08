@@ -36,7 +36,7 @@ defmodule Controller do
 	:io.format("ctr: halt~n", [])
 	:ok
 
-      {:instr, :out, _} ->
+      {:instr, @out, _} ->
 	send(alu, {:ctrl, :out})
 	send(mem, {:ctrl, :frw})
 	send(reg, {:ctrl, :nop})
@@ -63,7 +63,7 @@ defmodule Controller do
       # branch
       @beq ->
 	:io.format("ctr: beq~n", [])
-	{@sub, :reg, :frw, :nop, :bew}
+	{@sub, :reg, :frw, :nop, :beq}
 
       @bne ->
 	:io.format("ctr: bne~n", [])
@@ -72,7 +72,7 @@ defmodule Controller do
       # addi 
       @addi ->
 	:io.format("ctr: addi~n", [])
-	{@add, :imm, :frw, :wrt, :nrb}
+	{@add, :imm, :frw, :wrt, :nbr}
 
       # ori 
       @ori ->
