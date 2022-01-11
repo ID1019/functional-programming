@@ -3,6 +3,7 @@ DIRS =  avl \
 	concurrency \
 	derivative \
 	dynamic \
+	emulator \
 	huffman \
 	interpreter \
 	introduction \
