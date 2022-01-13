@@ -1,0 +1,46 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{minted}
+
+\begin{document}
+
+\title{
+    \textbf{My firt report.}
+}
+\author{My Name}
+\date{Spring Term 2022}
+
+\maketitle
+
+\section*{Introduction}
+
+This is what a report should look like, vanilla \LaTeX with regular
+page width and height and single spaced lines. Don't use any fancy
+packades that will turn your report into a christmas tree, keep it
+simple!.
+
+\section*{Sections}
+
+Since this is a small report I can omit having numbered sections and
+you do this by using section commands that end with a {\tt *}. You can
+ofcourse have subsections etc. 
+
+\section*{Inserting code}
+
+Code sniplets are included using the package {\tt minted}. If you
+want to include a program statemen in running text you can do this
+using for eaxmple teletype-text: {\tt append([1,2,3],[4,5]).
+
+\begin{minted}{elixir}
+  def append([], b) do b end
+  def append([h|t], b) do
+    [h | append(t, b)]
+  end  
+\end{minted}
+
+
+
+
+\end{document}

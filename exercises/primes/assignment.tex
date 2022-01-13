@@ -1,0 +1,135 @@
+\documentclass[a4paper,11pt]{article}
+
+\input ../include/preamble.tex
+
+\begin{document}
+
+\title{
+    \textbf{Enumerable primes}\\
+    \large{Programming II}
+}
+\author{Johan Montelius}
+\date{Spring Term 2022}
+\maketitle
+\defaultpagestyle
+
+\section*{Introduction}
+
+Your task is to implement a data structure that holds the infinite
+sequence of primes and can be used by the {\tt Enum} and {\tt Stream}
+modules. In the end we should be able to do like this:
+
+\begin{minted}{elixir}
+  iex(10)> Enum.take( Stream.map(Primes.primes(), fn(x) -> 2*x end), 5)
+  [4, 6, 10, 14, 22]
+\end{minted}
+
+The primes should implement the {\tt Enumarable} protocol and so you
+should have some understanding of {\tt Struct} and {\tt Protocol} but
+don't be afraid, things will work out.
+
+\section*{Infinite sequence of primes}
+
+Before implementing the enumerable protocol you should implement a
+infinite sequence of primes using anonymous functions. We divide this
+into three tasks and we start by implementing the infinite sequence of
+natural numbers (starting on 3).
+
+\subsection*{z}
+
+The function {\tt z/1} should take one argument, an integer, and
+return a function that when applied returns a tuple {\tt \{n, fun\}} where {\tt n} is the integer given
+and {\tt fun} is a function that takes no argument and when applied
+returns a tuple {\tt\{n+1, fun}}. The function now returned should
+of course return a tuple with the firste element {\tt n+2} etc. 
+
+This is what it should look like:
+
+\begin{minted}{elixir}
+iex(29)> z = Primes.z(3)
+z = Primes.z(3)
+#Function<4.106663018/0 in Primes.z/1>
+iex(30)> {_, z} = z.()
+{_, z} = z.()
+{4, #Function<4.106663018/0 in Primes.z/1>}
+iex(31)> {_, z} = z.()
+{_, z} = z.()
+{5, #Function<4.106663018/0 in Primes.z/1>}
+iex(32)> {_, z} = z.()
+{_, z} = z.()
+\end{minted}
+
+\subsection*{filter}
+
+The next thing you should implement is a {\tt filter/2} function. This
+function should take a function that can be used to generate a
+sequence as above, and a number, {\tt f}, that it should use as a
+filter. It should return a tuple {\tt \{p, fun\}} where {\tt p} is
+the first number in the sequence that is not divisable by {\tt f}. The
+function that is the second element in the tuple is a function that
+will deliver the next number in the sequnce not divisable by {\tt
+  f}. This is what it should look like:
+
+\begin{minted}{elixir}
+iex(55)> {_n, f} = Primes.filter(Primes.z(3), 2)
+{_n, f} = Primes.filter(fn() -> Primes.z(3) end, 2)
+{3, #Function<1.106663018/0 in Primes.filter/2>}
+iex(56)> {_n, f} = f.()
+{_n, f} = f.()
+{5, #Function<1.106663018/0 in Primes.filter/2>}
+iex(57)> {_n, f} = f.()
+{_n, f} = f.()
+{7, #Function<1.106663018/0 in Primes.filter/2>}
+\end{minted}
+
+If this works we have way of implementing a sequence of all numbers
+noty divisable by two and why not continue on this path and implement
+the sieve of Eratosthenes.
+
+\subsection*{sieve}
+
+Implement a function {\tt sieve/2} that takes a function and a (prime)
+number as arguments. The function should be a sequence generator like
+{\tt z} of {\tt f} in the above examples. We will assume that the
+generator returns all possible primes greater than the prime given as
+the second argument.
+
+\begin{minted}{elixir}
+  def sieve(n, p) do
+    :
+    :
+  end
+\end{minted}
+
+When we say ``possible'' we mean that the numbers generated have been
+filtered by all primes less than {\tt p}. How do you generate the next
+prime greater than {\tt p}? Can you also generate a function that
+returns all possible primes greater than this prime although they
+might be divisable by the new prime that you generated?
+
+If we you can do this, how do you let {\tt sieve/2} return a tuple
+{\tt \{next, fun\}} where {\tt next} is the next prime greater than
+{\tt p} and {\tt fun\} is function that returns all possible primes
+  greater than, and filtered by, the prime that you have found?
+
+\subsection*{primes}
+
+This final thing is to boot strap everything and provide a function
+{\tt primes} that returns a function that when applied generates a
+tuple {\tt \{2, fun\}} where {\tt 2} of course is the first prime and
+{\tt fun} is a function that will return the remaining primes.
+
+\begin{minted}{elixir}
+  def primes() do
+    fn() -> {2, fn() -> .......  end} end
+  end
+\end{minted}
+
+Hmm, what do we write on the dotted line? We could try with {\tt
+  z(3)}; that would give us all numbers greater than 3 but we don't
+want to have all the even numbers. Should we filter the number from
+{\tt z(3)} with 2? Close, but that would give us the sequence 2,3,5,6
+and we do not want to have 6. Ahh, 
+
+
+\end{document}
