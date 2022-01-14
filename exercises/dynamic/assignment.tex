@@ -32,8 +32,8 @@ cost. In the problem that I have chosen our task is to reduce the cost.
 
 Assume that your the manager of a timber yard and you have orders on
 logs of different length. Cutting a log in two pieces induces a cost
-and strangle enough this cost is proportional to the length of a
-log. It does not matter where you cut the log, the cost is the same.
+and strangle enough this \underline{cost is proportional to the length of a
+log}. It does not matter where you cut the log, the cost is the same.
 
 Now take for example that you have a log of 6 meters and you should
 cut it up in three pieces: 1, 2 and 3 meters, how are you going to cut
@@ -155,12 +155,13 @@ calculate the minimum cost of the alternatives and then select the smallest.
  \end{minted}
 
  \noindent You can now calculate the minimum cost even if you don't
- present exactly how the log is to be cut up. To describe how the log
- should be cut we change the cost
- function to return a tuple, {\tt \{cost, tree\}}, where {\tt cost} is
- the minimum cost as before and {\tt tree} is a representation of how
- to do the cutting. If you get the base cases right you should end up
- with the following solution:
+ present exactly how the log is to be cut up.
+
+ To describe how the log should be cut we change the cost function to
+ return a tuple, {\tt \{cost, tree\}}, where {\tt cost} is the minimum
+ cost as before and {\tt tree} is a representation of how to do the
+ cutting. If you get the base cases right you should end up with the
+ following solution:
  
 \begin{minted}{elixir}
  > Lumber.cost([1,2,3,2,1])
@@ -175,7 +176,7 @@ the real problem. Try the following problems:
 \begin{itemize}
 \item {\tt cost([1,2,3,4,5,6])}
 \item {\tt cost([1,2,3,4,5,6,7,8])}
-\item {\tt cost([1,2,3,4,5,6,7,8,9,10])} (don't hold your breath)
+\item {\tt cost([1,2,3,4,5,6,7,8,9,10])} 
 \end{itemize}
 
 Things do take time! Try the following benchmark; start with {\tt
@@ -206,7 +207,7 @@ tree is filled with sub-problems that we solve over and over again, if
 re-computation can be avoided things will change dramatically.
 
 The only thing wee need to solve is how to represent a problem and how
-to adapt our cost function to update and make use a memory. The first
+to adapt our cost function to update and make use of a memory. The first
 problem is not trivial but why not pick the simplest possible
 solution: represent the problem of dividing a log into the segments
 {\tt [1,2,3]} by the list {\tt [1,2,3]}. This is not a perfect
@@ -243,7 +244,7 @@ memory but we're only interested in the cost and the tree.
 
 
 Now we have the function {\tt cost/2} that also have a base clause and
-a general clause. Note that we will never call with an empty sequence
+a general clause. Note that we will never call it with an empty sequence
 but need to handle the case where we only have one element to avoid an
 infinite loop. In the general case we call {\tt cost/5} and then adds
 this solution to the memory. This is the only place where we add
@@ -278,13 +279,13 @@ memory.
 Now for you to complete {\tt cost/5}. This function will look very
 much as before but you need to "thread" the memory argument through
 the code. Note, instead of making a recursive call to {\tt cost/2} you
-make a call to {\tt check/2} to first check if there is a solution for
+make a call to {\tt check/2} to first check if there is a solution
 already.
 
 Do some small tests and if things look like they are working try {\tt
   bench(15)}. We have certainly made progress but it looks like
 calculating the result of a sequence of twenty pieces would still take
-some hours. Can we do better?
+hours. Can we do better?
 
 \subsection*{Better}
 
@@ -294,9 +295,9 @@ first one was the fact that we are still exploring mirror solutions We
 should be able to cut the execution time in half if we can avoid
 mirror images. The second thing was the key we use in the memory. If
 we have a solution for {\tt [1,2,3]} we will not find this if we are
-looking for a solution for {\tt [2,3,1]}.  As sequences gets longer
+looking for a solution for {\tt [2,3,1]}. As sequences gets longer
 this becomes a huge problem. How many permutations are there for a
-sequence of n elements?
+sequence of $n$ elements?
 
 Let's start by cutting the execution in half by avoiding mirror
 computations. There is a simple solution to this problem even if it
@@ -312,13 +313,11 @@ starting point but we are still far from solving problems of size 20.
   end  
 \end{minted}
 
-
 How about the second problem; could we find a unique key for two
 sequences that should be treated as the same? Could it be as simple as
 ordering the sequence? Could we order the sequence at start and then
 make sure that sub-sequences are order (we need to reverse the
 accumulated lists before doing a recursive call).
-
 
 \begin{table}[h!]
   \begin{center}
