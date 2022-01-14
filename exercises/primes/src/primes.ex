@@ -1,7 +1,12 @@
 defmodule Primes do
 
   defstruct [:next]
-    
+
+  def primes() do
+    %Primes{next: fn () ->  {2, fn () -> sieve(z(3), 2)  end} end}
+  end
+
+  
   defimpl Enumerable do
 
     def count(_) do  {:error, __MODULE__}  end
@@ -22,10 +27,12 @@ defmodule Primes do
     {p, %Primes{next: n}}
   end
   
-  def primes() do
-    %Primes{next: fn () ->  {2, fn () -> sieve(z(3), 2)  end} end}
+
+  def primef() do
+    fn () ->  {2, fn () -> sieve(z(3), 2)  end} end
   end
 
+  
   def z(n) do
     fn() ->
       :io.format("generate ~w\n", [n])

@@ -25,7 +25,7 @@ modules. In the end we should be able to do like this:
 \end{minted}
 
 The primes should implement the {\tt Enumarable} protocol and so you
-should have some understanding of {\tt Struct} and {\tt Protocol} but
+should have some understanding of {\tt Structs} and {\tt Protocols} but
 don't be afraid, things will work out.
 
 \section*{Infinite sequence of primes}
@@ -38,10 +38,11 @@ natural numbers (starting on 3).
 \subsection*{z}
 
 The function {\tt z/1} should take one argument, an integer, and
-return a function that when applied returns a tuple {\tt \{n, fun\}} where {\tt n} is the integer given
-and {\tt fun} is a function that takes no argument and when applied
-returns a tuple {\tt\{n+1, fun}}. The function now returned should
-of course return a tuple with the firste element {\tt n+2} etc. 
+return a function that when applied returns a tuple {\tt \{n, fun\}}
+where {\tt n} is the integer given and {\tt fun} is a function that
+takes no argument and when applied returns a tuple {\tt\{n+1,
+  fun\}}. The function now returned should of course return a tuple
+with the firste element {\tt n+2} etc.
 
 This is what it should look like:
 
@@ -66,7 +67,7 @@ function should take a function that can be used to generate a
 sequence as above, and a number, {\tt f}, that it should use as a
 filter. It should return a tuple {\tt \{p, fun\}} where {\tt p} is
 the first number in the sequence that is not divisable by {\tt f}. The
-function that is the second element in the tuple is a function that
+function, the second element in the tuple, is a function that
 will deliver the next number in the sequnce not divisable by {\tt
   f}. This is what it should look like:
 
@@ -83,7 +84,7 @@ iex(57)> {_n, f} = f.()
 \end{minted}
 
 If this works we have way of implementing a sequence of all numbers
-noty divisable by two and why not continue on this path and implement
+not divisable by two; why not continue on this path and implement
 the sieve of Eratosthenes.
 
 \subsection*{sieve}
@@ -103,13 +104,13 @@ the second argument.
 
 When we say ``possible'' we mean that the numbers generated have been
 filtered by all primes less than {\tt p}. How do you generate the next
-prime greater than {\tt p}? Can you also generate a function that
+prime greater than {\tt p}? Can you also create a function that
 returns all possible primes greater than this prime although they
 might be divisable by the new prime that you generated?
 
-If we you can do this, how do you let {\tt sieve/2} return a tuple
+If you can do this, how do you let {\tt sieve/2} return a tuple
 {\tt \{next, fun\}} where {\tt next} is the next prime greater than
-{\tt p} and {\tt fun\} is function that returns all possible primes
+{\tt p} and {\tt fun} is function that returns all possible primes
   greater than, and filtered by, the prime that you have found?
 
 \subsection*{primes}
@@ -129,7 +130,89 @@ Hmm, what do we write on the dotted line? We could try with {\tt
   z(3)}; that would give us all numbers greater than 3 but we don't
 want to have all the even numbers. Should we filter the number from
 {\tt z(3)} with 2? Close, but that would give us the sequence 2,3,5,6
-and we do not want to have 6. Ahh, 
+and we do not want to have 6. Ahh,....
+
+\begin{minted}{elixir}
+iex(4)>p = Primes.primes()
+#Function<2.128507103/0 in Primes.primef/0>
+iex(5)> {_, p} = p.()
+{_, p} = p.()
+{2, #Function<7.128507103/0 in Primes.primef/0>}
+iex(6)> {_, p} = p.()
+{_, p} = p.()
+{3, #Function<4.128507103/0 in Primes.sieve/2>}
+iex(7)> {_, p} = p.()
+{_, p} = p.()
+{5, #Function<1.128507103/0 in Primes.filter/2>}
+iex(8)> {_, p} = p.()
+{_, p} = p.()
+{7, #Function<1.128507103/0 in Primes.filter/2>}
+iex(9)> {_, p} = p.()
+{_, p} = p.()
+{11, #Function<1.128507103/0 in Primes.filter/2>}
+iex(10)>
+\end{minted}
+
+
+\section*{Enumerable}
+
+So now you can generate an infinite sequence of primes, time to make
+it work with the {\tt Enum} and {\tt Strem} modules. The thing you now
+nned to do is implement the {\tt Enumerable} protocol.
+
+A protocol is defined for a particular struct so we have to create a
+struct associated with the {\tt Primes} module. It's a simple data
+structure with only one element, {\tt next}. that will be your primes
+function. The function {\tt primes/0} will now return a {\tt Primes}
+struct with the initial fucntion. 
+
+\begin{minted}{elixir}
+defmodule Primes do
+
+  defstruct [:next]
+
+  def primes() do
+    %Primes{next: ... }
+  end
+\end{minted}
+
+The protocol can now be defined and we nned to implement four
+functions. The first three are not applicable since we have an
+infinite sequence so we simply return {\tt\{:error, \_\_MODULE\_\_\}}. It
+is in the function {\tt reduce/3} where the magic happens.
+
+\begin{minted}{elixir}
+defimpl Enumerable do
+
+    def count(_) do  {:error, __MODULE__}  end
+    def member?(_, _) do {:error, __MODULE__}  end
+    def slice(_) do {:error, __MODULE__} end
+
+    def reduce(_,       {:halt, acc}, _fun) do
+       {:halted, acc}
+    end
+    def reduce(primes,  {:suspend, acc}, fun) do
+       {:suspended, acc, fn(cmd) -> reduce(primes, cmd, fun) end}
+    end
+    def reduce(primes,  {:cont, acc}, fun) do
+      {p, next} = Primes.next(primes)
+      reduce(next, fun.(p,acc), fun)
+    end      
+  end
+\end{minted}
+
+Now for you to implement the function {\tt next/1}, it should return a
+tuple, the next prime and a Primes struct that represents the
+continuation. If everything works you should be able to do something like this.
+
+\begin{minted}{elixir}
+  iex(59)> Enum.take( Stream.map(Primes.primes(), fn(x) -> 2*x end), 5)
+  [4, 6, 10, 14, 22]
+\end{minted}
+
+
+
+
 
 
 \end{document}
