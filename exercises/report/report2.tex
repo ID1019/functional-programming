@@ -1,0 +1,175 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{minted}
+
+\begin{document}
+
+\title{
+    \textbf{Your second report.}
+}
+\author{Your Name}
+\date{Spring Term 2022}
+
+\maketitle
+
+\section*{Introduction}
+
+Here are some comments on the reports that you uploaded and some
+guide lines of what you should think of in the next report (and all
+reports in the future of you life). All these tips and tricks are how
+to use \LaTeX, it has nothing to do with Elixir.
+
+First tip, the name of the report should not be ``My first report''
+and the name should not be ``My Name''.
+
+\section*{Read the instructions}
+
+Almost all of you handed in a report written in LaTeX but of course
+there were two that handed in something written i Word or
+Notepad. Only two out of a hundred and fifty is still very good, well done.
+
+The instructions said ``not four pages of code'' most of you got the
+meaning. My idea is that you will learn a lot more if you have to
+explain you code to someone else. It one thing to get the code to work
+but explaining what you did is more complicated. When explaining
+something one often realize why things work as they do, or in the best
+case realize that it does not work.
+
+Explaining something also has the advantage that the reader gets
+another perspective on how the assignment can be solved and the
+arguments why it should be solved like this.
+
+\section*{Sections}
+
+I suggested that since these are all small reports, numbering of
+sections could be omitted. In LaTeX you create a section header
+either using
+
+\begin{verbatim}
+  \section\{something}
+\end{verbatim}
+or
+
+\begin{verbatim}
+  \section*{something}
+\end{verbatim}
+
+The difference is that when you use the {\tt *} version, no number is
+added to the header. You also use this for sub-sections i.e.
+
+\begin{verbatim}
+  \subsection{something}
+\end{verbatim}
+
+or
+
+\begin{verbatim}
+  \subsection*{something}
+\end{verbatim}
+
+If you don't use a number on your section header it looks strange to
+number the sub-sections.
+
+\section*{Inserting code}
+
+Code snippets are best included using the package {\tt minted} as I
+said. This packade will take care of most formating issues and also
+color the code. You still need to indent the code so in the example
+below I've done the indentation explicitly.
+
+\begin{minted}{elixir}
+def append([], y) do y end
+def append([h|t], y) do
+  [h | append(t, y)]
+end
+\end{minted}
+
+You could use other packages to format code and one polular is {\tt
+  lstlisting}. I don't think there is a default elixir mode for this
+and I thinsk minted does a very good job so why not use minted. 
+
+You could also use the simple {\tt verbatim} environment but thenn you
+have to be careful. LaTeX ignores {\tt tab} characters, it will treat
+them as null characters and this could lead to strange things. The two
+pieces of code below looks identical in the source code. The first one
+is formatted using space character but the second is using a tab
+character. As you can see the generated output is quite different.
+
+\begin{verbatim}
+   def append([], y) do y end
+   def append([h|t], y) do
+        [h | append(t, y)]
+   end
+\end{verbatim}
+
+\begin{verbatim}
+   def append([], y) do y end
+   def append([h|t], y) do
+	[h | append(t, y)]
+   end
+\end{verbatim}
+
+\section*{less than}
+
+If you in your LaTeX code write 5 \textless\ 7 it will look like 5 <
+7 and 9 \textgreater\ 7 will look like 9 > 7. Using the characters
+\textless\ and \textgreater\ directly does not work ... so, how did I
+do it?  I used the commands {\tt  \textbackslash textless} and {\tt
+  \textbackslash textgreater} to generate the symbols \textless\ and
+\textgreater.
+
+You could also use {\tt \{\textbackslash tt 5 < 7\}} but then it
+will use the teletype font and look like this: {\tt 5 < 7}.
+
+Still another way is to write it using so called {\tt math mode}. This
+is a mode used for writing mathematical formulas in a nice way. You
+enclose your expression in {\tt \$} signes like this {\tt \$5 < 7\$}
+and then it will look like this $5 < 7$.
+
+If you have a larger mathematical expression you enclose it in double
+\$ and the result is that it is written centered with some space
+around it like this:  $$ 5 < (3 * 8 / 3 ) $$
+
+
+\section*{no f*ing screen shots}
+
+I know that you are all very happy that things actually work and
+eagerly want to show what things look like on you screen but please,
+don't use screen shots. It looks ugly and it's impossible to mark or
+copy the things that you want to show. It also, most often, show a lot
+of irrelevant things so instead of using an image, copy the text and
+format it so it's easy to read.
+
+
+\section*{standard layout}
+
+The rows in regular article mode are short - because it makes it
+easier to read. Do not set the column width or margins explicitly, let
+LaTeX decide what it should look like.
+
+
+\section*{numbers}
+
+You will soon include some run-time measurements in your reports. You
+should the think about the number of significant figures that you
+use. Just because a benchmark took $1.2345678 s$ does not mean that
+you should report it in this way. If you write this in your report
+you're implicitly saying - if I do this again the number will be the
+same. This could be true but I doubt that anything you do on a
+computer can be determined with an 8 figure accuracy. The next time
+you try it might very well take $1.2354678 s$. What you report is
+maybe $1.235 s$ or $1.2 s$?
+
+\section*{why strange font}
+
+If you want to wite {\em foo} in teletype font you wite
+\verb+{\tt foo}+ like this {\tt foo But now if you forget the closing
+  \} character everything from now on will be written in this
+  font......
+
+  I hope that these tips and tricks will help you write an even better
+  report.
+
+\end{document}
