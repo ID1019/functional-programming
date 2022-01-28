@@ -1,13 +1,19 @@
 defmodule Bench do
 
+  ## n  -  number of operations
+  ## r  -  read ratio i.e. of 0.2 then 20% of operations will be read operations
+  ## k  -  the size of the memory k  adressed [0 ... (k-1)]
 
   def bench(n, r, k) do
-    seq = for _ <- 1..n, do: rand(r, k)
-    reg = List.to_tuple(Enum.to_list(0..k-1))
-    {dt, _} = :timer.tc(fn() -> List.foldl(seq, [], fn(x,a) -> dummy(a, x) end) end)
-    {lt, _} = :timer.tc(fn() -> List.foldl(seq, [], fn(x,a) -> list(a, x) end) end)
-    {mt, _} = :timer.tc(fn() -> List.foldl(seq, %{}, fn(x,a) -> map(a, x) end) end)
-    {tt, _} = :timer.tc(fn() -> List.foldl(seq, reg, fn(x,a) -> tuple(a, x) end) end)
+    seq = Enum.map(1..n, fn _ -> rand(r, k) end)
+    {dt, _} = :timer.tc(fn() -> dummy(k, seq) end)
+    {lt, _} = :timer.tc(fn() -> list(k, seq) end)
+    {mt, _} = :timer.tc(fn() -> map(k, seq) end)
+    {tt, _} = :timer.tc(fn() -> tuple(k, seq) end) 
+    ## dt - dummy
+    ## lt - list
+    ## mt - map (tree)
+    ## tt - tuple
     {dt, lt, mt, tt}
   end
 
@@ -21,8 +27,12 @@ defmodule Bench do
     end
   end
 
-  
-  def dummy(reg, op) do
+
+  def dummy(_, seq) do
+     List.foldl(seq, :ok, fn (op, reg) -> dummy_op(op, reg) end)
+  end
+
+  def dummy_op(op, reg) do
     case op do
       {:read, _key} ->
 	reg
@@ -33,7 +43,12 @@ defmodule Bench do
     end
   end
 
-  def list(reg, op) do
+  def list(k, seq) do
+     reg = Enum.map(0..(k-1), fn x -> {x, x} end)
+     List.foldl(seq, reg, fn (op, reg) -> list_op(op, reg) end)
+  end
+  
+  def list_op(op, reg) do
     case op do
       {:read, key} ->
 	List.keyfind(reg, key, 0, {key, 0})
@@ -45,7 +60,12 @@ defmodule Bench do
     end
   end
 
-  def map(reg, op) do
+  def map(k, seq) do
+     reg = Map.new(0..(k-1), fn x -> {x, x} end)
+     List.foldl(seq, reg, fn (op, reg) -> map_op(op, reg) end)
+  end
+  
+  def map_op(op, reg) do
     case op do
       {:read, key} ->
         Map.get(reg, key, 0)
@@ -56,8 +76,15 @@ defmodule Bench do
 	Map.put(reg, key, 42)
     end
   end
+
   
-  def tuple(reg, op) do
+
+  def tuple(k, seq) do
+     reg = List.to_tuple(Enum.to_list(0..(k-1)))
+     List.foldl(seq, reg, fn (op, reg) -> tuple_op(op, reg) end)
+  end
+  
+  def tuple_op(op, reg) do
     case op do
       {:read, key} ->
         _ = elem(reg, key)
