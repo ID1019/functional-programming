@@ -24,6 +24,15 @@ modules. In the end we should be able to do like this:
   [4, 6, 10, 14, 22]
 \end{minted}
 
+or, using the pipe notation:
+
+\begin{minted}{elixir}
+  iex(11)> Primes.primes() |>
+           Stream.map(fn(x) -> 2*x end) |>
+           Enum.take(5)
+\end{minted}
+
+
 The primes should implement the {\tt Enumarable} protocol and so you
 should have some understanding of {\tt Structs} and {\tt Protocols} but
 don't be afraid, things will work out.
