@@ -1,0 +1,215 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage{graphicx}
+
+\usepackage{minted}
+
+\begin{document}
+
+\title{
+    \textbf{Your third report.}
+}
+\author{Your Name}
+\date{Spring Term 2022}
+
+\maketitle
+
+\section*{Introduction}
+
+Here are some comments on the reports that you uploaded and some
+guide lines of what you should think of in the next report (and all
+reports in the future of you life). All these tips and tricks are how
+to use \LaTeX, it has nothing to do with Elixir.
+
+\section*{Explaining your code}
+
+The reports that you handed in last week look much better than the
+first reports. Some still had a page of code in the middle of the
+report and this is not the way to do it. When you describe you code,
+you describe it in sections. This s for example the append function:
+
+\begin{verbatim}
+  def append([], y) do y end
+  def append([h|t], y) do 
+    [h | append(t, y)]
+   end
+\end{verbatim}
+
+This is now when we explain why this piece of code is here and it is
+because we want to talk about tail recursion. How do we implement
+this in a tail recursive way? Hmm, tricky, can we do like this:
+
+\begin{verbatim}
+  def tailr([], y) do y end
+  def tailr([h|t], y) do 
+    tailr(t, [h|y])
+  end
+\end{verbatim}
+
+No, this will of course not work since the elements will occur in the
+wrong order. If we should use this then we would have to start with a
+reversed list .... hmm, why not do this?
+
+\begin{verbatim}
+  def append(x, y) do 
+    rev = reverse(x)
+    tailr(rev, y) 
+  end
+\end{verbatim}
+
+Ahh, so now the problem is to write reverse in a tail-recursive way
+but you know how to do this so - problem solved. Explaining you code
+like this is better than listing the code in the end. 
+
+\section*{Tables}
+
+You will now start to present numbers and one way is to present them
+in a table. You will have to do some reading on how to format table bu
+the general structures is quite easy. This is for example a table with
+some run-time figures.
+
+\begin{table}[h]
+\begin{center}
+\begin{tabular}{l|c|c}
+\textbf{prgm} & \textbf{runtime} & \textbf{ratio}\\
+\hline
+  dummy      &  115 &     1.0\\
+  union      &  535 &     4.6\\
+  tailr      &  420 &     3.6\\
+\end{tabular}
+\caption{Union and friends, list of 50000 elements, runtime in microseconds}
+\label{tab:table1}
+\end{center}
+\end{table}
+
+As I said in the previous note you should be careful with how many
+significant figures you use. If you say that something took
+$56.123456$ microseconds I can guarantee that the next time you try
+the measurement will be very different. It might be $56.2....$ or
+$55.9....$ so why write $56.123456$?  Why not write $56$ microseconds?
+
+The other thing, as you see in the table above, the runtime per se
+might not be interesting. The interesting thing is how it relates to
+something else. Look at the ratio above, it gives you the information
+that we are looking for.
+
+So when you include numbers, ask your self why you have these numbers
+in the report. What is the purpose, can you describe this in a better
+way?
+
+\section*{Graphs}
+
+Since you will present numbers you of course want to include a graph
+in your report. There are many ways to generate graphs but you want to
+use a way that minimize manual work. My tool over the years has been
+{\em Gnuplot} and if you do not have a favorite tool you could give it
+a try.
+
+Gnuplot is not a statistical program or a program that is very good at
+manipulating numbers but it is very good at taking a sequence of
+numbers and generate a nice graph.
+
+To show you how to do, let's use an example - why not runtime of
+Fibonacci. The first thing wee need is a benchmark program that writes
+a sequence runtimes. We will use two tab separated columns, on that
+gives us $n$ and one that gives us the runtime of $fib(n)$. 
+
+\begin{minted}{elixir}
+  def bench(l) do
+    {:ok, file} = File.open("fib.dat", [:write, :list])
+    seq = [12,14,16,18,20,22,24,26,28]
+    :io.format(file, "# This is a comment since it starts with #\n", [])
+    :io.format(file, "# Fibonacchi of n, time in us\n", [])
+    :io.format(file, "# n\ttime\n", [])
+    Enum.each(seq, fn n -> bench(l, n, file) end)
+    File.close(file)
+  end
+\end{minted}
+
+The {\tt bench/1} function will open a file, print some comments and
+then call {\tt bench(l, n, file)} for all $n$ in the sequence {\tt
+  [12,14 ..]}.  The {\tt bench/3} function will call {\tt loop(l,n)}
+and print out the $n$ and the time it took to calculate {\tt
+  fib(n)}. 
+
+\begin{minted}{elixir}
+  def bench(l, n, file) do
+    {t, _} = :timer.tc(fn -> loop(l, n) end)
+    :io.format(file, "~w\t~.2f\n", [n, t/l])
+  end
+\end{minted}
+
+The function {\tt loop(l,n)} is responsible for calling {\tt fib(n)}
+$l$ times and this could of course be done like this.
+
+\begin{minted}{elixir}
+  def loop(0,_) do :ok end
+  def loop(l,n) do 
+    fib(n)
+    loop(l-1, n)
+  end
+  
+  def fib(1) do 1 end
+  def fib(2) do 1 end
+  def fib(n) do fib(n-1) + fib(n-2) end
+\end{minted}
+
+If everything works, then the file {\tt fib.dat} will look something like this:
+
+\begin{verbatim}
+# This is a comment since it starts with #
+# Fibonacchi of n, time in us
+# n     time
+12      3.07
+14      6.92
+16      17.82
+ :
+\end{verbatim}
+
+Now comes the interesting part, how do we turn this into a nice plot?
+You should first install Gnuplot and I'm sure you can do this with
+out my help. Once you have Gnuplot installed we write a small script in
+{\tt fib.p} that looks like this:
+
+\begin{verbatim}
+set terminal pdf
+set output "fib.pdf"
+
+set title ""
+
+set xlabel "n"
+set ylabel "time in us"
+
+plot "fib.dat" u 1:2 with lines title "runtime fib(n)"
+\end{verbatim}
+
+There are of course tons of things you can do in this script but here
+we basically say that we want to generate a pdf of the graph and that
+the plot should use the first and second column in the file {\tt
+  fib.dat}.  If you now have Gnuplot installed you can run it from a terminal:
+
+\begin{verbatim}
+ $> gnuplot fib.p
+\end{verbatim}
+
+If you now look in your folder you will have a file called {\tt
+  fib.pdf} that is the graph. This is now included in the report like
+this (you need to have {\tt \\usepackage\{graphicx\}} in your report):
+
+\begin{figure}[H]
+  \center
+  \includegraphics[]{fib.pdf}
+  \caption{This is a fib graph.}
+  \label{fig:fib}
+\end{figure}
+
+We can probably do better than this nut now we have a very easy way to
+generate a new graph in our report. If you run the benchmark, run
+gnuplot and then generate the report you will have new graph in less
+than 20 seconds.
+
+
+
+\end{document}
