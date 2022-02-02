@@ -6,11 +6,11 @@ defmodule Program do
     {{:code, List.to_tuple(code)}, {:data, Map.new(data)}}
   end
 
+
   def read_instruction({:code, code}, pc) do
     0 = rem(pc,4) 
     elem(code, div(pc,4))
   end
-
 
   def endata(data) do  endata(data, 0, [], []) end
 
@@ -134,7 +134,7 @@ defmodule Program do
   ## If the offset value is a label it is resolved.
   def offset(label, addr, labels) do
     {_, abs} = List.keyfind(labels, label, 0)
-    (abs - addr)
+    div((abs - addr),4)
   end
     
 
