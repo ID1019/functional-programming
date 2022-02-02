@@ -3,11 +3,11 @@ defmodule Splay do
   def tree(), do: nil
 
   # In splay trees we will in each update operation move the key value
-  # pair to the root of teh tree. We will try to keep the braches
+  # pair to the root of the tree. We will try to keep the branches
   # equal in length but since the tree is ordered and the updated pair
-  # should be in the root the tree will sometimes be unballanced. The
+  # should be in the root the tree will sometimes be unbalanced. The
   # average tree will though be fairly well balanced. This will keep
-  # operations in O(lg(n)) time komplexity. 
+  # operations in O(lg(n)) time complexity. 
 
   # The root - we have two special cases and two general cases. The
   # general cases will use splay/2 to update a branch in the
