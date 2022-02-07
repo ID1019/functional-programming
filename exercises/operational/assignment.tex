@@ -238,7 +238,7 @@ we fail.
 
 $$\frac{v/s \in \sigma}{P\sigma(v, s) \rightarrow \sigma  }$$
 
-$$\frac{v/t \in \sigma \wedge t \not\mapsto s}{P\sigma(v, s) \rightarrow  {\rm fail} }$$ 
+$$\frac{v/t \in \sigma \wedge t \not= s}{P\sigma(v, s) \rightarrow  {\rm fail} }$$ 
 
 Matching a cons expression is quite simple but note what the rules
 says about the environment. We need to do the pattern matching of the
@@ -272,12 +272,12 @@ That it is as far as pattern matching goes. Try to do some matching by
 hand and explain which rules you apply. Try these:
 
 \begin{itemize}
-  
-\item $P{}(\lbrace :b, :a \rbrace, \lbrace a, b \rbrace)$  
-\item $P{}(\lbrace x, :b \rbrace, \lbrace a, b \rbrace)$
-\item $P{}(\lbrace x, x \rbrace, \lbrace a, a \rbrace)$
-\item $P{}(\lbrace x, x \rbrace, \lbrace a, b \rbrace)$
+\item $P\{\}(\{ {\mathnormal :b}, {\mathnormal :a} \}, \{ a, b \})$  
+\item $P\{\}(\{ x, {\mathnormal :b} \}, \{ a, b \})$
+\item $P\{\}(\{ x, x \}, \{ a, a \})$
+\item $P\{\}(\{ x, x \}, \{ a, b \})$
 \end{itemize}
+
 
 
 \subsection{a sequence}
