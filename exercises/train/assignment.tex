@@ -286,7 +286,7 @@ task as follows:
 \item For each move, use \verb+single+.
 \end{itemize}
 
-Please put the function \verb+move+ also in the module \verb+moves+
+Please put the function \verb+move+ also in the module \verb+Moves+
 (and hence in a file \verb+moves.ex+).  Do not forget to convince
 yourself that your solution works!
 
@@ -324,8 +324,8 @@ done by the following moves:
 
   For example, 
 \begin{verbatim}
-   split([:a,:b,:c],a) = {[],[:b,:c]}
-   split([:a,:b,:c],b) = {[:a],[:c]}
+   split([:a,:b,:c],:a) = {[],[:b,:c]}
+   split([:a,:b,:c],:b) = {[:a],[:c]}
 \end{verbatim}
   
   Use the functions \verb+position+, \verb+take+, and \verb+drop+.
