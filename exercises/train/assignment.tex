@@ -423,8 +423,10 @@ change. Thus, \verb+compress+ is implemented as follows:
 \begin{verbatim}
 def compress(ms) do
     ns = rules(ms)
-    if ns == Ms -> Ms
-       true     -> compress(ns)
+    if ns == Ms do 
+       Ms
+    else
+       compress(ns)
     end
 end
 \end{verbatim}
