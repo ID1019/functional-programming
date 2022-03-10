@@ -1,4 +1,6 @@
 defmodule Cmplx do
+
+
   
   def new(x, y) do
     {:cpx, x, y}
@@ -46,4 +48,37 @@ defmodule Cmplx do
     Depth.test(cr, ci, m)
   end
 
+  ##   Julia set, these parameters can be choosen to generate different sets.
+
+  @juliacr -0.8   
+  @juliaci 0.156
+  # cut off value, choosen so that R² - R > sqrt(cr² + ci²)
+  #  R² >  (expt (+ 0.5  (sqrt (+ 0.25 (+ (expt 0.8 2) (expt 0.156 2)) ) ) ) 2)
+  @juliaR2 2.13   
+
+  #@juliacr -0.4   
+  #@juliaci 0.6
+  #  R² >  (expt (+ 0.5  (sqrt (+ 0.25 (+ (expt 0.4 2) (expt 0.6 2)) ) ) ) 2)
+  #@juliaR2 1.9
+
+
+  def julia({:cpx, cr, ci}, m) do
+    julia(0, cr, ci, m)
+  end
+
+  defp julia(m, _zr, _zi, m), do: 0
+  defp julia(i, zr, zi, m) do
+    zr2 = zr * zr
+    zi2 = zi * zi
+    a2 = zr2 + zi2
+
+    if a2 < @juliaR2 do 
+      julia(i + 1, zr2 - zi2 + @juliacr, 2 * zr * zi  + @juliaci, m)
+    else
+      i
+    end
+  end
+  
+
+  
 end
