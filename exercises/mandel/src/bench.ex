@@ -1,5 +1,9 @@
 defmodule Bench do
 
+  def bench() do
+    bench(:bench, :large, 1024)
+  end
+  
   def bench(img, size, depth) do
     {t, _} = :timer.tc( fn() -> 
       {x, y, xn} = image(img)
@@ -25,7 +29,9 @@ defmodule Bench do
     parallel(3, img, size, depth)    
     parallel(4, img, size, depth)
     parallel(6, img, size, depth)    
-    parallel(8, img, size, depth)    
+    parallel(8, img, size, depth)
+    parallel(10, img, size, depth)        
+    parallel(12, img, size, depth)        
   end
   
   def pro(img, size, depth) do
@@ -115,6 +121,9 @@ defmodule Bench do
 
   def image(:mandel) do
     {-2.6,1.2,1.6}
+  end
+  def image(:bench) do
+    {-0.14, 0.8422, -0.13328}
   end
   def image(:waves) do
     {-0.14,0.85,-0.13}

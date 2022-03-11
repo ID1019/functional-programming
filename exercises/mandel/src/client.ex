@@ -6,8 +6,8 @@ defmodule Client do
   def start(node, name) do
     case Node.connect(node) do
       true ->
-	pid = {name, node}
-	spawn(fn -> init(pid) end)
+	server = {name, node}
+	spawn(fn -> init(server) end)
       _ ->
 	:error
     end
