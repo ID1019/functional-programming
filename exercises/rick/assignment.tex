@@ -1,0 +1,200 @@
+\documentclass[a4paper,11pt]{article}
+
+\input ../include/preamble.tex
+
+\begin{document}
+
+\title{
+    \textbf{The last assignment}\\
+    \large{ID1019 Programming II}
+}
+\author{Johan Montelius}
+\date{Spring Term 2022}
+\maketitle
+\defaultpagestyle
+
+
+\section*{Introduction}
+
+Morse codes were used in the days of telegraphs and manual radio
+communication. It is similar in the idea to Huffman coding in that it
+uses fewer symbols for frequent occurring characters and more symbols
+for the infrequent ones. You task is to write an encoder and a decoder
+for Morse signals, encode your name and decode two secret messages.
+
+{\bf The solution that you present should be your original code i.e. not
+  copied from any source apart from the More code tree in appendix. }
+
+\section{Morse codes}
+
+There are several standards for Morse codes and we will here use a
+slightly extended version since we also want to code some special
+character. The Morse code uses, as you probably know, long and short
+(often pronounced {\em di} and {\em da}) to encode characters. You
+might therefore think that is identical to Huffman codes but there is
+a difference. In Morse coding we have a special signal that tells us
+when one character ends and the next start. The pause between
+characters is necessary in order to decode a message.
+
+The code for 'a' is {\em di-da}, 'i' is {\em di-di} and 'l' is {\em di-da-di-di}.  If
+we just had the sequence {\em di-da-di-di} we would not know if this
+was ``ai'' or ``j''; we need a third signal, the pause, to tell the
+difference. A sequence {di-da-pause-di-di-pause} is then decoded as ``ai''.
+
+How does this change the structure of our decoding tree? In a Huffman
+tree we only have characters in the leafs and when we hit a leaf we
+know that we have a complete character and can start from the root
+again. In a Morse tree we can finish anywhere along the path to a
+leaf. We thus have characters in the nodes of the tree (not all).
+
+\section{Encoding}
+
+Your first task is to implement an encoder. The Morse codes are given
+in the appendix so the only thing that you need to to is to use this
+information to construct an encoding table that can then be used to
+encode a message.
+
+If you look in the appendix the Mores codes are given represented as a
+tree where one branch represents a short signal '.' and one branch the
+long signal '-'. You should use this table since it includes some
+special characters not normally found in the Morse alphabet. The
+character of the node is the ASCII value of a character or \verb+ :na+
+if no character has the corresponding code. Empty branches are
+represented by \verb+ nil+.
+
+\begin{minted}{elixir}
+{:node, character, long, short}
+\end{minted}
+
+The More trees starts like follows; a single long signal is the code
+for ASCII 116 which is a 't' and a single short is the code for 101
+i.e. an 'e'.
+
+\begin{minted}{elixir}
+  {:node, :na,
+    {:node, 116,  ..., ...},
+    {:node, 101,  ..., ...}}
+\end{minted}
+
+The tree is not the best structure to use when you encode a message so
+your first task is to transform this into a form that gives you a
+$O(lg(k))$ or $O(1)$ lookup operation (where $k$ is the number of
+letters in the alphabet). Describe why you have chosen the
+representation that you have and its characteristics.
+
+Once you have an encoding table you should implement an encoder that
+can encode a charlist (a list of ASCII values) as a Mores code
+represented as a charlist of short '.', long '-' and pause ' ' characters.
+
+The encoder should have a complexity of $O(n * m)$ where $n$ is the
+length of the message and $m$ is the length of the Morse codes. Since
+messages might be very long you should provide an implementation that
+does not use stack space proportional to the length of the
+message. This means that you need to provide a tail recursive
+solution.
+
+Describe your encoder and why it meets the requirements and include
+the code in your report.
+
+Show that your encoder works by encoding you name (and if you have
+non-ASCII characters in your name replace them with something close
+i.e. 'è' becomes 'e' etc)
+
+\section{Decoding}
+
+Your next task is to implement a decoder that can take a charlist of a
+Mores coded message and return the clear text message. You will of
+course first need an decoding table and the table that you constructed
+for the encoder might not be your best choice.
+
+The table that you construct should give you a lookup operation that
+has an $O(m)$ complexity i.e. it should be proportional to the length
+of the Morse code. This means that you can not represent your table as
+for example a list of all the codes and their corresponding characters
+since this would require and $O(k)$ operation to search through all
+the codes and an $O(m)$ operation to see if a code matches the code
+that you're looking for. The situation would improve somewhat if you
+choose to represent that table as a map structure but then the lookup
+operation would be $O(lg(k))$ which is good but does not take
+advantage of the fact that frequent occurring characters have short
+codes (very much the way Huffman coding works).
+
+So what is your choice of decoding table and what does your lookup
+function look like?
+
+Once you have the lookup operation you can implement the
+decoder. Since the Morse encoded messages of course could be very long
+your solution should not use stack space that is proportional to the
+length of the messages. Describe your decoder and why it meets the
+requirements, include the implementation in your report.
+
+Decode the secret messages below. If you cut and paste the code, make
+sure that you don't have carriage-return etc in the string. The string
+should only contain the dash, dot and space characters. 
+
+\begin{verbatim}
+  '.- .-.. .-.. ..-- -.-- --- ..- .-. ..-- 
+    -... .- ... . ..-- .- .-. . ..-- 
+    -... . .-.. --- -. --. ..-- - --- ..-- ..- ... '
+\end{verbatim}
+
+\begin{verbatim}
+  '.... - - .--. ... ---... .----- .----- .-- .-- 
+    .-- .-.-.- -.-- --- ..- - ..- -... . .-.-.- -.-. 
+    --- -- .----- .-- .- - -.-. .... ..--.. ...- .----. 
+    -.. .--.-- ..... .---- .-- ....- .-- ----. .--.-- 
+    ..... --... --. .--.-- ..... ---.. -.-. .--.-- 
+    ..... .---- '
+\end{verbatim}
+
+
+\pagebreak
+
+\section*{The Morse codes}
+
+\begin{minted}{elixir}
+def morse() do
+  {:node, :na,
+    {:node, 116,
+      {:node, 109,
+        {:node, 111,
+          {:node, :na, {:node, 48, nil, nil}, {:node, 57, nil, nil}},
+          {:node, :na, nil, {:node, 56, nil, {:node, 58, nil, nil}}}},
+        {:node, 103,
+          {:node, 113, nil, nil},
+          {:node, 122,
+            {:node, :na, {:node, 44, nil, nil}, nil},
+            {:node, 55, nil, nil}}}},
+      {:node, 110,
+        {:node, 107, {:node, 121, nil, nil}, {:node, 99, nil, nil}},
+        {:node, 100,
+          {:node, 120, nil, nil},
+          {:node, 98, nil, {:node, 54, {:node, 45, nil, nil}, nil}}}}},
+    {:node, 101,
+      {:node, 97,
+        {:node, 119,
+          {:node, 106,
+            {:node, 49, {:node, 47, nil, nil}, {:node, 61, nil, nil}},
+            nil},
+          {:node, 112,
+            {:node, :na, {:node, 37, nil, nil}, {:node, 64, nil, nil}},
+            nil}},
+        {:node, 114,
+          {:node, :na, nil, {:node, :na, {:node, 46, nil, nil}, nil}},
+          {:node, 108, nil, nil}}},
+      {:node, 105,
+        {:node, 117,
+          {:node, 32,
+            {:node, 50, nil, nil},
+            {:node, :na, nil, {:node, 63, nil, nil}}},
+          {:node, 102, nil, nil}},
+        {:node, 115,
+          {:node, 118, {:node, 51, nil, nil}, nil},
+          {:node, 104, {:node, 52, nil, nil}, {:node, 53, nil, nil}}}}}}
+end
+\end{minted}
+
+\pagebreak
+
+
+\end{document}
