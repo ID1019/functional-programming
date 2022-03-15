@@ -25,45 +25,49 @@ for Morse signals, encode your name and decode two secret messages.
 {\bf The solution that you present should be your original code i.e. not
   copied from any source apart from the More code tree in appendix. }
 
-\section{Morse codes}
+\section*{Morse codes}
 
 There are several standards for Morse codes and we will here use a
 slightly extended version since we also want to code some special
 character. The Morse code uses, as you probably know, long and short
-(often pronounced {\em di} and {\em da}) to encode characters. You
-might therefore think that is identical to Huffman codes but there is
-a difference. In Morse coding we have a special signal that tells us
-when one character ends and the next start. The pause between
-characters is necessary in order to decode a message.
+symbols to encode characters (often pronounced {\em da} and {\em di}). Since
+the idea is to encode frequent characters with few symbols you might
+think that is identical to Huffman codes but there is a difference. In
+Morse coding we have a special signal that tells us when one character
+ends and the next start. The pause between characters is necessary in
+order to decode a message.
 
-The code for 'a' is {\em di-da}, 'i' is {\em di-di} and 'l' is {\em di-da-di-di}.  If
-we just had the sequence {\em di-da-di-di} we would not know if this
-was ``ai'' or ``j''; we need a third signal, the pause, to tell the
-difference. A sequence {di-da-pause-di-di-pause} is then decoded as ``ai''.
+As an exampe we can look at how ``ai'' is coded. The code for 'a' is
+{\em di-da}, 'i' is {\em di-di} but the code for 'l' is {\em
+  di-da-di-di}.  If we just had the sequence {\em di-da-di-di} we
+would not know if this was ``ai'' or ``j''; we need a third signal,
+the pause, to tell the difference. A sequence
+{di-da-pause-di-di-pause} is then decoded as ``ai''.
 
-How does this change the structure of our decoding tree? In a Huffman
+How does this change the structure of our coding tree? In a Huffman
 tree we only have characters in the leafs and when we hit a leaf we
-know that we have a complete character and can start from the root
-again. In a Morse tree we can finish anywhere along the path to a
-leaf. We thus have characters in the nodes of the tree (not all).
+know that we have a complete code for a character. In a Morse tree we
+can finish anywhere along the path to a leaf. We thus have characters
+in the nodes of the tree (not all nodes but almost).
 
-\section{Encoding}
+\section*{Encoding}
 
 Your first task is to implement an encoder. The Morse codes are given
-in the appendix so the only thing that you need to to is to use this
+in the appendix so the only thing that you need to do is to use this
 information to construct an encoding table that can then be used to
-encode a message.
+encode a message. You should use the codes given since it includes some
+special characters not normally found in the Morse alphabet.
 
-If you look in the appendix the Mores codes are given represented as a
+\subsection{the encode table}
+
+If you look in the appendix the Morse codes are given represented as a
 tree where one branch represents a short signal '.' and one branch the
-long signal '-'. You should use this table since it includes some
-special characters not normally found in the Morse alphabet. The
-character of the node is the ASCII value of a character or \verb+ :na+
-if no character has the corresponding code. Empty branches are
-represented by \verb+ nil+.
+long signal '-'.  The character of the node is the ASCII value of a
+character or \verb+ :na+ if no character has the corresponding
+code. Empty branches are represented by \verb+ nil+.
 
 \begin{minted}{elixir}
-{:node, character, long, short}
+@tyespec node() :: {:node, char(), node(), node()} | :nil
 \end{minted}
 
 The More trees starts like follows; a single long signal is the code
@@ -80,18 +84,26 @@ The tree is not the best structure to use when you encode a message so
 your first task is to transform this into a form that gives you a
 $O(lg(k))$ or $O(1)$ lookup operation (where $k$ is the number of
 letters in the alphabet). Describe why you have chosen the
-representation that you have and its characteristics.
+representation that you have and its characteristics. Also present how
+you construct this table given the tree in the appendix.
+
+\subsection*{the encoder}
 
 Once you have an encoding table you should implement an encoder that
-can encode a charlist (a list of ASCII values) as a Mores code
-represented as a charlist of short '.', long '-' and pause ' ' characters.
+can encode a charlist (a list of ASCII values) as a Morse code
+represented as a charlist of short '.', long '-' and pause ' '
+characters. These could in Elixir be written using there ASCII values
+(46,45,32) or the special syntax for ASCII-values (\verb+ ?.+
+\verb+ ?-+ \verb+ ?/s+). 
+
 
 The encoder should have a complexity of $O(n * m)$ where $n$ is the
 length of the message and $m$ is the length of the Morse codes. Since
 messages might be very long you should provide an implementation that
 does not use stack space proportional to the length of the
 message. This means that you need to provide a tail recursive
-solution.
+solution. The Mores codes are so short so you could have a solution
+that uses stack space proportional to the code length. 
 
 Describe your encoder and why it meets the requirements and include
 the code in your report.
@@ -100,27 +112,32 @@ Show that your encoder works by encoding you name (and if you have
 non-ASCII characters in your name replace them with something close
 i.e. 'è' becomes 'e' etc)
 
-\section{Decoding}
+\section*{Decoding}
 
 Your next task is to implement a decoder that can take a charlist of a
-Mores coded message and return the clear text message. You will of
-course first need an decoding table and the table that you constructed
+Morse coded message and return the clear text message. You will of
+course first need a decoding table and the table that you constructed
 for the encoder might not be your best choice.
 
-The table that you construct should give you a lookup operation that
-has an $O(m)$ complexity i.e. it should be proportional to the length
-of the Morse code. This means that you can not represent your table as
-for example a list of all the codes and their corresponding characters
-since this would require and $O(k)$ operation to search through all
-the codes and an $O(m)$ operation to see if a code matches the code
-that you're looking for. The situation would improve somewhat if you
-choose to represent that table as a map structure but then the lookup
-operation would be $O(lg(k))$ which is good but does not take
-advantage of the fact that frequent occurring characters have short
-codes (very much the way Huffman coding works).
+\subsection*{the decode data structure}
 
-So what is your choice of decoding table and what does your lookup
+The datastructure that you use should give you a lookup operation that
+has an $O(m)$ complexity i.e. it should be proportional to the length
+of the Morse code. This means that you can not use for example a list
+of all the codes and their corresponding characters since this would
+require and $O(k)$ operation to search through all the codes and an
+$O(m)$ operation to see if a code matches the code that you're looking
+for. The situation would improve somewhat if you choose to represent
+that table as a map structure but then the lookup operation would be
+$O(lg(k))$ which is good but does not take advantage of the fact that
+frequent occurring characters have short codes and this is something
+that you want to take advantage of (very much the way how Huffman decoding
+works).
+
+So what is your choice of decoding data structure and what does your lookup
 function look like?
+
+\subsection*{the decoder}
 
 Once you have the lookup operation you can implement the
 decoder. Since the Morse encoded messages of course could be very long
@@ -130,7 +147,8 @@ requirements, include the implementation in your report.
 
 Decode the secret messages below. If you cut and paste the code, make
 sure that you don't have carriage-return etc in the string. The string
-should only contain the dash, dot and space characters. 
+should only contain the dash, dot and space characters (I've included
+an extra space in the end so all codes end with a pause).
 
 \begin{verbatim}
   '.- .-.. .-.. ..-- -.-- --- ..- .-. ..-- 
