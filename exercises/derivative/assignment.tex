@@ -109,10 +109,11 @@ def derivative(n) when is_atom(n) do: ...
 
 We would also have to think twice when we want to include constants
 such as $\pi$, could we represent it using the atom {\tt :pi}?
-Moreover, when we derivatives, is it important to separate the
-constant $\pi$ from the constant $2.34$? Can we treat $\pi$ as a variable with a not so variable value? 
+Moreover, when we calculate derivatives, is it important to separate
+the constant $\pi$ from the constant $2.34$? Can we treat $\pi$ as a
+variable with a not so variable value?
 
-A better approach (all though it will turn our expressions into huge
+A better approach (although it will turn our expressions into huge
 data structures) is to be more explicit in our choice of
 representation. What if we choose to represent all numbers using the
 tuple {\tt\{:num, c\}} where {\tt c} could be either an integer or a
@@ -179,13 +180,13 @@ These are two rules that we will use:
 \begin{itemize}
 \item $\frac{d}{dx} x \equiv 1$
 \item $\frac{d}{dx} c \equiv 0$  for any literal different from $x$
-\item $\frac{d}{dx} f + g \equiv  \frac{d}{dx} f + \frac{d}{dx} g$
-\item $\frac{d}{dx} f \cdot  g \equiv  \frac{d}{dx} f \cdot  g + f \cdot \frac{d}{dx} g$
+\item $\frac{d}{dx} (f + g) \equiv  \frac{d}{dx} f + \frac{d}{dx} g$
+\item $\frac{d}{dx} (f \times  g) \equiv  \frac{d}{dx} f \times  g + f \times \frac{d}{dx} g$
 \end{itemize}
 
 \noindent The third rule is quite straight-forward; the derivative of an sum is
 the sum of the derivatives of the terms. The derivative of
-$4x^{2} + 2x + 5$ is $8x + 2$ since since the derivative of $4x^{2}$
+$4x^{2} + 2x + 5$ is $8x + 2$ since the derivative of $4x^{2}$
 is $8x$ etc.
 
 The last rule, you might not even have learned as a rule but simply
@@ -225,7 +226,7 @@ derivative using the {\tt deriv/2} function?
 The answer that you get might not look like the answer you would have
 hoped for but it might be that what you see is an expression that can
 be simplified. The derivative of $2x$ is of course $2$ but our function
-will return something that looks like $0\cdot x + 2\cdot 1$, which of course is equal to $2$.
+will return something that looks like $0 \times x + 2 \times 1$, which of course is equal to $2$.
 
 
 % ================================================== %
@@ -267,7 +268,7 @@ zero etc. The problem is to know if there are any more things that
 could be done; how do we know that will not be able to do more.
 
 There will also be a discussion of what the simplest form would look
-like. Should we write $$ x \cdot (y + 2)$$ or should we write
+like. Should we write $$ x \times (y + 2)$$ or should we write
 $$xy + 2x$$
 
 \end{document}
