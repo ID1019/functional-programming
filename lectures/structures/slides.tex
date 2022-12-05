@@ -98,8 +98,9 @@
   \begin{lstlisting}
     defmodule Foo do
 
-      def test() do
-        42
+      def bar(x) do
+         br = Bar.answer(x)
+         :io.format("FooBar = ~w\n", [br])
       end
 
     end
@@ -206,10 +207,58 @@ end
 \end{frame}
 
 
+\begin{frame}[fragile]{linked list}
 
+  In functional programming languages linked lista are very useful.\pause
 
-\begin{frame}{linked list}
+  \vspace{20pt}
+  \begin{lstlisting}
+    []
+  \end{lstlisting}
+  \vspace{10pt}\pause
+  \begin{lstlisting}
+    [:one, 2, "three", 4]
+  \end{lstlisting}  
+  
+\end{frame}
 
+\begin{frame}[fragile]{the cons operator}
+
+  Creating a new node:\pause
+
+  \vspace{20pt}
+  \begin{lstlisting}
+    foo = 1
+    rest = [2,3,4,5]
+    all = [ foo | rest] 
+  \end{lstlisting}
+  \vspace{10pt}\pause
+  \begin{lstlisting}
+    [1,2,3,4,5]
+  \end{lstlisting}  
+  
+\end{frame}
+
+\begin{frame}[fragile]{list patterns}
+
+  \vspace{20pt}
+  \begin{lstlisting}
+    [a, b, c] = [1,2,3]
+  \end{lstlisting}
+  \vspace{10pt}\pause
+  \begin{lstlisting}
+    [a | rest] = [1,2,3]
+  \end{lstlisting}  
+
+  \vspace{10pt}\pause
+  \begin{lstlisting}
+    [a, b | rest] = [1,2,3]
+  \end{lstlisting}    
+
+  \vspace{10pt}\pause
+  \begin{lstlisting}
+    [a | rest] = [1]
+  \end{lstlisting}    
 \end{frame}
 
 
