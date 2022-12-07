@@ -56,96 +56,42 @@ end
 \end{frame}
 
 \begin{frame}[fragile]{catch this}
+
+\begin{columns}
+ \begin{column}{0.5\linewidth}
 \begin{verbatim}
 def foo(x, y) do
-    res = try do
-              bar(x, y)
-          rescue
-              error ->
-                  {:caught, error}
-          end
-    {x, y, res}
+  try do
+    {:ok, bar(x, y)}
+  rescue
+    error ->
+      {:error, error}
+  end
 end
 \end{verbatim}
+ \end{column}\pause
+ \begin{column}{0.5\linewidth}
+\begin{verbatim}
+def test(x, y) do
+  case foo(x, y) do 
+   {:error, msg} ->  
+      # state of x and y?
+        :        
+   {:ok, res} -> 
+        :
+  end
+end
+\end{verbatim}
+ \end{column}
+\end{columns}
+
 \end{frame}
 
 \begin{frame}{today's topic}
 
-\vspace{60pt}\hspace{80pt}Lists and recursion
+\vspace{60pt}\hspace{80pt}Recursion over lists
 
 \end{frame}
-
-\begin{frame}{pattern matching}
-\begin{itemize}
-\pause \item  {\tt [h|t] = [:a,[:b,:c]]}  
-\pause \item  {\tt [h1,h2|t] = [:a,:b,:c]} 
-\pause \item  {\tt [h1,h2,t] = [:a,:b,:c]} 
-\pause \item  {\tt [h1,h2,t] = [:a,:b,:c,:d]} 
-\pause \item  {\tt [h1|[h2|t]] = [:a,:b,:c]}
-\pause \item  {\tt [h|t] = [:a|:b]}
-\end{itemize}
-\end{frame}
-
-\begin{frame}{list construction}
-\begin{itemize}
-\pause \item  {\tt h = :a; t = [:b]; [h|t]}
-\pause \item  {\tt h = :a; t = [[:b]]; [h|t]}
-\pause \item  {\tt h = [:a,:b]; t = [:c,:d]; [h|t]}
-\pause \item  {\tt h = [:a,:b]; t = [:c,:d]; [h,t]}
-\pause \item  {\tt h1 = [:a,:b]; h2 = [:c,:d]; t = [:e,:f]; [h1|[h2|t]]}
-\pause \item  {\tt h1 = [:a,:b]; h2 = [:c,:d]; t = [:e,:f]; [h1,[h2|t]]}
-\pause \item  {\tt h = [:a,:b]; t = :c; [h|t]}
-\end{itemize}
-\end{frame}
-
-
-\begin{frame}{cons cells}
-
-\begin{tikzpicture}[scale=0.4]
-
-\node[anchor=west] at (0,3.5) {{\large z = []}};
-
-\node at (14,1.5) {{\large z}};
-\draw [ultra thick, red] (15,1) rectangle +(2,1);
-\draw [ultra thick, red] (15,1) -- +(2,1);
-
-\pause 
-\node[anchor=west] at (0,2) {{\large y = [:b | z]}};
-\pause 
-\node at (6,2.5) {{\large y }};
-\draw [ultra thick, blue] (7,2) rectangle +(2,1);
-\pause 
-\draw [ultra thick, blue] (10,4) rectangle +(2,1) node at +(1,0.5) {{\bf :b}};
-\draw [ultra thick, blue] (10,3) rectangle +(2,1);
-\draw [ultra thick, blue] (10,3) -- +(2,1);
-\pause 
-\draw [ultra thick, blue] (8, 2.5) circle [radius =0.1];
-\draw [ultra thick, blue] (8,2.5)  to [out=0, in=180]  (9.5,4.5);
-\draw [ultra thick, blue, ->] (9.5,4.5) -- (10,4.5); 
-
-\pause 
-\node[anchor=west] at (0,0.5) {{\large x = [:a | y]}};
-\pause 
-\node at (1,7.5) {{\large x }};
-\draw [ultra thick, black] (2,7) rectangle +(2,1);
-\pause 
-\draw [ultra thick, black] (6,7) rectangle +(2,1) node at +(1,0.5) {{\bf :a}};
-\draw [ultra thick, black] (6,6)  rectangle +(2,1);
-\pause 
-
-\draw [ultra thick, black] (7, 6.5) circle [radius =0.1];
-\draw [ultra thick, black] (7,6.5)  to [out=0, in=180]  (9.8,4.5);
-\draw [ultra thick, black, ->] (9.8, 4.5) -- (10,4.5);
-\pause 
-\draw [ultra thick, black] (3, 7.5) circle [radius =0.1];
-\draw [ultra thick, black, ->] (3,7.5) -- (5.8, 7.5); 
-\pause
-\node at (12,10) {{\large x = [:a,:b] }};
-
-\end{tikzpicture}
-
-\end{frame}
-
 
 \begin{frame}[fragile]{append}
 
@@ -362,9 +308,9 @@ end
 \pause
 
 \begin{verbatim}
-def odd_n_even(l) do
-   odd = odd(l),
-   even = even(l),
+def split(l) do
+   odd = odd(l)
+   even = even(l)
    {odd, even}
 end
 \end{verbatim}
@@ -502,11 +448,11 @@ end
 \begin{frame}{Summary}
 
 \begin{itemize}
- \pause\item Pattern matching of lists - learn it by heart
- \pause\item cons - is a constant time operation
- \pause\item append - is a $O(n)$ function
+ \pause\item recursion over lists is very common
  \pause\item tail recursion - a technique to master 
  \pause\item think about complexity
+ \pause\item cons - is a constant time operation
+ \pause\item append - is a $O(n)$ function
 \end{itemize}
 
 \end{frame}
