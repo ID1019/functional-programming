@@ -96,8 +96,8 @@ defmodule Test do
 
   # Benchmark for the list reverse functions.
   def bench() do
-    ls = [16, 32, 64, 128, 256, 512]
-    n = 100
+    ls = [16, 32, 64, 128, 256, 512, 1024]
+    n = 1000
     # bench is a closure: a function with an environment.
     bench = fn(l) ->
       seq = Enum.to_list(1..l)
@@ -113,10 +113,10 @@ defmodule Test do
 
   # Time the execution time of the a function.
   def time(n, fun) do
-    start = System.monotonic_time(:milliseconds)
+    start = System.monotonic_time(:millisecond)
     loop(n, fun)
-    stop = System.monotonic_time(:milliseconds)
-    stop - start
+    stop = System.monotonic_time(:millisecond)
+    (stop - start)
   end
 
   # Apply the function n times.
@@ -141,6 +141,22 @@ defmodule Test do
   def to_better(0, b) do b end
   def to_better(n, b) do
     to_better(div(n, 2), [rem(n, 2) | b])
+  end
+
+  # Benchmark to_binary
+  def to_bench() do
+    ls = [16, 32, 64, 128, 256, 512, 1024]
+    n = 1000000
+    # bench is a closure: a function with an environment.
+    bench = fn(l) ->
+      tn = time(n, fn -> to_binary(l) end)
+      tr = time(n, fn -> to_better(l) end)
+      :io.format("n: ~10w  to_binary: ~8w ns    to_better: ~8w ns~n", [l, tn, tr])
+    end
+
+    # We use the library function Enum.each that will call
+    # bench(l) for each element l in ls
+    Enum.each(ls, bench)
   end
 
   # Convert a binary to an integer.
