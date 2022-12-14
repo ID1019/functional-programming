@@ -35,13 +35,13 @@
   \item atoms - similar to Java enum \pause
   \item tuples - similar to a C struct but without names or an array\pause
   \item lists - syntax for linked lists
+  \item strings, chars, char-lists - "hello", ?h, ?e, ?l, ?l, ?o, 'hello'
   \end{itemize}
 
 \end{frame}
 
 \begin{frame}{Integers}
 
-  Syntax:
   Syntax:
   \space{10pt}
   \begin{itemize}
@@ -206,6 +206,39 @@ end
   
 \end{frame}
 
+\begin{frame}{under the hood}
+
+\begin{tikzpicture}[scale=0.4]
+
+
+\node[anchor=west] at (0,6.5) {{\large y = \{:foo, 10, 12\}}};
+
+\node at (15,8.5) {{\large y:}};
+\draw[ultra thick, red] (16,8) rectangle +(2,1);
+\draw[ultra thick, red] (20,6)rectangle +(3,-3);
+\node[ultra thick, red] at (21,5.5) {:foo};
+\node[ultra thick, red] at (21,4.5) {10};
+\node[ultra thick, red] at (21,3.5) {12};
+\draw[ultra thick, red, ->] (17,8.5) to[out=270,in=180]  (19.8,5.5);
+
+\pause 
+\node[anchor=west] at (0,5) {{\large x = \{:bar, y\}}};
+\pause 
+\node at (6,2.5) {{\large x:}};
+\draw [ultra thick, blue] (7,2) rectangle +(2,1);
+\draw[ultra thick, blue] (12,3)rectangle +(3,-2);
+\node[ultra thick, blue] at (13,2.5) {:bar};
+\draw[ultra thick, blue, ->] (13,1.5) to[out=0,in=180]  (19.4,5.5);
+\draw[ultra thick, blue, ->] (8,2.5) to[out=0,in=180]  (11.6,2.5);
+
+\pause
+\node[anchor=west] at (-4,5) {{\large \{z, \{:foo, n, _\}\}}};
+
+\end{tikzpicture}
+
+\end{frame}
+
+
 
 \begin{frame}[fragile]{linked list}
 
@@ -334,9 +367,67 @@ end
 \end{frame}
 
 
+\begin{frame}[fragile]{Strings}
 
+\begin{verbatim}
+text = "This is a string"
+\end{verbatim}
+  
+\vspace{20pt}  \pause
+  
+\begin{verbatim}
+combined = text <> " that we append to this string"
+\end{verbatim}
 
+\vspace{20pt}  \pause
 
+\begin{verbatim}
+answer = 42
+message = "The answer is #{answer}, but what is question?"
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{Strings and binaries}
+
+\vspace{20pt}  \pause
+\begin{verbatim}  
+  <<x, y, z , rest::binary>> = "absdefg"
+\end{verbatim}  
+  
+\end{frame}
+
+\begin{frame}[fragile]{Strings and lists of charactes}
+
+\vspace{20pt}  \pause  
+\begin{verbatim}
+  msg = String.to_charlist("abcde")
+\end{verbatim}
+
+\vspace{20pt}  \pause
+\begin{verbatim}  
+  [x,y,z | rest] = msg
+\end{verbatim}
+
+\vspace{20pt}  \pause
+\begin{verbatim}  
+  msg = [?h, ?e, ?l, ?l, ?o]
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{Summary}
+
+  \begin{itemize}
+  \item integers, floting point values \pause
+  \item boolean - true or false
+  \item atoms - similar to Java enum \pause
+  \item tuples - similar to a C struct (but without names) or an array\pause
+  \item lists - syntax for linked lists
+  \item strings, chars, char-lists  - "hello", ?h, ?e, ?l, ?l, ?o, 'hello'
+  \end{itemize}
+
+\end{frame}
 
 \end{document}
 
