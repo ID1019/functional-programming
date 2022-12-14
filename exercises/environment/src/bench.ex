@@ -22,11 +22,13 @@ defmodule Bench do
       end
 
       list_lookup= fn (seq, map) ->
-        Enum.reduce(seq, map, fn (k, acc) -> EnvList.add(acc, k, :foo) end)
+        Enum.each(seq, fn (k) -> EnvList.lookup(map, k) end)
+	map
       end
 
       tree_lookup = fn (seq, map) ->
-        Enum.reduce(seq, map, fn (k, acc) -> EnvTree.add(acc, k, :foo) end)
+        Enum.each(seq, fn (k) -> EnvTree.lookup(map, k) end)
+	map
       end            
 
       list_remove = fn (seq, map) ->
@@ -40,8 +42,8 @@ defmodule Bench do
       {tla, map_list} = time.(i, EnvList.new(), list_add)
       {tta, map_tree} = time.(i, EnvTree.new(), tree_add)
 
-      {tll, map_list} = time.(i, map_list, list_lookup)
-      {ttl, map_tree} = time.(i, map_tree, tree_lookup)
+      {tll, _} = time.(i, map_list, list_lookup)
+      {ttl, _} = time.(i, map_tree, tree_lookup)
 
       {tlr, _} = time.(i, map_list, list_remove)
       {ttr, _} = time.(i, map_tree, tree_remove)      
