@@ -4,6 +4,8 @@ DIRS =  avl \
 	derivative \
 	dynamic \
 	emulator \
+	environment \
+	higher \
 	huffman \
 	interpreter \
 	introduction \
