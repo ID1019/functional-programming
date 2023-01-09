@@ -260,13 +260,40 @@ is also an implementation in the module {\tt Enum} called {\tt
 The reason it also occurs in the {\tt Enum} module is that this module
 can handle other enumerable data structures, not just lists.
 
+\section*{Filter out the good ones}
+
+The third higher order construct that we shall look at is one that
+filters out the elements in a list that meet some requirement. You
+have now seen several examples of how we can define a higher order
+function so this one should be no match for you.
+
+Start by implementing a function {\tt odd/1} that takes a list and
+returns a list of all the odd elements ({\tt rem(x,2) == 1}).
+
+\begin{minted}{elixir}
+  def odd( ... ) do ... end
+  def odd( ... ) do
+    if ...  do
+       ... 
+    else
+       ...
+    end
+  end
+\end{minted}
+
+Now rewrite this as a function {\tt filter/2} that takes a list and a
+function that returns {\tt true} or {\tt false}. You should then be
+able to implement not only the function {\tt odd/1} using {\tt
+  filter/2} but also functions as {\tt even/1} or {\tt
+  greater_than_five/1}.
+
 
 
 \section*{Summary}
 
 Once you start to use the higher order functions {\tt map/2}, {\tt
   reduce/3} and {\tt filter/2} you will be able to write much shorter
-programs and spend less time writing recursive functions that look
+programs and spend less time writing recursive functions that looks
 more or less the same. It is very often that most of a program actually
 consist of a series of these operations (and their cousins) that once
 you get use to it your programs will not look the same.
@@ -281,6 +308,8 @@ filter so useful that they need no other reason.
 In the future, write your programs as normal but then spend some time
 to see if you can rephrase it using the higher order functions found
 in the {\tt Enum} module.
+
+
 
 
 

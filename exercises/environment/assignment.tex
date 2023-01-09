@@ -2,23 +2,9 @@
 
 \input ../include/preamble.tex
 
-% SECTIONS
-%
-% * Introduction
-% * Representing functions
-% * An expression
-% * Expressions
-% * The derivative of
-% * The rules of the game
-% * Carrying on
-% * Simplification
-
 
 \begin{document}
 
-% ================================================== %
-% == Title  == %
-% ================================================== %
 
 \title{
     \textbf{An environment}\\
@@ -30,20 +16,16 @@
 \defaultpagestyle
 
 
-% ================================================== %
-% == Introduction  == %
-% ================================================== %
-
 \section*{Introduction}
 
 The name of this assignment might be confusing and it will only be
 clear later in the course why we call this assignment "An
-environment". What you should implement is a key-value database, also called a "map", that
-can be used to look up the value associated with a key. We don't make
-any assumptions about the keys and will simply compare them using the
-regular operators. 
+environment". What you should implement is a key-value database, also
+called a "map", that can be used to look up the value associated with
+a key. We don't make any assumptions about the keys and will simply
+compare them using the regular operators.
 
-You should implement the map using two different techniqies, both
+You should implement the map using two different techniques, both
 implementations should provide the following interface:
 
 \begin{itemize}
@@ -55,15 +37,15 @@ implementations should provide the following interface:
   the value is changed.
 
 \item {\tt lookup(map, key)} : return either {\tt \{key, value\}}, if
-  the key {\tt key} is associated with the data stucture {\tt value},
-  or {\tt nil} if no assocations is found.
+  the key {\tt key} is associated with the data structure {\tt value},
+  or {\tt nil} if no association is found.
 
 \item {\tt remove(key, map)} : returns a map where the
   association of the key {\tt key} has been removed
 \end{itemize}
 
 
-We will in this assignement use keys of atoms and the values will be
+We will in this assignment use keys of atoms and the values will be
 integers but the implementation should not take this for granted.
 
 \subsection*{a map as a list}
@@ -78,8 +60,8 @@ atom \verb+ :b+ is associated with 13.
   \verb+[a: 12, b: 13]+. You can also use this syntax which makes it
 easier to write long sequences of key value pairs.}
 
-In a module {\tt EnvList}, implmement the functions above and test
-that you can perform the different operations. Would it make sence to
+In a module {\tt EnvList}, implement the functions above and test
+that you can perform the different operations. Would it make sense to
 keep the list sorted?
 
 \subsection*{a map as a tree}
@@ -87,8 +69,8 @@ keep the list sorted?
 If the map grows larger the list implementation might not be our best
 option. A tree structure would probably be a better approach. You
 could implement you tree any way you want but why not choose a simple
-represnetation where an empty tree is represneted by the atom {\tt
-  nil} and a node by the sructure {\tt \{:node, key, value, left,
+representation where an empty tree is represented by the atom {\tt
+  nil} and a node by the structure {\tt \{:node, key, value, left,
   right\}}.
 
 In a module {\tt EnvTree}, implement the functions above and test that
@@ -99,7 +81,7 @@ efficient. You don't have to implement a balanced tree but this would
 of course be something that one would need to consider.
 
 The {\tt add/3} and {\tt lookup/2} functions are fairly straight
-forwrd to implement. Identify the base cases and then how to recurse
+forward to implement. Identify the base cases and then how to recurse
 down the right or left branch. Use the following skeleton code to get
 you started:
 
@@ -144,9 +126,12 @@ can handle all special cases you should be up an running in a few minutes.
     ...   = leftmost(right)
     {:node, ..., ..., ..., ...}
   end
-  def remove({:node, k, v, left, right}, key) when key < k do {:node, k, v, ..., right} end
-  def remove({:node, k, v, left, right}, key) do {:node, k, v, left, ...} end
-
+  def remove({:node, k, v, left, right}, key) when key < k do
+     {:node, k, v, ..., right}
+  end
+  def remove({:node, k, v, left, right}, key) do 
+     {:node, k, v, left, ...} 
+  end
   def leftmost({:node, key, value, nil, rest}) do ...  end
   def leftmost({:node, k, v, left, right}) do
     ... = leftmost(left)
@@ -158,135 +143,127 @@ can handle all special cases you should be up an running in a few minutes.
 \subsection*{benchmark}
 
 Now let's do some benchmarks to see how the implementations perform
-and compare to each other. Measure the time it takes to add add a
-number of key-values to a map, to perform a lookup operation for each
-key and finally to remove the keys. To do a fair comparison we first
-generate a sequence of random numbers and the let each version use the
-same sequcence.
+and compare to each other. We want to see how the different
+implementations work with a growing number of key-value pair so let's
+set up a benchmark where we first construct a map of a number of
+elements and then measure the time it takes to perform an
+operation. We will set up the benchmark so that we use the same
+key-value pairs for each of the implementations.
 
 Measuring time can be done using the function {\tt :timer.tc(fun)}
 (this is the Erlang module {\tt timer} and we thus write it using the
 regular atom syntax). This function will take a function, call this
-function and return a tuple with the number of microseconds it took and
-the result.
+function and return a tuple with the number of microseconds it took
+and the result. The argument to {\tt tc/1} is a function and as you
+will see this is quite efficient.
 
-In order to make life easier for us we can write a generic function
-{\tt time/4} that will take a list of integers, a number $n$, a map
-and a function and time it takes to apply this function to the
-sequence and the map $n$ number of times. The function should return
-the updated map and this is acheived using the {\tt Enum.reduce/3)
-  function.
+Using functions as arguments we can for example use the function {\tt
+  Enum.each/2} to generate a list of random numbers. Try the following
+with different values of $n$ and $i$:
 
 \begin{minted}{elixir}
-  def time(seq, n, map, f) do
-    :timer.tc(fn () -> Enum.reduce(1..n, map, fn(_, mp) -> f.(seq, mp) end) end)
-  end
+   Enum.map(1..n, fn(_) -> :rand.uniform(i) end)
 \end{minted}
 
-You could for example use this function as follows to find out that it
-takes a millisecond or two to sum up the integers in the list {\tt [1,4,5,2]}.
+To build a key-value store using our {\tt EnvList} module we can do as follows:
 
 \begin{minted}{elixir}
-  time([1,4,5,2], 1000, 0, fn(seq, _) -> Enum.sum(seq) end)
-\end{minted}
-
-We can also use it to find out how long time it takes to add four
-key-value pairs to a list based map.
-
-\begin{minted}{elixir}
-  time([1,4,5,2], 1000, EnvList.new(), fn(seq, map) -> 
-       Enum.reduce(seq, map, fn(e, acc) -> 
-                EnvList.add(acc, e, :foo) end) 
-     end)
-\end{minted}
-
-We are using higher order function when we implemen this and this is
-something that you might not have used before. This will then be a
-quick example of what we can do.
-
-\begin{minted}{elixir}
-  def bench(seq, n) do
-    {add, map} = time(seq, n, EnvList.new(), fn(seq, map) -> 
-                                 Enum.reduce(seq, map, fn(e, acc) -> 
-                                   EnvList.add(acc, e, :foo)
-				 end)
-       end)
-    {lookup, _} = time(seq, n, map, fn(seq, map) -> 
-                                 Enum.each(seq, fn(e) -> 
-                                   EnvList.lookup(map, e)
-				 end)
-                                 map
-       end)
-
-    {remove, _} = time(seq, n, map, fn(seq, map) -> 
-                                 Enum.reduce(seq, map, fn(e, acc) -> 
-                                      EnvList.remove(acc, e) end) 
-      end)
-    {add, lookup, remove}
-  end
-\end{minted}
-
-Now since we should benchmark several versions of out key-value store
-we might as well use a generic version of this benchmark
-procedure. Why not use parameters for the function that we need.
-
-\begin{minted}{elixir}
-  def bench(seq, n, f_new, f_add, f_lookup, f_remove) do
-    {add, map} = time(seq, n, f_new.(), fn(seq, map) -> 
-                                 Enum.reduce(seq, map, fn(e, acc) -> 
-                                   f_add.(acc, e, :foo)
-				 end)
-      end)
-    {lookup, _} = time(seq, n, map, fn(seq, map) -> 
-                                 Enum.each(seq, fn(e) -> 
-                                   f_lookup.(map, e)
-				 end)
-                                 map
-      end)
-
-    {remove, _} = time(seq, n, map, fn(seq, map) -> 
-                                 Enum.reduce(seq, map, fn(e, acc) -> 
-                                      f_remove.(acc, e) end) 
-      end)
- 
-    {add, lookup, remove}
-  end
-\end{minted}
-
-Now we can implement our final benchark procedure as follows:
-
-\begin{minted}{elixir}
-  def bench(i, n) do
     seq = Enum.map(1..i, fn(_) -> :rand.uniform(i) end)
 
-    {tla, tll, tlr}  = bench(seq, n, &EnvList.new/0, 
-                                     &EnvList.add/3, 
-                                     &EnvList.lookup/2, 
-                                     &EnvList.remove/2)
-    {tta, ttl, ttr}  = bench(seq, n, &EnvTree.new/0, 
-                                     &EnvTree.add/3, 
-                                     &EnvTree.lookup/2, 
-                                     &EnvTree.remove/2)
-    {i, tla, tta, tll, ttl, tlr, ttr}
+    list = Enum.reduce(seq,  EnvList.new(), fn(e, list) -> 
+                  EnvList.add(list, e, :foo) 
+                  end)
+\end{minted}
+
+We first build a list of random numbers (from 0 to $i$) and then use
+this list as keys when we add dummy key-value pairs to an empty store.
+
+Once we have a store of $i$ pairs we can construct another sequence of $n$
+random numbers and use them when we benchmark for example adding a new pair:
+
+\begin{minted}{elixir}
+    seq = Enum.map(1..n, fn(_) -> :rand.uniform(i) end)
+    
+    {tla, _} = :timer.tc(fn() -> Enum.each(seq, fn(e) ->
+                      EnvList.add(list, e, :foo)
+                      end)
+                    end)
+\end{minted}
+
+Note that we here ignore the constructed store with the new pair, we
+simply add the item and then drop the result. In this way we can first
+build a store containing for example 64 entries and then measure the
+time it takes to add a thousand new pairs without growing the store.
+
+We can now do the same with the other operations and combine everything
+in one function:
+
+\begin{minted}{elixir}
+  def bench(i, n) do 				    
+    seq = Enum.map(1..i, fn(_) -> :rand.uniform(i) end)
+
+    list = Enum.reduce(seq,  EnvList.new(), fn(e, list) -> 
+                    EnvList.add(list, e, :foo) 
+                    end)
+
+    seq = Enum.map(1..n, fn(_) -> :rand.uniform(i) end)
+    
+    {add, _} = :timer.tc(fn() ->
+                    Enum.each(seq, fn(e) -> 
+                      EnvList.add(list, e, :foo) 
+                      end) 
+                    end)
+
+    {lookup, _} = :timer.tc(fn() -> 
+                    Enum.each(seq, fn(e) ->
+                      EnvList.lookup(list, e) 
+                      end) 
+                    end) 
+    
+    {remove, _} = :timer.tc(fn() -> 
+                    Enum.each(seq, fn(e) -> 
+                      EnvList.remove(list, e) 
+                    end) 
+                   end) 
+
+    {i, add, lookup, remove}
   end
 \end{minted}
 
-The only thing now missing is to run this benchmark for different
-length of the sequence.
+The {\tt bench/2} function is then used repeatedly with growing values
+of $i$. If we print out the result we will have a nice sequence of
+numbers to plot or present in a table.
+
+{\em The specification {\tt ~12.2f} means print a float with 2
+  decimals right aligned using a width of 12 characters. Change it to
+  anything that suits your needs.}
 
 \begin{minted}{elixir}
   def bench(n) do
+
     ls = [16,32,64,128,256,512,1024,2*1024,4*1024,8*1024]        
-    :io.format("~18.s~12.s~12.s~12.s~12.s~12.s\n", ["list", "tree", "list", "tree", "list", "tree"])
-    :io.format("~6.s~8.s~-24.s~-24.s~-24.s\n", ["n", "", "add", "lookup", "remove"])
+
+    :io.format("# benchmark with ~w operations, time per operation in us\n", [n])
+    :io.format("~6.s~12.s~12.s~12.s\n", ["n", "add", "lookup", "remove"])
+
     Enum.each(ls, fn (i) ->
-      {i, tla, tta, tll, ttl, tlr, ttr} = bench(i, n)
-      :io.format("~6.w~12.2f~12.2f~12.2f~12.2f~12.2f~12.2f\n",
-         [i, tla/(i*n), tta/(i*n), tll/(i*n), ttl/(i*n), tlr/(i*n), ttr/(i*n)])
+      {i, tla, tll, tlr} = bench(i, n)
+      :io.format("~6.w~12.2f~12.2f~12.2f\n", [i, tla/n, tll/n, tlr/n])
     end)
-    :ok
   end
 \end{minted}
 
+Once you have your benchmark up an running you can compare your two
+implementations of the key-value store. You might also wan to see how
+well you did compared to the key-value store that comes with the
+Elixir system form start. There is a module called {\tt Map} that does
+exactly what you want and more (the functions are called {\tt put/3},
+{\tt get/2} and {\tt delete/2}). It uses a trier data structure (a
+tree of hash tables) and is implemented in C++ so it is not strange if
+it performs better than your solution but my guess is that you're not
+that far off.
+
+Take a look at the documentation of the {\tt Map} module. From now on
+you can use it if you want. 
 
 \end{document}
