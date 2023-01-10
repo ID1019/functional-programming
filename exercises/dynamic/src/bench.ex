@@ -31,7 +31,7 @@ defmodule Bench do
      {_, speed} = List.foldl(data, {1, []}, fn ({n,t},{p,a}) -> {t, [{n, t, t/p} | a]} end)
      Enum.each(Enum.reverse(speed), fn({n,t,r}) -> :io.format("~w\t &~.4f &~.1f \\\\ \n", [n, t/1000000, r]) end)
   
-  
+  end  
 
 
 end

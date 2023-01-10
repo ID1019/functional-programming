@@ -94,7 +94,6 @@ def nth(n, [_|t]) do nth(n-1, t) end
 
 \end{frame}
 
-
 \begin{frame}{nth element}
 
 \begin{itemize}
@@ -114,6 +113,42 @@ Benchmark different versions of n'th:
 
 \end{frame}
 
+\begin{frame}[fragile]{update an item in a list}
+
+\begin{verbatim}
+   update(lst, pos, itm)
+\end{verbatim}
+  \vspace{20pt}\pause
+\begin{verbatim}
+def update([_|rest], 0, itm) do [itm|rest] end
+def update([first|rest], n, itm) do
+   [first|update(rest, n-1, itm)]
+end
+\end{verbatim}
+
+  \vspace{10pt}\pause
+  {\em this is an expensive operation}
+\end{frame}
+
+\begin{frame}[fragile]{update an item in a tuple}
+
+\begin{verbatim}
+   update(lst, pos, itm)
+\end{verbatim}
+  \vspace{20pt}\pause
+\begin{verbatim}
+def update([_|rest], 0, itm) do [itm|rest] end
+def update([first|rest], n, itm) do
+   [first|update(rest, n-1, itm)]
+end
+\end{verbatim}
+
+  \vspace{10pt}\pause
+  {\em this is an expensive operation}
+\end{frame}
+
+
+
 \begin{frame}[fragile]{why use lists}
 
 Represent the following information using ether a list or tuple:
@@ -122,7 +157,7 @@ Represent the following information using ether a list or tuple:
 \pause \item a playing card: ace of club, king of hearts etc 
 \pause \item a stack of playing cards
 \pause \item 1001 movies to see before you die
-\pause \item a million things you should do, in order
+\pause \item a "bucket list" of  things to do
 \end{itemize}
 
 \pause\vspace{20pt}
@@ -130,7 +165,6 @@ Represent the following information using ether a list or tuple:
 \end{frame}
 
 \begin{frame}[fragile]{what about queues}
-
 
   How do we implement a {\em queue}?
 
