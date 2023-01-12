@@ -5,6 +5,7 @@ DIRS =  avl \
 	dynamic \
 	emulator \
 	environment \
+	hanoi \
 	higher \
 	huffman \
 	interpreter \
