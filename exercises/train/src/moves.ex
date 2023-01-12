@@ -1,5 +1,11 @@
 defmodule Moves do
 
+
+  def sequence([], state) do [state] end
+  def sequence([move|rest], state) do 
+    [state | sequence(rest, single(move, state))] 
+  end  
+  
   def single({_, 0}, state)  do state end
 
   def single({:one, n}, {main, one, two}) when n > 0 do

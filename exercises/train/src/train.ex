@@ -17,5 +17,12 @@ defmodule Train do
 
   def position([y|_], y) do 1 end
   def position([_|t], y) do position(t, y) + 1 end  
+
+  def split(train, y) do
+    n = position(train, y)
+    {take(train, n-1), drop(train, n)}
+  end
+
   
 end
+
