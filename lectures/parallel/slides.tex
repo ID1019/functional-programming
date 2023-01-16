@@ -1,4 +1,4 @@
-\input{../include/preamble}
+\input{../include/preamble.tex}
 
 \title[ID1019 Parallel programming]{Parallel programming}
  
@@ -100,11 +100,11 @@ What language support do we have:
 \begin{columns}
  \begin{column}{0.5\linewidth}
 \begin{verbatim}
-def fib(0) do 0 end
+def fib(0) do 1 end
 def fib(1) do 1 end
 def fib(n) do
-   f1 = fib(n-1),
-   f2 = fib(n-2),
+   f1 = fib(n-1)
+   f2 = fib(n-2)
    f1 + f2
 end
 \end{verbatim}
@@ -112,7 +112,7 @@ end
 \pause
  \begin{column}{0.5\linewidth}
 \begin{verbatim}
-def fib(0) do 0 end
+def fib(0) do 1 end
 def fib(1) do 1 end
 def fib(n) do
    f1 = spawn(fn() -> fib(n-1) end)
@@ -134,7 +134,7 @@ end
 \begin{columns}
  \begin{column}{0.5\linewidth}
  \begin{verbatim}
-def fib(0) do 0 end
+def fib(0) do 1 end
 def fib(1) do 1 end
 def fib(n) do
    r1 = make_ref()
@@ -216,7 +216,7 @@ def fix(n, _) do fib(n) end
 \begin{frame}[fragile]{finding the granularity}
 
 \begin{verbatim}
-> Fib.bench(40,20).
+> Fib.bench(40,20)
 fib(40)  sequential: 7000 ms
 fix(40,38) : 2900 ms
 fix(40,36) : 1100 ms
@@ -247,7 +247,7 @@ ok
 \pause
 \begin{column}{0.5\linewidth}
 \begin{verbatim}
-> Fib.bench(40,20).
+> Fib.bench(40,20)
 fib(40)  sequential: 7000 ms
 fix(40,38) : 0 ms
 fix(40,36) : 0 ms
@@ -377,7 +377,7 @@ reduce the color depth of the image.
 \begin{columns}
  \begin{column}{0.5\linewidth}
 \begin{verbatim}
-> Test.batch().
+> Test.batch()
 reading in  118 ms 
 gray in      66 ms 
 reduce in    66 ms 
@@ -404,17 +404,17 @@ total in    349 ms
 \begin{frame}[fragile]{benchmark}
 
 \begin{verbatim}
-> Test.stream().
+> Test.stream()
 reading turning gray, reducing and writing in 260 ms 
 \end{verbatim}
 \pause
 \begin{verbatim}
-> erlang:system_flag(schedulers_online, 2). 
+> :erlang.system_flag(:schedulers_online, 2)
 1
 \end{verbatim}
 \pause
 \begin{verbatim}
-> Test.stream().
+> Test.stream()
 reading turning gray, reducing and writing in 161 ms 
 \end{verbatim}
 

@@ -33,9 +33,11 @@ defmodule Server do
     start(width, height, x0, y0 , k, depth, "forest.ppm") 
   end  
   
-  # The start/7 process will start a mandel server and a print process.
+  # The start/7 process will start a mandel server (registered under :mandel) and a print process.
   def start(width, height, x, y, k, depth, file) do
-    {:ok, spawn(fn -> init(width, height, x, y, k, depth, file) end)}
+    pid = spawn(fn -> init(width, height, x, y, k, depth, file) end)
+    Process.register(pid, :mandel)
+    :ok
   end
 
   defp init(width, height, x, y, k, depth, file) do

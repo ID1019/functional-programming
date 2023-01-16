@@ -25,7 +25,7 @@
     \large{Programming II - Elixir Version}
 }
 \author{Johan Montelius}
-\date{Spring Term 2018}
+\date{Spring Term 2023}
 \maketitle
 \defaultpagestyle
 
@@ -77,6 +77,7 @@ an interpreter for a subset of the Elixir language. Since it is not the
 complete language it is not a true meta-interpreter but it's close.
 
 \subsection{Expressions}
+
 Our target programming language is a limited functional language and
 in its first incarnation it will be limited to simple expressions; We
 will not have any function calls nor any program with function
@@ -110,6 +111,7 @@ sequence in the following way:
 \end{figure}
 
 \subsection{Terms, data structures and patterns}
+
 Expressions of the form that we have just described are also referred
 to as {\em terms}. We will later see examples of expression that are
 more complicated and we will talk about expressions in general and
@@ -155,6 +157,7 @@ without confusion is that it is clear from the grammatical rules of the
 language if we refer to a pattern or a term. 
 
 \subsection{Evaluation}
+
 Our interpreter will take a sequence and evaluate the pattern matching
 expressions one after the other; the result of the last expression is
 the result of the whole sequence. When the evaluation starts the
@@ -240,13 +243,13 @@ Env.lookup(:foo, Env.add(:foo, 42, Env.new()))
 Note that Elixir will write a list of binary tuples in a special
 way. It is so common that we work with key-value where the ``key'' is
 an atom that Elixir uses a special syntax. The list {\tt [\{:x, 12\},
-  \{:y, 13\}]} will be written {\tt [x: 12, y: 13]}. You also use this
-for when you enter key-value list, it will save you some typing.
+  \{:y, 13\}]} will be written {\tt [x: 12, y: 13]}. You can also use this
+syntax when you enter a key-value list, it will save you some typing.
 
 \subsection{Terms and patterns}
 
 If we only needed to represent terms consisting of atoms and
-cons-cells, things would be trivial. The term {\tt \{:a, :b\}} could
+cons cells, things would be trivial. The term {\tt \{:a, :b\}} could
 simply be represented by the Elixir term {\tt \{:a, :b\}}. The problem
 is that we also need to represent variables. We will of
 course not be able to represent a variable in our target language with
@@ -261,12 +264,14 @@ atom could of course have the same identifier as a variable with out
 causing any problems; the atom {\tt \{:atm, 123\}} is different from
 the variable {\tt \{:var, 123\}}.
 
-A cons cell could be represented by a tuple {\tt \{:cons, head,
-  tail\}}. We could of course have chosen to represent cons cells as
-Elixir cons cells but we want to make a distinction between the
-representation of terms in our target language and terms in Elixir (our
-target language now happens to be Elixir look-alike but that is of
-course not always the situation).
+A cons cell ( in Elixir we would write {\tt [ head \textbar\ tail ]}
+but in this limited language we are talking about a binary tuple {\tt
+  \{head, tail\}} ) could be represented by a tuple {\tt \{:cons,
+  head, tail\}}. We could of course have chosen to represent cons
+cells as Elixir cons cells but we want to make a distinction between
+the representation of terms in our target language and terms in Elixir
+(our target language now happens to be Elixir look-alike but that is
+of course not always the situation).
 
 As an exercise you can write down the representation of the term:
 

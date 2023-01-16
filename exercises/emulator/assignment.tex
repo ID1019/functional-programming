@@ -46,8 +46,8 @@ In this exercise we will combine your knowledge of assembly
 programming and functional programming to implement an emulator for a
 subset of MIPS assembler. You should have a basic understanding of
 assembly programming but we will not do very advanced programming so
-no need to know all instructions by heart. The idéa here is not to
-imlpement a complete emulator but to see how we can implement it in
+no need to know all instructions by heart. The idea here is not to
+implement a complete emulator but to see how we can implement it in
 Elixir.
 
 
@@ -55,9 +55,9 @@ Elixir.
 
 We will only implement a small subset of the MIPS instruction set. If
 we can emulate one arithmetic operation I think we could easily extend
-the emulator to handle all. The subset is however choosen to cover the
+the emulator to handle all. The subset is however chosen to cover the
 various forms of instructions: arithmetic, load and store, branching
-etc. We will also inlcude some non-mips insructions that might be fun
+etc. We will also include some non-MIPS instructions that might be fun
 to have when we run our programs.
 
 
@@ -65,135 +65,139 @@ These are the instructions that we will implement:
 
 \begin{itemize}
 \item {\tt add \$d \$s \$t} : add the values of register {\tt \$s} and {\tt \$t} and place result in {\tt \$d}.
-\item {\tt  sub \$d \$s \$t} : subtract the values of register {\tt \$s} and {\tt \$t} and place result in {\tt \$d}.
-\item {\tt addi \$d \$t imm} : add the values of register {\tt \$t} and the immediat value {\tt imm} and place result in {\tt \$d}.
-\item {\tt lw \$d offset(\$t)} : load the value found at adress {\tt offset + \$t} and place it in {\tt \$d}.
-\item {\tt sw \$s offset(\$t)} : store the value in register {\tt \$s} at adress {\tt offset + \$t}. 
+\item {\tt sub \$d \$s \$t} : subtract the values of register {\tt \$s} and {\tt \$t} and place result in {\tt \$d}.
+\item {\tt addi \$d \$t imm} : add the values of register {\tt \$t} and the immediate value {\tt imm} and place result in {\tt \$d}.
+\item {\tt lw \$d offset(\$t)} : load the value found at address {\tt offset + \$t} and place it in {\tt \$d}.
+\item {\tt sw \$s offset(\$t)} : store the value in register {\tt \$s} at address {\tt offset + \$t}. 
 \item {\tt beq \$s \$t offset} : branch to {\tt pc + offset} if values at {\tt \$s} and  {\tt \$t} are equal.
 \end{itemize}
 
 
-We will also implement the two following instrucktions that do not
+We will also implement the two following instructions that do not
 have any corresponding machine instructions but are very handy for our
 implementation.
 
 \begin{itemize}
-\item {\tt halt} : halt the execution (normally implemented as an enless loop but we will actually stop)
+\item {\tt halt} : halt the execution (normally implemented as an endless loop but we will actually stop)
 \item {\tt out \$s} : output value at register location {\tt \$s}.
 \end{itemize}
 
 When you normally write assembly programs you of course use an editor
-nd write you programs in a text file. A program could for example
+and write you programs in a text file. A program could for example
 look like this:
 
-
 \begin{verbatim}
-	.text 	
+        .text   
 main:
-	li $t2, 42		# load 42 into reg $t2 
-	lw $t3, value		# load the word stored at address value into reg $t3
-	add $t4, $t2, $t3	# add $t2 and $t3, place result in $t4
-	sw $t4, result		# Store the answer at address result
+         addi $1  $0  5       # $1 <- 5 
+         lw   $2  $0  arg     # $2 <- data[arg]
+         add  $4  $2  $1      # $4 <- $2 + $1
+         addi $5  $0  $1      # $5 <- 1
+loop:    sub  $4  $4  $5      # $4 <- $4 - $5
+         bne  $4  $0  loop    # branch if not equal
 
-loop:   j loop
+        .data
 
-	.data
-
-value:	.word 37
-
-result 	.word 0
+arg:    .word 12
 \end{verbatim}
 
 We could write a parser that would read a file and represents the
 program in a suitable data structure for our emulator but we will skip
-this step and start from a resonable data strucure that represents the
-program. We will represent our program in two structures, one that
-holds the data and one that holds the program. This is not really how
-things work but it's fine for our needs and it make things easier.
+this step and start from a reasonable data structure that represents
+the program. We will represent our program in two structures, one that
+holds the code and one that holds the data. This is not really how
+things work but it's fine for our needs and it makes things easier.
 
 The program will be a list of instructions where each instruction is a
-tuple hodling the name of the instruction and its arguments. The
+tuple holding the name of the instruction and its arguments. The
 program above could be represented by the following list:
 
 \begin{verbatim}
- [{:li, :t2, 42},
-  {:lw, :t3, 0},            # value will be at data address 0
-  {:add, :t4, :t2, :t3},
-  {:sw, :t4, 4},            # result will be at data address 4
-  {:j, -4}]                 # pc is allready pc+4 when we instruction is executed
+  [{:addi, 1, 0, 5},     # $1 <- 5 
+   {:lw, 2, 0, :arg},    # $2 <- data[:arg]
+   {:add, 4, 2, 1},      # $4 <- $2 + $1
+   {:addi, 5, 0, 1},     # $5 <- 1
+   {:label, :loop},
+   {:sub, 4, 4, 5},      # $4 <- $4 - $5
+   {:out, 4},            # out $4
+   {:bne, 4, 0, :loop},  # branch if not equal
+   :halt]
 \end{verbatim}
 
-The data segment will in the sam way be represented as a sequence of
-value but we make it a bit flexible and present it as a sequence of
-segments, each with an initial address. We will make life a lot easier
-for us and limit memory operations to full word operations i.e. 4
-bytes. So the following would be the representation of a data area
-with one segment starting at address 0 holding two words of data.
+We have added two extra instructions: {\tt :out} that will be used for
+output and {\tt :halt} that will terminate the execution.
+
+The data segment will in the same way be represented as a sequence of
+labels and values.
 
 \begin{verbatim}
-  [ {0, [37, 0]} ]
+  [ {:label, :arg}, {:word, 12} ]
 \end{verbatim}
 
-The data structures now presented are how the program and data area
-are presented to us. These structures might not be the best structures
-for our puproses but that is one of our first tasks of our
-implementation, find a suitable representation of this data.
+We combine the code segment and data segments into one tuple and this
+is what we will call a program in this tutorial.
+
+\begin{verbatim}
+ {:prgm,  code(), data()} 
+\end{verbatim}
+
+This data structure is how the program is presented to us. The
+structure might not be the best structures for our purposes but that
+is one of our first tasks of our implementation, find a suitable
+representation that we can work with. 
 
 \section{The implementation}
 
 We start by doing an overall design of the system. This will give us
-insight into which moduels we will need an how data best is
+insight into which modules we will need an how data best is
 represented.
 
 \subsection{the state of the computation}
 
-The fisrt thning we should think through is what the state of the
+The first thing we should think through is what the state of the
 computation is. The program itself is of course part of the state but
 since we have separated the code from the data the code part is
 static. We will only read from the code using a {\em program
-  counter}. The program counter is thus somethning that is part of the
+  counter}. The program counter is thus something that is part of the
 state and it will of course change during the execution. The most
 normal operation is that the program counter is incremented by 4 to
 index the next instruction but it could also be set by a branch or
 jump instruction.
 
-The memmory is of course also part of the state and it will of course
+The memory is of course also part of the state and it will of course
 change with each store operation. We should be able to index it using
 addresses and let's assume that we only use addresses aligned by 4
 bytes (you could change this later and allow for byte addressing). So
-give that we should both be able to read from and write to this data
-structure we might choose somthing different from the code area.
+given that we should both be able to read from and write to this data
+structure we might choose something different from the code area.
 
 The final state of the computation are the registers of the CPU. In a
 MIPS architecture we have 32 general purpose registers (well, register
 0 always holds the value 0) but the MIPS assembler language has a
 convention of usage. Register 28 is pointing to the data area, 29 is
-used as a stackpointer, 30 as the frame base pointer etc.
-
-In the code example above we saw registers called {\tt \$t4} and these
-are temporary registers that are not preserved across a function
-call. Registers that are preserved are called {\tt \$s0}, {\tt \$s1}
-etc. How regsiters should be used is of course very important for the
-programmer or for the developer of the assembler but it is nothing
-that we need to consider. We should simply execute the instructions
-give to us so for all that we care we could view them as 32 general
-purpose registers (aprt from register 0).
+used as a stack pointer, 30 as the frame base pointer etc. For our
+purposes the registers are all the same (apart from register zero).
 
 
 \subsection{the execution}
 
 When we start our emulation we will have a code area where we can read
 the next instruction referred to by the program counter. We will
-retreive the instruction, interpret it, possibly modify registers
+retrieve the instruction, interpret it, possibly modify registers
 and/or memory and then determine how to update the program
 counter. Let's give it a try:
 
 \begin{minted}{elixir}
-
   defmodule Emulator do
-  
+
+  def run(prgm) do
+     {code, data} = Program.load(prgm)
+     reg = Registers.new() 
+     run(0, code, reg, data)
+  end
+
   def run(pc, code, reg, mem) do
-    next = Program.read(code, pc)
+    next = Program.read_instruction(code, pc)
     case next do
 
       :halt ->  
@@ -203,7 +207,7 @@ counter. Let's give it a try:
          pc = pc + 4
          s = Register.read(reg, rs)
          t = Register.read(reg, rt)
-         reg = Register.write(reg, rd, s + t) # well, almost
+         reg = Register.write(reg, rd, s + t)  # well, almost
          run(pc, code, reg, mem)
       
        :
@@ -217,235 +221,89 @@ should be represented as two's complement etc. This is not the course
 of data architecture, we're only doing this for fun.
 
 It should be rather simple to complete this piece of the
-emulator. Load and store instructions will simply us a Memory module
+emulator. Load and store instructions will simply us a module
 that does the right thing and branch and jump instructions are simple.
 
+\subsection{the output}
 
-We add one thing that will collect the output generated from the {\tt
-  out} instruction. Let's keep keep the details hidden in a module. We
-also add a more convient way of calling the emulator, the registers
-are after all cleared when we start and let's always start with the
-program counter set to zero.
+The {\tt :out} instruction could of course echo the value of the
+register in the terminal but let's add a feature that collects the
+output in a list that is returned when the program terminates. We can
+hide the details of how things are done in a separate module that
+takes care of everything.
 
 
 \begin{minted}{elixir}
-  def run(code, mem, out) do
-     reg = Register.new() 
-     run(0, code, reg, mem, out)
+  defmodule Emulator do
+
+  def run(prgm) do
+     {code, data} = Program.load(prgm)
+     out = Out.new()
+     reg = Registers.new() 
+     run(0, code, reg, data, out)
   end
 
+
   def run(pc, code, reg, mem, out) do
-    next = Program.read(code, pc)
+    next = Program.read_instruction(code, pc)
     case next do
  
-       :halt ->
-          Out.close(out)
+     :halt ->
+        Out.close(out)
     
-       {:out, rs} ->
+
+      {:out, rs} ->
          pc = pc + 4
          s = Register.read(reg, rs)
          out = Out.put(out, s)
-         run(pc, code, reg, mem, out)
+         run(pc, code, reg, mem, out)          
 
        :
- \end{minted}
 
- That's it, all we have to do now is implement the supporting modules.
-
- \subsection{the program}
-
- The decission to separate the code from the general data segment was
- not something that happend by accident. Since we know that the code
- will not change we can focus on finding a representation that gives
- us fast access. One could of course represent the sequence of
- instructions as they are given to us i.e. as a list. This would work
- but it would certainly have its drawbacks.
-
- \begin{minted}{elixir}
-   def read(code, pc) do
-      Enum.at(code, pc)
-   end
- \end{minted}
-
- Looks ok - but what is done everytime we request an instruction?
-
- Since we're not really accessing instructions randomly we could
- rewrite our emulator to work directly on a list of instructions. In
- nine cases out of ten we will step to the next instruction so we could do as follows:
-
- \begin{minted}{elixir}
-   def emulate([instr|rest], reg, mem, out) do
-
-     case instr do
-        :
-        
-      {:add, rd, rs, rt} ->
-          :
-          :
-       emulate(rest, reg, mem, out)
-
-        :
-    end
-  end
- \end{minted}
-
- This would work as long as we move forward but how do we implement a
- branch or jump instruction? One way would be to have an extra
- argument that was the complete code and then use this when we
- jump. This would still be expensive when we jump but it's a better
- solution than we had before.
-
- One interesting solution would be to have branch and jump
- instructions to hold a reference to the code segment that we should
- jump to. Take a look at the following representation of a program.
-
- \begin{minted}{elixir}
-
-   def demo() do
-
-      label = [{:add, :t2, :t0, :t3},
-                :
-                :
-               :halt ]  
-      [{:lw, :t2, 123},
-          :
-       {:beq, :t3, :t5, label},
-          :
-          :
-       | label]
-   end
- \end{minted}
-
- If code was represented in this way (and we would have to arrange it
- in this way) the branch instruction would be a piece of cake to implement.
-
-\begin{minted}{elixir}
-   def emulate([instr|rest], reg, mem, out) do
-
-     case instr do
-
-       {:beq, rd, rs, imm} ->
-         s = Register.read(reg, rs)
-         t = Register.read(reg, rt)
-         next = if d == t do imm else rest end
-         emulate(next, reg, mem, out)
-
-      :
-    end
-  end
- \end{minted}
- 
- This is so beautiful, ... it's just that.... what is the problem?
-
- Let's try something differently; this is the boring solution but very
- efficient. Since we know that we will only read from the code segment
- and we will use an integer as an index we might as well represent the
- code as a tuple.
-
- \begin{minted}{elixir}
-   defmodule Program do 
-
-     def assemble(prgm) do
-        {:code, List.to_tuple(prgm)}
      end
-
-     def read({:code, code}, pc) do elem(pc, code) end
-   
-   end
-\end{minted}
- 
-We are given the code as a list of instructions and simply convert it
-to a tuple. Tuples in Elixir are zero indexed so we even have the
-right addresses with out doing anything. There is a limitation on how
-large tuples can be but if you look it up you will realize that it's
-not a problem today. Why the detour of going through the solution
-using a list you may ask but we're here to explore alternatives and
-learn some Elixir programming, not copy a solution.
-
-\subsection{the registers}
-
-The registers are named things like: {\tt :zero}, {\tt :at}, {\tt
-  :v0}, {\tt :v1} etc. A list of tuples would work but this would give
-us a linear access time. This is not all that problematic since there
-are few and fixed number of registers. The implementation is simple
-and we even have library functions do to the work for us
-
-\begin{minted}{elixir}
-  defmodule Register do
-
-    def new() do [] end
-
-    def read(reg, key) do
-       {key, val} = List.keyfind(reg, key, 0, {key, 0})
-        val
-    end
-
-    def write(reg, :zero) do reg end
-    def write(reg, key, val) do List.keystore(reg, key, 0, {:key, val}) end
-
   end
 \end{minted}
 
-Since we know that we are working with a key-value stire we might of
-course use the library that is optimised for this. Let's create a map
-and use this as the see what it would look like.
+ That's it, all you have to do now is implement the supporting modules and you have a MIPS emulator up and running.
 
-\begin{minted}{elixir}
-  defmodule Register do
+ \section{Your implementation}
 
-    def new() do %{}end
+ There are four modules that you need to implement, three supporting
+ modules and then the emulator itself. Start with the supporting
+ modules and test them before you implement the final solution. These
+ are the modules:
 
-    def read(reg, key) do  Map.get(reg, key, 0) end
+ \begin{itemize}
+  \item{\tt Program:} The module should be able to create a code
+   segment and a data segment given a program description. It should
+   provide functions to read from the code segment and both read and
+   write to a data segment.
 
-    def write(reg, :zero) do reg end
-    def write(reg, key, val) do Map.put(reg, key, val) end
+  \item{\tt Register:} The register module should handle all operations for
+   the registers: create a new register structure and, read and write to
+   individual registers.
 
-  end
-\end{minted}
+ \item{\tt Out:} The module should collect the output from the
+   execution and be able to return it as a list of integers. 
 
-Which one is more efficientyou may ask bbut before we try to answers
-that question we will look at a thirs alternative. This alternative is
-based on the fact that the keys of the regsiters are not arbitrary
-key. We know that the keys are only a convient way of expressing the
-numbers 0 to 31; there are only 32 registers.
+ \item{\tt Emulator:} This module is the heart of the system. It
+   should be able to take a program, transform it to a code and data
+   segment and then execute the program and return the output.
+ \end{itemize}
 
-What if we could change our code in a way that the instructions use
-integers as a reference to registers instead of atoms. This would
-allow us to, as with the code, have direct access to the values. We
-simply use the buil-in functions {\tt elem/2} and {\tt put\_elem/3} and
-we're up and running.
-
-\begin{minted}{elixir}
-  defmodule Register do
-    def new() do
-      {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-    end
-  
-    def read(reg, i) do elem(reg, i) end
-
-    def write(reg, 0, _) do reg end
-    def write(reg, i, val) do put_elem(reg, i, val) end  
-  end
-\end{minted}
-
-So, now we have three alternatives: a list, a map and a tuple. Which
-one is more efficient? Does it depend on the access pattern? How do we find out?
-
-\subsection{the memory}
-
-So now we come to the memory and now of course we know what
-alternatives we have. We know that the memory will be accessed using
-an integer as a reference. This might lead us to a solution similar to
-the code area but there is of course a huge difference. We will
-constantly read and write to the memory and a tuple is expensive to
-update. The only reason we still considered it when implementing the
-registeres was that there where few and fixed number of registers. The
-memory could be very large and we don't know from start how large.
+ The different modules all handle a state but the requirements on
+ these states are different. The code segments only needs to provide a
+ quick lookup operation given a program counter but does not have to
+ care about changing the code itself. The data segment should of
+ course be easy both to read and write to and the same goes for the
+ registers. The difference between the data segment and the register is
+ that the register is of a fixed and fairly small size. The output
+ structure should support incremental writing but no reading, apart
+ from when the list is returned. These differences should be taken
+ into account in you implementation, choose a data structure that is
+ suitable in each case.
 
 
-
-
- \subsection{the }
 
 
 

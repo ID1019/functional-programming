@@ -42,7 +42,7 @@
 \maketitle
 \defaultpagestyle
 
-\section*{Introduction}
+\section{Introduction}
 
 In this exercise we will combine your knowledge of computer
 architecture and concurrent programming to implement an emulator of a
@@ -60,7 +60,7 @@ studied their description you should do so before starting with the
 implementation, this is not a tutorial of the MIPS architecture.
 
 
-\subsection*{high-level design}
+\subsection{high-level design}
 
 We will divide the processor into five units, each unit will be
 implemented as an Elixir process and the data-paths will be Elixir
@@ -82,12 +82,12 @@ The units, which will also be Elixir modules, are:
   result to the memory unit.
 
 \item {\bf Memory} : handles load and store operation and in the case
-  of a store passes the read value to the register unit.
+  of a load, passes the read value to the register unit.
 
-\item {\bf Branch} : decides which instruction to
-  execute next. In the beginning this is simply the next instruction
-  but when we introduce branch and jump instructions this unit will
-  have more things to do.
+\item {\bf Branch} : decides which instruction to execute next. In the
+  beginning this is simply the next instruction ({\em program counter
+    + 4}) but when we introduce branch and jump instructions this unit
+  will have more things to do.
 
 \item {\bf Controller} : the brain of the CPU, will receive the op
   codes from the instruction unit and direct the other units what to do.
@@ -95,27 +95,35 @@ The units, which will also be Elixir modules, are:
 \end{itemize}
 
 In Fig.\ref{fig:flow} we see an overview of the CPU with the primary
-data flow. We have all units but the control unit, to simplify the
-image. The Instruction unit will fetch the next instruction and send the
+data flow. To simplify the image the messages from the control unit
+to the other units are not drawn.
+
+The execution will always start by a message from the branch unit to
+the instruction unit. The message contains the value of the program
+counter from which address the next instruction should be fetched.
+
+The instruction unit will fetch the next instruction and send the
 register identifiers to the register unit. It will also send a
-possible immediate value directly to the ALU and an incremented
-program counter to the branch unit.
+possible immediate value directly to the ALU and the branch
+unit. These immediate values might be used depending on the
+instruction but it is not up to the instruction unit to decide.
 
 The register unit will send the content of the registers to the ALU
-unit but also pass one value directly to the memory unit.  This will
+unit but also pass one value directly to the memory unit. This will
 typically be a value that should be stored. The ALU does its
 computation and sends the result, and address, to the memory unit. It
 will also send a message to the branch unit describing the outcome of
 the operation i.e. if it was zero or not.
 
-The memory unit will, if it is a load instruction that is executed,
+The memory unit will either store a value in memory or load a value
+from memory. If it is a load instruction that is executed, it will
 send the retrieved value back to the register unit. The register unit
 will then store it in one of the registers.
 
-The branch will receive both the incremented program counter from
-the instruction unit and a value from the register unit. Depending on the
-instruction, and the outcome of the ALU operation, the next code
-address is selected and sent to the instruction unit.
+The branch unit will receive both an immediate value from the
+instruction unit and a value from the register unit. Depending on the
+instruction, and the outcome of the ALU operation, the program counter
+is updated.
 
 
 \begin{figure}
@@ -128,17 +136,22 @@ address is selected and sent to the instruction unit.
 \node[unit]    (alu)       [right=of reg]   {ALU};
 \node[unit]    (mem)       [right=of alu]   {Memory};
 \node[unit]    (brn)       [above=of alu]   {Branch};
-
+\node[unit]    (ctrl)       [below=of reg]   {Controller};
 %Lines 
-\draw[->] (instr.east) -- (reg.west);
+\draw[->, dash dot] (instr.east) -- (reg.west);
+\draw[->, dashed] (instr.south) .. controls +(down:1cm) and +(left:1cm) ..  (ctrl.west);
+
 \draw[->] (reg.east) -- (alu.west);
+
 \draw[->] (alu.east) -- (mem.west);
-\draw[->] (alu.north) -- (brn.south);
+\draw[->, dashed] (alu.north) -- (brn.south);
+
 \draw[->] (instr.north) .. controls +(up:1cm) and +(left:1cm) .. (brn.west);
 \draw[->] (instr.south) .. controls +(down:1cm) and +(down:1cm) .. (alu.south);
 
 \draw[->] (reg.south) .. controls +(down:1cm) and +(down:1cm) .. (mem.south);
-\draw[->] (brn.north) .. controls +(up:2cm) and +(left:3cm) .. (instr.west);
+
+\draw[->, dash dot] (brn.north) .. controls +(up:2cm) and +(left:3cm) .. (instr.west);
 \draw[->] (mem.north) .. controls +(up:1cm) and +(up:1cm) .. (reg.north);
 
   \end{tikzpicture}
@@ -151,33 +164,38 @@ normally described as two units, one main controller and a separate
 ALU controller. We will combine these into one unit; nothing is gained
 by separating them.
 
+In addition to the units described we will have one {\em output
+  unit}. In order to write small programs that actually returns a
+result more than an updated memory, the ALU can be directed to send
+values to the output. The output unit can either echo these values to
+the terminal and/or save them and return them as a result of the
+computation.
 
-\subsection*{signals as messages}
+\subsection{signals as messages}
 
 When you see the regular description of the CPU architecture you will
-see how for example the Instruction unit sends three different signals to
-the Register unit: read 1, read 2 and write register. We will
+see how for example the instruction unit sends three different signals to
+the register unit: source register, target register and destination register. We will
 implement this in one message. The register unit will in the same way
 pass two values to the ALU i one message.  Our implementation is thus
 more focused on which information that is passed between the units
 rather than how this would realized in a hardware implementation.
 
-\subsection*{the program}
 
-We will make things a bit easier by separating the code from the main
-memory. In real life, the code is of course in the main memory but it
-makes things easier if we keep them in two different data
-structures. The only limitations that this will mean is that 1/ we
-will not be able to change the code during execution and 2/ we can not
-use the program counter as a base address when accessing data.
+\subsection{the program}
+
+In this implementation we will make things a bit easier by separating
+the code from the main memory. In real life, the code is of course in
+the main memory but it makes things easier if we keep them in two
+different data structures. The only limitations that this will mean is
+that 1/ we will not be able to change the code during execution and 2/
+we can not use the program counter as a base address when accessing
+data.
 
 The first limitation is something we can live with, few programs write
 to the code segment anyway. The second limitation could be a problem but
-not in the MIPS architecture. The only instructions that operate
-relative to the program counter is the branch and jump
-instructions. These instruction do not read from the main memory but
-only change the program counter and we will be able to handle
-this.
+not in the MIPS architecture; there are no instructions that operate
+relative to the program counter.
 
 Since we will not write to the code area we can implement this with a
 data structure that maximize read performance. The main memory
@@ -189,10 +207,10 @@ description of a program and returns the {\em code} and {\em data}
 structures.
 
 
-\subsection*{the controller}
+\subsection{the controller}
 
 The Controller is of course the heart of the system. It will receive
-one message from the instruction unit with the op code and ALU function
+a message from the instruction unit with the op code and ALU function
 code. It then determines what the different units should do and sends
 the corresponding signals. This is how the units can be directed:
 
@@ -200,26 +218,26 @@ the corresponding signals. This is how the units can be directed:
 
 \item {\bf Register} : the register unit can proceed and send the two
   values to the ALU but must then know if it should store the value
-  returned from the Memory unit and which register to store it in.
+  returned from the memory unit and which register to store it in.
 
 \item {\bf ALU} : the ALU must of course know which operation to
   perform but it must also know it it should use both values from the
-  Register unit or if it should use the immediate value from the
-  Instruction unit.
+  register unit or if it should use the immediate value from the
+  instruction unit.
 
 \item {\bf Memory} : the memory unit must know if it should perform a
   load, store or no-op. If it is a load instruction the read value
-  should be returned to the Register unit. If it is a store operation
+  should be returned to the register unit. If it is a store operation
   it does not matter what it outputs (but it must send a value)
   otherwise it sends the value it received from the ALU.
 
 \item {\bf Branch} : the branch unit needs to know if the operation is a
   branch or jump instruction in order to determine how to select the
-  next program counter.
+  next program counter; increment by four or jump.
   
 \end{itemize}
 
-\subsection*{asynchronous pipeline}
+\subsection{asynchronous pipeline}
 
 One thing that we have not mentioned is how to time things, where is
 the clock pulse and when should units proceed. The answer is that the
@@ -227,12 +245,12 @@ design is asynchronous and a unit can proceed as soon as it has the
 available information.
 
 Asynchronous does not mean chaos so we need to think about how this
-should work. One example where things could go wrong is if the Next
+should work. One example where things could go wrong is if the branch
 unit decides to send the next program counter to the Instruction unit
 since it knows it's not a branch instruction being executed - why wait
 for the ALU if the zero information is not needed? The problem is if
 the next instruction is a branch instruction and the zero message from
-the previous instructions is read. We need a way to keep things
+the previous instructions is read; we need a way to keep things
 synchronized even though messages are sent asynchronous. 
 
 To make this work we first of all rely on the ordered delivery of
@@ -246,7 +264,7 @@ To visualize the communication protocol we draw a sequence diagram. In
 Fig.~\ref{fig:seq} we see all of the messages that are sent during one
 instruction cycle. All of these messages should be sent and a unit
 needs to receive them all. Note that the diagram only shows the
-logical time relations. The Register unit can not send the values $vs$
+logical time relations. The register unit can not send the values $vs$
 and $vt$ before receiving the register numbers from the Instruction
 unit. However, nothing prevents the immediate value from the
 Instruction unit to reach the ALU unit before the $va$ and $vt$
@@ -255,7 +273,6 @@ first send the values to the ALU before sending the value to the
 memory unit but this order is not important. Messages can take
 arbitrary long time and as long as we're not sending two messages to
 the same receiver, the order is irrelevant. 
-
 
 \begin{figure}
   \centering 
@@ -316,7 +333,11 @@ the register unit and the next program counter from the branch unit to
 the instruction unit. It turns out that we need to do a trick to get
 this circular structure working, not a big deal but now you know.
 
-\subsection*{instructions}
+If you have not done so yet you should now pick up a description on
+the MIPS architecture and go through the sequence diagram above. You
+need to know what these signals mean and what the intended meaning is.
+
+\subsection{instructions}
 
 We will not implement the whole MIPS instruction set, only a hand full
 of instructions. In the following description, register numbers are
@@ -359,9 +380,9 @@ We will go through the implementations module by module and first look
 at the {\tt Program} module.
 
 
-\section*{The program module}
+\section{The program module}
 
-The {\tt Program} module will handle all aspects of the code and data:
+The {\tt program} module will handle all aspects of the code and data:
 how we initialize it from a program and how the instruction and memory
 units can access it. Let's describe what the program module should do
 with an example.
@@ -375,41 +396,40 @@ the {\em jump} instruction yet so we encode the unconditional jump by
 a {\em beq} instruction. 
 
 \begin{minted}{elixir}
-  def hello() do
     {:prgm, 
-     [{:ori, 1, 0, :hello},    # this is only 16 bits but it's ok 
+     [{:ori, 1, 0, :hello},    # set $0 to start of the string
       {:label, :loop},
-      {:lb, 2, 1, 0},
-      {:beq, 2, 0, :done},
-      {:out, 2},
-      {:addi, 1, 1, 1},
-      {:beq, 0, 0, :loop},
-      {:label, :done},
-      :halt
+      {:lb, 2, 1, 0},          # load byte from $0+$1 and place in $2
+      {:beq, 2, 0, :done},     # if $2 is zero we're done
+      {:out, 2},               # output the byte in $2
+      {:addi, 1, 1, 1},        # increment $1 
+      {:beq, 0, 0, :loop},     # jump to :loop
+      {:label, :done},         
+      :halt                    # done
      ],
      [{:label, :hello},
-      {:asciiz,'hello'}]
+      {:asciiz,'hello'}]       # zero terminated string
     }
   end
 \end{minted}
 
-The Program module will take a program on the form above, resolve the
+The program module will take a program on the form above, resolve the
 labels, encode the code and data segments and return it in a
 tuple. The code and data segments can then be passed to the instruction
 unit and memory units.
 
 \begin{itemize}
-\item {\tt load(program() :: \{code(), data()\}} : return the encoded program as two structures, code and data
+\item {\tt load(program()) :: \{code(), data()\}} : return the encoded program as two structures, code and data
 \end{itemize}
 
-\subsection*{the code segment}
+\subsection{the code segment}
 
 There are a few things we need to decide here. We have decided that
 the code segment can only be read from, not written to, and this is
 something that we can make use of. The segment can be represented as a
 tuple to give us quick and easy read access. Since instructions are
-only read a 4 byte aligned addresses we simply take the program
-counter and divide it with four before indexing the tuple.
+only read at 4 byte aligned addresses we simply take the program
+counter and divide it by four before indexing the tuple.
 
 \begin{itemize}
 \item {\tt read\_instruction(code(), pc()) :: instruction()} : return the  instruction given the program counter
@@ -428,46 +448,76 @@ divide the bits into segments and forward them to the other units.
 The code segment of the "Hello World" example could look like this:
 
 \begin{minted}{elixir}
-  {<< 52,   1,   0,   0>>,
-   <<128,  34,   0,   0>>,
-   << 16,  64,   0,  12>>, 
-   <<248,  64,   0,   0>>,
-   << 32,  33,   0,   1>>, 
-   << 16,   0, 255, 236>>, 
-   <<252,   0,   0,   0>>}  
+  {:code, {<< 52,   1,   0,   0>>,
+           <<128,  34,   0,   0>>,
+           << 16,  64,   0,  12>>, 
+           <<248,  64,   0,   0>>,
+           << 32,  33,   0,   1>>, 
+           << 16,   0, 255, 236>>, 
+           <<252,   0,   0,   0>>}}
 \end{minted}
 
+To understand how the instructions are coded into 32-bit binaries you
+should check the specification of the MIPS architecture. The
+instructions can be grouped into three categories and we have a fourth
+for our special instructions. The encoding could look as follows:
 
-\subsection*{the data segment}
+\begin{minted}{elixir}
+def encode(instr, addr, labels) do
+  case instr do
 
-The data segment of course needs to be both read and writable. It is
-also byte indexed so this is something that we must be able to
-handle. The question is if this is going to be handled by the Program
-module or the Memory module.
+    ## R-type {op, dest, src, target}
+    {:add, rd, rs, rt}  -> 
+        <<@aop::6, rs::5, rt::5, rd::5, 0::5, @add::6>>
+          :
 
-What should memory values look like: should we store integers or binaries? 
-There are no right or wrong answers but it will set the standard for
-the other modules in our implementation. 
+    ## I-type {op, target, src, imm}  
+    {:addi, rt, rs, imm}  -> 
+       <<@addi::6, rs::5, rt::5, immediate(imm, labels)::integer-signed-16>>	
+          :
+        
+    ## Branch 
+    {:beq,  rs, rt, offs} -> 
+        <<@beq::6, rs::5, rt::5, offset(offs, addr, labels)::integer-signed-16>>
+          :
 
-For now I have an implementation where I have made the following
-decisions:
+    ## extra instructions, not present in the MIPS architecture 
+    {:out, rs}            -> <<@out::6, rs::5, 0::5, 0::16>>
+    :halt                 -> <<@halt::6, 0::5, 0::5, 0::16>>	
+  end
+end
+\end{minted}
+
+The immediate and offset values could of course be a label and these
+should of course be resolved. Note that immediate values are encoded
+as signed 16-bit integers. The op-codes can be found in the appendix. 
+
+\subsection{the data segment}
+
+The data segment of course needs to be both read and writable. We
+should also be able to work with words or individual bytes, so this is
+something that we must be able to handle. The question is if this is
+going to be handled by the program module or the Memory module.
+
+What should memory values look like: should we store integers or
+binaries?  There are no right or wrong answers but it will set the
+standard for the other modules in our implementation. For now, let's
+have an implementation where we make the following decisions:
 
 \begin{itemize}
 
-\item {\bf Values are integers.}  We could store also values as 32 bit
-  binaries but we would then have to implement arithmetic operations
-  (addition, subtraction) on binaries. Having values as integers saves
-  us the trouble (but we will have to implement shift and logical
-  operations). The decision is not that important and we could easily
-  change it.
+\item {\bf Values are 32-bit binaries.}  This will make it very
+  explicit what we have to do when coding integers etc. The external
+  API will however work with integers so the rest of the system does
+  not have to care how integers are represented as 32-bit values. 
 
-\item {\bf Reading a byte is allowed} We store values as words and
-  words can only be read and written using 4 byte aligned
-  addresses. Reading and writing individual bytes is allowed and the
-  magic is handled by the Program module. 
+\item {\bf Reading a word is the default.} We store values as words
+  and words can only be read and written using 4 byte aligned
+  addresses. Reading and writing individual bytes is of course allowed
+  and the magic is handled by the program module.
 \end{itemize}
 
-The memory is implemented as a {\em map} addressed by four byte
+The memory is implemented as a {\em map}, addressed by four byte
 aligned addresses. This is the API that we will make available to the
 memory unit:
 
@@ -479,38 +529,59 @@ memory unit:
 \end{itemize}
 
 Since we can address the memory byte by byte we need to decide how we
-store a sequence of four bytes. This is a {\em big-endian} or {\tt
-  little-endian} decision but if we only used word addressing we would
-not have notice. Integers are stored in with the highest byte "first",
-try the following in a terminal:
+store a sequence of four bytes i.e. the {\em big-endian} or {\tt
+  little-endian} decision. Try the following in a terminal:
 
 \begin{minted}{elixir}
   <<0x03020100::32>>
 \end{minted}
 
-If we store this value at address $12$ we need to decide which byte to
-return when reading a byte at address $12$. We can choose either the
-{\em big-} ($0x03$) or {\tt little-end}
-($0x00$), but we need to be consistent. This also effect how a
-sequence of bytes are stored; which byte is the first? How do we store
-"hell"?
+As you see Elixir will handle this as the four bytes: 3, 2, 1 and
+0. If we store this value at address $12$ we need to decide which
+bytes go into addresses: $12$, $13$, $14$ and $15$. Which byte should
+we return when reading a value at address $12$? We can choose either
+the {\em big-end} ($0x03$) or {\tt little-end} ($0x00$), but we need
+to be consistent.
 
-If we choose to implement our memory with the bytes ordered {\em <<?l,
-  ?l, ?e, ?h>>}, the memory segment of our "Hello World" example looks
-like follows:
+Let's decide to implement a big-endian architecture so the value $3$
+goes into address $12$. As long as we only read and write words the
+order does not matter but when we read or write a byte it makes a difference. 
+
+If we read the value at address $13$ we need to first decide that we should
+read the word at address $12$ and then extract the second byte. 
+The \verb+read\_byte/2+ function could look like this:
 
 \begin{minted}{elixir}
- %{0 => 1819043176, 4 => 111}}}
+  def read_byte({:data, data}, i) do
+    j = rem(i,4)
+    i = i - j
+    <<a::8, b::8, c::8, d::8>> =  Map.get(data, i)
+    case j do
+      0 -> a
+      1 -> b
+      2 -> c
+      3 -> d
+    end
+  end
 \end{minted}
 
-Note that the final 'o' is stored in a separate word with address $4$.
+The ordering decision also effect how a sequence of bytes are
+stored. How do we store "hello"? The first byte in the sequence should
+of course be the letter 'h' and as we have decided to use a big-endian
+order we could store it as follows:
+
+\begin{minted}{elixir}
+  data = %{0 => <<?h::8,?e::8,?l::8,?l::8>> , 4 => <<?o::8, 0::8, 0::8, 0::8>>}
+\end{minted}
+
+
 
 \section{The processor units}
 
 Now that we have the program module working the implementation of the
 processor units becomes much easier.
 
-\subsection*{the instruction unit}
+\subsection{the instruction unit}
 
 The instruction unit is a fairly simple process. When it is created it
 is given a code data structure and the process identifiers of: the
@@ -518,7 +589,7 @@ register unit, the ALU, the branch unit and the controller. It will
 receive signals only from the branch unit and there are only two messages:
 
 \begin{itemize}
-\item {\tt \{:brn, :stop\}} : the process should terminate.
+\item {\tt \{:brn, :halt\}} : the process should terminate.
   
 \item {\tt \{:brn, pc\}} : the next instruction should be executed.
 \end{itemize}
@@ -553,14 +624,17 @@ not even know how to interpret the whole sequence and sends the lower
 immediate value should be used.
 
 Note that we decode the immediate value as a signed 16-bit integer;
-this is important. The increment of the program counter is done
-by the branch unit. The {\tt shamt} value (shift amount) is ignore for
+this is important. The increment of the program counter is done by the
+branch unit. If we should branch the immediate value will decide if we
+should jump forward or backwards. 
+
+The {\tt shamt} value (shift amount) is ignore for
 the time being since it is only used in shift instructions. The {\tt
   fnct} value is passed to the controller and not to a separate ALU
 controller.
 
 
-\subsection*{the register unit}
+\subsection{the register unit}
 
 The register unit will keep an internal state of 32 registers. These
 are implemented as a 32 element tuple. Reading is easy but writing
@@ -569,15 +643,17 @@ is of course a costly operation but the tuple is very small.
 The {\em \$0} register has a special meaning in the MIPS
 architecture. It always returns zero so the read and write functions
 should be such that an attempt to write to the {\em \$0} register does
-not make any changes or that a read always return zero.
-
+not make any changes and that a read always return zero.
 
 The register unit receives the: {\em source}, {\em target} and {\em
-  destination} registers from the instructions unit but it does not
-have the complete picture of what it should do. It knows that it should
+destination} register numbers from the instructions unit but it does not
+yet have the complete picture of what it should do. It knows that it should
 read the source and target registers and forward the values to the ALU
 unit and the memory unit but it does not know if the result should be
 stored or not.
+
+It has to wait for a message from the controll unit and a value from
+memory unit before it can complet the operation.
 
 \begin{minted}{elixir}
      {:instr, rs, rt, rd} ->
@@ -595,15 +671,13 @@ stored or not.
 	end
 \end{minted}
 
-The memory unit will wait for one message from the control unit and
-one message from the memory unit before it can make a decision. The
-operation received from the controller is either: {\tt :nop} (don't
+ The operation received from the controller is either: {\tt :nop} (don't
 write), {\tt :wrt} (write to target register) or {\tt :wrd} (write to
 destination register). In the description of the MIPS architecture
 this is described as two single bit signals ({\em RegDst}, {\em
-  RegWrite}).
+  RegWrite}) but we encod it as one of three values. 
 
-\subsection*{the ALU}
+\subsection{the ALU}
 
 The ALU will receive the values of the source and target registers
 from the register unit but it will also receive the immediate value
@@ -637,15 +711,25 @@ The result is forwarded to the memory module but we also send a
 message to the branch unit. The branch unit needs to decide the value
 of the next program counter if we have a branch instruction.
 
-\subsection*{the memory unit}
+The ALU can also recieve the following messages from the controller:
+
+\begin{itemize}
+\item {\tt \{:ctrl, :halt\}} : terminate the execution but make sure
+  to send dummy messages to the memory and branch units.
+
+\item {\tt \{:ctrl, :out\}} : send the source value to the output
+  unit, send dummy messages to the memory and branch units.
+\end{itemize}
+
+\subsection{the memory unit}
 
 The memory unit must be started in a special way. As we said almost
 all messages flow from left to right but the memory unit will send
-messages back to the ALU. We then have the problem in which order these
-processes should be started. If we start the memory unit first then we
-can give the identifier of the memory process as an argument when we
-start the ALU, but how does the memory process get access to the
-process identifier of the ALU?
+messages back to the ALU. We then have a chiken and egg problem when
+deciding in which order these processes should be started. If we start
+the memory unit first then we can give the identifier of the memory
+process as an argument when we start the ALU, but how does the memory
+process get access to the process identifier of the ALU?
 
 The trick is to start the memory unit first but then send a message
 to it with the process identifier of the ALU. We will have to do the
@@ -665,7 +749,7 @@ same maneuver when we start the branch unit.
 \end{minted}
 
 Since we have delegated all the tricky parts of memory handling to the
-Program module, the memory unit becomes quite simple. It will receive
+program module, the memory unit becomes quite simple. It will receive
 the address from the ALU and a value from the register unit. It then
 receives the final instruction from the control unit and it is set to go.
 
@@ -674,10 +758,8 @@ receives the final instruction from the control unit and it is set to go.
     receive do
 
       {:alu, addr} ->
-	:io.format("mem: adr ~w~n", [addr])
 	receive do
 	  {:reg, val} ->
-	    :io.format("mem: val ~w~n", [val])
 	    receive do
                 :
 	      {:ctrl, rw} ->
@@ -708,10 +790,10 @@ even if we do a write operation we still need to send a value (0) to
 the register unit.
 
 The control signal determines if we should operate on a word or
-byte. This is normally not described in simple description of the MIPS
+byte. This is normally not described in a simple description of the MIPS
 architecture so keep this is mind when you study the architecture.
 
-\subsection*{the branch unit}
+\subsection{the branch unit}
 
 The branch unit is the heart of the system. It will send the first
 directive to the instruction unit and then feed this with updated
@@ -757,7 +839,7 @@ control unit will determine if we should {\em branch on equal} {\tt
 
 The {\tt next/4} function should always increment the program counter
 by four. If we do not branch we should of course go to the next
-instruction but also when we do branch we need to add four. The
+instruction but also when we do branch we need to first add four. The
 immediate values are given as an offset to the address of the
 instruction plus four. If you study the MIPS architecture you will see
 that the program counter is first incremented by four before the
@@ -768,11 +850,11 @@ important to represent the immediate value as an 16-bit signed
 integer.
 
 
-\subsection*{the controller unit}
+\subsection{the controller unit}
 
 If the branch unit was the heart, the control unit is the brain of the
 system. This is where decisions are made and signals sent to all
-other units what they should do.
+other units in the architecture..
 
 The unit receives the {\em operation code} and the {\em function code}
 from the instruction unit. The function code is only valid if the
@@ -788,13 +870,17 @@ function code is not used, or rather the bits are used to encode the
     receive do
         :
       {:instr, op, fnct} ->
-	control(op, fnct, reg, alu, mem, brn)
+	{fnct, a, m, r, b} = control(op, fnct)
+	send(alu, {:ctrl, fnct, a})
+	send(mem, {:ctrl, m})
+	send(reg, {:ctrl, r})
+	send(brn, {:ctrl, b})
 	controller(reg, alu, mem, brn)
     end
   end
 \end{minted}
 
-The function {\tt control/6} is where we decide what should happen
+The function {\tt control/2} is where we decide what should happen
 in the machine. We know that the instruction unit has sent a message
 to the register unit, the ALU and the branch unit. The register unit has forwarded
 values also to the ALU and the memory unit. 
@@ -812,11 +898,7 @@ plus four.
 
 \begin{minted}{elixir}
       @aop ->
-	:io.format("ctr: alu ~w~n", [fnct])
-	send(alu, {:ctrl, fnct, :reg})
-	send(mem, {:ctrl, :frw})
-	send(reg, {:ctrl, :wrd})
-	send(brn, {:ctrl, :nbr})
+	{fnct, :reg, :frw, :wrd, :nbr}
 \end{minted}
 
 In the {\em branch on equal} instruction, the ALU is told to do a
@@ -827,13 +909,9 @@ branch unit and the branch unit is told to branch if the ALU value is
 zero. The next instruction will then be the program counter plus the
 offset.
 
-
 \begin{minted}{elixir}        
       @beq ->
-	send(alu, {:ctrl, @sub, :reg})  # sub
-	send(mem, {:ctrl, :frw})
-	send(reg, {:ctrl, :nop})
-	send(brn, {:ctrl, :beq})
+	{@sub, :reg, :frw, :nop, :bew}
 \end{minted}
 
 The {\em add immediate} instruction is implemented by sending an add
@@ -845,10 +923,7 @@ store the value in the target register.
 
 \begin{minted}{elixir}
       @addi ->
-	send(alu, {:ctrl, @add, :imm})
-	send(mem, {:ctrl, :frw})
-	send(reg, {:ctrl, :wrt})
-	send(brn, {:ctrl, :nbr})
+	{@add, :imm, :frw, :wrt, :nrb}
 \end{minted}
 
 A load instruction in implemented almost in the same way as the add
@@ -856,36 +931,35 @@ instruction but now the memory unit will use the value received from
 the ALU as an address in a read operation. The read value is then
 forwarded to the register unit that stores it in the target register.
 
-
 \begin{minted}{elixir}
       @lw  ->
-	send(alu, {:ctrl, @add, :imm})
-	send(mem, {:ctrl, :rword})
-	send(reg, {:ctrl, :wrt})
-	send(brn, {:ctrl, :nbr})
+	{@add, :imm, :rword, :wrt, :nbr}	
 \end{minted}
 
-All instructions follow the pattern described in these examples so its
+All instructions follow the pattern described in these examples so it's
 now quite easy to implement the remaining instructions. The ALU unit
 must of course be updated to handle more functions but the data flow
 through the CPU is the same.
 
-\subsection*{halt the execution}
+The controller need in addition to these regular instructions also
+handle the two special instrucktions {\tt :halt} and {\tt :out}. 
 
+\subsection{halt the execution}
 
-We have one special instructions, that is not part of the MIPS
-architecture but very handy.
+There is no proper to terminate a MIPS execution. A program that
+should do nothing is simply set to execute a jump instruction that
+jumps to itself. Since it is nive to terminate a prorgram we introduce
+the {\tt halt} instruction.
 
 \begin{minted}{elixir}
-      :out -> <<@halt::6, rs::5, 0::5, 0::16>>
+      :halt -> <<@halt::6, 0::5, 0::5, 0::16>>
 \end{minted}
 
-The halt operation will terminate the
-execution by sending {\tt :halt} messages to the other units. The only
-unit that we do not send a {\tt :halt} message is the instruction unit
-since this unit is not expecting any messages from the control
-unit. The branch unit will be responsible for sending a {\tt :halt}
-message to the instruction unit.
+The halt instruction will terminate the execution by sending {\tt :halt}
+messages to the other units. The only unit that we do not send a {\tt
+  :halt} message to is the instruction unit since this unit is not
+expecting any messages from the control unit. The branch unit will be
+responsible for sending a {\tt :halt} message to the instruction unit.
 
 \begin{minted}{elixir}
       {:instr, @halt, _} ->
@@ -893,7 +967,6 @@ message to the instruction unit.
 	send(mem, {:ctrl, :halt})
 	send(reg, {:ctrl, :halt})
 	send(brn, {:ctrl, :halt})
-	:io.format("ctr: halt~n", [])
 	:ok
 \end{minted}
 
@@ -910,7 +983,7 @@ since these are waiting for messages bu will then terminate.
 	send(brn, {:alu, false})
 	:ok
 \end{minted}
-      
+
 The memory unit will send one dummy message to the register unit and then terminate.
 
 \begin{minted}{elixir}
@@ -938,11 +1011,11 @@ and terminates.
 \end{minted}
 
       
-\subsection*{some output}
+\subsection{some output}
 
-Output is not part of the MIPS instruction set but
-it's nice to have some output from the programs we write. To
-implement this we introduce a new instruction.
+Output is not part of the MIPS instruction set but it's nice to have
+some output from the programs we write. To implement this we introduce
+a new instruction.
 
 \begin{minted}{elixir}
       {:out, rs} -> <<@out::6, rs::5, 0::5, 0::16>>
@@ -951,7 +1024,7 @@ implement this we introduce a new instruction.
 We the add some logic to the control unit to make it send a new directive to the ALU. 
 
 \begin{minted}{elixir}
-      @out  ->
+      {:ctrl, @out, _}   ->
 	send(alu, {:ctrl, :out})
 	send(mem, {:ctrl, :frw})
 	send(reg, {:ctrl, :nop})
@@ -962,13 +1035,12 @@ The register unit will behave as usual and read the source and target
 registers. Both are sent to the ALU and the value from the source
 register is the one that we want to output.
 
-
 The ALU will be given an extra process identifier when created. This
 is a process that should be sent the value. We add the following clause to the ALU:
 
 \begin{minted}{elixir}
       {:ctrl, :out} ->
-	send(out, {:alu, a})
+        send(out, {:alu, vs})
 	send(mem, {:alu, 0})
 	send(brn, {:alu, false})
 	alu(mem, brn, out)
@@ -978,7 +1050,6 @@ Note that we need to send dummy values to the memory unit and the
 branch unit. These units are suspended waiting for the message from the
 ALU and we do not send anything we will have a dead-lock.
 
-
 When it is time to terminate the execution we send a {\tt :done}
 message to the output unit. We want to know that we have received all
 output messages before we terminate.
@@ -986,43 +1057,60 @@ output messages before we terminate.
 \begin{minted}{elixir}
      {:ctrl, :halt} ->
        send(out, {:alu, :done})
-       send(mem, {:alu, 0})		
-       send(brn, {:alu, false})
-       :ok
+          :
 \end{minted}
 
-\section*{The MIPS computer}
+
+\section{The MIPS computer}
 
 If we now have all pieces of the puzzle we can try to build a CPU and
-execute program. This is what the final program could look like:
+execute a program. We need to implement an output unit that accepts
+the messages from the ALU unit but then we are set to go.
 
+We only need to start the units in the right order starting with the
+memory, branch and output unit. Once these are running we can start
+the ALU unit. We then start the memory and controller units and then
+finally the instruction unit.
+
+The memory unit must of course be given the initial memory and the
+instruction unit the code segment. These are of course provided by
+encoding a program using the Program module.
+
+The last thing that needs to be done is to connect the memory unit to
+the register unit and the branch unit to the instruction unit.
+Remember that we had this circular dependency that had to be
+resolved. Once the branch unit receives the connection to the
+instruction unit the execution should start. 
+
+
+
+\pagebreak
+\section*{Appendix}
+
+
+\subsection*{MIPS op-codes}
 
 \begin{minted}{elixir}
-defmodule MIPS do
+  ## op codes
+  @aop 0
 
-  def run(prgm) do
-    {code, data} = Program.load(prgm)
+  @beq 0x4
+  @bne 0x5
 
-    out = Out.start()
+  @addi 0x8
+  @ori 0xd
 
-    mem = Memory.start(data)
-    brn = Branch.start()
-    alu = ALU.start(mem, brn, out)
-    reg = Register.start(alu, mem)
-    ctrl = Controller.start(reg, alu, mem, brn)
-    instr = Instruction.start(code, reg, alu, brn, ctrl)
+  @lb 0x20
+  @lw 0x23
+  @sb 0x28
+  @sw 0x2b
 
-    send(mem, {:init, reg})
-    send(brn, {:init, instr})
-
-    Out.wait(out)
-  end
-
-end
+  @out  0x3e    ## output value in register rs {:out, rs}
+  @halt 0x3f    ## halt the execution
+  
+  ## fnct codes 
+  @add 32
+  @sub 34
 \end{minted}
-
-
-
-
 \end{document}
 

@@ -35,95 +35,69 @@ defmodule Controller do
 	send(brn, {:ctrl, :halt})
 	:io.format("ctr: halt~n", [])
 	:ok
+
+      {:instr, @out, _} ->
+	send(alu, {:ctrl, :out})
+	send(mem, {:ctrl, :frw})
+	send(reg, {:ctrl, :nop})
+	send(brn, {:ctrl, :nbr})
+	controller(reg, alu, mem, brn)
+
       {:instr, op, fnct} ->
-	control(op, fnct, reg, alu, mem, brn)
+	{fnct, a, m, r, b} = control(op, fnct)
+	send(alu, {:ctrl, fnct, a})
+	send(mem, {:ctrl, m})
+	send(reg, {:ctrl, r})
+	send(brn, {:ctrl, b})
 	controller(reg, alu, mem, brn)
     end
   end
-  
 
-  def control(op, fnct, reg, alu, mem, brn) do
+  def control(op, fnct) do
     case op do 
 
       ## arithmetic operations
       @aop ->
 	:io.format("ctr: alu ~w~n", [fnct])
-	send(alu, {:ctrl, fnct, :reg})
-	send(mem, {:ctrl, :frw})
-	send(reg, {:ctrl, :wrd})
-	send(brn, {:ctrl, :nbr})
-
+	{fnct, :reg, :frw, :wrd, :nbr}
       # branch
       @beq ->
 	:io.format("ctr: beq~n", [])
-	send(alu, {:ctrl, @sub, :reg})  # sub
-	send(mem, {:ctrl, :frw})
-	send(reg, {:ctrl, :nop})
-	send(brn, {:ctrl, :beq})
+	{@sub, :reg, :frw, :nop, :beq}
 
       @bne ->
 	:io.format("ctr: bne~n", [])
-	send(alu, {:ctrl, @sub, :reg})  # sub
-	send(mem, {:ctrl, :frw})
-	send(reg, {:ctrl, :nop})
-	send(brn, {:ctrl, :bne})
+	{@sub, :reg, :frw, :nop, :bne} 
 
       # addi 
       @addi ->
 	:io.format("ctr: addi~n", [])
-	send(alu, {:ctrl, @add, :imm})
-	send(mem, {:ctrl, :frw})
-	send(reg, {:ctrl, :wrt})
-	send(brn, {:ctrl, :nbr})
+	{@add, :imm, :frw, :wrt, :nbr}
 
       # ori 
       @ori ->
 	:io.format("ctr: addi~n", [])
-	send(alu, {:ctrl, @add, :imm})
-	send(mem, {:ctrl, :frw})
-	send(reg, {:ctrl, :wrt})
-	send(brn, {:ctrl, :nbr})
+	{@add, :imm, :frw, :wrt, :nbr}
 
       # load byte lb
       @lb ->
 	:io.format("ctr: load byte~n", [])
-	send(alu, {:ctrl, @add, :imm})
-	send(mem, {:ctrl, :rbyte})
-	send(reg, {:ctrl, :wrt})
-	send(brn, {:ctrl, :nbr})
+	{@add, :imm, :rbyte, :wrt, :nbr}	
 	
       # load word lw
       @lw  ->
 	:io.format("ctr: load word~n", [])
-	send(alu, {:ctrl, @add, :imm})
-	send(mem, {:ctrl, :rword})
-	send(reg, {:ctrl, :wrt})
-	send(brn, {:ctrl, :nbr})
+	{@add, :imm, :rword, :wrt, :nbr}	
 
       #store byte sb
       @sb  ->
 	:io.format("ctr: store byte~n", [])
-	send(alu, {:ctrl, @add, :imm})
-	send(mem, {:ctrl, :wbyte})
-	send(reg, {:ctrl, :nop})
-	send(brn, {:ctrl, :nbr})
+	{@add, :imm, :wbyte, :nop, :nbr}	
 
       #store word sw
       @sw ->
 	:io.format("ctr: store word~n", [])
-	send(alu, {:ctrl, @add, :imm})
-	send(mem, {:ctrl, :wword})
-	send(reg, {:ctrl, :nop})
-	send(brn, {:ctrl, :nbr})
-
-      ## Special instructions, not present in MIPS
-      # out
-      @out  ->
-	:io.format("ctr: out~n", [])
-	send(alu, {:ctrl, :out})
-	send(mem, {:ctrl, :frw})
-	send(reg, {:ctrl, :nop})
-	send(brn, {:ctrl, :nbr})
+	{@add, :imm, :wword, :nop, :nbr}	
 
       strange ->
 	:io.format("ctr: strange ~w~n", [strange])

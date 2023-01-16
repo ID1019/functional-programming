@@ -16,13 +16,13 @@
     \large{Programming II - Elixir Version}
 }
 \author{Christian Schulte \\ \\ {\em adapted to Elixir by Johan Montelius}}
-\date{Spring Term 2021}
+\date{Spring Term 2023}
 \maketitle
 
 
 \thispagestyle{fancy}
 
-\section{Introduction}
+\section*{Introduction}
 
 You are in charge of shunting wagons of a train.  In
 the following we assume that each wagon is self driving and that the
@@ -47,8 +47,8 @@ situation in the shunting station is called \emph{state}. A
     \node(main) [rectangle, draw , minimum height=1cm, minimum width=3cm]{main};
     \node(one) [rectangle, draw, minimum height=1cm, minimum width=3cm, above right = 0.5cm and 4cm of main ]{one};
     \node(two) [rectangle, draw, minimum height=1cm, minimum width=3cm, below right = 0.5cm and 4cm of main]{two};
-    \draw[] (main) -- (one);
-    \draw[] (main) -- (two);    
+    \draw[<->] (main) to[out=0,in=180](one);
+    \draw[<->] (main) to[out=0,in=180](two);    
   \end{tikzpicture}
 \end{center}  
 \caption{Train shunting station}
@@ -67,8 +67,8 @@ problem and develop some list processing support.
 
 \paragraph{Lab purpose}
 
-This lab exercises several important issues.  How are problems modeled
-by data structures such as lists and tuples.  How are lists
+This lab exercises several important issues. How are problems modeled
+by data structures such as lists and tuples. How are lists
 processed. This ranges from simple to more complicated patterns of
 recursion over lists. This lab is of course also geared at getting you
 started with Erlang and functional programming in general.
@@ -76,7 +76,7 @@ started with Erlang and functional programming in general.
 And last, but not least, we hope that you have \emph{some fun} solving
 this little puzzle.
 
-\section{Modeling}
+\section*{Modeling}
 
 \paragraph{Trains, wagons, and states}
 
@@ -86,28 +86,36 @@ whereas \verb+[:a,:a]+ is not).
 
 A complete description of the state of a shunting station
 consists of three lists: a list describing the train on track
-``main'', and two lists describing tracks ``one'' and ``two''. An
-entire state is represented as a tuple with three elements, where
-the first element represents the train on track ``main'', the
-second the train on ``one'', and the third on track ``two''.
+``main'', and two lists describing tracks ``one'' and ``two''.
 
 \begin{figure}[h]
 \begin{center}
   \begin{tikzpicture}
     \node(main) [rectangle, draw , minimum height=1cm, minimum width=3cm]{{\tt [:a, :b]}};
-    \node(one) [rectangle, draw, minimum height=1cm, minimum width=3cm, above right = 0.5cm and 4cm of main ]{{\tt [ :c, :d] }};
-    \node(two) [rectangle, draw, minimum height=1cm, minimum width=3cm, below right = 0.5cm and 4cm of main]{{\tt [ :e, :f]}};
-    \draw[] (main) -- (one);
-    \draw[] (main) -- (two);    
+    \node(one) [rectangle, draw, minimum height=1cm, minimum width=3cm, above right = 0.5cm and 4cm of main ]{{\tt [:c, :d] }};
+    \node(two) [rectangle, draw, minimum height=1cm, minimum width=3cm, below right = 0.5cm and 4cm of main]{{\tt [:e, :f]}};
+    \draw[<->] (main) to[out=0,in=180] (one);
+    \draw[<->] (main) to[out=0,in=180](two);    
   \end{tikzpicture}
 \end{center}
 \caption{Example state displayed.}
 \label{fig:ex-state}
 \end{figure}
 
+\paragraph{right-most, left-most}
+
+One important question is of course which wagons are the {\em
+ right-most} and {\em left-most}. We can of course choose how we
+represent our tracks but will chose a way that follows how we write our tracks.
+
+For track one and two the first element in the list will be the wagon
+closes to the path to the main track. The first element in the list
+that represents the main track is the left-most wagon on the track
+i.e. furtests from track one and two.
 
 The state \verb+{[:a,:b],[:c, :d],[:e, :f]}+
 is visualized in Figure~\ref{fig:ex-state}.
+
 
 \paragraph{Moves}
 
@@ -139,6 +147,7 @@ Moves describe how one state is transformed into another:
 The same holds true for moves with first element \verb+:two+
 concerning track ``two''.
 
+
 \begin{figure}[h]
 \begin{center}
 \begin{tabular}{lr}
@@ -146,16 +155,16 @@ concerning track ``two''.
     \node(main) [rectangle, draw , minimum height=0.5cm, minimum width=2cm]{{\tt [:a,:b]}};
     \node(one) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, above right = 0.3cm and 2cm of main ]{{\tt [:c,:d] }};
     \node(two) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, below right = 0.3cm and 2cm of main]{{\tt [:e,:f]}};
-    \draw[] (main) -- (one);
-    \draw[] (main) -- (two);    
+    \draw[<->] (main) to[out=0,in=180](one);
+    \draw[<->] (main) to[out=0,in=180](two);    
     \node(cap) [rectangle, above of=main] {a)};
   \end{tikzpicture} &
   \begin{tikzpicture}
     \node(main) [rectangle, draw , minimum height=0.5cm, minimum width=2cm]{{\tt [:a]}};
     \node(one) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, above right = 0.3cm and 2cm of main ]{{\tt [:b,:c,:d] }};
     \node(two) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, below right = 0.3cm and 2cm of main]{{\tt [:e,:f]}};
-    \draw[] (main) -- (one);
-    \draw[] (main) -- (two);    
+    \draw[<->] (main) to[out=0,in=180](one);
+    \draw[<->] (main) to[out=0,in=180](two);    
     \node(cap) [rectangle, above of=main] {b)};
   \end{tikzpicture}
   \\[1cm]
@@ -163,16 +172,16 @@ concerning track ``two''.
     \node(main) [rectangle, draw , minimum height=0.5cm, minimum width=2cm]{{\tt []}};
     \node(one) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, above right = 0.3cm and 2cm of main ]{{\tt [:b,:c,:d] }};
     \node(two) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, below right = 0.3cm and 2cm of main]{{\tt [:a,:e,:f]}};
-    \draw[] (main) -- (one);
-    \draw[] (main) -- (two);    
+    \draw[<->] (main) to[out=0,in=180] (one);
+    \draw[<->] (main) to[out=0,in=180](two);    
     \node(cap) [rectangle, above of=main] {c)};
   \end{tikzpicture} &
   \begin{tikzpicture}
     \node(main) [rectangle, draw , minimum height=0.5cm, minimum width=2cm]{{\tt [:b,:c]}};
     \node(one) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, above right = 0.3cm and 2cm of main ]{{\tt [:d] }};
     \node(two) [rectangle, draw, minimum height=0.5cm, minimum width=2cm, below right = 0.3cm and 2cm of main]{{\tt [:a,:e,:f]}};
-    \draw[] (main) -- (one);
-    \draw[] (main) -- (two);    
+    \draw[<->] (main) to[out=0,in=180](one);
+    \draw[<->] (main) to[out=0,in=180](two);    
     \node(cap) [rectangle, above of=main] {d)};
   \end{tikzpicture}
 \end{tabular}
@@ -186,9 +195,9 @@ concerning track ``two''.
 Figure~\ref{fig:ex-moves} shows examples of moves applied to
 states, where (a)~is the initial state, (b)~after application of
 \verb+{:one,1}+, (c)~after application of \verb+{:two,1}+, and finally
-(d)~after application of \verb+{:one,-2}+.
+(d)~after application of \verb+{:one,-2}+ (note the order).
 
-\section{Some list processing}
+\section*{Some list processing}
 
 Before we actually start, we will develop some list-processing
 routines that you will need later.
@@ -200,25 +209,40 @@ routines that you will need later.
 \item \verb+drop(xs,n)+ returns the list \verb+xs+ without its first
   \verb+n+ elements.
 
-\item \verb+append(xs,ys)+ returns the list \verb+xs+ with the elements
-  of \verb+ys+ appended.
+\item \verb+append(xs,ys)+ returns the list where the elements of
+  \verb+xs+ have been added to the list \verb+ys+.
+
+  For example, \verb+append([:a,:b],[:c])+ returns \verb+[:a, :b, :c]+.
   
 \item \verb+member(xs,y)+ tests whether \verb+y+ is an element of \verb+xs+.
 
-\item \verb+position(xs,y)+ returns the first position of \verb+y+ in
+\item \verb+position(xs,y)+ returns the first position (1 indexed) of \verb+y+ in
   the list \verb+xs+. You can assume that \verb+y+ is an element of
   \verb+xs+.
 
   For example, \verb+position([:a,:b,:c],:b)+ returns \verb+2+.
+
+\item \verb+split(xs, y)+ return a tuple with two lists, all the
+  elemenst before \verb+y+ and all elements after \verb+y+
+  (i.e. \verb+y+ is not part in either).
+
+  For example, 
+\begin{verbatim}
+   split([:a,:b,:c],:a) = {[],[:b,:c]}
+   split([:a,:b,:c],:b) = {[:a],[:c]}
+\end{verbatim}
+  
+  Use the functions \verb+position+, \verb+take+, and \verb+drop+ or
+  implement it from scratch.
+  
 \end{enumerate}
 
-Please put all together in one file \verb+list.erl+ and add an
-appropriate module declaration into that file: add a module
-declaration and export the functions listed above.
+Please put all definitions together in one module {\tt Train} in a file \verb+train.ex+
 
-\section{Applying a Single Move}
 
-The first task is writing a binary function \verb+single+ that
+\section*{Applying moves}
+
+The first task is writing a binary function \verb+single/2+ that
 takes a move and an input state. It returns a
 new state computed from the state with the move applied.
 
@@ -228,10 +252,7 @@ For example, \verb+single({:one,1},{[:a,:b],[],[]})+ returns
 \verb+single+ should be used later in this assignment whenever a
 move is to be performed on a state.
 
-\paragraph{Structure.}
-
-Now we are in position to develop \verb+single+. Approach the
-task as follows:
+Approach the task as follows:
 \begin{itemize}
   
 \item Your program should decide by pattern-matching which track
@@ -242,56 +263,45 @@ task as follows:
   or negative).
   
 \item Taking wagons from the end of a train can be done by using
-  \verb+length+ and \verb+drop+; taking wagons from the beginning of a
-  train can be done by using \verb+take+; adding wagons to a track
-  can be done by \verb+append+.
+  \verb+length/1+ and \verb+drop/2+; taking wagons from the beginning of a
+  train can be done by using \verb+take/2+; adding wagons to a track
+  can be done by \verb+append/2+.
 
 \item Take into account that moves are allowed where no wagons
   are moved at all!
 \end{itemize}
 
-Please store your function in a module called \verb+moves+.
+Please store your function in a module called \verb+Moves+ in the file {\tt moves.ex}.
 
-\section{Applying Several Moves}
-
-The next task is writing a function \verb+move+ that takes an
-input state and a list of moves. It results in a list of
-states. If the list of moves has $n$ elements, the resulting list
-of states has $n+1$ elements. Its first element is the initial
-state and its last element is the final resulting state.
+You should also implement a function {\tt sequence/2} that takes a
+list of moves and a state an returns a list of states that that
+represents the transitions when the moves are peformed.
 
 For example,
+
 \begin{verbatim}
-   move([{:one,1},{:two,1},{:one,-1}],
-        {[:a,:b],[],[]}).
-\end{verbatim}
-returns the list of states
-\begin{verbatim}
-   [{[:a,:b],[],[]}, {[:a],[:b],[]}, 
-    {[],[:b],[:a]}, {[:b],[],[:a]}]
+ sequence([{:one, 1}, {:two, 1}, {:one, -1}, {:two, -1}], {[:a,:b], [], []})
 \end{verbatim}
 
+should return the lists:
 
-\paragraph{Structure.}
+\begin{verbatim}
+[
+  {[:a, :b], [], []},
+  {[:b], [:a], []},
+  {[], [:a], [:b]},
+  {[:a], [], [:b]},
+  {[:b, :a], [], []}
+] 
+\end{verbatim}
 
-Now we are in a position to develop \verb+move+. Approach the
-task as follows:
-\begin{itemize}
+You can use this function to verify that the sequences of moves that
+you generate actually do solve the problem given.
 
-\item Recursively apply each move in turn.
-  
-\item When no moves are to be applied, our specification says
-  that the initial state is to be returned (base-case).
-  
-\item For each move, use \verb+single+.
-\end{itemize}
+\section{The shunting problem}
 
-Please put the function \verb+move+ also in the module \verb+moves+
-(and hence in a file \verb+moves.ex+).  Do not forget to convince
-yourself that your solution works!
-
-
-\section{Finding Moves}
+So now for the actual poroblem, finding a sequence of moves that
+changes the order of the wagons on the main track.
 
 Develop a procedure \verb+find+ that takes two trains \verb+xs+
 and \verb+ys+ as input and returns a list of moves, such that the
@@ -309,69 +319,65 @@ position as required by \verb+ys+.
 The base-case is simple. If there are no wagons, no moves are
 needed.
 
-Otherwise, we take the first wagon \verb+y+ from \verb+ys+ (the
-desired train). Our goal is to find a list of moves that takes
-the wagon \verb+y+ in front position on the main track. This is
-done by the following moves:
+Otherwise, we take the left-most wagon \verb+y+ from \verb+ys+ (the desired
+train). Our goal is to find a list of moves that takes the wagon
+\verb+y+ from its current position in \verb+xs+ to being the left-most
+wagon in a train on the main track. This is done by the following
+moves:
+
 \begin{enumerate}
   
-\item Split the train \verb+xs+ into the wagons \verb+hs+ (for head) and
-  \verb+ts+ (for tail), where \verb+hs+ are the wagons before \verb+y+
+\item Split the train \verb+xs+ into the wagons \verb+hs+ and
+  \verb+ts+, where \verb+hs+ are the wagons before \verb+y+
   in \verb+xs+, and \verb+ts+ are the wagons after \verb+y+ in \verb+xs+.
 
-  Write a procedure \verb+split+ that takes a list of wagons
-  \verb+xs+ and the wagon \verb+y+ and returns the pair \verb+{hs,ts}+.
-
-  For example, 
-\begin{verbatim}
-   split([:a,:b,:c],a) = {[],[:b,:c]}
-   split([:a,:b,:c],b) = {[:a],[:c]}
-\end{verbatim}
-  
-  Use the functions \verb+position+, \verb+take+, and \verb+drop+.
-
-\item Move \verb+y+ and the following wagons (that is \verb+ts+) on track
+\item Move \verb\verb+y+ and the following wagons (that is \verb+ts+) to track
   ``one''.
   
-\item Move the remaining wagons (that is, \verb+hs+) on track
+\item Move the remaining wagons (that is, \verb+hs+) to track
   ``two''.
   
 \item Move all wagons on ``one'' to ``main'' (this includes \verb+y+,
-  which goes as needed to the front of ``main'').
+  which goes as needed to the left-most posiition on ``main'').
   
 \item Move all wagons on ``two'' to ``main''.
 \end{enumerate}
 
-After having moved one wagon in the right position, we only need
-to consider the remaining wagons of both \verb+xs+ and \verb+ys+
-(of course in the new order as they are now on the main track!).
+After having moved one wagon in the right position, we only need to
+consider the remaining wagons of \verb+ys+. We should of course update
+the current state on the main track but the state is simply \verb+ts+
+appended to \verb+hs+ (we moved \verb+ts+ to the main track before \verb+hs+).
 
-Please store your functions in the module \verb+shunt+ (and file
+Note that the function \verb+find/2+ does not need to "perform" the
+moves using \verb+single/2+ or \verb+sequene/2+, we know what the
+final state should look like. You can, or should, use \verb+sequene/2+
+to verify that \verb+find/2+ actually takes us from the inital state
+to the desired.
+
+Please store your functions in the module \verb+Shunt+ (and file
 \verb+shunt.ex+).
-
 
 \paragraph{Example.}
 Given the input train \verb+[:a,:b]+ and the output train \verb+[:b,:a]+, the
 list of moves computed by \verb+find+ is:
+
 \begin{verbatim}
    [{:one,1},{:two,1},{:one,-1},{:two,-1} 
     {:one,1},{:two,0},{:one,-1},{:two,0}]
 \end{verbatim}
 
+\section*{Finding less moves}
 
-
-
-\section{Finding Less Moves}
-
-Develop a function \verb+few+ that behaves as \verb+find+ but
-that takes for each recursive application into account whether
-the next wagon is already in the right position. If so, no moves
-are needed.
+As you probably noticed, a generated sequnce of moves contains a lot
+of redundant moves. Develop a function \verb+few+ that behaves as
+\verb+find+ but that takes for each recursive application into account
+whether the next wagon is already in the right position. If so, no
+moves are needed.
 
 Proceed by modifying (only very few modifications are needed)
-your program for \verb+find+.
+your program for \verb+find/2+.
 
-Please store \verb+few+ also in the module \verb+shunt+.
+Please store \verb+few/2+ also in the module \verb+Shunt+.
 
 \paragraph{Example.}
 Given the input train \verb+[:c,:a,:b]+ and the output train
@@ -381,9 +387,9 @@ Given the input train \verb+[:c,:a,:b]+ and the output train
 \end{verbatim}
 
 
-\section{Move Compression}
+\section{Move compression}
 
-The list of moves computed by \verb+few+ is still awkward and
+The list of moves computed by \verb+few/2+ is still awkward and
 can be easily optimized according to the following rules:
 \begin{enumerate}
 \item Replace \verb+{:one,n}+ directly followed by \verb+{:one,m}+ with
@@ -411,40 +417,42 @@ by Rule~2
 and finally by Rule~4
 \verb+[]+.
 
-Develop a function \verb+compress+ that takes a list of moves and
+Develop a function \verb+compress/1+ that takes a list of moves and
 returns a compressed list of moves. Compression must be complete,
 that is, none of the above rules should be applicable to the
 returned list of moves.
 
 Approach this task as follows. Develop a procedure
-\verb+rules+ that applies rules recursively. Then repeat
-application of \verb+rules+ until the list of moves does not
+\verb+rules/1+ that applies rules recursively. Then repeat
+application of \verb+rules/1+ until the list of moves does not
 change. Thus, \verb+compress+ is implemented as follows:
 \begin{verbatim}
 def compress(ms) do
     ns = rules(ms)
-    if ns == Ms -> Ms
-       true     -> compress(ns)
+    if ns == ms do 
+       ms
+    else
+       compress(ns)
     end
 end
 \end{verbatim}
 
-Please store your program also in the module \verb+shunt+.
+Please store your program also in the module \verb+Shunt+.
 
-\section{Finding Really Few Moves}
+\section{Finding really few moves}
 
 \emph{This assignment is voluntary.} This means you don't have to
 do it, however we strongly encourage you to do it. And actually
 it is fun!
 
-The problem with both \verb+find+ and \verb+few+ is that they
+The problem with both \verb+find/2+ and \verb+few/2+ is that they
 always push back the wagons from ``one'' and ``two'' to ``main'',
 even though there might be some opportunity to actively use track
 ``two'' to push wagons from track ``one'' into position and vice
 versa. In the following, we are going to take advantage of this.
 
 Develop a procedure \verb+fewer+, that takes four arguments:
-\verb+ms+ as the wagons on ``main'', \verb+Os+ as the wagons on ``one'',
+\verb+ms+ as the wagons on ``main'', \verb+os+ as the wagons on ``one'',
 \verb+ts+ as the wagons on ``two'', and \verb+ys+ as the desired train.
 
 \verb+fewer+ works recursively and as before, each recursive
@@ -455,9 +463,9 @@ track:
 \item If \verb+y+ is a member of \verb+ms+, bring it in the right
   position as done previously. Leave the other wagons on track
   ``one'' and ``two''.
-\item If \verb+y+ is a member of \verb+Os+ (it is on track ``one''), move
+\item If \verb+y+ is a member of \verb+os+ (it is on track ``one''), move
   the wagons in front first to ``main'' and then to ``two''. Then
-  move \verb+Y+ into position. Otherwise, leave the wagons on ``one''
+  move \verb+y+ into position. Otherwise, leave the wagons on ``one''
   and ``two'' unchanged.
 
   This adds one more wagon in the right position on ``main''.

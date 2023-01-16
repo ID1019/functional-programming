@@ -199,8 +199,7 @@ defmodule Eager do
   end
   def eval_cls([{:clause, ptr, seq} | cls], str, env) do
 
-    env = eval_scope(ptr, env)
-    case eval_match(ptr, str, env) do
+    case eval_match(ptr, str, eval_scope(ptr, env)) do
       :fail ->
         eval_cls(cls, str, env)
 

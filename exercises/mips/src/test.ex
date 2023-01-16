@@ -54,13 +54,13 @@ defmodule Test do
     {:prgm, 
      [{:ori, 1, 0, :hello},    # this is only 16 bits but it's ok 
       {:label, :loop},
-      {:lb, 2, 1, 0},
-      {:beq, 2, 0, :done},
-      {:out, 2},
-      {:addi, 1, 1, 1},
-      {:beq, 0, 0, :loop},
-      {:label, :done},
-      :halt
+      {:lb, 2, 1, 0},          # load byte $0 + $1 into $2
+      {:beq, 2, 0, :done},     # if zero we're done
+      {:out, 2},               # output the byte
+      {:addi, 1, 1, 1},        # increment $1 
+      {:beq, 0, 0, :loop},     # jump to :loop
+      {:label, :done},         
+      :halt                    # done
      ],
      [{:label, :hello},
       {:asciiz,'hello'}]
