@@ -7,8 +7,8 @@ The programming language used was originally Erlang but we're now moving to Elix
 
 ### Lectures
 
-There will be 14 lectures that will go through the concepts of
-functional and concurrent programming. We will use Elixir as an
+There are aprx 14 lectures that go through the concepts of
+functional and concurrent programming. We use Elixir as an
 example language but the lectures are more focused on the bigger
 picture. Learning Elixir is something you best learn when programming.
 
@@ -22,15 +22,6 @@ deeper knowledge about functional and concurrent programming besides
 learning Elixir.
 
 - [Exercises](exercises)
-
-
-### Seminars
-
-The seminars that we will use each year will be a subset of the
-exercises. During the seminars we will discuss how to best solve
-problems and pros and cons of alternative solutions
-
-- [The seminars for spring 2018](Seminars2018.md)
 
 
 ### Generating pdf:s

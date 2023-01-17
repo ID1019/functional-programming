@@ -1,0 +1,319 @@
+\documentclass[a4paper,11pt]{article}
+
+\input ../include/preamble.tex
+
+
+\begin{document}
+
+
+\title{
+    \textbf{Higher order functions}\\
+    \large{Programming II - Elixir Version}
+}
+\author{Johan Montelius}
+\date{Spring Term 2023}
+\maketitle
+\defaultpagestyle
+
+
+
+\section*{Introduction}
+
+In this assignment you will learn how to implement two very powerful
+constructs: map and reduce. Once you master these higher order
+functions you will cut the source code that you have to write by a
+factor of two.
+
+\section*{Recursively transforming a list}
+
+Let's start with a simple example; implement a function that takes a
+list of integers as input and returns a list where all elements have
+been doubled.
+
+\begin{minted}{elixir}
+  def double( ... ) do .. end
+  def double( ... ) do
+     :
+  end
+\end{minted}
+
+Now implement a function that will take a list of integers and returns
+a list where you have added five to each element.
+
+\begin{minted}{elixir}
+  def five( ... ) do .. end
+  def five( ... ) do
+     :
+  end
+\end{minted}
+
+Implement a function, {\tt animal/1}, that takes a list of animals:
+{\tt :cat}, {\tt :dog}, {\tt :cow} etc and replaces each occurrence of
+{\tt :dog} with {\tt :fido}.
+
+As you now hopefully see is that your three functions all have the
+same pattern. We should be able to implement one function that does
+the recursion for us and performs the transformation that we want to
+do.
+
+Remove all of your functions and implement a function {\tt
+  double\_five\_animal/2} that takes a list of either integers or
+animals and performs a transformation depending on the second
+argument. If the second argument is {\tt :double} you should double
+the element, if it is {\tt :five} you should etc.
+
+\begin{minted}{elixir}
+
+  def double_five_animal( ..., ...) do ... end
+  def double_five_animal( ..., ...) do 
+     case ...  do 
+       ...   ->   ...
+       ...   ->   ...     
+       ...   ->   ...
+     end
+  end  
+\end{minted}
+
+Now, using your implementation of {\tt double\_five\_animal/2},
+implement the functions {\tt double/1}, {\tt five/1} and {\tt animal}.
+
+
+\section*{Functions as data}
+
+We will now introduce something that for ever will change the way you
+program. In the programming you have done so far you have probably
+always seen the program and its procedures as one part and the data
+structures that you work with as another part. This does not have to be
+the case, if the language allows we can treat functions as data.
+
+
+In the Elixir shell try the following:
+
+\begin{minted}{elixir}
+ f = fn(x) -> x * 2 end
+\end{minted}
+
+What is {\tt f}?  The answer is that {\tt f} is a function (or rather
+a closure but more on this later). It's a function that takes one
+argument and returns the doubling of this argument. How do you use it, try the following:
+
+\begin{minted}{elixir}
+ f.(5)
+\end{minted}
+
+Notice the dot between the {\tt f} and the parenthesis, if {\tt f} was
+the name of a function we would write {\tt f(5)} but now since it is a
+variable bound to a function we have to use the dot notation. 
+
+In the same way you can construct a function {\tt g} that adds five to
+its argument and a function {\tt h} that returns {\tt :fido} if
+applied to {\tt :dog} otherwise returns the argument as is.
+
+{\tt You can use the one row if-then-else:  {\tt if  x == :dog, do: :fido , else: x}}
+
+Now for the revolution.
+
+\section*{A function as argument}
+
+If we no can hold a function in our hand we should of course also be
+able to pass it as an argument to another function. Let's go back and
+look at our original problem, implementing a generic transformer that
+transforms each element in a list.
+
+Implement a function called {\tt apply\_to\_all/2} that takes a list as
+its first argument and ... a function ... as it's second
+argument. The function {\tt apply\_to\_all/2} should generate a list
+that is the result of applying the given function to each of the
+elements in the list.
+
+\begin{minted}{elixir}
+  def apply_to_all(..., ...) do ... end
+  def apply_to_all(..., ...) do
+    :  
+  end  
+\end{minted}
+
+Now, give that you have defined {\tt f}, {\tt g} and {\tt h}, try the
+following in the terminal:
+
+
+\begin{minted}{elixir}
+  apply_to_all([1,2,3,4], f)  
+
+  apply_to_all([1,2,3,4], g)    
+
+  apply_to_all([:dog, :cat, :cow, :horse], h)    
+\end{minted}
+
+Hmm, what if we try this:
+
+\begin{minted}{elixir}
+  apply_to_all([1,2,3,4], fn(x) -> 2*x + 5 end)
+\end{minted}
+
+
+As you see the function {\tt apply\_to\_all/2} is quite versatile and
+can be used any time you want to run through a list of items and apply
+a function to each of its elements. It's so useful that it has been
+given a very short name {\tt map/2} and is part of the {\tt Enum}
+module.
+
+\section*{Reducing a list}
+
+Let's try another scenario, assume that we should sum the elements of a
+list. This should be something that you now can do in less than a
+minute (don't us an accumulator or try to do a tail-recursive
+implementation), give it a try:
+
+\begin{minted}{elixir}
+  def sum( ... ) do ... end
+  def sum( ... ) do
+    ...
+  end  
+\end{minted}
+
+As you see, this function also uses a simple recursive pattern, you're
+running down the list and adding the element to whatever the result is
+from the recursive call. The result of summing an empty list is of
+course $0$.
+
+If we follow the idea from {\tt apply\_to\_all/2} we could rewrite this
+using one generic function {\tt fold\_right/3} that takes a list, a
+base value and a function as arguments. It should of course return the
+base value for an empty list and otherwise return the value obtained
+by applying the function to an element and whatever is returned by the
+recursive call to {\tt fold\_right/3}.
+
+
+\begin{minted}{elixir}
+  def fold_right(..., ..., - ) do ... end
+  def fold_right(..., ..., f ) do
+    f.(..., ...) 
+  end  
+\end{minted}
+
+Using {\tt fold\_right/2} you can now implement both {\tt sum/1} and
+{\tt prod/2} (that returns the product of all elements).
+
+You might wonder why it we call it {\tt \_right} and the reason is that
+we apply the function in a right to left order. When we sum the
+elements of the list {\tt [1,2,3,4]} we will apply the addition as follows:
+
+$$  1 + (2 + (3 + (4 + 0)))$$
+
+Since addition is a symmetric function it does not matter if we pass
+the function {\tt f(x,y) -> x + y end} or {\tt f(y,x) -> x + 4 end} to
+{\tt fold\_right/2} but most functions are not symmetric so we need to
+agree on how we pass the arguments to the given function. Should we do
+{\tt f.(elem, fold\_right(...))} or {\tt f.(fold\_right(...), elem)}?
+The agreement is to do it as in the first example so if you try the
+following:
+
+\begin{minted}{elixir}
+  fold_right([1,2,3,4], 0, fn(x, acc) -> {x, acc} end)
+\end{minted}
+
+you should receive the answer:
+
+\begin{minted}{elixir}
+  {1, {2, {3, {4, 0}}}}
+\end{minted}
+
+Now if there is a {\tt fold\_right/3}, obviously there must be a {\tt
+  fold\_left/3}. This function will do the same thing but now apply the
+function left-to-right. If we try:
+
+\begin{minted}{elixir}
+  fold_left([1,2,3,4], 0, fn(x, acc) -> {x, acc} end)
+\end{minted}
+
+we should receive:
+
+\begin{minted}{elixir}
+  {4, {3, {2, {1, 0}}}}
+\end{minted}
+
+To implement {\tt fold\_left/3} you need to use you skills in writing a
+tail recursive function where we have an accumulating parameter. The
+second argument is the accumulating parameter so the implementation
+looks like this:
+
+\begin{minted}{elixir}
+  def fold_left(..., ..., - ) do ... end
+  def fold_left(..., ..., f ) do
+    fold_left(..., f.(..., ...), f) 
+  end  
+\end{minted}
+
+The left-to-right version is in most cases more efficient since we are
+not using any stack space but it depends on the function that
+apply. With a function with a constant execution time it does not
+matter if we apply the function left-to-right or right-to-left but if
+the execution depends on the size of either of its arguments we need
+to be careful.
+
+The fold functions are so useful that they are provided in the module
+{\tt List} and they are called {\tt foldl/3} and {\tt foldr/3}. There
+is also an implementation in the module {\tt Enum} called {\tt
+  reduce/3} that implements the left-to-right strategy.
+
+The reason it also occurs in the {\tt Enum} module is that this module
+can handle other enumerable data structures, not just lists.
+
+\section*{Filter out the good ones}
+
+The third higher order construct that we shall look at is one that
+filters out the elements in a list that meet some requirement. You
+have now seen several examples of how we can define a higher order
+function so this one should be no match for you.
+
+Start by implementing a function {\tt odd/1} that takes a list and
+returns a list of all the odd elements ({\tt rem(x,2) == 1}).
+
+\begin{minted}{elixir}
+  def odd( ... ) do ... end
+  def odd( ... ) do
+    if ...  do
+       ... 
+    else
+       ...
+    end
+  end
+\end{minted}
+
+Now rewrite this as a function {\tt filter/2} that takes a list and a
+function that returns {\tt true} or {\tt false}. You should then be
+able to implement not only the function {\tt odd/1} using {\tt
+  filter/2} but also functions as {\tt even/1} or {\tt
+  greater\_than\_five/1}.
+
+
+
+\section*{Summary}
+
+Once you start to use the higher order functions {\tt map/2}, {\tt
+  reduce/3} and {\tt filter/2} you will be able to write much shorter
+programs and spend less time writing recursive functions that looks
+more or less the same. It is very often that most of a program actually
+consist of a series of these operations (and their cousins) that once
+you get use to it your programs will not look the same.
+
+These higher order constructs are available in all functional
+programming languages, you will find them in Haskell as well as in
+JavaScript. While the hard core functional programmers argue that the
+lambda calculus, Church numerals and the Y combinator is the reason to
+use functional programming, most programmers just finds map, reduce and
+filter so useful that they need no other reason.
+
+In the future, write your programs as normal but then spend some time
+to see if you can rephrase it using the higher order functions found
+in the {\tt Enum} module.
+
+
+
+
+
+
+
+
+\end{document}

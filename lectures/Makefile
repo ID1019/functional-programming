@@ -15,6 +15,7 @@ DIRS = 	asynchronous \
 	parallel \
 	pong \
 	recursion \
+	structures \
 	tracer \
 	transport \
 	trees \

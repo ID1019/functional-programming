@@ -43,7 +43,7 @@ defmodule Program do
   ## that are a multiple of four.
   
   def read_instruction({:code, code}, pc) do
-    0 = rem(pc,4)      ## pc must be amultiple of 4
+    0 = rem(pc,4)      ## pc must be a multiple of 4
     elem(code, div(pc, 4))
   end
 

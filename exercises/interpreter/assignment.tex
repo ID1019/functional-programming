@@ -25,7 +25,7 @@
     \large{Programming II - Elixir Version}
 }
 \author{Johan Montelius}
-\date{Spring Term 2018}
+\date{Spring Term 2023}
 \maketitle
 \defaultpagestyle
 
@@ -77,6 +77,7 @@ an interpreter for a subset of the Elixir language. Since it is not the
 complete language it is not a true meta-interpreter but it's close.
 
 \subsection{Expressions}
+
 Our target programming language is a limited functional language and
 in its first incarnation it will be limited to simple expressions; We
 will not have any function calls nor any program with function
@@ -110,6 +111,7 @@ sequence in the following way:
 \end{figure}
 
 \subsection{Terms, data structures and patterns}
+
 Expressions of the form that we have just described are also referred
 to as {\em terms}. We will later see examples of expression that are
 more complicated and we will talk about expressions in general and
@@ -155,6 +157,7 @@ without confusion is that it is clear from the grammatical rules of the
 language if we refer to a pattern or a term. 
 
 \subsection{Evaluation}
+
 Our interpreter will take a sequence and evaluate the pattern matching
 expressions one after the other; the result of the last expression is
 the result of the whole sequence. When the evaluation starts the
