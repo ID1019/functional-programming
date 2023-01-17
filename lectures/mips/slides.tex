@@ -123,9 +123,10 @@
 
 \begin{frame}[fragile]{instruction encoding}
 
- \begin{lstlisting}
-      \{:add, rd, rs, rt\}    -> <<   @aop::6, rs::5, rt::5, rd::5, 0::5, @add::6>>
- \end{lstlisting}
+ \begin{verbatim}
+   {:add, rd, rs, rt} -> 
+      <<@aop::6, rs::5, rt::5, rd::5, 0::5, @add::6>>
+ \end{verbatim}
 
 \end{frame}
 
