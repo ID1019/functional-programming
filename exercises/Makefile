@@ -1,10 +1,12 @@
 DIRS =  avl \
 	bitonic \
+	carlo \
 	concurrency \
 	derivative \
 	dynamic \
 	emulator \
 	environment \
+	expression \
 	hanoi \
 	higher \
 	huffman \

@@ -1,16 +1,16 @@
 defmodule Bench do
   
-  def bench() do bench(100) end
+  def bench() do bench(1000) end
 
   def bench(n) do
 
     ls = [16,32,64,128,256,512,1024,2*1024,4*1024,8*1024]        
-    :io.format("# benchmark of map as a list and as a tree (loop: ~w) \n", [n])
+    :io.format("# benchmark of key-value store as a list, a tree and Map: ~w operations, time per operation in us\n", [n])
     :io.format("~6.s~8.s~-36.s~-36.s~-36.s\n", ["n", "", "add", "lookup", "remove"])
     :io.format("~18.s~12.s~12.s~12.s~12.s~12.s~12.s~12.s~12.s\n", ["list", "tree", "map", "list", "tree", "map", "list", "tree", "map"])
     Enum.each(ls, fn (i) ->
       {i, tla, tta, tma, tll, ttl, tml, tlr, ttr, tmr} = bench(i, n)
-      :io.format("~6.w~12.2f~12.2f~12.2f~12.2f~12.2f~12.2f~12.2f~12.2f~12.2f\n", [i,tla/(i*n), tta/(i*n), tma/(i*n), tll/(i*n), ttl/(i*n), tml/(i*n), tlr/(i*n), ttr/(i*n), tmr/(i*n)])
+      :io.format("~6.w~12.2f~12.2f~12.2f~12.2f~12.2f~12.2f~12.2f~12.2f~12.2f\n", [i,tla/n, tta/n, tma/n, tll/n, ttl/n, tml/n, tlr/n, ttr/n, tmr/n])
     end)
 
     :ok
@@ -19,39 +19,29 @@ defmodule Bench do
   def bench(i, n) do 				    
     seq = Enum.map(1..i, fn(_) -> :rand.uniform(i) end)
 
-    {tla, tll, tlr}  = bench(seq, n, &EnvList.new/0, &EnvList.add/3, &EnvList.lookup/2, &EnvList.remove/2)
-    {tta, ttl, ttr}  = bench(seq, n, &EnvTree.new/0, &EnvTree.add/3, &EnvTree.lookup/2, &EnvTree.remove/2)
-    {tma, tml, tmr}  = bench(seq, n, &Map.new/0, &Map.put/3, &Map.get/2, &Map.delete/2)    
+    list = Enum.reduce(seq,  EnvList.new(),  fn(e, list) -> EnvList.add(list, e, :foo) end)
+    tree = Enum.reduce(seq,  EnvTree.new(),  fn(e, tree) -> EnvTree.add(tree, e, :foo) end)
+    map = Enum.reduce(seq,  Map.new(),  fn(e, map) -> Map.put(map, e, :foo)  end)    
+
+    seq = Enum.map(1..n, fn(_) -> :rand.uniform(i) end)
+    
+    {tla, _} = :timer.tc(fn() -> Enum.each(seq, fn(e) -> EnvList.add(list, e, :foo) end) end)
+    {tta, _} = :timer.tc(fn() -> Enum.each(seq, fn(e) -> EnvTree.add(tree, e, :foo) end) end) 
+    {tma, _} = :timer.tc(fn() -> Enum.each(seq, fn(e) -> Map.put(map, e, :foo) end) end) 
+
+    {tll, _} = :timer.tc(fn() -> Enum.each(seq, fn(e) -> EnvList.lookup(list, e) end) end) 
+    {ttl, _} = :timer.tc(fn() -> Enum.each(seq, fn(e) -> EnvTree.lookup(tree, e) end) end) 
+    {tml, _} = :timer.tc(fn() -> Enum.each(seq, fn(e) -> Map.get(map, e) end) end) 
+    
+    {tlr, _} = :timer.tc(fn() -> Enum.each(seq, fn(e) -> EnvList.remove(list, e) end) end) 
+    {ttr, _} = :timer.tc(fn() -> Enum.each(seq, fn(e) -> EnvTree.remove(tree, e) end) end) 
+    {tmr, _} = :timer.tc(fn() -> Enum.each(seq, fn(e) -> Map.delete(map, e) end) end) 
     
     {i, tla, tta, tma, tll, ttl, tml, tlr, ttr, tmr}
   end
 
 
-  def bench(seq, n, f_new, f_add, f_lookup, f_remove) do
-    {add, map} = time(seq, n, f_new.(), fn(seq, map) -> 
-                                 Enum.reduce(seq, map, fn(e, acc) -> 
-                                   f_add.(acc, e, :foo)
-				 end)
-    end)
-  {lookup, _} = time(seq, n, map, fn(seq, map) -> 
-                                 Enum.each(seq, fn(e) -> 
-                                   f_lookup.(map, e)
-				 end)
-      map
-    end)
 
-  {remove, _} = time(seq, n, map, fn(seq, map) -> 
-                                 Enum.reduce(seq, map, fn(e, acc) -> 
-                                      f_remove.(acc, e) end) 
-  end)
-  
-  {add, lookup, remove}
-  end
-
-
-  def time(seq, n, map, f) do
-    :timer.tc(fn () -> Enum.reduce(1..n, map, fn(_, map) -> f.(seq, map) end) end)
-  end
 
   
 end
