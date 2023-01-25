@@ -31,6 +31,8 @@ DIRS =  avl \
 	transport\
 	twothree   
 
+ADVENT22 = day16.ex day16.csv
+
 PONG = pong.ex ping.ex websocket.ex game.ex session.ex pong.html pong.js
 
 REPORT = report.pdf report.tar.gz
@@ -53,6 +55,10 @@ install:
 	for f in $(PONG); do \
              rsync -uL ./pong/src/$$f  $(WWW)/pong/src/$$f;\
         done
+	mkdir -p $(WWW)/advent/2022
+	for f in $(ADVENT22); do\
+             rsync -uL ./advent/2022/src/$$f $(WWW)/advent/2022/$$f;\
+	done
 	mkdir -p $(WWW)/report
 	for f in $(REPORT); do \
              rsync -uL ./report/$$f  $(WWW)/report/$$f;\
