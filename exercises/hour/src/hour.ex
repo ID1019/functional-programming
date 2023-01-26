@@ -1,69 +1,77 @@
 defmodule Hour do
 
-  @type glass() :: {:open, integer(), integer()}
-
+  @type glas() :: {:glas, integer(), integer()} 
 
   def solve(k) do
-    one = {:open, 7, 0}
-    two = {:open, 4, 0}
-    case solve(one, two, k) do
-      :no ->
-	:no
-      path ->
-	[{k, one, two, "start"} | path]
-    end
+    solve({:glas, 0, 4}, {:glas, 0, 7}, k)
   end
   
-  def solve( _, _, k) when k < 0 do :no end
+  def solve(one, two, k) do
+    iterative(one, two, k, 0)
+  end
 
-  def solve( {:open, 0, _}=one,  two, 0) do [{0, one, two, "first empty, done"}] end
-  def solve( one,  {:open, 0, _}=two, 0) do [{0, one, two, "second empty, done"}] end  
-
-  def solve( {:open, 0, n1}=one, {:open, 0, n2}=two, k) do  
-    case cont({:open, n1, 0}, {:open, n2, 0}, k) do
+  ## iterative deepening to a depth of 2k - we can not have more than
+  ## two flips a minute.
+  
+  def iterative(_, _, k, z) when z > 2*k do :no end
+  def iterative(one, two, k, z) do
+    case tock(one, two, k, z) do
       :no ->
-	:no
+	iterative(one, two, k, z+1)
       path ->
-	[{k, one, two, "both empty, toggle both"}|path]
+	{:solved, z, path}
     end
   end
-  
-  def solve( {:open, 0, n1}=one, {:open, t2, n2}=two, k) do
-    case cont({:open, n1, 0}, {:open, t2, n2}, k) do
+
+  ## solve k minutes with exactly z flips
+
+  def tock(one, two, 0, 0) do [{0, one, two, "done"}] end
+  def tock(_, _, _, 0) do :no end
+
+  def tock(one, two, k, z)  do  
+    case tick(flip(one), two, k, z-1) do
       :no ->
-	case cont({:open, n1, 0}, {:open, n2, t2}, k) do
+	case tick(one, flip(two), k, z-1) do
 	  :no ->
-	    :no
+	    if (z >= 2) do
+	      case tick(flip(one), flip(two), k, z-2) do
+		:no ->
+		  :no
+		path ->
+		  [{k, one, two, "flip both"}|path]
+	      end
+	    else
+	      :no
+	    end
 	  path ->
-	    [{k, one, two, "first empty, toggle both"} | path]
+	    [{k, one, two, "flip second"}|path]
 	end
       path ->
-	[{k, one, two, "first empty, toggle it"} | path]
+	[{k, one, two, "flip first"}|path]
     end
   end
 
-  def solve( {:open, t1, n1}=one, {:open, 0, n2}=two, k) do
-    case cont({:open, t1, n1}, {:open, n2, 0}, k) do
-      :no ->
-	case cont({:open, n1, t1}, {:open, n2, 0}, k) do
-	  :no ->
-	    :no
-	  path ->
-	    [{k, one, two, "second empty, toggle both"} | path]
-	end
-      path ->
-	[{k, one, two, "second empty, toggle it"} | path]
-    end
-  end
   
-  def solve(one, two, k) do 
-    cont(one, two, k)
+  def tick({:glas, t1, n1}, {:glas, 0, n2}, k, z)  when t1 > 0 and t1 <= k do  
+    tock({:glas, 0, n1+t1}, {:glas, 0, n2}, k-t1, z)
+  end        
+  
+  def tick({:glas, 0, n1}, {:glas, t2, n2}, k, z)  when t2 > 0 and t2 <= k do  
+    tock({:glas, 0, n1}, {:glas, 0, n2+t2}, k-t2, z)
   end
 
-  def cont( {:open, t1, n1}, {:open, t2, n2}, k) do  
-    solve( {:open, t1-1, n1+1}, {:open, t2-1, n2+1}, k-1)
-  end    
+  def tick({:glas, t1, n1}, {:glas, t2, n2}, k, z) when t1 > 0 and t1 < t2 and t1 <= k do  
+    tock({:glas, 0, n1+t1}, {:glas, t2-t1, n2+t1}, k-t1, z)
+  end
 
+  def tick({:glas, t1, n1}, {:glas, t2, n2}, k, z) when t2 > 0 and t1 >= t2 and t2 <= k do  
+    tock({:glas, t1-t2, n1+t2}, {:glas, 0, n2+t2}, k-t2, z)
+  end  
+
+  def tick( _, _, _, _)  do :no end
+  
+
+  def flip({:glas, t, n}) do {:glas, n, t} end
   
 
 end
