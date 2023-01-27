@@ -133,14 +133,12 @@ end
 \begin{frame}[fragile]{update an item in a tuple}
 
 \begin{verbatim}
-   update(lst, pos, itm)
+   put_elem(tuple, pos, itm)
 \end{verbatim}
   \vspace{20pt}\pause
 \begin{verbatim}
-def update([_|rest], 0, itm) do [itm|rest] end
-def update([first|rest], n, itm) do
-   [first|update(rest, n-1, itm)]
-end
+   > put_elem({:a, :b, :c}, 1, :x) 
+   {:a, :x, :c}
 \end{verbatim}
 
   \vspace{10pt}\pause
@@ -148,21 +146,6 @@ end
 \end{frame}
 
 
-
-\begin{frame}[fragile]{why use lists}
-
-Represent the following information using ether a list or tuple:
-                   
-\begin{itemize}
-\pause \item a playing card: ace of club, king of hearts etc 
-\pause \item a stack of playing cards
-\pause \item 1001 movies to see before you die
-\pause \item a "bucket list" of  things to do
-\end{itemize}
-
-\pause\vspace{20pt}
-{\em Lists are sometimes called ``stacks'' since the push an pop are cheap.}
-\end{frame}
 
 \begin{frame}[fragile]{what about queues}
 
