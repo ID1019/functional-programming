@@ -1,0 +1,187 @@
+\documentclass[a4paper,11pt]{article}
+
+\input ../include/preamble.tex
+
+\usepackage{tikz}
+\usetikzlibrary{automata,arrows,topaths,calc,positioning}
+
+
+\begin{document}
+
+
+\title{
+    \textbf{Two hourglases $\Pi$}\\
+    \large{Programming II}
+}
+\author{Johan Montelius}
+\date{Spring Term 2023}
+\maketitle
+\defaultpagestyle
+
+
+\section*{Introduction}
+
+This is a puzzle that you should solve using a method called {\em
+  iterative deepening}. The procedure is to try to solve a puzzle in
+the lest number of move by first trying to solve it with one move and
+if that does not work, use two and of that does not work use three
+etc. When you find a solution you know that this is the one with the
+least number of moves.
+
+This procedure is called iterative deepening since we iterate a try to
+search for a solution deeper and deeper down in a search tree. It
+sounds a bit inefficient to constantky start from the beginning but it
+turns out that the overhead is not that big. The time it takes to find
+a solution it typically only twice as long as it would take to start
+with the correct deepth directly.
+
+\section*{The puzzle}
+
+Assume that you have two hourglasses, one that can measure $7$ minutes
+and one that can measure $4$ minutes. Your task is to come up with a
+sequnce of actions that will allow you to measure $13$ minutes. The
+move that can do is of course to flip a hourglass over so that the
+sand starts to fall into the lower chamber. You can of course flip any
+of the glasses over whenever you want but since your task is to
+measure time it onky makes sence to flip it over when you know how
+many minutes has passed.
+
+You can try to come up with a sequence right away but if you're not
+Rain Man, it will probably take you some time. You will probably use a
+pen and paper and start to write down sequences of move or what the
+hourglasses look like after sertain minutes. You probably realize that
+we need a way to represent an hourglass so this will be your first job.
+
+Once we have a suitable representation we need to define a search
+tree; what does the tree look like, each node should be the state of
+the two hourglasses but which {\em moves} are legal. When we search
+the tree we should keep tracj of the deapth but what is the deapth and
+what does a solution lokk like. This not something that you will write
+down immediately but a process that gradually arrives to a final
+solution.
+
+Since this puzzle comes in many flavours you should be able to solve
+any specification of two hourglass of $x$ minutes and $y$ minutes and
+measuring $z$ minutes (or determine that it is not possible). As you
+will see the solution that you come up with will be able to do that so
+don't worry.
+
+\section*{check one solution}
+
+The following is one possible way of step by step implement a program
+that finds a solution to hour puzzle. You can follow this example or
+come up with an alternative strategy.
+
+Let's first settle for a representation of an hourglass. If it's an
+hourglass standing on a table, we can represent it by the tuple {\tt
+  \{:glas, 0, 7\}} meaning that this is an hourglass that can measure $7$
+minutes. Once we flip it over the sand starts to trickle down, we need
+to represent how much sand we have in the upper chamber and how much
+we have in the lower chamber. An hourglass with flowing sand can then
+be represented by the tuple {\tt \{:glas, 3, 4\}} meaning that four
+minutes have passed and we have three more minutes to go.
+
+\subsection{iterative deepening}
+
+We want to find a solution with as few moves, or {\em flips}, as
+possible. The iterative deepening method should therefore determine of
+there is a solution with exactly $n$ flips before it tries to find a
+solution with $n+1$ flips. We thus need a function that will determine
+if there is a solution with exactly $n$ flips. Since we will do a lot
+of fliping we might as well define a function that flips a hourglas.
+
+\begin{minted}{elixir}
+  def flip({:glas, t, n}) do {:glas, n, t} end  
+\end{minted}
+
+In the end we need a function {\tt tock/4} that takes four arguments,
+two hourglasses, the number of minutes that we should measure, {\tt
+  k}, and exactly the number of flips that we should do, {\t z}.
+
+Before we define {\t tock/4} we will define another function, {\tt
+  tick/4}, will move the time forward until either one of the
+hourglasses has terminted. After all if both hourglasses are trickling
+sand we can not do anything but wait. As soon as one of the
+hourglasses terminates we do have a choice and we then call {\tt
+  tock/4} that will explore the different options we have.
+
+For {\tt tock/4} we have several situations that we should handle.
+One is if the first hourglas is trickling while the other is just
+standing on the table. Then we can wait until the first hourglas is
+down to zero before we call {\tt tock/4} to determine what to do. Note
+that this is only an option if we still have some time left ({\tt \{t1
+  <= k\}}).
+
+\begin{minted}{elixir}
+  def tick({:glas, t1, n1}, {:glas, 0, n2}, k, z)  when t1 > 0 and t1 <= k do  
+    tock({:glas, 0, n1+t1}, {:glas, 0, n2}, k-t1, z)
+  end
+   :
+   :
+\end{minted}
+
+We of course have the reverse situation where the first glas is just
+standing there and the second one is trickling sand. A third case is
+if they are both trickling but the first one has less minutes to
+go. The fourh case is the oposit and if there are no options (we would
+run out of time) we return {\tt :no}.
+
+So now we are ready to define {\tt tock/4}. We have two hourglases, of
+which at least one is down to zero. We now first check if we actually
+have a solution and this is of course the case where both the minutes
+and flips are down to zero. If the are we return {\tt :yes}.
+
+\begin{minted}{elixir}
+  def tock(_, _, 0, 0) do :yes end
+\end{minted}
+
+If we still have time to go but the number of flips that we should use
+is down to zero there is no solution to be found.
+
+\begin{minted}{elixir}
+  def tock(_, _, _, 0) do :no end  
+\end{minted}
+
+In general we still have time to go and we have more flips to do so we
+explore our options. The three options we have are: flip only the
+first, only the second or both. Since it we are only looking for any
+solution (not all or the best) we can ty these options one by one. 
+
+\begin{minted}{elixir}
+  def tock(one, two, k, z) do
+    case tock(flip(one), two, k, z-1) do 
+       :no ->
+            :
+       :yes ->
+          :yes     
+    end
+  end 
+\end{minted}
+
+If you implemented everything up to now you should be able to try the
+following two calls:
+
+\begin{minted}{elixir}
+  Hour.tock({:glas, 0, 4}, {:glas, 0, 4}, 13, 6)
+\end{minted}
+and
+\begin{minted}{elixir}
+  Hour.tock({:glas, 0, 4}, {:glas, 0, 4}, 13, 6)
+\end{minted}
+
+If you done everything right you know that there is no solution using
+exacly five flips but there is a solution using six flips. There
+should be a solution with seven flips but not with eight. Is there one
+for: 9, 10, 11, ...?
+
+
+
+
+
+
+\section*{Summary}
+
+
+  
+
+\end{document}

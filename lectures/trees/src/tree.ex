@@ -33,7 +33,8 @@ defmodule Tree do
       seq = sequence(i, 10000)
       elem(:timer.tc(fn () -> f.(seq) end),0)
     end
-    IO.write("# benchmark of lists and tree \n")
+    IO.write("# benchmark of lists and tree: average time to insert an element when building a structyre of n elements\n")
+    IO.write("# n\tlist\ttree\n")    
 
     bench = fn (i) ->
       list = fn (seq) ->
@@ -44,7 +45,7 @@ defmodule Tree do
       end      
       tl = test.(i, list) 
       tt = test.(i, tree)     
-      IO.write("  #{tl}\t\t#{tt}\n")
+      :io.format("~w\t~.2f\t~.2f\n", [i, tl/i, tt/i])
     end
     
     Enum.map(ls, bench)
