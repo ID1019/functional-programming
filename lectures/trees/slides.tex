@@ -31,19 +31,17 @@ We could implement lists using tuples:
 \pause
 
 \begin{code}
-   <list> ::=  & :nil | \\
-               & '\{' :cons ',' <expression> ',' <list> '\}'
+  {}  
+  {:foo, {}}
+  {:foo, {:bar, {}}}
+  {:foo, {:bar, {:zot, {}}}}
 \end{code}
 
-
 \pause \vspace{20pt}
-{\tt [:foo, :bar, :zot]}
+{\tt [:foo | [:bar | [:zot | [] ] ] ] }
 
 \pause \vspace{10pt}
-{\tt [:foo | [:bar | [:zot | [] ] ] ] }
- 
-\pause \vspace{10pt}
-{\tt \{:cons, :foo, \{:cons, :bar, \{:cons, :zot, :nil\}\}\}}
+{\tt [:foo, :bar, :zot]}
 
 \end{frame}
 
