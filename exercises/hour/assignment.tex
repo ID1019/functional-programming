@@ -5,12 +5,11 @@
 \usepackage{tikz}
 \usetikzlibrary{automata,arrows,topaths,calc,positioning}
 
-
 \begin{document}
 
 
 \title{
-    \textbf{Two hourglases $\Pi$}\\
+    \textbf{Two hourglases}\\
     \large{Programming II}
 }
 \author{Johan Montelius}
@@ -46,6 +45,8 @@ of the glasses over whenever you want but since your task is to
 measure time it onky makes sence to flip it over when you know how
 many minutes has passed.
 
+\subsection*{the search three}
+
 You can try to come up with a sequence right away but if you're not
 Rain Man, it will probably take you some time. You will probably use a
 pen and paper and start to write down sequences of move or what the
@@ -55,10 +56,70 @@ we need a way to represent an hourglass so this will be your first job.
 Once we have a suitable representation we need to define a search
 tree; what does the tree look like, each node should be the state of
 the two hourglasses but which {\em moves} are legal. When we search
-the tree we should keep tracj of the deapth but what is the deapth and
-what does a solution lokk like. This not something that you will write
-down immediately but a process that gradually arrives to a final
-solution.
+the tree we should keep track of the depth but what is the depth and
+what does a solution look like.
+
+Let's represent an hourglas as for example [3,4] menaing that is is a
+hourglass of seven minutes with three more minutes to go. We can then
+display a search tree as follows:
+
+\begin{figure}[h]
+\center
+\begin{tikzpicture}[]
+ \node[] (root) at (2,3) {t = 13, [0,7], [0,4]};
+
+ \node[below left = of root] (a1) {t = 6, [0,7], [0,4]};
+ \node[below = of root] (a2) {t = 9, [3,4],[0,4]};
+ \node[below right = of root] (a3) {t = 9, [0,7], [0,4]};  
+ \draw[->] (root) -- node[left, anchor = south east] {flip 7} (a1);
+ \draw[->] (root) -- node[left, anchor = north east] {flip both} (a2);
+ \draw[->] (root) -- node[right, anchor = south west] {flip 4} (a3);  
+\end{tikzpicture}
+\caption{The first level of the search three}
+\end{figure}
+
+This would be read as starting at time $0$ with the two hourglasses
+standing on the table. We have three options: flip the first, both or
+the second. If we flip the seven minutes glas only we can do nothing
+but wait for seven minutes and again have the two hourglases in front
+of us. If we flip both we arrive at at state where we have three
+minutes left in the seven minutes glas. If we expand this branch we
+have the following tree:
+
+
+\begin{figure}[h]
+\center
+\begin{tikzpicture}[]
+ \node[] (root) at (2,3) {t = 13, [0,7], [0,4]};
+
+ \node[below left = of root] (a1) {}; 
+ \node[below = of root] (a2) {t = 9, [3,4],[0,4]};
+\node[below right = of root] (a3) {};  
+
+ \draw[->, dashed] (root) -- (a1);
+ \draw[->] (root) -- node[left, anchor = north east] {flip both} (a2);
+ \draw[->, dashed] (root) -- (a3);
+
+ \node[below left = of a2] (b1) {t = 2, [0,7], [0,4]};
+ \node[below = of a2] (b2) {t = 6, [0,7],[1,3]};
+ \node[below right = of a2] (b3) {t = 6, [0,7], [1,3]};  
+
+ \draw[->] (a2) -- node[left, anchor = south east] {flip 7} (b1);
+ \draw[->] (a2) -- node[left, anchor = north east] {flip both} (b2);
+ \draw[->] (a2) -- node[right, anchor = south west] {flip 4} (b3);   
+ 
+\end{tikzpicture}
+\caption{Expanding the search three}
+\end{figure}
+
+If you start to draw the rest of this search tree you will find out that it is rather big. 
+
+
+
+
+
+
+
 
 Since this puzzle comes in many flavours you should be able to solve
 any specification of two hourglass of $x$ minutes and $y$ minutes and
@@ -81,7 +142,6 @@ we have in the lower chamber. An hourglass with flowing sand can then
 be represented by the tuple {\tt \{:glas, 3, 4\}} meaning that four
 minutes have passed and we have three more minutes to go.
 
-\subsection{iterative deepening}
 
 We want to find a solution with as few moves, or {\em flips}, as
 possible. The iterative deepening method should therefore determine of
@@ -93,6 +153,8 @@ of fliping we might as well define a function that flips a hourglas.
 \begin{minted}{elixir}
   def flip({:glas, t, n}) do {:glas, n, t} end  
 \end{minted}
+
+\subsection*{tick-tock}
 
 In the end we need a function {\tt tock/4} that takes four arguments,
 two hourglasses, the number of minutes that we should measure, {\tt
@@ -173,6 +235,10 @@ If you done everything right you know that there is no solution using
 exacly five flips but there is a solution using six flips. There
 should be a solution with seven flips but not with eight. Is there one
 for: 9, 10, 11, ...?
+
+\section*{The path}
+
+
 
 
 
