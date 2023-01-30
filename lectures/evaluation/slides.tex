@@ -90,7 +90,7 @@ examples:
 
 \begin{frame}{evaluation}
 
-  When we {\em evaluate} sequences, the result will be a structure.
+  When we {\em evaluate} sequences, the result will be a {\em data structure}.
   \pause\vspace{10pt}
 
 $${\rm Atoms} =  \{a,b,c, ...\}$$
@@ -105,7 +105,7 @@ An evaluation can also result in $\perp$, called ``bottoms'', this represents a 
 \begin{frame}{injective mapping}
 
 \pause \vspace{20pt}
-For every atom {\tt a}, there is a corresponding structure $s$.
+For every atom {\tt a}, there is a corresponding data structure $s$.
 
 \vspace{10pt}
 \hspace{40pt}We write ${\rm a} \mapsto s$.
@@ -121,7 +121,7 @@ For every atom {\tt a}, there is a corresponding structure $s$.
 {\em For every digit \texttt{1,2,3} (or \texttt{I, II, III}) there is a corresponding number $1,2,3$.}
 
 \pause \vspace{20pt}
-{\em Our language could have structures that do not have corresponding terms.}
+{\em Our language could have data structures that do not have corresponding terms.}
 
 \end{frame}
 
@@ -144,7 +144,7 @@ We write:
 $$\frac{{\rm prerequisite}}{E\sigma({\rm expression}) \rightarrow {\rm result}}$$
 
 \vspace{20pt}
-where {\em result} is a {\em structure}.
+where {\em result} is a {\em data structure}.
 
 \end{frame}
 
@@ -160,6 +160,34 @@ We have the following rules for evaluation of expressions:
 \vspace{10pt}\pause Evaluation of a compund structure: $$\frac{ E\sigma(e_1) \rightarrow s_1 \qquad   E\sigma(e_2) \rightarrow s_2}{E\sigma(\lbrace e_1 , e_2\rbrace) \rightarrow \{s_1, s_2\}}$$
  
 \end{frame}
+
+\begin{frame}{evaluation tree}
+
+    \begin{tikzpicture}[overlay]
+
+
+      \node<1-7>[] (root) at (6,0) {$E\lbrace x/\mathit{bar}\rbrace(\text{\{:foo, x\}}) \rightarrow ? $};
+      \draw<1->[] ($(root)+(-5,0.5)$) -- ($(root)+(5,0.5)$);
+
+      \node<2-3>[] (e1) at ($(root) +(-3, 1)$) {$E\lbrace x/\mathit{bar}\rbrace(\text{:foo}) \rightarrow ? $};
+      \draw<2->[] ($(e1)+(-2,0.5)$) -- ($(e1)+(2,0.5)$);
+
+      \node<3->[] (foo) at ($(e1) +(0, 1)$) {$\text{:foo} \mapsto \mathit{foo}$};
+
+      \node<4->[] ()  at ($(root) +(-3, 1)$) {$E\lbrace x/\mathit{bar}\rbrace(\text{:foo}) \rightarrow \mathit{foo}$};
+      
+      \node<5-6>[] (e2) at ($(root) +(3, 1)$) {$E\lbrace x/\mathit{bar}\rbrace(\text{x}) \rightarrow ? $};
+      \draw<5->[] ($(e2)+(-2,0.5)$) -- ($(e2)+(2,0.5)$);      
+
+      \node<6->[] (bar) at ($(e2) +(0, 1)$) {$\text{x}/\mathit{bar} \in \lbrace x/\mathit{bar}\rbrace$};
+      
+      \node<7->[] () at ($(root) +(3, 1)$) {$E\lbrace x/\mathit{bar}\rbrace(\text{x}) \rightarrow \mathit{bar}$};
+
+      \node<8->[] () at (root) {$E\lbrace x/\mathit{bar}\rbrace(\text{\{:foo, x\}}) \rightarrow \lbrace \mathit{foo}, \mathit{bar} \rbrace$};      
+  \end{tikzpicture}
+
+\end{frame}  
+
 
 \begin{frame}{evaluation of expressions}
 
