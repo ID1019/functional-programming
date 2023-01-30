@@ -5,12 +5,11 @@
 \usepackage{tikz}
 \usetikzlibrary{automata,arrows,topaths,calc,positioning}
 
-
 \begin{document}
 
 
 \title{
-    \textbf{Two hourglases $\Pi$}\\
+    \textbf{Two hourglases}\\
     \large{Programming II}
 }
 \author{Johan Montelius}
@@ -46,6 +45,8 @@ of the glasses over whenever you want but since your task is to
 measure time it onky makes sence to flip it over when you know how
 many minutes has passed.
 
+\subsection*{the search three}
+
 You can try to come up with a sequence right away but if you're not
 Rain Man, it will probably take you some time. You will probably use a
 pen and paper and start to write down sequences of move or what the
@@ -55,10 +56,74 @@ we need a way to represent an hourglass so this will be your first job.
 Once we have a suitable representation we need to define a search
 tree; what does the tree look like, each node should be the state of
 the two hourglasses but which {\em moves} are legal. When we search
-the tree we should keep tracj of the deapth but what is the deapth and
-what does a solution lokk like. This not something that you will write
-down immediately but a process that gradually arrives to a final
-solution.
+the tree we should keep track of the depth but what is the depth and
+what does a solution look like.
+
+Let's represent an hourglas as for example [3,4] menaing that is is a
+hourglass of seven minutes with three more minutes to go. We can then
+display a search tree as follows:
+
+\begin{figure}[h]
+\center
+\begin{tikzpicture}[]
+ \node[] (root) at (2,3) {t = 13, [0,7], [0,4]};
+
+ \node[below left = of root] (a1) {t = 6, [0,7], [0,4]};
+ \node[below = of root] (a2) {t = 9, [3,4],[0,4]};
+ \node[below right = of root] (a3) {t = 9, [0,7], [0,4]};  
+ \draw[->] (root) -- node[left, anchor = south east] {flip 7} (a1);
+ \draw[->] (root) -- node[left, anchor = north east] {flip both} (a2);
+ \draw[->] (root) -- node[right, anchor = south west] {flip 4} (a3);  
+\end{tikzpicture}
+\caption{The first level of the search three}
+\end{figure}
+
+This would be read as starting at time $0$ with the two hourglasses
+standing on the table. We have three options: flip the first, both or
+the second. If we flip the seven minutes glas only we can do nothing
+but wait for seven minutes and again have the two hourglases in front
+of us. If we flip both we arrive at at state where we have three
+minutes left in the seven minutes glas. The last option is to flip the second glas and wait for four minutes.
+
+Note that we can not flip for example both glases and wait for two
+minutes and arrive to the situation: [5,2], [2,2]. We simply donät
+know when two minutes has passed. We have to wait until one, or both,
+glasses are down to zero and this is when do our next move.
+
+If we expand the second branch we have the following tree:
+
+
+\begin{figure}[h]
+\center
+\begin{tikzpicture}[]
+ \node[] (root) at (2,3) {t = 13, [0,7], [0,4]};
+
+ \node[below left = of root] (a1) {}; 
+ \node[below = of root] (a2) {t = 9, [3,4],[0,4]};
+\node[below right = of root] (a3) {};  
+
+ \draw[->, dashed] (root) -- (a1);
+ \draw[->] (root) -- node[left, anchor = north east] {flip both} (a2);
+ \draw[->, dashed] (root) -- (a3);
+
+ \node[below left = of a2] (b1) {t = 5, [0,7], [0,4]};
+ \node[below = of a2] (b2) {t = 5, [0,7],[0,4]};
+ \node[below right = of a2] (b3) {t = 6, [0,7], [1,3]};  
+
+ \draw[->] (a2) -- node[left, anchor = south east] {flip 7} (b1);
+ \draw[->] (a2) -- node[left, anchor = north east] {flip both} (b2);
+ \draw[->] (a2) -- node[right, anchor = south west] {flip 4} (b3);   
+ 
+\end{tikzpicture}
+\caption{Expanding the search three}
+\end{figure}
+
+If you start to draw the rest of this search tree you will find out
+that it is rather big. It is of course not infinitly large since a
+branch must stop if there is no time left (an time will be decreased
+in each step). Since each node represents a state where one (or both)
+hourglases has A {\em solution} if found if we find a leaf with a time
+of zero.
 
 Since this puzzle comes in many flavours you should be able to solve
 any specification of two hourglass of $x$ minutes and $y$ minutes and
@@ -81,36 +146,29 @@ we have in the lower chamber. An hourglass with flowing sand can then
 be represented by the tuple {\tt \{:glas, 3, 4\}} meaning that four
 minutes have passed and we have three more minutes to go.
 
-\subsection{iterative deepening}
-
-We want to find a solution with as few moves, or {\em flips}, as
+We want to find a solution with as few {\em flips} as
 possible. The iterative deepening method should therefore determine of
-there is a solution with exactly $n$ flips before it tries to find a
-solution with $n+1$ flips. We thus need a function that will determine
-if there is a solution with exactly $n$ flips. Since we will do a lot
+there is a solution with exactly $x$ flips before it tries to find a
+solution with $x+1$ flips. We thus need a function that will determine
+if there is a solution with exactly $z$ flips. Since we will do a lot
 of fliping we might as well define a function that flips a hourglas.
 
 \begin{minted}{elixir}
   def flip({:glas, t, n}) do {:glas, n, t} end  
 \end{minted}
 
-In the end we need a function {\tt tock/4} that takes four arguments,
-two hourglasses, the number of minutes that we should measure, {\tt
-  k}, and exactly the number of flips that we should do, {\t z}.
+\subsection*{tick, tock}
 
-Before we define {\t tock/4} we will define another function, {\tt
-  tick/4}, will move the time forward until either one of the
-hourglasses has terminted. After all if both hourglasses are trickling
-sand we can not do anything but wait. As soon as one of the
-hourglasses terminates we do have a choice and we then call {\tt
-  tock/4} that will explore the different options we have.
+We will search the tree using two functions: {\tt tick/4} and {\tt
+  tock/4}. Both functions will take the two hourglasses, the number of
+minutes that we should measure, {\tt k}, and exactly the number of
+flips that we should do, {\t z}, as arguments.
 
-For {\tt tock/4} we have several situations that we should handle.
-One is if the first hourglas is trickling while the other is just
-standing on the table. Then we can wait until the first hourglas is
-down to zero before we call {\tt tock/4} to determine what to do. Note
-that this is only an option if we still have some time left ({\tt \{t1
-  <= k\}}).
+The function {\tt tick/4} is used when we have fliped either of both
+glases and will move the time forward until either one of the
+hourglasses has terminted.  As soon as one of the hourglasses
+terminates we do have a choice and we then call {\tt tock/4} that will
+explore the different options we have.
 
 \begin{minted}{elixir}
   def tick({:glas, t1, n1}, {:glas, 0, n2}, k, z)  when t1 > 0 and t1 <= k do  
@@ -129,7 +187,7 @@ run out of time) we return {\tt :no}.
 So now we are ready to define {\tt tock/4}. We have two hourglases, of
 which at least one is down to zero. We now first check if we actually
 have a solution and this is of course the case where both the minutes
-and flips are down to zero. If the are we return {\tt :yes}.
+and flips are down to zero. If they are we return {\tt :yes}.
 
 \begin{minted}{elixir}
   def tock(_, _, 0, 0) do :yes end
@@ -145,34 +203,97 @@ is down to zero there is no solution to be found.
 In general we still have time to go and we have more flips to do so we
 explore our options. The three options we have are: flip only the
 first, only the second or both. Since it we are only looking for any
-solution (not all or the best) we can ty these options one by one. 
+solution (not all or the best) we can try these options one by one. 
 
 \begin{minted}{elixir}
   def tock(one, two, k, z) do
     case tock(flip(one), two, k, z-1) do 
        :no ->
-            :
+         case .....  do
+           :
+         end
        :yes ->
           :yes     
     end
   end 
 \end{minted}
 
+Note that the flip-argument is decremented by one if we flip one glass
+but by two if we flip both (you can of course choose to count fliping
+both as one move).
+
 If you implemented everything up to now you should be able to try the
 following two calls:
 
 \begin{minted}{elixir}
-  Hour.tock({:glas, 0, 4}, {:glas, 0, 4}, 13, 6)
+  Hour.tock({:glas, 0, 7}, {:glas, 0, 4}, 13, 5)
 \end{minted}
 and
 \begin{minted}{elixir}
-  Hour.tock({:glas, 0, 4}, {:glas, 0, 4}, 13, 6)
+  Hour.tock({:glas, 0, 7}, {:glas, 0, 4}, 13, 6)
 \end{minted}
 
 If you done everything right you know that there is no solution using
 exacly five flips but there is a solution using six flips. There
 should be a solution with seven flips but not with eight. Is there one
 for: 9, 10, 11, ...?
+
+\section*{Iterative deepening}
+
+The itertive deeåening method is relative simple. You start by
+searching for a solution using only zero flips (there are of course
+none). When you know that there is no solution to be found you
+increase the number of flips that you can use by one and try again. If
+you find a solution you know that this is the "best" solution.
+
+
+\begin{minted}{elixir}
+  def solve() do
+    solve({:glas, 0, 4}, {:glas, 0, 7}, 13)
+  end
+  
+  def solve(one, two, k) do
+    iterative(one, two, k, 0)
+  end
+  
+  def iterative(one, two, k, z) do
+    case ...    do
+      :no ->
+	...
+      :yes ->
+	{:found, z}
+    end
+  end
+\end{minted}
+
+If you get this right you should know that the best solution uses six
+flips. You can call {\tt iterative/4} directly and find out that there
+is another sulution at seven, thirtheen, ...
+
+\begin{minted}{elixir}
+  > Hour.iterative({:glas, 0, 7}, {:glas, 0, 4}, 13, 7)
+   :
+
+  > Hour.iterative({:glas, 0, 7}, {:glas, 0, 4}, 13, 8)
+   :
+\end{minted}
+
+If you search for solutions with more flips you will eventually reach
+a point where there are no more solitions. The way the iterative
+deepening works right now you will then go into an endless search for
+solutions by incrementing $z$. You might want to add a clasue stating
+that there is no point in searching for a solution wikth more than say
+$2\times k$ flips. After all we can do at most two flips per minute.
+
+ 
+\section*{The path}
+
+So you know that there is a solution with siz flips but you still does
+not know the order of these flips. We should therefore make a small
+change to our program to generate a list of the moves we need to do.
+
+
+
 
 
 
