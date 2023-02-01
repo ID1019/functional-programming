@@ -683,7 +683,7 @@ by making a fucntion call to the {\tt Prgm} module as shown in the code below:
 \begin{minted}{elixir}
 def eval_expr({:fun id}, env)  do
    {par, seq} = apply(Prgm, id, [])
-   {:ok,  {:closure, par, [], seq}}
+   {:ok,  {:closure, par, seq, Env.new()}}
 end
 \end{minted}
 
@@ -699,7 +699,7 @@ end
          {:clause, {:cons, {:var, :hd}, {:var, :tl}}, 
           [{:cons, 
             {:var, :hd}, 
-            {:call, :append, [{:var, :tl}, {:var, :y}]}}]
+            {:apply, {:fun, :append}, [{:var, :tl}, {:var, :y}]}}]
         }]
       }]
     }

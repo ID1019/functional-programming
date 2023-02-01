@@ -1,9 +1,9 @@
 defmodule Hour do
 
-  @type glas() :: {:glas, integer(), integer()} 
+  @type glass() :: {:glass, integer(), integer()} 
 
   def solve(k) do
-    solve({:glas, 0, 4}, {:glas, 0, 7}, k)
+    solve({:glass, 0, 4}, {:glass, 0, 7}, k)
   end
   
   def solve(one, two, k) do
@@ -52,26 +52,26 @@ defmodule Hour do
   end
 
   
-  def tick({:glas, t1, n1}, {:glas, 0, n2}, k, z)  when t1 > 0 and t1 <= k do  
-    tock({:glas, 0, n1+t1}, {:glas, 0, n2}, k-t1, z)
+  def tick({:glass, t1, n1}, {:glass, 0, n2}, k, z)  when t1 > 0 and t1 <= k do  
+    tock({:glass, 0, n1+t1}, {:glass, 0, n2}, k-t1, z)
   end        
   
-  def tick({:glas, 0, n1}, {:glas, t2, n2}, k, z)  when t2 > 0 and t2 <= k do  
-    tock({:glas, 0, n1}, {:glas, 0, n2+t2}, k-t2, z)
+  def tick({:glass, 0, n1}, {:glass, t2, n2}, k, z)  when t2 > 0 and t2 <= k do  
+    tock({:glass, 0, n1}, {:glass, 0, n2+t2}, k-t2, z)
   end
 
-  def tick({:glas, t1, n1}, {:glas, t2, n2}, k, z) when t1 > 0 and t1 < t2 and t1 <= k do  
-    tock({:glas, 0, n1+t1}, {:glas, t2-t1, n2+t1}, k-t1, z)
+  def tick({:glass, t1, n1}, {:glass, t2, n2}, k, z) when t1 > 0 and t1 < t2 and t1 <= k do  
+    tock({:glass, 0, n1+t1}, {:glass, t2-t1, n2+t1}, k-t1, z)
   end
 
-  def tick({:glas, t1, n1}, {:glas, t2, n2}, k, z) when t2 > 0 and t1 >= t2 and t2 <= k do  
-    tock({:glas, t1-t2, n1+t2}, {:glas, 0, n2+t2}, k-t2, z)
+  def tick({:glass, t1, n1}, {:glass, t2, n2}, k, z) when t2 > 0 and t1 >= t2 and t2 <= k do  
+    tock({:glass, t1-t2, n1+t2}, {:glass, 0, n2+t2}, k-t2, z)
   end  
 
   def tick( _, _, _, _)  do :no end
   
 
-  def flip({:glas, t, n}) do {:glas, n, t} end
+  def flip({:glass, t, n}) do {:glass, n, t} end
   
 
 end
