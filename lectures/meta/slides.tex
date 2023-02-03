@@ -26,8 +26,8 @@ Let's write a program that evaluates an expression in our language.
 
 \pause\vspace{20pt}
 
-Since the language we have defined is close to Erlang and we will
-implement the interpreter in Erlang, we call it a {\em meta
+Since the language we have defined is close to Elixir and we will
+implement the interpreter in Elixir, we call it a {\em meta
 interpreter}. 
 
 \pause\vspace{20pt}
@@ -42,7 +42,7 @@ written in ... Java.}
 \begin{frame}{a recap}
 
   \begin{tabular}{r l l}
-   {\em Atoms} & = & \{a, b, c, \ldots\} \\
+   {\em Atoms} & = & \{:a, :b, :c, \ldots\} \\
    {\em Structures} & = & {\em Atoms} $\cup$ \{ \{a, b\} \textbar a $\in$ {\em Structures}  $\wedge$  b $\in$ {\em Structures} \}
   \end{tabular}
 
@@ -52,9 +52,9 @@ written in ... Java.}
 \begin{frame}{expressions and patterns}
 
 \begin{grammar}
-<atom> ::= a | b | c | \ldots
+<atom> ::= :a | :b | :c | \ldots
 
-<variable> ::= X | Y | Z | \ldots
+<variable> ::= x | y | z | \ldots
 
 <expression> ::= <atom> | <variable> | '\{' <expression> ',' <expression> '\}'
 
@@ -75,7 +75,7 @@ written in ... Java.}
  \end{itemize}
 
 \begin{itemize}
-  \pause \item $E\sigma(p = e, {\rm sequence}) \rightarrow E\theta({\rm sequence})$ if  $E\sigma(e) \rightarrow s \wedge P\sigma(p, s) \rightarrow \theta$
+  \pause \item $E\sigma(p = e, {\rm sequence}) \rightarrow E\theta({\rm sequence})$ if  $E\sigma(e) \rightarrow s \wedge S(\sigma, p) \rightarrow \sigma' \wedge P\sigma'(p, s) \rightarrow \theta$
 \end{itemize}
 
 \end{frame}
@@ -84,16 +84,16 @@ written in ... Java.}
 
 \pause
 \begin{itemize}
-  \pause \item $P\sigma(a = s) \rightarrow \sigma$  if  $a \equiv s$
-  \pause \item $P\sigma(\_ = s) \rightarrow \sigma$  
-  \pause \item $P\sigma(v = s) \rightarrow \sigma$  if \pause $ v/s \in \sigma $
-  \pause \item $P\sigma(v = s) \rightarrow \lbrace v/s \rbrace \cup \sigma$ if \pause $ v/t \not\in \sigma$
-  \pause \item $P\sigma(\lbrace p_1, p_2 \rbrace  = \lbrace s_1, s_2 \rbrace) \rightarrow \theta$ if
-      $P\sigma(p_1 = s_1) \rightarrow \theta' \wedge P\theta'(p_2 = s_2) \rightarrow \theta$
+  \pause \item $P\sigma(a, s) \rightarrow \sigma$  if  $a \equiv s$
+  \pause \item $P\sigma(\_, s) \rightarrow \sigma$  
+  \pause \item $P\sigma(v,s) \rightarrow \sigma$  if \pause $ v/s \in \sigma $
+  \pause \item $P\sigma(v,s) \rightarrow \lbrace v/s \rbrace \cup \sigma$ if \pause $ v/t \not\in \sigma$
+  \pause \item $P\sigma(\lbrace p_1, p_2 \rbrace , \lbrace s_1, s_2 \rbrace) \rightarrow \theta$ if
+      $P\sigma(p_1,s_1) \rightarrow \theta' \wedge P\theta'(p_2,s_2) \rightarrow \theta$
 \end{itemize}
 \pause
 \begin{itemize}
-  \pause \item $P\sigma(t = s) \rightarrow$ \pause $\  \mathrm{fail}\ $ if no other rule apply
+  \pause \item $P\sigma(t,s) \rightarrow$ \pause $\  \mathrm{fail}\ $ if no other rule apply
 \end{itemize}
 
 \end{frame}
@@ -142,9 +142,9 @@ written in ... Java.}
 \begin{frame}[fragile]{high level description}
 
 \begin{itemize}
- \pause \item \verb+eval_expr(Exr, Env)+ :  evaluate the expression, given the environment
- \pause \item \verb+eval_seq(Sequence, Env)+ :  evaluate the sequence, given the environment
- \pause \item \verb+eval_match(Patter, Sructure, Env)+ :  match the pattern to the structure
+ \pause \item \verb+eval_expr(exr, env)+ :  evaluate the expression, given the environment
+ \pause \item \verb+eval_seq(sequence, env)+ :  evaluate the sequence, given the environment
+ \pause \item \verb+eval_match(patter, structure, env)+ :  match the pattern to the structure
 \end{itemize}
 
 \pause\vspace{20pt}{Sound easy - let's go!}
@@ -159,7 +159,7 @@ written in ... Java.}
 
 \pause  \vspace{20pt}
 
-Let's represent {\em atoms} as Erlang atoms and compound {\em structures} as Erlang tuples.
+Let's represent {\em atoms} as Elixir atoms and compound {\em structures} as Elixir tuples.
 
 \end{frame}
 
@@ -167,9 +167,9 @@ Let's represent {\em atoms} as Erlang atoms and compound {\em structures} as Erl
 \begin{frame}{term expressions}
 
 \begin{grammar}
-<atom> ::= a | b | c | \ldots
+<atom> ::= :a | :b | :c | \ldots
 
-<variable> ::= X | Y | Z | \ldots
+<variable> ::= x | y | z | \ldots
 
 <literal> ::= <atom>
 
@@ -186,10 +186,10 @@ Let's represent {\em atoms} as Erlang atoms and compound {\em structures} as Erl
 
 \pause\vspace{20pt}
 \begin{itemize}
- \pause \item atoms: {\tt \{atm, a\}, \{atm, b\}, \ldots} 
- \pause \item variables: {\tt \{var, x\}, \{var, y\}, \ldots} 
- \pause \item \_:  \verb+ignore+.
- \pause \item compound: {\tt \{cons, \{atm, c\}, \{var, z\}\}, \ldots}
+ \pause \item atoms: {\tt \{:atm, :a\}, \{:atm, :b\}, \ldots} 
+ \pause \item variables: {\tt \{:var, :x\}, \{:var, :y\}, \ldots} 
+ \pause \item \_:  \verb+:ignore+.
+ \pause \item compound: {\tt \{:cons, \{:atm, :c\}, \{:var, :z\}\}, \ldots}
 \end{itemize}
 
 \end{frame}
@@ -202,7 +202,7 @@ Let's represent {\em atoms} as Erlang atoms and compound {\em structures} as Erl
 <sequence> ::=  <expression> | <pattern matching> ',' <sequence>
 \end{grammar}
 
-\pause\vspace{20pt} Why not represent it as a list of tuples, \verb+{match, Pattern, Expression}+, ending in a single expression.
+\pause\vspace{20pt} Why not represent it as a list of tuples, \verb+{:match, pattern, expression}+, ending in a single expression.
 
 \end{frame}
 
@@ -210,19 +210,19 @@ Let's represent {\em atoms} as Erlang atoms and compound {\em structures} as Erl
 
 \pause A parser would take a source program (or in our case a source sequence):
 
-\pause\vspace{10pt}\hspace{40pt}\verb+ X = a, Y = {X,b}, {c, Y}+
+\pause\vspace{10pt}\hspace{40pt}\verb+ x = :a, y = {x,:b}, {:c, y}+
 
 \pause \vspace{10pt} and transform it to a representation
 
 \pause\vspace{10pt}
 \begin{verbatim}
-   [{match, {var, x}, {atm, a}}, 
-    {match, {var, y}, {cons, {var, x},{atm, b}}, 
-    {cons, {atm, c}, {var, y}}]
+   [{:match, {:var, :x}, {:atm, :a}}, 
+    {:match, {:var, :y}, {cons, {:var, :x},{:atm, :b}}, 
+    {:cons, {:atm, :c}, {:var, :y}}]
 \end{verbatim}
 \pause \vspace{10pt} that is evaluated to return a data structure
 
-\pause\vspace{10pt}\hspace{40pt}\verb+{c {a,b}}+
+\pause\vspace{10pt}\hspace{40pt}\verb+{:c {:a,:b}}+
 
 \end{frame}
 
@@ -232,10 +232,10 @@ Let's represent {\em atoms} as Erlang atoms and compound {\em structures} as Erl
 The environment will map variables to values.
 
 \pause\vspace{20pt}
-A list of tuples \verb+{Variable, Structure}+ will do fine.
+A list of tuples \verb+{variable, structure}+ will do fine.
 
 \pause\vspace{20pt}
-\hspace{40pt}\verb+[{x, a}, {y, {b,c}}, {z,d}]+
+\hspace{40pt}\verb+[{:x, :a}, {:y, {:b,:c}}, {:z,:d}]+
 
 \pause\vspace{20pt}
 .... ehh, why not a tree, $O(lg(n))$ is better than $O(n)$, ... 
@@ -251,8 +251,8 @@ Separate the implementation of the environment in its own module.
 
 \begin{itemize}
   \pause\item \verb+new()+ : return a new environment
-  \pause\item \verb+add(Var, Str, Env)+ : return an environment where the variable is bound to the structure
-  \pause\item \verb+lookup(Var, Env)+ : return either \verb+{Var, Str}+ or \verb+false+ 
+  \pause\item \verb+add(Var, Str, env)+ : return an environment where the variable is bound to the structure
+  \pause\item \verb+lookup(Var, env)+ : return either \verb+{Var, Str}+ or \verb+false+ 
 \end{itemize}
 
 
@@ -263,13 +263,13 @@ Separate the implementation of the environment in its own module.
 \begin{frame}[fragile]{evaluate an expression}
 
 \begin{verbatim}
-eval_expr({atm, A}, Env) -> ...
+def eval_expr({:atm, a}, env) do...
 \end{verbatim}
 \begin{verbatim}
-eval_expr({var, V}, Env) -> ...
+def eval_expr({:var, v}, env) do ...
 \end{verbatim}
 \begin{verbatim}
-eval_expr({cons, H, T}, Env) -> ...
+def eval_expr({:cons, h, t}, env) do ...
 \end{verbatim}
 
 \end{frame}
@@ -277,26 +277,26 @@ eval_expr({cons, H, T}, Env) -> ...
 
 \begin{frame}[fragile]{pattern matching}
 
-We're matching a pattern to a data structure, returning either \verb+{ok, Env}+ or \verb+fail+.
+We're matching a pattern to a data structure, returning either \verb+{ok, env}+ or \verb+fail+.
 
 \begin{verbatim}
-eval_match({ignore, _, Env) -> ...
+def eval_match({:ignore, _, env) -> ...
 \end{verbatim}
 \pause
 \begin{verbatim}
-eval_match({var, V}, S, Env) -> ... 
+def eval_match({:var, v}, s, env) do ... 
 \end{verbatim}
 \pause
 \begin{verbatim}
-eval_match({atm, A}, A, Env) -> ...
+def eval_match({:atm, a}, a, env) do ...
 \end{verbatim}
 \pause
 \begin{verbatim}
-eval_match({cons, P1, P2},{S1,S2}, Env) -> ... 
+def eval_match({:cons, p1, p2},{s1,s2}, env)do ... 
 \end{verbatim}
 \pause
 \begin{verbatim}
-eval_match(_, _, Env) -> ...
+def eval_match(_, _, env) -> ...
 \end{verbatim}
 
 \pause{\em We're so close.}
@@ -305,19 +305,18 @@ eval_match(_, _, Env) -> ...
 \begin{frame}[fragile]{evaluating a sequence}
 
 \begin{verbatim}
-eval_seq([Expresion], Env) -> ...
-\end{verbatim}
-
-\begin{verbatim}
-eval_seq([{match, Pattern, Expresion}|Sequence], Env) ->
-    case ... of
-        error -> 
+def eval_seq([{expression], env) do
+    eval_expr(expression, end)
+end
+def eval_seq([{:match, p, e}, sequence], env) do
+    case ... do
+        :error -> 
             ...;
-        {ok, Str}  ->
-            case ... of
-                fail ->
-                    error;
-                {ok, ...} ->
+        {:ok, str}  ->
+            case ... do
+                :fail ->
+                    :error;
+                {:ok, ...} ->
                     ...
             end
     end.
@@ -335,9 +334,9 @@ eval_seq([{match, Pattern, Expresion}|Sequence], Env) ->
  \begin{column}{0.5\linewidth}
   \begin{itemize}
    \pause \item The interpreter
-   \pause \item Erlang using tuples
-   \pause \item Erlang using lists
-   \pause \item Erlang using '++'
+   \pause \item Elixir using tuples
+   \pause \item Elixir using lists
+   \pause \item Elixir using '++'
   \end{itemize}
  \end{column}
  \begin{column}{0.5\linewidth}
@@ -358,9 +357,9 @@ eval_seq([{match, Pattern, Expresion}|Sequence], Env) ->
 \begin{frame}[fragile]{case expression}
 
 \begin{verbatim}
-   case  X  of 
-       a ->  foo;
-       b ->  bar
+   case  x  do 
+       :a ->  :foo;
+       :b ->  :bar
    end
 \end{verbatim}
 
