@@ -357,6 +357,26 @@ $$\lambda z \rightarrow  (z + (y + 5))$$
 \end{frame}
 
 
+\begin{frame}[fragile]{recursion - fake it}
+
+  \begin{verbatim}
+    def sum(xs) do
+      f = fn(l, g) ->
+            case l do 
+              [] -> 0
+              [h|t] -> h + g(t, g)
+            end
+          end
+      f.(xs, f)
+    end
+  \end{verbatim}
+
+  \pause
+    {\em the Y combinator}
+\end{frame}
+
+
+
 \begin{frame}{functional programming languages}
 
  \begin{itemize}
