@@ -409,27 +409,37 @@ end
 
 \begin{frame}[fragile]{example}
 
-\pause What is gurka/1 doing?
-
+\begin{verbatim}
+def foldr([], acc, op) do acc end
+def foldr([h|t], acc, op) do
+   op.(h, foldr(t, acc, op))
+end
+\end{verbatim}
+  
 \pause\vspace{20pt}
 
+\begin{columns}
+  \begin{column}{.5\linewidth}
+What is gurka/1 doing?
 \begin{verbatim}
 def gurka(l) do
   f = fn (_, a) -> a + 1 end
   foldr(l, 0, f)
 end
 \end{verbatim}
-
-\pause\vspace{20pt}
-\pause How about tomat/1?
-
-\pause\vspace{10pt}
+  \end{column}
+  \pause
+  \begin{column}{.5\linewidth}
+How about tomat/1?
 \begin{verbatim}
 def tomat(l) do 
   f = fn (h, a) ->  a ++ [h] end
   foldr(l, [], f)
 end
 \end{verbatim}
+\end{column}
+\end{columns}
+
 \end{frame}
 
 \begin{frame}[fragile]{example}
@@ -453,24 +463,6 @@ end
 \end{frame}
 
 
-\begin{frame}[fragile]{example}
-
-\pause\vspace{10pt}
-\begin{verbatim}
-def gurka(l) do
-  f = fn (_, a) -> a + 1 end
-  foldl(l, 0, f)
-end
-\end{verbatim}
-\pause 
-\begin{verbatim}
-def morot(l) do
-  f = fn (h, a) ->  [h|a] end
-  foldl(l, [], f)
-end
-\end{verbatim}
-\end{frame}
-
 \begin{frame}{left or right}
 
 Which one should you use, {\em fold-left} or {\em fold-right}?
@@ -484,14 +476,14 @@ Which one should you use, {\em fold-left} or {\em fold-right}?
 \vspace{20pt}
 
 \begin{verbatim}
-def append_right(l) do
-  f = fun(e,a) -> e ++ a end
+def flatten_r(l) do
+  f = fn (e,a) -> e ++ a end
   foldr(l, [], f)
 end
 \end{verbatim}
 \pause
 \begin{verbatim}
-def append_left(l) do
+def flaten_l(l) do
   f = fn (e,a) -> a ++ e end
   foldl(l, [], f)
 end
@@ -500,18 +492,63 @@ end
 \end{frame}
 
 
-
-\begin{frame}{patterns}
-
-In the {\tt List} module. 
+\begin{frame}{List module}
 
 \begin{itemize}
 \item {\tt foldr(list, acc, f)}: fold from right  {\tt f.(x1, .. f.(xn, acc)..) }
 \item {\tt foldl(list, acc, f)}: fold from left  {\tt f.(xn, .. f.(x1, acc)..) }
 \end{itemize}
 
-\vspace{10pt}\pause
-In the {\tt Enum} module. 
+\end{frame}
+
+\begin{frame}[fragile]{more patterns}
+
+  map/2 :  apply a function to each element in a list
+  \pause
+  \begin{columns}
+    \begin{column}{.5\linewidth}
+\begin{verbatim}
+  def map([], _) do ...  end
+  def map([h|t], f) do 
+     [ f.(h) | ... ]
+  end
+\end{verbatim}  
+    \end{column}
+    \pause
+    \begin{column}{.5\linewidth}
+\begin{verbatim}
+  def map(lst, f) do map(lst, f, []) end
+
+  def map([], _, sofar) do reverse(sofar) end
+  def map([h|t], f, sofar) do 
+     map(t, f, [f.(h)|sofar])
+  end
+\end{verbatim}  
+    \end{column}
+  \end{columns}
+  
+\end{frame}
+
+\begin{frame}[fragile]{more patterns}
+
+  filter/2 :  return a list with all elements that meet a criteria 
+  \pause
+
+\begin{verbatim}
+  def filter([], _) do ...  end
+  def fiter([h|t], f) do 
+     if f.(h) do 
+        [ h | ... ]
+     else 
+        ...
+     end
+  end
+\end{verbatim}  
+  
+\end{frame}
+
+\begin{frame}{Enum module}
+
 \begin{itemize}
 \item {\tt map(enum, f)}: return the list of {\tt f.(x)} for each element {\tt x} in the enumeration
 \pause 
@@ -522,200 +559,6 @@ In the {\tt Enum} module.
 \item {\tt sort(enum, f)}: sort the list given that the function {\t f} is less than or equal
 \end{itemize}
 
-\end{frame}
-
-
-\begin{frame}[fragile]{an infinite list}
-
-\pause\vspace{20pt}
-
-\verb+inf = infinity()+\pause \verb+; [0|inf] = inf.()+\pause \verb+; [1|inf] = inf.()+
-
-\pause
-\begin{verbatim}
-def infinity() do 
-  fn() -> infinity(0) end 
-end
-\end{verbatim}
-\pause
-\begin{verbatim}
-def infinity(n) do
-  [...|...] 
-end
-\end{verbatim}
-
-\end{frame}
-
-
-\begin{frame}[fragile]{the list of fibonacci }
-
-A function that returns an infinite list of Fibonacci numbers.
-
-\pause\vspace{20pt}
-
-\begin{verbatim}
-def fib() do 
-  fn() -> fib(1,1) end 
-end
-\end{verbatim}
-\pause
-\begin{verbatim}
-def fib(f1, f2) do
-  [f1 | fn() -> fib(f2, f1+f2) end]
-end
-\end{verbatim}
-
-\end{frame}
-
-\begin{frame}{a lazy list from 1 to 10}
-
-  Let's represent a {\em range} of integers from 1 to 10 as:
-
-  \vspace{10pt}\hspace{20pt} {\tt \{:range, 1, 10\}}
-
-  \vspace{10pt}\pause
-
-  Elixir gives us a syntax for this:
-
-    \vspace{10pt}\hspace{20pt} {\tt 1..10}
-  
-
-    
-  \vspace{40pt}\pause
-  {\em This is not exactly how Elixir represents it but it's fine for now}
-
-\end{frame}
-
-
-
-\begin{frame}[fragile]{let's reduce this range}
-
-\begin{verbatim}
-  def sum(r) do
-    reduce(r,  0, fn(x,a) -> x+a end)
-  end
-\end{verbatim}
-
-  \vspace{10pt}\pause{\em Our {\tt reduce/3} should work as {\tt foldl/3} (does it make sense to have a {\tt foldr/3}).}
-
-  
-\begin{verbatim}
-  def reduce({:range, from , to}, acc, fun) do
-    if from <= to do
-      reduce({:range, from+1, to}, fun.(from, acc), fun)
-    else
-      acc
-    end
-  end
-\end{verbatim}
-
-\vspace{20pt}  \pause
-  
-  
-
-  
-\end{frame}
-
-\begin{frame}{Things we would like to do}
-
-  Can we, without traversing the full range:
-  \begin{itemize}
-  \item take the first five elements
-  \item find an element in the range
-  \item return the first element and the rest of the range
-  \end{itemize}
-
-  \vspace{20pt}\pause
-  {\em We need to control the reduction.}
-\end{frame}
-
-
-
-\begin{frame}[fragile]{continue}
-
-  
-\begin{verbatim}
-  def reduce({:range, from , to}, {:cont, acc}, fun) do
-    if from <= to do
-      reduce({:range, from+1, to}, fun.(from, acc), fun)
-    else
-      {:done, acc}
-    end
-  end
-\end{verbatim}
-
-  \pause
-  
-\begin{verbatim}
-  def sum(r) do
-    reduce(r, {:cont, 0}, fn(x,a) -> {:cont, x+a} end)
-  end
-\end{verbatim}
-
-  
-\end{frame}
-
-\begin{frame}[fragile]{stop in the midle}
-
-\begin{verbatim}
-    :
-  def reduce(_, {:halt, acc}, _fun) do
-    {:halted, acc}
-  end
-\end{verbatim}
-
-\pause
-\begin{verbatim}
-  def take(r, n) do
-    reduce(r, {:cont, {:sofar, 0, [] }},
-      fn(x,{:sofar, s, a}) ->
-        s = s+1
-        if s >= n do
-          {:halt, [x|a]}
-        else
-          {:cont, {:sofar, s, [x|a]}}
-        end
-      end)
-  end    
-\end{verbatim}
-  
-  
-\end{frame}
-
-\begin{frame}[fragile]{ head and tail }
-
-\begin{verbatim}
-    :
-  def reduce(range, {:suspend, acc}, fun) do
-    {:suspended, acc, fn(cmd) -> reduce(range, cmd, fun) end}
-  end
-\end{verbatim}
-  \pause
-
-
-\begin{verbatim}
-  def head(r) do
-    reduce(r, {:cont, :na},
-      fn (x, _) ->
-        {:suspend, x}
-      end)
-  end
-\end{verbatim}
-  
-\end{frame}
-
-\begin{frame}{Elixir libraries}
-
-  \begin{itemize}
-  \item {\tt List} : operatates on lists, returns a list or some value.  \pause
-  \item {\tt Enum} : takes an {\tt Enumerable} as argument, returns a list or value. \pause
-  \item {\tt Stream} : takes an {\tt Enumerable} as argument, returns an {\tt Enumerable} or value. 
-  \end{itemize}
-
-  \vspace{20pt}\pause {\em A datastructure is {\em Enumerable} if it
-    implements the {\em reduce protocol}. Lists and ranges are {\tt
-      Enumerable}.}
-  
 \end{frame}
 
 
@@ -739,7 +582,7 @@ Higher order functions takes a higher order ...
 Are functions considered to be ``first-class citizen''?
 \end{frame}
 
-\begin{frame}[fragile]{not}
+\begin{frame}[fragile]{truly first-class?}
     
   \vspace{20pt}Not really - look at this.
     
@@ -753,7 +596,6 @@ Are functions considered to be ``first-class citizen''?
   f == g 
 \end{frame}
 
-
 \begin{frame}{Summary}
 
 \pause Higher order programming:
@@ -761,9 +603,6 @@ Are functions considered to be ``first-class citizen''?
 \begin{itemize}
 \pause\item {closure}: a function and an environment
 \pause\item {generic algorithms}: separate the recursive pattern from the data it operates over
-\pause\item {continuations}: powerful technique to handle incomplete information
-\pause\item {range}: representation of a range of integers
-\pause\item {streams}: lazy evaluation of ranges resulting in 
 \end{itemize}
 
 
