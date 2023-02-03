@@ -1,0 +1,216 @@
+\input{../include/preamble.tex}
+
+\title[ID1019 Streams]{Streams}
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}[fragile]{an infinite list}
+
+\pause\vspace{20pt}
+
+\verb+inf = infinity()+\pause \verb+; [0|inf] = inf.()+\pause \verb+; [1|inf] = inf.()+
+
+\pause
+\begin{verbatim}
+def infinity() do 
+  fn() -> infinity(0) end 
+end
+\end{verbatim}
+\pause
+\begin{verbatim}
+def infinity(n) do
+  [...|...] 
+end
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{the list of fibonacci }
+
+A function that returns an infinite list of Fibonacci numbers.
+
+\pause\vspace{20pt}
+
+\begin{verbatim}
+def fib() do 
+  fn() -> fib(1,1) end 
+end
+\end{verbatim}
+\pause
+\begin{verbatim}
+def fib(f1, f2) do
+  [f1 | fn() -> fib(f2, f1+f2) end]
+end
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{a lazy list from 1 to 10}
+
+  Let's represent a {\em range} of integers from 1 to 10 as:
+
+  \vspace{10pt}\hspace{20pt} {\tt \{:range, 1, 10\}}
+
+  \vspace{10pt}\pause
+
+  Elixir gives us a syntax for this:
+
+    \vspace{10pt}\hspace{20pt} {\tt 1..10}
+
+    \vspace{10pt}\pause
+    But we will do our own :-)
+
+    
+  \vspace{40pt}\pause
+  {\em This is not how Elixir represents it but it's fine for now}
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]{let's reduce this range}
+
+\begin{verbatim}
+  def sum(r) do
+    reduce(r,  0, fn(x,a) -> x+a end)
+  end
+\end{verbatim}
+
+  \vspace{10pt}\pause{\em Our {\tt reduce/3} should work as {\tt foldl/3} (does it make sense to have a {\tt foldr/3}).}
+  
+\begin{verbatim}
+  def reduce({:range, from , to}, acc, fun) do
+    if from <= to do
+      reduce({:range, from+1, to}, fun.(from, acc), fun)
+    else
+      acc
+    end
+  end
+\end{verbatim}
+
+\vspace{20pt}  \pause
+\end{frame}
+
+\begin{frame}{Things we would like to do}
+
+  Can we, without traversing the full range:
+  \begin{itemize}
+  \item take the first five elements
+  \item find an element in the range
+  \item return the first element and the rest of the range
+  \end{itemize}
+
+  \vspace{20pt}\pause
+  {\em We need to control the reduction.}
+\end{frame}
+
+
+
+\begin{frame}[fragile]{continue}
+
+\begin{verbatim}
+  def reduce({:range, from , to}, {:cont, acc}, fun) do
+    if from <= to do
+      reduce({:range, from+1, to}, fun.(from, acc), fun)
+    else
+      {:done, acc}
+    end
+  end
+\end{verbatim}
+
+  \pause
+  
+\begin{verbatim}
+  def sum(r) do
+    reduce(r, {:cont, 0}, fn(x,a) -> {:cont, x+a} end)
+  end
+\end{verbatim}
+  
+\end{frame}
+
+\begin{frame}[fragile]{stop in the midle}
+
+\begin{verbatim}
+    :
+  def reduce(_, {:halt, acc}, _fun) do
+    {:halted, acc}
+  end
+\end{verbatim}
+
+\pause
+\begin{verbatim}
+  def take(r, n) do
+    reduce(r, {:cont, {:sofar, 0, [] }},
+      fn(x,{:sofar, s, a}) ->
+        s = s+1
+        if s >= n do
+          {:halt, [x|a]}
+        else
+          {:cont, {:sofar, s, [x|a]}}
+        end
+      end)
+  end    
+\end{verbatim}
+  
+  
+\end{frame}
+
+\begin{frame}[fragile]{ head and tail }
+
+\begin{verbatim}
+    :
+  def reduce(range, {:suspend, acc}, fun) do
+    {:suspended, acc, fn(cmd) -> reduce(range, cmd, fun) end}
+  end
+\end{verbatim}
+  \pause
+
+
+\begin{verbatim}
+  def head(r) do
+    reduce(r, {:cont, :na},
+      fn (x, _) ->
+        {:suspend, x}
+      end)
+  end
+\end{verbatim}
+  
+\end{frame}
+
+\begin{frame}{Elixir libraries}
+
+  \begin{itemize}
+  \item {\tt List} : operatates on lists, returns a list or some value.  \pause
+  \item {\tt Enum} : takes an {\tt Enumerable} as argument, returns a list or value. \pause
+  \item {\tt Stream} : takes an {\tt Enumerable} as argument, returns an {\tt Enumerable} or value. 
+  \end{itemize}
+
+  \vspace{20pt}\pause {\em A datastructure is {\em Enumerable} if it
+    implements the {\em reduce protocol}. Lists and ranges are {\tt
+      Enumerable}.}
+  
+\end{frame}
+
+\begin{frame}{Summary}
+
+\begin{itemize}
+\pause\item {range}: representation of a range of integers
+\pause\item {streams}: lazy evaluation of ranges resulting in 
+\end{itemize}
+
+\end{frame}
+
+
+\end{document}
+
+
+
