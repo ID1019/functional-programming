@@ -63,17 +63,22 @@ defmodule Range do
       {:done, acc}
     end
   end  
-  def reduce({:range, from, to}, {:suspend, acc}, _f) do
-    if (from <= to) do 
-      {:suspended, from, fn(cmd, f) -> reduce({:range, from+1, to}, cmd, f) end}
-    else
-      {:done, acc}
-    end
+  def reduce(range, {:suspend, acc}, f) do
+    {:suspended, acc, fn(cmd) -> reduce(range, cmd, f) end}
   end
   def reduce(_, {:halt, acc}, _f) do
     {:halted, acc}
   end
+
+  def head(range) do
+    reduce(range,  {:cont, :nil}, 
+      fn(x, _) ->
+	{:suspend, x}
+      end
+    )
+  end
   
+      
   
   
 

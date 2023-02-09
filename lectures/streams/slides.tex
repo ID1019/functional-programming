@@ -101,7 +101,7 @@ def sum({:range, from, to}, acc) do sum({:range, ..., to}, ...) end
 
   \vspace{20pt}
 
-  \verb+ foldl({:range, 1, 5}, 0, fn(x,a) -> x + a end)+
+  \verb= foldl({:range, 1, 5}, 0, fn(x,a) -> x + a end)=
 
 \end{frame}
 
@@ -124,7 +124,7 @@ def sum(range) do foldl(range, 0, fn(x,acc) -> x + acc end) end
 
   \vspace{20pt}
 
-  \verb+ map({:range, 1, 5}, fn(x) -> x + 1 end)+ \pause
+  \verb= map({:range, 1, 5}, fn(x) -> x + 1 end)= \pause
 
   \vspace{20pt}
   {\em should we return a list of values or .... a modified range?}
@@ -161,7 +161,7 @@ def sum(range) do foldl(range, 0, fn(x,acc) -> x + acc end) end
 \end{frame}
 
 
-\begin{frame}[fragile]{reduce/: the goto of all}
+\begin{frame}[fragile]{reduce/3: the goto of all}
 
 \begin{verbatim}
   def sum(r) do
@@ -188,7 +188,7 @@ def sum(range) do foldl(range, 0, fn(x,acc) -> x + acc end) end
 \vspace{20pt}  \pause
 \end{frame}
 
-\begin{frame}{How do we stop in the mildle?}
+\begin{frame}{How do we stop in the midle?}
 
   Implement take/2 using reduce by ..... 
 
@@ -219,7 +219,8 @@ def sum(range) do foldl(range, 0, fn(x,acc) -> x + acc end) end
 \end{verbatim}
 
   \vspace{10pt}\pause
-  {\em The accumulator is both a value and an instruiction to continue.}
+  {\em The accumulator is both a value and an instruction to continue.}
+
   
 \end{frame}
 
@@ -247,8 +248,6 @@ def sum(range) do foldl(range, 0, fn(x,acc) -> x + acc end) end
 \end{verbatim}
   
 \end{frame}
-
-
 
 
 
@@ -284,7 +283,7 @@ def sum(range) do foldl(range, 0, fn(x,acc) -> x + acc end) end
   \end{itemize}
 
   \vspace{20pt}\pause {\em A datastructure is {\em Enumerable} if it
-    implements the {\em reduce protocol}. Lists and ranges are {\tt
+    implements the {\em enumerable protocol}. Lists and ranges are {\tt
       Enumerable}.}
   
 \end{frame}
@@ -293,7 +292,7 @@ def sum(range) do foldl(range, 0, fn(x,acc) -> x + acc end) end
 
 \begin{itemize}
 \pause\item {range}: representation of a range of integers
-\pause\item {streams}: lazy evaluation of ranges resulting in 
+\pause\item {streams}: lazy evaluation of sequences
 \end{itemize}
 
 \end{frame}
