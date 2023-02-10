@@ -1,0 +1,314 @@
+\input{../include/preamble.tex}
+
+\title[ID1019 Advent of Code 2022 - Day 15]{Advent of Code 2022 - Day 15}
+
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Part One}
+
+  You have received a distress signal from a lost elf and need to
+  locate the position. You have sent out {\em sensors} in a network of
+  tunnels that report their position (x-y coordinates) and
+  \underline{the position of the closest beacon}.
+
+  \vspace{40pt} \pause Distance is "Manhattan distance" and there is
+  only one closest beacon i.e. no sensor will not have two closest beacons.
+  
+\end{frame}
+
+
+\begin{frame}[fragile]{the input}
+
+
+  \tiny{
+    \begin{verbatim}
+Sensor at x=2, y=18: closest beacon is at x=-2, y=15
+Sensor at x=9, y=16: closest beacon is at x=10, y=16
+Sensor at x=13, y=2: closest beacon is at x=15, y=3
+Sensor at x=12, y=14: closest beacon is at x=10, y=16
+Sensor at x=10, y=20: closest beacon is at x=10, y=16
+Sensor at x=14, y=17: closest beacon is at x=10, y=16
+Sensor at x=8, y=7: closest beacon is at x=2, y=10
+Sensor at x=2, y=0: closest beacon is at x=2, y=10
+Sensor at x=0, y=11: closest beacon is at x=2, y=10
+Sensor at x=20, y=14: closest beacon is at x=25, y=17
+Sensor at x=17, y=20: closest beacon is at x=21, y=22
+Sensor at x=16, y=7: closest beacon is at x=15, y=3
+Sensor at x=14, y=3: closest beacon is at x=15, y=3
+Sensor at x=20, y=1: closest beacon is at x=15, y=3
+\end{verbatim}
+    }
+
+\end{frame}
+
+
+\begin{frame}[fragile]{the map}
+
+  \tiny{
+  \begin{verbatim}
+               1    1    2    2
+     0    5    0    5    0    5
+ 0 ....S.......................
+ 1 ......................S.....
+ 2 ...............S............
+ 3 ................SB..........
+ 4 ............................
+ 5 ............................
+ 6 ............................
+ 7 ..........S.......S.........
+ 8 ............................
+ 9 ............................
+10 ....B.......................
+11 ..S.........................
+12 ............................
+13 ............................
+14 ..............S.......S.....
+15 B...........................
+16 ...........SB...............
+17 ................S..........B
+18 ....S.......................
+19 ............................
+20 ............S......S........
+21 ............................
+22 .......................B....
+\end{verbatim}
+}
+\end{frame}
+
+
+\begin{frame}{the problem}
+
+
+  \vspace{20pt} \pause None of the beacons detected is sending the
+  distress signal, where could it come from?
+
+  \vspace{20pt} \pause Since every sensor is reporting its closest
+  beacon, there could be no becon closer.
+  
+  \vspace{20pt} \pause Eliminate the coordinates where the lost beacon
+  could be.
+
+\end{frame}
+
+
+\begin{frame}[fragile]{an example}
+
+  Sensor at (8,7) reporrt beacon at (2,10).
+  \vspace{10pt}\pause
+
+  \tiny{
+  \begin{verbatim}
+               1    1    2    2
+     0    5    0    5    0    5
+-2 ..........#.................
+-1 .........###................
+ 0 ....S...#####...............
+ 1 .......#######........S.....
+ 2 ......#########S............
+ 3 .....###########SB..........
+ 4 ....#############...........
+ 5 ...###############..........
+ 6 ..#################.........
+ 7 .#########S#######S#........
+ 8 ..#################.........
+ 9 ...###############..........
+10 ....B############...........
+11 ..S..###########............
+12 ......#########.............
+13 .......#######..............
+14 ........#####.S.......S.....
+15 B........###................
+16 ..........#SB...............
+17 ................S..........B
+18 ....S.......................
+19 ............................
+20 ............S......S........
+21 ............................
+22 .......................B....
+\end{verbatim}  
+    }
+\end{frame}
+
+
+\begin{frame}{part one}
+
+  \vspace{20pt}\pause
+  In the sample input, in the row where y=10, there are 26 positions where a beacon \underline{cannot} be present.
+
+  \vspace{20pt}\pause
+  Given the real input, in the row where y=2.000.000, how many positions cannot contain a beacon? 
+
+\end{frame}
+
+
+
+\begin{frame}{strategy}
+
+  We only need to keep track of one row and for this row keep track of where a beacon could not be.
+
+  \vspace{10pt}\pause
+  For each sensor:
+  \pause
+  \begin{itemize}
+  \item determine the distance from the sensor to the beacon and
+  \item block each position in the row that is closer or equal distance.
+  \item If the beacon is on the row, it is not blocked.
+  \end{itemize}    
+
+\end{frame}
+
+\begin{frame}[fragile]{example}
+
+
+  The sensor at (8,7) has a distance to its beacon (2,10) of
+  $6 + 3 = 9$. The distance to the row is $10 - 7 = 3$ so the sensor
+  covers the range $(8-(9-3)) .. (8+(9-3))$ or $2..14$. 
+  
+    \begin{verbatim}
+               1    1    2    2
+     0    5    0    5    0    5
+ 5 ...---------------..........
+ 6 ..-----------------.........
+ 7 .---------S-------0-........
+ 8 ..-----------------.........
+ 9 ...---------------..........
+10 ....B############...........
+11 ..0..-----------............
+12 ......---------.............
+\end{verbatim}  
+
+\vspace{10pt} \pause
+Since the beacon is on the line, $3..14$ should be blocked.    
+
+\end{frame}
+
+\begin{frame}[fragile]{the Row}
+
+  \begin{verbatim}
+defmodule Row do
+
+    def new() do ... end            # an empty row
+
+    def block(row, from, to) do     # block segment from to 
+       :
+    end
+
+    def blocked() do ... end        # number of blocked positions
+
+end
+  \end{verbatim}
+  
+\end{frame}
+
+\begin{frame}[fragile]{the parser}
+
+  Each row: \pause   \verb+"Sensor at  x=2, y=18: closest beacon is at x=-2, y=15"+
+  \vspace{20pt} \pause
+
+  Could be represented as:  \pause  \verb+{:sensor, {2,18}, {-2,15}}+
+
+  \vspace{20pt} \pause
+  
+  \begin{verbatim}
+def parse(row) do
+  [_, sx, sy, bx, by] =  String.split(row, "=") do 
+  {sx, _} = Integer.parse(sx)
+  {sy, _} = Integer.parse(sy)
+  {bx, _} = Integer.parse(bx)  
+  {by, _} = Integer.parse(by)
+  {:sensor, {sx,sy}, {bx, by}}
+end
+\end{verbatim}
+
+  \vspace{20pt}\pause
+  {\em Will of course crash if we parse something else but ...} 
+  
+\end{frame}
+
+\begin{frame}[fragile]{block a segment}
+
+  \begin{verbatim}
+  def block({sx, sy}, {bx, by}, y, row) do
+    diff = ...           # diff between distance to beacon and row y
+    if (diff >= 0 ) do
+      if (y == by) do
+        :                # block segment sx +/- diff, but not bx
+      else
+        :                # block whole segment sx +/- diff
+      end
+    else
+      :                  # don't block anyting
+    end
+  end
+\end{verbatim}
+  
+\end{frame}
+
+\begin{frame}[fragile]{the solution}
+
+
+\begin{verbatim}
+def task_a() do 
+  y = 10
+  sample() |> 
+    Stream.map(fn(row) -> parse(row) end) |> 
+    Enum.reduce( Row.new(), 
+       fn({:sensor, sensor, beacon}, row) ->
+         block(row, sensor, beacon}
+       end) |>
+    Row.blocked()
+end
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{Part Two}
+
+  The distress signal can not be too far away, the x and y coordinates
+  are both in the range $0..4.000.000$. Find the only possible
+  coordinate where the signal can come from.
+
+  
+  \vspace{20pt}\pause Simple - check each row using the strategy in
+  part one (also block positions of beacons), find the first row with
+  only one free position.
+
+\end{frame}
+
+
+\begin{frame}[fragile]{block segment}
+
+  \begin{verbatim}
+def block({sx, sy}, {bx, by}, y, row) do
+  diff = ....
+  if (diff >= 0 ) do
+      :
+  else
+     row
+  end
+end
+\end{verbatim}
+  
+\end{frame}
+
+\begin{frame}{let's go}
+
+
+  \vspace{20pt}\pause ehhh......?
+  
+\end{frame}
+
+
+\end{document}
+
+
+
