@@ -14,27 +14,16 @@ defmodule Sequence do
 
     def reduce(_,    {:halt, acc}, _fun),   do: {:halted, acc}
     def reduce(seq,  {:suspend, acc}, fun), do: {:suspended, acc, fn(cmd) -> reduce(seq, cmd, fun) end}
-    def reduce(seq,  {:cont, acc}, fun) do
-      case Sequence.next(seq) do
+    def reduce(%Sequence{next: f},  {:cont, acc}, fun) do
+      case f.() do 
+	{seq, f} ->
+	  reduce(%Sequence{next: f}, fun.(seq, acc), fun)
 	:done ->
 	  {:done, acc}
-	{s, next} ->
-	  :io.format(" generated ~w\n", [s])
-	  reduce(next, fun.(s,acc), fun)
       end
-    end      
-  end
-
-  def next(%Sequence{next: f}) do 
-    case f.() do 
-      {seq, f} ->
-	{seq, %Sequence{next: f}}
-      :done ->
-	:done
     end
   end
-  
-  
+
   def split([x|seq]) do 
     split(seq, x, [x], [], fn() -> :done end)
   end
