@@ -69,7 +69,7 @@ defmodule Split do
       end)
   end
 
-  
+  def add(seq,{0,_}) do seq end  
   def add([],e) do [e] end
   def add([{_,h}|_]=seq,{_,x}=e) when h > x do [e|seq] end  
   def add([{n,x}|t],{i,x}) do [{n+i,x} | t] end
