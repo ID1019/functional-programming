@@ -17,30 +17,40 @@ defmodule Cave do
   
   def graph(input, start) do
 
-    ## divide into:
+    ## divide tunnels into:
     ##   valves that have rate above 0 (or is the starting position) and
-    ##   conn that are valves with flow equal to 0
+    ##   conn that are tunnels with flow equal to 0
+
     {valves, conn} = Enum.split_with(input,  fn({valve, {rate,_}}) -> (rate != 0) or (valve == start) end)
 
-    ## if :AA is conneted to :BB with distance 1 and :BB is connected
-    ## to :CC with distance 1 then add :CC to the connection of :AA
-    ## with the distance 2 etc
+    ## Create a map where the valves are directly connected to other
+    ## valves i.e. tunnels are removes.
 
-    conn = Enum.reduce(conn, conn, fn({v0, {_, t0}}, valves) ->
-      Enum.map(valves, fn({v1, {r1,t1}}) ->
-	{v1, {r1, extend(v1, t1, v0, t0)}}
-      end)
-    end)
+    ## First extend the connecting tunnels ...
+
+    conn = extend(conn, conn)
+
+    ## Then extend all valves, replacing tunnels that are only serving as connections.
     
-    valves = Enum.reduce(conn, valves, fn({v0, {_, t0}}, valves) ->
-      Enum.map(valves, fn({v1, {r1,t1}}) ->
-	{v1, {r1, extend(v1, t1, v0, t0)}}
-      end)
-    end)
+    valves = extend(conn, valves)
 
+    ## The resulting graph will have tunnels with valves directly
+    ## connected to other tunnels with valves (plus the starting
+    ## position, even if it has no valve)
+    
     Map.new(valves)
+
   end
 
+
+  def extend(conn, valves) do
+    Enum.reduce(conn, valves, fn({v0, {_, t0}}, valves) ->
+      Enum.map(valves, fn({v1, {r1,t1}}) ->
+	{v1, {r1, extend(v1, t1, v0, t0)}}
+      end)
+    end)
+  end
+  
   def extend(v1, t1, v0, t0) do
       case List.keyfind(t1, v0, 0) do
 	{v0, _k0} ->
