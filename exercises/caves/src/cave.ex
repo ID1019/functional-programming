@@ -2,7 +2,7 @@ defmodule Cave do
 
   def input(start) do
     graph = File.stream!("day16.csv") |>
-      parse() ## |>  reduce(start)
+      parse() |>  reduce(start)
     valves = valves(graph)
     {valves, graph}
   end
@@ -25,18 +25,30 @@ defmodule Cave do
   def reduce(input, start) do
 
     ## divide tunnels into:
-    ##   valves: that have rate above 0 (or is the starting position) and
+    ##   valves: that have rate above 0  and
     ##   conn: that are tunnels with flow equal to 0 i.e. connecting tunnels
 
-    {valves, conn} = Enum.split_with(input,  fn({valve, {rate,_}}) -> (rate != 0) or (valve == start) end)
+    {valves, conn} = Enum.split_with(input,  fn({valve, {rate,_}}) -> (rate != 0)  end)
+
+    ## Add the staring position to the valves if it is not already there.
+
+    valves = if (valves[start] == nil) do
+      [{start, conn[start]} | valves]
+    else
+      valves
+    end
 
     ## First extend the connecting tunnels so that they all connect
-    ## only to tunnels with valves.
+    ## only to tunnels with valves i.e. tunnels that are not in the
+    ## set.
 
     conn = extend(conn)
 
-    ## Then extend all tunnels with valves, replacing tunnels that are
-    ## only serving as connections.
+    ## Then extend all tunnels with valves (and the starting tunnel),
+    ## replacing tunnels that are only serving as connections. The
+    ## result will be a graph with nodes only between tunnels with
+    ## valves. The starting tunnel is always present but if it does
+    ## not have a valve no other tunnel will lead to it. 
     
     extend(conn, valves)
   end
