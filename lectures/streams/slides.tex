@@ -75,9 +75,93 @@ end
 
 \end{frame}
 
+\begin{frame}[fragile]{sum/1 of a range}
+
+  \pause
+\begin{verbatim}
+def sum({:range, to, to}) do ... end  
+def sum({:range, from, to}) do  ... + sum({:range, ..., to}) end  
+\end{verbatim}
+
+  \vspace{20pt}  \pause
+  
+\begin{verbatim}
+def sum(range) do  sum(range, 0) end
+
+def sum({:range, to, to}, acc) do ... end  
+def sum({:range, from, to}, acc) do sum({:range, ..., to}, ...) end  
+\end{verbatim}
+  
+  
+\end{frame}
+
+\begin{frame}[fragile]{foldl/3 on a range}
+
+  How do we fold-left on a range:  \pause
+
+  \vspace{20pt}
+
+  \verb= foldl({:range, 1, 5}, 0, fn(x,a) -> x + a end)=
+
+\end{frame}
 
 
-\begin{frame}[fragile]{let's reduce this range}
+\begin{frame}[fragile]{sum/1 of a range}
+
+
+\begin{verbatim}
+
+def sum(range) do foldl(range, 0, fn(x,acc) -> x + acc end) end
+
+\end{verbatim}
+  
+\end{frame}
+
+
+\begin{frame}[fragile]{map/2 on a range}
+
+  How do we map on a range (let's forget the order):  \pause
+
+  \vspace{20pt}
+
+  \verb= map({:range, 1, 5}, fn(x) -> x + 1 end)= \pause
+
+  \vspace{20pt}
+  {\em should we return a list of values or .... a modified range?}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{filter/2 on a range}
+
+  How do we filter a range (again, f*ck the order):  \pause
+
+  \vspace{20pt}
+
+  \verb+ filter({:range, 1, 5}, fn(x) -> rem(x,2) == 0 end)+ \pause
+
+  \vspace{20pt}
+  {\em should we return a list of values or ....}
+
+\end{frame}
+
+\begin{frame}[fragile]{take/2 on a range}
+
+  How do we take n elements from a range (order ... not):  \pause
+
+  \vspace{20pt}
+
+  \verb+ take({:range, 1, 1_000_000}, 5)+ \pause
+
+  \vspace{20pt}
+
+  {\em we don't want to build a list of a million integers}
+
+
+\end{frame}
+
+
+\begin{frame}[fragile]{reduce/3: the goto of all}
 
 \begin{verbatim}
   def sum(r) do
@@ -97,22 +181,21 @@ end
   end
 \end{verbatim}
 
+  \vspace{20pt}\pause
+
+  {\em ... we're not done!}
+  
 \vspace{20pt}  \pause
 \end{frame}
 
-\begin{frame}{Things we would like to do}
+\begin{frame}{How do we stop in the midle?}
 
-  Can we, without traversing the full range:
-  \begin{itemize}
-  \item take the first five elements
-  \item find an element in the range
-  \item return the first element and the rest of the range
-  \end{itemize}
+  Implement take/2 using reduce by ..... 
 
   \vspace{20pt}\pause
   {\em We need to control the reduction.}
+  
 \end{frame}
-
 
 
 \begin{frame}[fragile]{continue}
@@ -127,13 +210,17 @@ end
   end
 \end{verbatim}
 
-  \pause
+  \vspace{20pt}\pause
   
 \begin{verbatim}
   def sum(r) do
     reduce(r, {:cont, 0}, fn(x,a) -> {:cont, x+a} end)
   end
 \end{verbatim}
+
+  \vspace{10pt}\pause
+  {\em The accumulator is both a value and an instruction to continue.}
+
   
 \end{frame}
 
@@ -146,26 +233,27 @@ end
   end
 \end{verbatim}
 
-\pause
+\vspace{20pt}\pause
 \begin{verbatim}
   def take(r, n) do
-    reduce(r, {:cont, {:sofar, 0, [] }},
-      fn(x,{:sofar, s, a}) ->
-        s = s+1
-        if s >= n do
-          {:halt, [x|a]}
+    reduce(r, {:cont, {:sofar, n, [] }},
+      fn(x,{:sofar, n, a}) ->
+        if n > 0 do
+          {:cont, {:sofar, n-1, [x|a]}}
         else
-          {:cont, {:sofar, s, [x|a]}}
+          {:halt, [x|a]}
         end
       end)
   end    
 \end{verbatim}
   
-  
 \end{frame}
 
-\begin{frame}[fragile]{ head and tail }
 
+
+\begin{frame}[fragile]{suspend in the midle:  head and tail }
+
+  
 \begin{verbatim}
     :
   def reduce(range, {:suspend, acc}, fun) do
@@ -195,7 +283,7 @@ end
   \end{itemize}
 
   \vspace{20pt}\pause {\em A datastructure is {\em Enumerable} if it
-    implements the {\em reduce protocol}. Lists and ranges are {\tt
+    implements the {\em enumerable protocol}. Lists and ranges are {\tt
       Enumerable}.}
   
 \end{frame}
@@ -204,7 +292,7 @@ end
 
 \begin{itemize}
 \pause\item {range}: representation of a range of integers
-\pause\item {streams}: lazy evaluation of ranges resulting in 
+\pause\item {streams}: lazy evaluation of sequences
 \end{itemize}
 
 \end{frame}
