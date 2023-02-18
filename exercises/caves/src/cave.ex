@@ -2,18 +2,22 @@ defmodule Cave do
 
   def input(start) do
     graph = File.stream!("day16.csv") |>
-      parse() |>  reduce(start)
+      parse() |> reduce(start)
     valves = valves(graph)
     {valves, graph}
   end
 
   def sample(start) do
     graph = sample() |>
-      parse() |>  reduce(start)
+      parse() |> reduce(start)
     valves = valves(graph)
     {valves, graph}
   end
 
+  def get(graph, valve) do
+    graph[valve]
+  end
+  
   def valves(graph) do
     Enum.filter(graph, fn({_,{rt,_}}) -> rt > 0 end) |>
       Keyword.keys()
@@ -28,7 +32,7 @@ defmodule Cave do
     ##   valves: that have rate above 0  and
     ##   conn: that are tunnels with flow equal to 0 i.e. connecting tunnels
 
-    {valves, conn} = Enum.split_with(input,  fn({valve, {rate,_}}) -> (rate != 0)  end)
+    {valves, conn} = Enum.split_with(input,  fn({_, {rate,_}}) -> (rate != 0)  end)
 
     ## Add the staring position to the valves if it is not already there.
 
@@ -73,15 +77,15 @@ defmodule Cave do
   
   def extend(v1, t1, v0, t0) do
       case List.keyfind(t1, v0, 0) do
-	{v0, _k0} ->
+	{v0, k0} ->
 	  removed = List.keydelete(t1, v0, 0)
 	  Enum.reduce(t0, removed, fn({v2,k2}, acc) ->
 	    if (v2 != v1 ) do
 	      case List.keyfind(removed, v2, 0) do
 		{v2,k3} ->
-		  [{v2, min(k3, k2+1)}|List.keydelete(acc, v2,0)]
+		  [{v2, min(k3, k2+k0)}|List.keydelete(acc, v2,0)]
 		nil ->
-		  [{v2, k2+1}|acc]
+		  [{v2, k2+k0}|acc]
 	      end
 	    else
 	      acc
