@@ -1,47 +1,55 @@
 defmodule Cave do
 
   def input(start) do
-    File.stream!("day16.csv") |>
-      parse() |>
-      graph(start)
+    graph = File.stream!("day16.csv") |>
+      parse() ## |>  reduce(start)
+    valves = valves(graph)
+    {valves, graph}
   end
 
   def sample(start) do
-    sample() |>
-      parse() |>
-      graph(start)
+    graph = sample() |>
+      parse() |>  reduce(start)
+    valves = valves(graph)
+    {valves, graph}
   end
 
-  ## build a graph given the specification
-  ## input on the form {valve, {rate, [{v1,1}, {v2,1} .. ]}}
+  def valves(graph) do
+    Enum.filter(graph, fn({_,{rt,_}}) -> rt > 0 end) |>
+      Keyword.keys()
+  end
+
+
+  ## Reduce the graph so that it only contains tunnels with valves.
   
-  def graph(input, start) do
+  def reduce(input, start) do
 
     ## divide tunnels into:
-    ##   valves that have rate above 0 (or is the starting position) and
-    ##   conn that are tunnels with flow equal to 0
+    ##   valves: that have rate above 0 (or is the starting position) and
+    ##   conn: that are tunnels with flow equal to 0 i.e. connecting tunnels
 
     {valves, conn} = Enum.split_with(input,  fn({valve, {rate,_}}) -> (rate != 0) or (valve == start) end)
 
-    ## Create a map where the valves are directly connected to other
-    ## valves i.e. tunnels are removes.
+    ## First extend the connecting tunnels so that they all connect
+    ## only to tunnels with valves.
 
-    ## First extend the connecting tunnels ...
+    conn = extend(conn)
 
-    conn = extend(conn, conn)
-
-    ## Then extend all valves, replacing tunnels that are only serving as connections.
+    ## Then extend all tunnels with valves, replacing tunnels that are
+    ## only serving as connections.
     
-    valves = extend(conn, valves)
-
-    ## The resulting graph will have tunnels with valves directly
-    ## connected to other tunnels with valves (plus the starting
-    ## position, even if it has no valve)
-    
-    Map.new(valves)
-
+    extend(conn, valves)
   end
 
+  def extend(conn) do
+    Enum.reduce(Keyword.keys(conn), conn, fn(v0, conn) ->
+      {_, t0} = Keyword.fetch!(conn, v0)
+      Enum.map(conn, fn({v1, {r1,t1}}) ->
+	{v1, {r1, extend(v1, t1, v0, t0)}}
+      end)	
+    end)
+  end
+  
 
   def extend(conn, valves) do
     Enum.reduce(conn, valves, fn({v0, {_, t0}}, valves) ->
