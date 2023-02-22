@@ -2,71 +2,69 @@ defmodule Day16 do
   
   def task_a(t) do
     start = :AA
-    ##{closed, graph} = Cave.sample(start)
-    {closed, graph} = Cave.input(start) 
-    {max, _} = search(start, t, closed, [], 0, graph, Map.new())
-    max
+    {closed, graph} = Cave.sample(start)
+    ##{closed, graph} = Cave.input(start) 
+    elem(check(start, t, closed, graph, Map.new()),0)
   end
 
   def task_b(t) do
     start = :AA
-    ##{[frst|closed], graph} = Cave.sample(start)
-    {[frst|closed], graph} = Cave.input(start) 
-    split(start, t, closed, [frst], [], graph)
+    {[frst|closed], graph} = Cave.sample(start)
+    ##{[frst|closed], graph} = Cave.input(start) 
+    elem(split(start, t, closed, [frst], [], graph, Map.new()),0)
   end
 
-  def split(start, t, [], you, elefant,  graph) do
+  def split(start, t, [], you, elefant,  graph, mem) do
     :io.format("you: ~w\t\telefant: ~w", [you, elefant])
-    {m1, _} = search(start, t, you, [], 0, graph, Map.new())
-    {m2, _} = search(start, t, elefant, [], 0, graph, Map.new())    
+    {m1, mem} = search(start, t, you, graph, mem)
+    {m2, mem} = search(start, t, elefant, graph, mem)    
     total = m1+m2
     :io.format("\t\ttotal: ~w\n", [m1+m2])
-    total
+    ##:io.put_chars('.')
+    {total, mem}
   end
-  def split(start, t, [valve|closed], you, elefant,  graph) do
-    m1 = split(start, t, closed, [valve|you], elefant, graph)
-    m2 = split(start, t, closed, you, [valve|elefant], graph)    
-    max(m1,m2)
+  def split(start, t, [valve|closed], you, elefant,  graph, mem) do
+    {m1, mem} = split(start, t, closed, [valve|you], elefant, graph, mem)
+    {m2, mem} = split(start, t, closed, you, [valve|elefant], graph, mem)    
+    {max(m1,m2), mem}
   end
+
+  ## The memory is organized so that it can be sused in several
+  ## searches. The key is what is left, not how we got there, what
+  ## valves are currently open or the rate at which the pressure is
+  ## released.
   
-  def check(valve, t, closed, open, rate, graph, mem) do
-    case mem[{valve, t, open}] do
+  def check(valve, t, closed, graph, mem) do
+    case mem[{valve, t, closed}] do
       nil ->
-	{max, mem} = search(valve, t, closed, open, rate, graph, mem)
-	mem = Map.put(mem, {valve, t, open}, max)
+	{max, mem} = search(valve, t, closed, graph, mem)
+	mem = Map.put(mem, {valve, t, closed}, max)
 	{max, mem}
       max ->
 	{max, mem}
     end
   end
 
-
-  def search(_, 0, _, _, _, _, _, mem) do
+  def search(_, 0, _, _, _, mem) do
     {0, mem}
   end  
-  def search(_, t, [], _, rate, _, mem) do
-    total = rate * t
-    ## We actually learned something but why add it to the memory,
-    ## it will not save us any work. 
-    {total, mem}
+  def search(_, _, [], _, mem) do
+    {0, mem}
   end  
-  def search(valve, t, closed, open, rate, graph, mem) do
+  def search(valve, t, closed, graph, mem) do
 
     {rt, tunnels} = Cave.get(graph,valve)
 
     ## mx will be the best option so far
     
-    ## One option is to stay put and do nothing.
-    mx = rate*t
-
-    ## If we have a valve to open that might be a better option
+    ## If we have a valve to open, that might be an idea
     {mx, mem} = if (rt > 0 and Enum.member?(closed, valve)) do
       removed = List.delete(closed, valve)
-      {ox, mem} = check(valve, t-1, removed, insert(open, valve), rate+rt, graph, mem)
-      ox = ox + rate
-      {max(ox,mx), mem}
+      {ox, mem} = check(valve, t-1, removed, graph, mem)
+      ox = ox + (rt * (t-1))
+      {ox, mem}
     else
-      {mx, mem}
+      {0, mem}
     end
 
     ## Try moving to each of the tunnels.
@@ -74,20 +72,13 @@ defmodule Day16 do
     Enum.reduce(tunnels, {mx, mem}, 
       fn({nxt, d}, {mx, mem}) ->
         if (d < t) do
-	  {ox, mem} = check(nxt, t-d, closed, open, rate, graph, mem)
-	  ox = ox + (rate *d)
+	  {ox, mem} = check(nxt, t-d, closed, graph, mem)
 	  {max(ox,mx), mem}
 	else
 	  {mx, mem}
 	end
       end)
   end
-
-  ## Keep the list ordered to work better as key.
-  
-  def insert([], valve) do [valve] end
-  def insert([v|rest], valve) when v < valve do  [v|insert(rest, valve)] end
-  def insert(open, valve) do  [valve|open] end
 
 
 end
