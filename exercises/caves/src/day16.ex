@@ -1,13 +1,34 @@
 defmodule Day16 do
-
-  def dynamic(t) do
+  
+  def task_a(t) do
     start = :AA
-    ## {closed, graph} = Cave.sample(start)
+    ##{closed, graph} = Cave.sample(start)
     {closed, graph} = Cave.input(start) 
     {max, _} = search(start, t, closed, [], 0, graph, Map.new())
     max
   end
 
+  def task_b(t) do
+    start = :AA
+    ##{[frst|closed], graph} = Cave.sample(start)
+    {[frst|closed], graph} = Cave.input(start) 
+    split(start, t, closed, [frst], [], graph)
+  end
+
+  def split(start, t, [], you, elefant,  graph) do
+    :io.format("you: ~w\t\telefant: ~w", [you, elefant])
+    {m1, _} = search(start, t, you, [], 0, graph, Map.new())
+    {m2, _} = search(start, t, elefant, [], 0, graph, Map.new())    
+    total = m1+m2
+    :io.format("\t\ttotal: ~w\n", [m1+m2])
+    total
+  end
+  def split(start, t, [valve|closed], you, elefant,  graph) do
+    m1 = split(start, t, closed, [valve|you], elefant, graph)
+    m2 = split(start, t, closed, you, [valve|elefant], graph)    
+    max(m1,m2)
+  end
+  
   def check(valve, t, closed, open, rate, graph, mem) do
     case mem[{valve, t, open}] do
       nil ->
@@ -31,7 +52,7 @@ defmodule Day16 do
   end  
   def search(valve, t, closed, open, rate, graph, mem) do
 
-    {rt, tunnels} = graph[valve]
+    {rt, tunnels} = Cave.get(graph,valve)
 
     ## mx will be the best option so far
     
