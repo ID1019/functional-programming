@@ -7,30 +7,28 @@ defmodule Philosopher do
   @timeout 1000
 
   # Create a new philosopher process.
-  def start(hunger, strength, left, right, name, ctrl, seed) do
-    spawn_link(fn -> init(hunger, strength, left, right, name, ctrl, seed) end)
+  def start(hunger, strength, left, right, name, ctrl, gui) do
+    spawn_link(fn -> init(hunger, strength, left, right, name, ctrl, gui) end)
   end
 
-  defp init(hunger, strength, left, right, name, ctrl, seed) do
-    gui = Gui.start(name)
-    :rand.seed(:exsss, {seed, seed, seed})
+  defp init(hunger, strength, left, right, name, ctrl, gui) do
     dreaming(hunger, strength, left, right, name, ctrl, gui)
   end
 
   # Philosopher is in a dreaming state.
   defp dreaming(0, strength, _left, _right, name, ctrl, gui) do
     IO.puts("#{name} is happy, strength is still #{strength}!")
-    send(gui, :stop)
+    send(gui, {:action, name, :done})
     send(ctrl, :done)
   end
   defp dreaming(hunger, 0, _left, _right, name, ctrl, gui) do
     IO.puts("#{name} is starved to death, hunger is down to #{hunger}!")
-    send(gui, :stop)
+    send(gui, {:action, name, :done})
     send(ctrl, :done)
   end
   defp dreaming(hunger, strength, left, right, name, ctrl, gui) do
     IO.puts("#{name} is dreaming!")
-    send(gui, :leave)
+    send(gui, {:action, name, :leave})
 
     ##  this is where we sleep
     delay(@dream)
@@ -41,7 +39,7 @@ defmodule Philosopher do
 
   # Philosopher is waiting for chopsticks.
   defp waiting(hunger, strength, left, right, name, ctrl, gui) do
-    send(gui, :waiting)
+    send(gui, {:action, name, :waiting})
     IO.puts("#{name} is waiting, #{hunger} to go!")
 
     case Chopstick.request(left) do
@@ -60,7 +58,7 @@ defmodule Philosopher do
 
   # Philosopher is eating.
   defp eating(hunger, strength, left, right, name, ctrl, gui) do
-    send(gui, :enter)
+    send(gui, {:action, name, :enter})
     #IO.puts("#{name} is eating...")
 
     delay(@eat)

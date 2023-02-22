@@ -5,49 +5,60 @@ defmodule Gai do
   @blue {0, 0, 200}  
   @black {0, 0, 0}
   @white {255, 255, 255}
-
   
 
-  def start(name) do
-    spawn_link(fn() -> init(name) end)
+  def start(names) do
+    spawn_link(fn() -> init(names) end)
   end
 
-  def init(name) do
-    width = 400
-    height = 400
+  def init(names) do
+    width = 800
+    height = 800
     server = :wx.new()  #Server will be the parent for the Frame
-    frame = :wxFrame.new(server, -1, name, [{:size,{width, height}}])
+    frame = :wxFrame.new(server, -1, "Philosophers", [{:size,{width, height}}])
     :wxFrame.setBackgroundColour(frame, @white)
     bitmap = :wxBitmap.new(width,height)
     :wxFrame.show(frame)
-    loop(frame, bitmap)
+    state = state(names)
+    pos = positions(names, 400)
+    :io.format("positions: ~w\n", [pos])
+    :io.format("state: ~w\n", [state])
+    loop(frame, bitmap, state, pos)
   end
 	
 
-  def loop(frame, bitmap) do
+  def loop(frame, bitmap, state, pos) do
     receive do
-      :waiting ->
-	draw(frame, bitmap)
-	loop(frame, bitmap)
-      :enter ->
-	:wxFrame.setBackgroundColour(frame, @red)
-	loop(frame, bitmap)
-      :leave ->
-	:wxFrame.setBackgroundColour(frame, @blue)
-	loop(frame, bitmap)
-      :abort ->
-	:wxFrame.setBackgroundColour(frame, @black)
-	loop(frame, bitmap)
+       {:action, name, action} ->
+	state = update(state, name, action)
+	:io.format("state: ~w\n", [state])
+	draw(frame, bitmap, state, pos)
+	loop(frame, bitmap, state, pos)
       :stop ->
 	:ok
       error ->
 	:io.format("gui: strange message ~w ~n", [error])
-	loop(frame, bitmap)
+	loop(frame, bitmap, state, pos)
     end
   end
 
+  def state(names) do
+    Enum.map(names, fn(name) -> {name, :done} end)
+  end
 
-  def draw(frame, bitmap) do
+  def update(names, name, action) do
+    Keyword.replace(names, name, action)
+  end
+  
+  
+  def positions(names, off) do
+    d = length(names)
+    pos = Enum.map(1..d,  fn(r) ->{round(:math.sin((2*:math.pi / d)*r)*200+off),round(:math.cos((2*:math.pi/d)*r)*200+off)} end)
+    List.zip([names, pos])
+  end
+  
+
+  def draw(frame, bitmap, names, pos) do
 
     memDC = :wxMemoryDC.new(bitmap)
 
@@ -57,19 +68,30 @@ defmodule Gai do
     :wxDC.setBackground(memDC,white)
 
     :wxDC.clear(memDC)
-    
-    brush = :wxBrush.new()
-    :wxBrush.setColour(brush, @red)
-    :wxDC.setBrush(memDC,brush)
 
-    :wxDC.drawCircle(memDC, {100, 100}, 20)
     canDC = :wxWindowDC.new(frame)
-    :wxDC.blit(canDC, {0,0}, {:wxBitmap.getWidth(bitmap), :wxBitmap.getHeight(bitmap)}, memDC, {0,0})
+    
+    Enum.each(names, fn({name, state}) ->
+      xy = pos[name]
+      brush = :wxBrush.new()
+      color = case state do
+		:waiting -> @yellow
+		:enter -> @red
+		:leave -> @blue
+		:done -> @white
+	      end
+      :wxBrush.setColour(brush, color)
+      :wxDC.setBrush(memDC,brush)
+      :wxDC.drawCircle(memDC, xy, 40)
+      :wxDC.blit(canDC, {0,0}, {:wxBitmap.getWidth(bitmap), :wxBitmap.getHeight(bitmap)}, memDC, {0,0})
+    end)
 
     :wxWindowDC.destroy(canDC)
     :wxMemoryDC.destroy(memDC)
+
+    :ok
   end
-  
+      
 end
 
 
