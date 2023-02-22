@@ -78,6 +78,7 @@ defmodule Gai do
 		:waiting -> @yellow
 		:enter -> @red
 		:leave -> @blue
+		:died -> @black
 		:done -> @white
 	      end
       :wxBrush.setColour(brush, color)

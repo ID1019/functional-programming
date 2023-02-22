@@ -23,7 +23,7 @@ defmodule Philosopher do
   end
   defp dreaming(hunger, 0, _left, _right, name, ctrl, gui) do
     IO.puts("#{name} is starved to death, hunger is down to #{hunger}!")
-    send(gui, {:action, name, :done})
+    send(gui, {:action, name, :died})
     send(ctrl, :done)
   end
   defp dreaming(hunger, strength, left, right, name, ctrl, gui) do
