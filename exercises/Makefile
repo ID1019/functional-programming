@@ -31,7 +31,7 @@ DIRS =  avl \
 	transport\
 	twothree   
 
-ADVENT22 = day16.ex day16.csv
+ADVENT22 = day16.csv
 
 PONG = pong.ex ping.ex websocket.ex game.ex session.ex pong.html pong.js
 
