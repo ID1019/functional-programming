@@ -38,9 +38,6 @@ defmodule Dinner do
     wait(5, [c1, c2, c3, c4, c5])
   end
 
-
-
-
   defp init(n, node) do
     c1 = Chopstick.start(node)
     c2 = Chopstick.start(node)
@@ -48,12 +45,12 @@ defmodule Dinner do
     c4 = Chopstick.start(node)
     c5 = Chopstick.start(node)
     ctrl = self()
-    gui = Gai.start([:arendt, :hypathia, :simone, :elisabeth, :ayn])
-    Philosopher.start(n, 5, c1, c2, "Arendt", ctrl, gui)
-    Philosopher.start(n, 5, c2, c3, "Hypatia", ctrl, gui)
-    Philosopher.start(n, 5, c3, c4, "Simone", ctrl, gui)
-    Philosopher.start(n, 5, c4, c5, "Elisabeth", ctrl, gui)
-    Philosopher.start(n, 5, c5, c1, "Ayn", ctrl, gui)
+    gui = Gai.start([:arendt, :hypatia, :simone, :elisabeth, :ayn])
+    Philosopher.start(n, 5, c1, c2, :arendt, ctrl, gui)
+    Philosopher.start(n, 5, c2, c3, :hypatia, ctrl, gui)
+    Philosopher.start(n, 5, c3, c4, :simone, ctrl, gui)
+    Philosopher.start(n, 5, c4, c5, :elisabeth, ctrl, gui)
+    Philosopher.start(n, 5, c5, c1, :ayn, ctrl, gui)
     wait(5, [c1, c2, c3, c4, c5])
   end
   
@@ -70,7 +67,7 @@ defmodule Dinner do
 
       :abort ->
 	## in order to kill all chopsticks and philosophers
-	:io.format("dinner aborted~")
+	:io.format("dinner aborted\n")
         Process.exit(self(), :kill)
     end
   end
