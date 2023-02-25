@@ -121,18 +121,9 @@ defmodule Chopstick do
   # Initalizing the chopstick.
   defp init() do
     IO.puts("chopstick started")
-    local({:chopstick, self()})
     available()
   end
   
-  def local(msg) do
-    case Process.whereis(:shell) do
-      nil ->
-	nil
-      pid ->
-	send(pid, msg)
-    end
-  end    
 
       
   # The two states of the chopstick.

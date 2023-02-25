@@ -2,24 +2,26 @@ defmodule Day16 do
   
   def task_a(t) do
     start = :AA
-    {closed, graph} = Cave.sample(start)
-    ##{closed, graph} = Cave.input(start) 
+    ##{closed, graph} = Cave.sample(start)
+    {closed, graph} = Cave.input(start) 
     elem(check(start, t, closed, graph, Map.new()),0)
   end
 
   def task_b(t) do
     start = :AA
-    {[frst|closed], graph} = Cave.sample(start)
-    ##{[frst|closed], graph} = Cave.input(start) 
+    ##{[frst|closed], graph} = Cave.sample(start)
+    {[frst|closed], graph} = Cave.input(start) 
     elem(split(start, t, closed, [frst], [], graph, Map.new()),0)
   end
 
   def split(start, t, [], you, elefant,  graph, mem) do
-    :io.format("you: ~w\t\telefant: ~w", [you, elefant])
-    {m1, mem} = search(start, t, you, graph, mem)
-    {m2, mem} = search(start, t, elefant, graph, mem)    
+    s0 = map_size(mem)
+    :io.format("you: ~2.w  elefant: ~2.w  size: ~8.w  ", [length(you), length(elefant), s0])
+    {t1, {m1, mem}} = :timer.tc(fn() ->  search(start, t, you, graph, mem) end)
+    {t2, {m2, mem}} = :timer.tc(fn() -> search(start, t, elefant, graph, mem) end)
     total = m1+m2
-    :io.format("\t\ttotal: ~w\n", [m1+m2])
+    s1 = map_size(mem)
+    :io.format("added: ~6.w  time: ~6.w\n", [s1-s0, t1+t2])
     ##:io.put_chars('.')
     {total, mem}
   end
