@@ -186,9 +186,11 @@ function main() {
     
     init(); // initiate game objects
 
-    // Hard coded IP number of server, should be given dynammic but
-    // fine for now.
-    socket = new WebSocket('ws://localhost:8080/demo', "pong");
+    port = document.getElementById('pong').getAttribute('port')
+    host = document.getElementById('pong').getAttribute('host')    
+    url = ''.concat('ws://' + host + ':' + port + '/pong')
+    
+    socket = new WebSocket(url, 'pong');
 
     socket.binaryType = "arraybuffer";
 

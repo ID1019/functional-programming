@@ -1,13 +1,14 @@
 defmodule Pong do
 
+  @port   8080
   @tick    100
   @serve  4000
   
-  def start(port) do
-    spawn(fn() -> init(port) end)
+  def start() do
+    spawn(fn() -> init() end)
   end
 
-  defp init(port) do
+  defp init() do
 
     pong = self()
     ses1 = Session.start(:player1, pong)
@@ -15,7 +16,7 @@ defmodule Pong do
 
     ses2 = Ping.start(:player2, pong)
     
-    server = WebSocket.start(port, [ses1])
+    server = WebSocket.start(@port, [ses1])
 
     receive do
       {:ready, name} ->
@@ -44,7 +45,7 @@ defmodule Pong do
   end
 
   def pong(player1, player2, ball, sessions) do
-
+    ##:io.format("pong:  ball ~w\n", [ball])
     receive  do
 
       {:player1, :down} ->
