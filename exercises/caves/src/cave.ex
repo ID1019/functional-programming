@@ -26,13 +26,13 @@ defmodule Cave do
 
   ## Reduce the graph so that it only contains tunnels with valves.
   
-  def reduce(input, start) do
+  def reduce(tunnels, start) do
 
     ## divide tunnels into:
     ##   valves: that have rate above 0  and
     ##   conn: that are tunnels with flow equal to 0 i.e. connecting tunnels
 
-    {valves, conn} = Enum.split_with(input,  fn({_, {rate,_}}) -> (rate != 0)  end)
+    {valves, conn} = Enum.split_with(tunnels,  fn({_, {rate,_}}) -> (rate != 0)  end)
 
     ## Add the staring position to the valves if it is not already there.
 
@@ -54,7 +54,13 @@ defmodule Cave do
     ## valves. The starting tunnel is always present but if it does
     ## not have a valve no other tunnel will lead to it. 
     
-    extend(conn, valves)
+    valves = extend(conn, valves)
+
+    ## Then close the graph so that it becomes complete i.e. we have a
+    ## direct path from any node to any other node. 
+
+    close(valves)
+
   end
 
   def extend(conn) do
@@ -95,6 +101,44 @@ defmodule Cave do
 	  t1
       end
   end
+
+  def close(valves) do
+    Enum.reduce(valves, valves, fn({v0, _}, valves) ->
+      {_, {_, t0}} = List.keyfind(valves, v0, 0)
+      Enum.map(valves, fn({v1, {r1, t1}}) ->
+	{v1, {r1, close(v1, t1, v0, t0)}}
+      end)
+    end)
+  end
+
+  def close(v1, t1, v0, t0) do 
+    case List.keyfind(t1, v0, 0) do
+      {_,n} ->
+	Enum.reduce(t0, t1, fn({x0,dx}, t) ->
+	  if x0 == v1 do
+	    t
+	  else
+	    case List.keyfind(t, x0, 0) do
+	      {_, d0} ->
+		if (n+dx < d0) do
+		  List.keyreplace(t, x0, 0, {x0, n+dx})
+		else
+		  t
+		end
+	      nil ->
+		[{x0,n+dx}| t]
+	    end
+	  end
+	end)
+      nil ->
+        t1
+    end
+  end
+
+
+  
+	
+
   
 
   def parse(input) do
