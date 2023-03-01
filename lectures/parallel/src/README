@@ -5,6 +5,7 @@ iex  --erl '+P 130000000'
 
 :erlang.system_flag(:schedulers_online, 4)
 
+:erlang.systen_info(:garbage_collection)
 
 
 
