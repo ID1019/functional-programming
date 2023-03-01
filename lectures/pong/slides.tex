@@ -300,8 +300,9 @@ Messages from the session handler to the websocket handler:
   \vspace{10pt} \pause
   
   \begin{itemize}
-  \item Two players ({\tt player1} and {\tt player2}) that have a {\em y-position} and a {\em score}. \pause
-  \item A ball that is defined by {\em x-} and {\em y-position}, and {\em x-} and {\em y-speed}.\pause
+  \item Two players ({\tt player1} and {\tt player2}). \pause
+  \item A ball. \pause
+  \item The current score.\pause
   \item Two {\em session pids} to send messages to the players. 
   \end{itemize}
 
@@ -321,34 +322,42 @@ Messages from the session handler to the websocket handler:
 
 \begin{frame}{Rules of the game}
 
-  \pause A player is represented as a tuple {\tt \{name, y-pos, score\}}.
+  \pause A player is represented as a tuple {\tt \{name, x-pos, y-pos, dir\}}.
   \vspace{10pt}
 
   \begin{itemize}
-  \item {\tt player(name) } : return a named {\tt player}
-  \item {\tt up(player) } : return either {\tt \{:ok, player\}} or {\tt :no}
-  \item {\tt down(player) } : return either {\tt \{:ok, player\}} or {\tt :no}
+  \item {\tt player1(name) } : return a named {\tt player 1} 
+  \item {\tt player2(name) } : return a named {\tt player 2}  \pause   
+  \item {\tt up(player) } : return either {\tt \{:ok, player\}} or {\tt :no} 
+  \item {\tt down(player) } : return either {\tt \{:ok, player\}} or {\tt :no} \pause
   \end{itemize}
   \vspace{10pt}      
-  \pause A ball is represented a as tuple {\tt \{:ball, x, y, dx, dy\}}. 
+  \pause A ball is represented a as tuple {\tt \{:ball, x, y, dx, dy\}}.  \pause
   \vspace{10pt}      
   \begin{itemize}
-  \item {\tt serve(name, player1, player2)} : return {\tt \{pos, ball\}}
-  \item {\tt move_ball(player1, player2, ball)} : return either
-    
+  \item {\tt serve(player)} : return {\tt \{pos, ball\}} \pause
+  \item {\tt move_ball(player1, player2, ball)} : return either \pause
     \begin{itemize}
-      \item {\tt \{:bounce, pos, ball\}}  (increase speed)
-      \item {\tt \{:moved, pos, ball\}}
-      \item {\tt \{:score, name, score, player\}}
+      \item {\tt \{:bounce, pos, ball\}}  (increase speed) \pause
+      \item {\tt \{:moved, pos, ball\}} \pause
+      \item {\tt \{:score, name\}}\pause
     \end{itemize}
   
   \end{itemize}
-      
-    
+  
 \end{frame}
 
+\begin{frame}{the Game module}
 
+  The Game module provides only functions; it does not keep a state. 
 
+  \vspace{20pt}\pause
+  The Game module knows how large the court is.
+  
+  \vspace{20pt}\pause
+  The state (apart from the score) is held by the three data structures: player1, player2 and the ball.
+
+\end{frame}
 
 \end{document}
 

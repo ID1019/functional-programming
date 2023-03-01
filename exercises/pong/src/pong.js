@@ -186,9 +186,11 @@ function main() {
     
     init(); // initiate game objects
 
-    // Hard coded IP number of server, should be given dynammic but
-    // fine for now.
-    socket = new WebSocket('ws://localhost:8080/demo', "pong");
+    port = document.getElementById('pong').getAttribute('port')
+    host = document.getElementById('pong').getAttribute('host')    
+    url = ''.concat('ws://' + host + ':' + port + '/pong')
+    
+    socket = new WebSocket(url, 'pong');
 
     socket.binaryType = "arraybuffer";
 
@@ -199,10 +201,6 @@ function main() {
     socket.onopen =  function(event) {
 	// we could alert the user
     }    
-
-    var d = document.createElement("div");
-    d.innerHTML = '<svg onclick="requestFullscreen()"width="20" height="16" opacity="0.5"><path d="M0 5v-5h5m10 0h5v5m0 6v5h-5m-10 0h-5v-5M6 6h8v4h-8z"style="fill:none;stroke:#000;stroke-width:4"></path></svg>';
-    document.body.appendChild(d);
 
     // game loop function
     var loop = function() {				   

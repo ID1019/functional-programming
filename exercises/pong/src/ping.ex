@@ -13,6 +13,7 @@ defmodule Ping do
     :io.format("ping: robot ~w started~n", [name])
     send(server, {:ready, name})
     ping(name, server, div(@height,2))
+    :io.format("ping: robot ~w stoped~n", [name])
   end
   
 

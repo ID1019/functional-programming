@@ -1,7 +1,16 @@
-
-iex  --erl '+P 130000000'
+## check maximum number of processes
 
 :erlang.system_info(:process_limit)
+
+##  increasing maximum number of processes in system
+
+iex  --erl '+P 134000000'
+
+# check number of schedulers
+
+:erlang.system_info(:schedulers_online)
+
+# change number of schedulers
 
 :erlang.system_flag(:schedulers_online, 4)
 
