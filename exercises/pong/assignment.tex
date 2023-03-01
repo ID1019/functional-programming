@@ -102,7 +102,7 @@ them to the handler process.
 
 
 \begin{figure}
-  \begin{tikzpicture}[scale=0.5]
+  \begin{tikzpicture}[scale=0.6]
     \node[draw, thick, rounded corners] (server) at (0,0) {server};
     \node[draw, thick, rounded corners, above left = of server] (ses1) {session 1};
     \node[draw, thick, rounded corners, below left = of server] (ses2) {session 2};
@@ -151,14 +151,14 @@ the details in one module.
 
 \subsection*{the websocket layer}
 
-The server will start by creating two processes, one {\tt server}
+The server will start by creating two processes, one {\tt session}
 process for each player. It will then creat a {\tt socket} process
 that is given the process identifiers of the two session
 processes. The socket process will open a TCP listening socket on a
 specified port and then spawn two processes that wait for incomming
 connections.
 
-To describe how the websocket protocol works in detail is a bit ouside
+To describe how the websocket protocol works in detail is a bit outside
 the scope of this exercise so let's only go through it breifly. A
 client will open a connection by opening a TCP connection and then
 send special HTTP request. This request will specify that it wants to
@@ -176,11 +176,181 @@ but when it has received a proper message it will send it to the
 handler process.
 
 The handler process will receive messages from the decoder process and
-forward them to its session process. The 
+forward them to its session process. If the decoder process detects
+that the socket is closed it will inform the hanlder who then will
+relay this information to the session process and then terminate.
+
+The reason why the handler process chooses to spawn a decoder process
+is that if it would read from the socket itself, it would be suspended
+waiting for messages on the socket. A message from the session process
+could then be dealyed and not delivered in time. There are other ways
+to solve this but in this sitiation it is easier to spawn a new
+process that suspends reading from teh socket while the handler
+process is ready to receive messages from either the decoder or the
+session process.
+
+\subsection*{the session layer}
+
+In Fig.\ref{fig:seq} the initalisation of the system is shown. The
+server process is started first and it spawns two session processes
+giving them unique names ({\tt :player1}, {\tt :player1}). The server
+then spawns the {\tt websocket} process that opens the specified TCP
+port. The process is also given the process identifiers of the two
+session porcesses. The websocet process then spwans the two hanlder
+processes that will, when they receive a connection, report back to
+their session processes that they are open. 
+
+Once the session process receivs the messages from a handler process
+it will report back to the server process that it is ready to start
+the game. The server process will wait for both session processes to
+report and can then serve the first ball. 
+
+During the game teh session process is responsible for endocding and
+decoding messages between the pong server and the client browser.
+
+The messages from the handler process to the session proces are as follows:
+
+\begin{itemize}
+\item {\tt \{:ws, pid, :open\}}  : a connection was establishes
+\item {\tt \{:ws, pid, :close\}} : the connection was closed by the client
+\item {\tt \{:ws, pid, \{:msg,  <<?U, _::binary>>\}\}} : player pressed up arrow
+\item {\tt \{:ws, pid, \{:msg,  <<?D, _::binary>>\}\}} : player pressed down arrow
+\end{itemize}
+
+The messages generated when the player presses either the up or down
+arrow are deoded and delivered to the pong server as {\tt\{:pong1,
+  :up\}} and {\tt\{:player1, :down\}}. The session process knows if it
+is handling {\tt :player1} or {\tt :player2} and can thus generat the
+right messages. Note that the client process can not decide by its own
+that a paddle should be moved, it only passes the request to move to
+the pong server. It is the server that decides in what order things
+should move.
+
+The pong server constanly send messahes to the client, directing it to
+move paddles, the ball or update the score. These messages needs to be
+encoded as byte sequences. These are the messages from the pong erver
+and how they are encoded:
+
+\begin{itemize}
+\item {\tt \{:player1, :up\}}  : player 1 moved up -  {\tt <<?P,?U>>}
+\item {\tt \{:player1, :down\}}  : player 1 moved down - {\tt <<?P,?D>>}
+\item {\tt \{:player1, :score, score\}}  : player 1 new score - {\tt <<?P,?S, score>>}
+\item {\tt \{:player2, ... \}} : same messages for player 2 -  {\tt <<?O, ... >>}        
+\item {\tt \{:ball, x, y \}} : ball moved  - {\tt <<?B, x::16, y::16 >>}        
+\item {\tt \{:ball, :hide\}} : hide ball - {\tt <<?B, 0::16, 0::16>>}        
+\item {\tt \{:frw, msg\}}  : raw message to client - {\tt msg}
+\end{itemize}
+
+The raw message is used for debugging, a possibility for us to
+communicate direclt with the client.
+
+\begin{figure}
+\center
+\begin{tikzpicture}[scale=1]
+
+  \coordinate (n0) at (0,6);
+  \coordinate (nn) at (0,-0.5);
+
+  \coordinate (a0) at (3, 3);
+  \coordinate (an) at (3,-0.5);
+
+  \coordinate (b0) at (5,4);
+  \coordinate (bn) at (5,-0.5);
+
+  \coordinate (c0) at (7,5);
+  \coordinate (cn) at (7,-0.5);
+
+  \coordinate (s0) at (12,6);
+  \coordinate (sn) at (12,-0.5);
+
+  \draw[->] (n0) to []  (nn);
+  \draw[->] (s0) to []  (sn);
+
+  \node[anchor=south] at (n0) {browser 1/2};
+  \node[anchor=south] at (s0) {pong server};
+
+  \coordinate (s2) at ($(s0)+(0,-1)$);
+  \draw[dashed] (s2) -- node[near start, above]{start(name, me)\ \ } (c0);
+  \node[anchor=south] at (c0) {session 1/2};  
+  \draw[->] (c0) to []  (cn);
+
+  \coordinate (s3) at ($(s2)+(0,-1)$);
+  \draw[dashed] (s3) -- node[near start, above]{start(8080,[ses1, ses2])\ \ } (b0);
+  \node[anchor=south] at (b0) {websocket};  
+  \draw[] (b0) to []  ($(b0)+(0,-2)$);
+
+  \coordinate (b1) at ($(b0)+(0,-1)$);
+  \draw[dashed] (b1) -- (a0);        
+  \node[anchor=south] at (a0) {handler 1/2};  
+  \draw[->] (a0) to []  (an);  
+
+  \coordinate (n4) at ($(n0)+(0,-4)$);
+  \coordinate (a1) at ($(a0)+(0,-1)$);
+  \draw[dashed, <->, shorten <=0.2cm, shorten >=0.2cm] (n4) -- node[midway, above] {websocket} (a1);
+
+  \coordinate (a2) at ($(a1)+(0,-1)$);
+  \coordinate (c2) at ($(c0)+(0,-4)$);
+  \draw[->, shorten <=0.2cm, shorten >=0.2cm] (a2) -- node[midway, above] {\{:ws, pid, :open\}} (c2);
+
+  \coordinate (c3) at ($(c2)+(0,-1)$);
+  \coordinate (s4) at ($(s3)+(0,-4)$);
+  \draw[->, shorten <=0.2cm, shorten >=0.2cm] (c3) -- node[midway, above] {\{:ready, name\}} (s4);  
+\end{tikzpicture}
+\caption{A sequence diagram showing how the communication layer is started.}
+\label{fig:seq}
+\end{figure}
+
+\subsection*{the pong server}
+
+Once we have the session layer working we can concentrate on building
+the game engine. The ponge server needs to have a model of the game
+state, know how to chnge it based on requests and broadcast the
+changes to both players. The initial state of the game also needs to be
+know by both clients so that the server only needs to inform the
+clients of changes.
+
+Since the rules of the game are quite extensive and needs to decide
+what should happen each time the ball moves or a player wants to move
+we implement this in a module of its own. The pong server will thus
+know very litle about what is going on and always consult the game
+module before acting on a requst. 
+
+The state of the game is simply keepingh track of where the players
+have their paddles, where the ball is and what the score is. The
+server also holds the process identifiers of teh session processes to
+be able to broadcast the state changes.
 
 
+\begin{itemize}
+\item Two players ({\tt player1} and {\tt player2}).
+\item A ball.
+\item The current score.
+\item Two {\em session pids} to send messages to the players. 
+\end{itemize}
 
+The message that come from the session processes are request to move
+the paddles. The game module is use to determin if the move is
+possible and if so, an directive to move the paddle is broadcasted to
+the session processes. Note that the server allways boradcast the
+changes to both clients, the clienst thus receivs the same messages
+from the server.
 
+Moving the paddles in the simple problem to solve, it's a bit tricker
+to handle the ball. Inorder for the ball to move the sever must
+periodically calculate the new position of the ball and then update
+the clients. This is solved using a call to {\tt :timer.send_after/3}
+function. This function will schedule a message to a process after a
+given time and we set this up to send a {\tt :tick} message after
+$100 ms$. When the tick mesage is handled the ball is moved and a new
+tick message is scheduled.
+
+The last message we need to handle is a {\tt \{:serve, :player1\}} (
+or {\tt :player2}) message. This is also a message that the server
+schedules to be sent to itself after a second or two. When it is
+received a new ball is generated and the games starts. Everytime a
+player misses the ball a new serve message is scheludled.
+
+\subsection*{the game module}
 
 
 
