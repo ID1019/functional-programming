@@ -183,7 +183,7 @@ process (use spawn\_link/1). The procedure should take the following arguments.
 \item {\tt right} and {\tt left}: the process identifiers of the two
   chopsticks.
 
-\item {\tt name}: a string that is the name of the philosopher, used
+\item {\tt name}: an atom that is the name of the philosopher, used
   for nice logging.
 
 \item {\tt ctrl}: a controller process that should be informed when
@@ -224,11 +224,11 @@ def init() do
   c4 = Chopstick.start()
   c5 = Chopstick.start()
   ctrl = self()
-  Philosopher.start(5, c1, c2, "Arendt", ctrl)
-  Philosopher.start(5, c2, c3, "Hypatia", ctrl)
-  Philosopher.start(5, c3, c4, "Simone", ctrl)
-  Philosopher.start(5, c4, c5, "Elisabeth", ctrl)
-  Philosopher.start(5, c5, c1, "Ayn", ctrl)
+  Philosopher.start(5, c1, c2, :arendt, ctrl)
+  Philosopher.start(5, c2, c3, :hypatia, ctrl)
+  Philosopher.start(5, c3, c4, :simone, ctrl)
+  Philosopher.start(5, c4, c5, :elisabeth, ctrl)
+  Philosopher.start(5, c5, c1, :ayn, ctrl)
   wait(5, [c1, c2, c3, c4, c5])
 end
 \end{minted}
@@ -297,16 +297,9 @@ end
 \end{minted}
 
 Change your implementation of the philosophers to use the new
-interface. At this time it is worth understanding a bit about the
-random module. It will as you have figured out generate a random
-number each time we can {\tt :rand.uniform/1} but, the sequence is 
-the same each
-time we create a new process. A process will use the same sequence
-every time it is created. This is very nice when we debug programs
-since we then eliminate one source of indeterminism, but not as fun
-when we want processes to behave different each time we run it. Do
-some reading and provide each philosopher with a unique seed value, if
-you do it right you can have different execution patterns at will.
+interface. You should also add another parameter to the philosopher;
+every time a philosopher has to give up waiting for a chopstick its
+strength is reduced by one. If the strength goes down to $0$ it dies. 
 
 So you have broken the dead-lock, or so you think, but what is
 actually happening? What happens when a philosopher gives up? You have
@@ -321,7 +314,7 @@ what is happening.
 \section{Asynchronous requests}
 
 The solution that you have now is quite boring in that a philosopher
-will first request the left chopstick and only when this is delivered
+will first request the left chopstick and, only when this is delivered
 will it try to grab the right chopstick. How about sending a request
 to both chopsticks first and then wait for the replies? Change the
 request function and then provide a {\em granted} function that does
