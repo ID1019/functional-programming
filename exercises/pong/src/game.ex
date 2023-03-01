@@ -16,91 +16,85 @@ defmodule Game do
 
   
   
-  def player(name) do
+  def player1(name) do
+    x = (2 * @paddle_width)
     y = trunc( (@field_height - @paddle_height) / 2)
-    {name, y, 0}
+    {name, x, y, @dx}
   end
 
-  def down({name, y, s}) do
+  def player2(name) do
+    x = (@field_width - 2*@paddle_width - @ball_width)
+    y = trunc( (@field_height - @paddle_height) / 2)
+    {name, x, y, -@dx}
+  end
+  
+  def down({name, x, y, d}) do
     if (y + @paddle_height) < @field_height do
-      {:ok, {name, y + @paddle_speed, s}}
+      {:ok, {name, x, y + @paddle_speed, d}}
     else
       :no
     end
   end
 
-  def up({name, y, s}) do
+  def up({name, x, y, d}) do
     if y > 0 do
-      {:ok, {name, y - @paddle_speed, s}}
+      {:ok, {name, x, y - @paddle_speed, d}}
     else
       :no
     end
   end
 
-
-  def serve(name,{name, y, _}, _) do
-    dx = @dx
+  def serve({_name, x, y, d}) do
+    dx = d
     dy = @dy
-    bx = (2 * @paddle_width) 	       
+    bx = x
     by = (y + trunc(@paddle_height/2))
     {{bx, by}, {:ball, bx, by, dx, dy}}
   end
-  def serve(name, _, {name, y, _}) do
-    dx = -@dx
-    dy = @dy
-    bx = (@field_width - 2*@paddle_width - @ball_width) 	    
-    by = (y + trunc(@paddle_height/2))
-    {{bx, by}, {:ball, bx, by, dx, dy}}
-  end  
-  
-  
 
   def move_ball(player1, player2, ball) do
 
     {:ball, bx, by, dx, dy}  = ball
-      {name1, y1, s1} = player1
-      {name2, y2, s2} = player2
+    {name1, x1, y1, _} = player1
+    {name2, x2, y2, _} = player2
       
-      bx = bx + dx
-      by = by + dy
+    bx = bx + dx
+    by = by + dy
 	  
-      cond  do
-	dx > 0 and (bx >= (@field_width - 2*@paddle_width - @ball_width)) and (by >= (y2-@ball_width) and by <= (y2 + @paddle_height)) ->
-	  #:io.format(" ball hits right paddle at: ~w ~w\n", [bx, by])
-	  {dx, dy} = spin(y2, by, dx, dy)
+    cond  do
+      dx > 0 and (bx >= x2) and (by >= (y2-@ball_width) and by <= (y2 + @paddle_height)) ->
+	#:io.format(" ball hits right paddle at: ~w ~w\n", [bx, by])
+	{dx, dy} = spin(y2, by, dx, dy)
+	{:bounce, {bx, by}, {:ball, bx, by, dx, dy}}
 
-	  {:bounce, {bx, by}, {:ball, bx, by, dx, dy}}
+      dx < 0 and (bx <= x1) and  (by >= (y1-@ball_width) and by <= (y1 + @paddle_height)) ->
+	#:io.format(" ball hits left paddle\n")
+	{dx, dy} = spin(y1, by, dx, dy)
+	{:bounce, {bx, by}, {:ball, bx, by, dx, dy}}
 
-	dx < 0 and (bx <= (2*@paddle_width)) and  (by >= (y1-@ball_width) and by <= (y1 + @paddle_height)) ->
-	  #:io.format(" ball hits left paddle\n")
-	  {dx, dy} = spin(y1, by, dx, dy)
-	  {:bounce, {bx, by}, {:ball, bx, by, dx, dy}}
-
-	bx >= (@field_width - @ball_width) ->
-	  s1 = s1+1
-	  {:score, name1, s1, {name1, y1, s1}}
+      bx >= (@field_width - @ball_width) ->
+	{:score, name1}
 	  
-	bx <= 0 ->
-	  s2 = s2+1
-	  {:score, name2, s2, {name2, y2, s2}}
+      bx <= 0 ->
+	{:score, name2}
 
-	by <= 0 ->
-          dy = -dy
-    	  bx = bx + dx
-	  by = by + dy	
-	  {:moved, {bx, by}, {:ball, bx, by, dx, dy}}
+      by <= 0 ->
+        dy = -dy
+    	bx = bx + dx
+	by = by + dy	
+	{:moved, {bx, by}, {:ball, bx, by, dx, dy}}
 
-	by >= (@field_height - @ball_width) ->
-          dy = -dy
-    	  bx = bx + dx
-	  by = by + dy	
-	  {:moved, {bx, by}, {:ball, bx, by, dx, dy}}
+      by >= (@field_height - @ball_width) ->
+        dy = -dy
+    	bx = bx + dx
+	by = by + dy	
+	{:moved, {bx, by}, {:ball, bx, by, dx, dy}}
 
-	true ->
-    	  bx = bx + dx
-	  by = by + dy	
-	  {:moved, {bx, by}, {:ball, bx, by, dx, dy}}
-      end
+      true ->
+    	bx = bx + dx
+	by = by + dy	
+	{:moved, {bx, by}, {:ball, bx, by, dx, dy}}
+    end
   end
 
   

@@ -8,10 +8,11 @@ defmodule Session do
   def init(name, server) do
     receive do
     {:ws,  ws, :open} ->
-	:io.format("session: player (~w)  connected\n", [self()])
+	:io.format("session: ~w (~w)  connected\n", [name, self()])
 	send(server, {:ready, name})
 	session(name, server, ws)
-	:io.format("session: player (~w) stopped~n", [self()])
+	send(server, {name, :close})
+	:io.format("session: ~w (~w) stopped~n", [name, self()])
     end
   end
 
