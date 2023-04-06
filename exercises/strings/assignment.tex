@@ -1,0 +1,127 @@
+\documentclass[a4paper,11pt]{article}
+
+\input ../include/preamble.tex
+
+
+\begin{document}
+
+
+\title{Strings}
+
+\author{Johan Montelius}
+\date{Spring Term 20xx}
+
+\maketitle
+
+\defaultpagestyle
+
+\section*{Introduction}
+
+There are two ways to represent strings in Elixir and you should get
+use to using both and knowing when to prefere one over the other. In
+order to learn how to use strings you should do some performance
+measurments to uderstand the complexity of different operations.
+
+\section*{The history}
+
+The reason Elixir has two ways to represent strings is historical and
+dates back to how Erlang represented strings. The Erlang system was
+not targeting text processing so strings were simply respresented as a
+linked list of integers that represnted the characters of the
+string. This representation allows great flexibility and did not
+require any additional data structures.
+
+As the Erlang system matured a new data structure, a byte sequence or
+{\em binary}, was introduced. The binary data structure allowed for
+efficient representation of large data structures and provided
+efficient access operations. Once byte sequences where introduced
+these were an obviuous form to represent strings; think about an array
+of bytes compared to a linked list of integers.
+
+In Erlang a string was written using quatations marks ({\tt "ABC"})
+and was represented as a linked list of integers. Binaries were
+written using {\em bit syntax} ({\tt <<65,66,67>>}) and libraries
+operating on strings would accept either. To make things even more
+flexible srings could be encoded as: linked lists och characyters,
+binaries or a linked list of a mixture.
+
+When Elixir was introduced, an Elixir uses Ruby syntax, a slight
+change was made to the syntax. Since the byte sequence representation
+is more efficient (and maybe what programmers expect), the quoted
+syntax ({\tt "a sequence of bytes"}) was used to define byte
+sequences. If you really wanted a linked list of characters you
+instead used single quotes ({\tt 'a linked list of characters'}).
+
+To complicate things even further strings as byte sequcnes are
+represented using UTF8 which means that a character is represented by
+a {\em code point} that can be: one, two, three or even four bytes. If
+you only use the ASCII alphabet you get away with one byte per
+character but the Swedish letters å, ä and ö require two bytes. A
+tring represented as a linked list is however encoded as {\em latin1}
+i.e. an extended version of ASCII. If you're not confused yet you can
+try the following in a Elixir terminal:
+
+\begin{verbatim}
+> IO.inspect("åäö", binaries: :as_binaries)
+
+> IO.inspect('åää')
+
+\end{verbatim}
+
+The Elixir shell of course wants to make life easy for you and will
+display strings in a way that is readble. This will sometimes couse a
+confusion and you will start to debug you program even though it does
+return the right result. Try the following in the terminal:
+
+\begin{verbatim}
+> [104,101,108,108,111]
+
+\end{verbatim}
+
+If you program should return a list of five integers, Elixir will see
+if all integers are between $32$ and $127$, assume that is a list of
+ASCII values and print them as the characters they represent. This can
+be very confusing of you don't know what is going on.
+
+
+\section{A charlist - a linked list of characters}
+
+The first thing that we should make clear is the complexity of
+accessing a random element in a charlist (Elixir terminology for
+linked list of characters). Since a charlist is a linked list the
+complexity of different operations should not be a surpise. Use the
+following definitions and explore how the execution time changes. Make
+a nice table that shows your results and draw the right conclusions. 
+
+
+\begin{minted}{elixir}
+  def access(k, n, i) do
+    a = List.duplicate(0, n)
+    {t, _} = :timer.tc(fn () -> Enum.each(1..k, fn(_) -> Enum.at(a, i) end) end)
+    t
+  end
+\end{minted}
+
+
+\begin{minted}{elixir}
+  def append(k, n, m) do
+    a = List.duplicate(0, n)
+    b = List.duplicate(1, m)
+    {t, _} = :timer.tc(fn () -> Enum.each(1..k, fn(_) -> a ++ b end) end)
+    t
+  end
+\end{minted}
+  
+
+\section{A binary - an array of bytes}
+
+When we represent a string as a binary ytou will 
+
+
+
+
+
+
+
+
+\end{document}
