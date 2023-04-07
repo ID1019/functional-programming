@@ -115,9 +115,184 @@ a nice table that shows your results and draw the right conclusions.
 
 \section{A binary - an array of bytes}
 
-When we represent a string as a binary ytou will 
+When we represent a string as a binary things become a bit more
+complicated; it's more efficient but in order to make use of the
+efficiency you need to know how things are impelemented. The following
+description is not exactly how things work but it will give you the
+right understanding of complexity.
+
+A binary data structure consists of two parts: an array of bytes and a
+header. The header keeps two references: one to the beginning of the
+first byte of the array and one two the last byte. The array can be
+shared amog several binary data structures so similar to a linked list
+we do not alwyas have to copy the data structure.
+
+Let's look at an example; the code below allocates a binary structure
+using the string syntax and then uses pattern matching to get hold of
+the first byte and the rest of the binary.
+
+\begin{verbatim}
+>  str = "string"
+
+>  <<char, rest::binary>>  = str
+
+\end{verbatim}
+
+If we draw a image of what this will look like in memory we would en up with someting like this:
+
+\begin{tikzpicture}
+  \node[] at (0,6.5) {str : };
+  \draw[] (1,6) rectangle (2,7);
+  \draw[] (2,6) rectangle (3,7);
+  \draw[->] (1.5,6.5) to[in=90, out=270] (2.5,5.2);
+  \draw[->] (2.5,6.5) to[in=90, out=270] (7.5,5.2);  
+
+  \draw[] (2,4) rectangle(8,5);
+  \foreach \i\c in {3/s, 4/t , 5/r, 6/i, 7/n, 8/g} {
+    \draw[] (\i,4) -- (\i,5);
+    \node[] at (\i - 0.5, 4.5) {\c};
+  };
+
+  \node[] at (1,2.5) {rest : };
+  \draw[] (2,2) rectangle (3,3);
+  \draw[] (3,2) rectangle (4,3);
+  \draw[->] (2.5,2.5) to[out=90, in=270] (3.5,3.8);
+  \draw[->] (3.5,2.5) to[out=90, in=270] (7.5,3.8);  
+\end{tikzpicture}
+
+The two binary structures share the string "a string" so there is no
+copying needed. There is some more magic going on in order to solve
+garbage collection etc but to udnerstand the complexity this is fine
+for now.
+
+When we concatenate two strings, the general scheme is that the two
+strings are both copied into a resulting string. If {\tt a} and {\tt
+  b} are two strings then, in general, the call {\tt c = a <> b} would
+mean that a new binary is allocated and the content of both {\tt a}
+and {\tt b} is copied into the new array. If this is the "general"
+scheme you suspect that there is a special case and there is one but
+first let's ponder the complexity of the concatention procedure.
+
+Take a look at the two definitions below, they do more or less the
+same thing but the first function is operating on charlists and the
+second on binaries. Working with linked lists the function will have a
+$O(n)$ complexity where $n$ is the length of the first list. 
+
+\begin{minted}{elixir}
+  def app_lst([], str) do str end
+  def app_lst([head | tail], str) do
+    [head |  app_lst(tail, str)]
+  end    
+  
+  def app_str(<<>>, str) do str end
+  def app_str(<<head, tail::binary>>, str) do
+    <<head, app_str(tail, str)::binary>>
+  end  
+\end{minted}
+
+The second function of course also has a $O(n)$ component but the
+concatenation in each recursion is now not a constant time operation
+but an operation that depends on $m$ the length of the second binary;
+the complexity is thus $O(n*m)$. 
+
+Knowing this you can benchmark the following function; before you do
+try to estimatet the complexity of the function. It does exactly the
+same things as {\tt app_str/2} but now bytes are added to the end of
+binary one by one to build the final concatenated result.
+
+\begin{minted}{elixir}
+  def strange(str, <<>>) do str end
+  def strange(str, <<head, tail::binary>>) do
+    strange(str <> <<head>>, tail)
+  end
+\end{minted}
+
+After doing some benchmarking you will probably find that the
+complexity os not what you expected - it's alot better, why? This is
+the special case that me mentioned earlier and to understand what is
+going on we have to explore the representation of binaries.
+
+\section*{The special case}
+
+When a binary os allocted, more room is allocated than is actually
+needed. Let's say that we allocate an exponent of $2$ i.e. $8$, $16$, $32$,
+$64$ .... bytes to hold a binary. Our string in teh previous example
+would then look like this.
+
+\begin{tikzpicture}
+  \node[] at (0,6.5) {str : };
+  \draw[] (1,6) rectangle (2,7);
+  \draw[] (2,6) rectangle (3,7);
+  \draw[->] (1.5,6.5) to[in=90, out=270] (2.5,5.2);
+  \draw[->] (2.5,6.5) to[in=90, out=270] (7.5,5.2);  
+
+  \draw[] (2,4) rectangle(10,5);
+  \foreach \i\c in {3/s, 4/t , 5/r, 6/i, 7/n, 8/g, 9/, 10/} {
+    \draw[] (\i,4) -- (\i,5);
+    \node[] at (\i - 0.5, 4.5) {\c};
+  };
+\end{tikzpicture}
+
+Now how can we implemnent an operation such as {\tt c = str <> "x"}?
+If the runtime system knows that there is some spare room in the end
+of the array we can simply copy the one byte giving us this result.
 
 
+\begin{tikzpicture}
+  \node[] at (0,6.5) {str : };
+  \draw[] (1,6) rectangle (2,7);
+  \draw[] (2,6) rectangle (3,7);
+  \draw[->] (1.5,6.5) to[in=90, out=270] (2.5,5.2);
+  \draw[->] (2.5,6.5) to[in=90, out=270] (7.5,5.2);  
+
+  \draw[] (2,4) rectangle(10,5);
+  \foreach \i\c in {3/s, 4/t , 5/r, 6/i, 7/n, 8/g, 9/x, 10/} {
+    \draw[] (\i,4) -- (\i,5);
+    \node[] at (\i - 0.5, 4.5) {\c};
+  };
+
+  \node[] at (1,2.5) {c : };
+  \draw[] (2,2) rectangle (3,3);
+  \draw[] (3,2) rectangle (4,3);
+  \draw[->] (2.5,2.5) to[out=90, in=270] (2.5,3.8);
+  \draw[->] (3.5,2.5) to[out=90, in=270] (8.5,3.8);    
+\end{tikzpicture}
+
+This of course only works once and if we continue to do {\tt d = str
+  <> "y"} then the whole string {\tt str} (as well as {\tt "y"}) will
+be copied. Note however that we can do {\tt d = c <> "y"} and only
+copy the {\tt y} to the free position in the array.
+
+So, what is the complexity of concatenating strings? In the general
+case you will have to copy both strings so it's an $O(n+m)$
+operation. If you're lucky, or are very carefull when implementing
+your functions and you know what you're doing, you can get away with
+$O(m)$.
+
+\section*{Conclusions}
+
+To understand why operations take time and correctly estimate the time
+complexity of functions you need to understand how things are
+implemented. The difference between using an algorithm that runs in
+$O(n)$ compared to $O(n^2)$ time could be the difference of a working
+implementation and something that is simply to slow to usefull. You
+should of course not allways choose a $O(n)$ algorithm over an
+$O(n^2)$ algorithm but you should know what you do.
+
+Given your gained knowledge of how binary strcutres are represented,
+how would you reverse a binary?
+
+\begin{minted}{elixir}
+  def nreverse(<<>>) do <<>> end
+  def nreverse(<<h, tail::binary>>) do
+    nreverse(tail) <> <<h>>
+  end  
+
+  def areverse(<<>>, str) do str end
+  def areverse(<<h, tail::binary>>, str) do
+    areverse(tail, <<h, str::binary>>)
+  end    
+\end{minted}
 
 
 
