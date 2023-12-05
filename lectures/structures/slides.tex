@@ -30,7 +30,7 @@
 \begin{frame}{Data structures}
 
   \begin{itemize}
-  \item integers, floting point values \pause
+  \item integers, floating point values \pause
   \item boolean - true or false
   \item atoms - similar to Java enum \pause
   \item tuples - similar to a C struct but without names or an array\pause
@@ -50,7 +50,7 @@
   \item 0x1F \pause
   \end{itemize}  
   
-  Integgers can be almost arbitrary large: \pause
+  Integers can be almost arbitrary large: \pause
 
   \vspace{10pt}\
   {\tt > 123456789123456789 * 123456789123456789}\pause
@@ -79,7 +79,7 @@
 
 \begin{frame}{atoms}
 
-  Atoms are identifiers with a program whide scope. \pause
+  Atoms are identifiers with a program wide scope. \pause
 
   \vspace{20pt}
   Used to represent objects or values : {\tt :apple}, {\tt :orange}, {\tt :ok}, {\tt :error}. \pause
@@ -89,7 +89,7 @@
   
 
   \vspace{20pt}
-  {\em syntax allows to ommit colon fo the atoms {\tt :true}, {\tt :false} and {\tt :nil}.}
+  {\em syntax allows to omit colon for the atoms {\tt :true}, {\tt :false} and {\tt :nil}.}
     
 \end{frame}
 
@@ -143,14 +143,43 @@ end
 
 
  \vspace{20pt}
-{\em types are checked at runtime}
+{\em types are checked at run-time}
  
+\end{frame}
+
+\begin{frame}{dynamic typing}
+
+  The development process. 
+  \vspace{20pt}
+  \begin{columns}
+   \begin{column}{0.5\textwidth}
+     Static typing: \pause
+     \begin{itemize}
+     \item compile .... error, oh no \pause
+     \item compile .... error, oh no \pause
+     \item compile .... error, oh no \pause
+     \item compile .... yes! \pause
+     \item run .... no problem \pause
+     \end{itemize}
+   \end{column}
+   \begin{column}{0.5\textwidth}
+     Dynamic typing: \pause
+     \begin{itemize}
+     \item compile .... no problem \pause
+     \item run .... error, oh no \pause
+     \item run .... error, oh no \pause
+     \item run .... error, oh no \pause
+     \item run .... yes! \pause       
+     \end{itemize}
+   \end{column}   
+ \end{columns}
+
 \end{frame}
 
 
 \begin{frame}{tuples}
 
-  A compund data structure. \pause
+  A compound data structure. \pause
 
   \vspace{20pt}
 
@@ -182,7 +211,7 @@ end
 
 \begin{frame}[fragile]{access components}
 
-  Components of a tuple are extarcted using {\em pattern matching}.\pause
+  Components of a tuple are extracted using {\em pattern matching}.\pause
 
   \begin{lstlisting}
     x = {:gurka, 123, "Prima gurkor"}
@@ -236,9 +265,13 @@ end
 
 
 \pause
-\node at (2,-2) {{\large z: :bar}};
-\node at (6,-2) {{\large n: 10}};
+\draw [ultra thick, black] (7,-2) rectangle +(2,1);
+\node at (6,-1.5) {{\large z:}};
+\node[ultra thick, black] at (8,-1.5) {:bar};
 
+\draw [ultra thick, black] (15,-2) rectangle +(2,1);
+\node at (14,-1.5) {{\large n:}};
+\node[ultra thick, black] at (16,-1.5) {10};
 
 \end{tikzpicture}
 
@@ -248,7 +281,7 @@ end
 
 \begin{frame}[fragile]{linked list}
 
-  In functional programming languages linked lista are very useful.\pause
+  In functional programming languages linked lists are very useful.\pause
 
   \vspace{20pt}
   \begin{lstlisting}
@@ -389,7 +422,7 @@ combined = text <> " that we append to this string"
 
 \begin{verbatim}
 answer = 42
-message = "The answer is #{answer}, but what is question?"
+message = "The answer is #{answer}, but what is the question?"
 \end{verbatim}
 
 \end{frame}
@@ -403,7 +436,7 @@ message = "The answer is #{answer}, but what is question?"
   
 \end{frame}
 
-\begin{frame}[fragile]{Strings and lists of charactes}
+\begin{frame}[fragile]{Strings and lists of characters}
 
 \vspace{20pt}  \pause  
 \begin{verbatim}
@@ -420,12 +453,15 @@ message = "The answer is #{answer}, but what is question?"
   msg = [?h, ?e, ?l, ?l, ?o]
 \end{verbatim}
 
+\vspace{20pt}\pause
+ {\em try in teminal:  IEx.configure(inspect: [charlists: :as_lists])}
+
 \end{frame}
 
 \begin{frame}{Summary}
 
   \begin{itemize}
-  \item integers, floting point values \pause
+  \item integers, floating point values \pause
   \item boolean - true or false
   \item atoms - similar to Java enum \pause
   \item tuples - similar to a C struct (but without names) or an array\pause
