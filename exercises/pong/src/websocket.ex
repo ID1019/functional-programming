@@ -17,7 +17,7 @@ defmodule WebSocket do
 	  :stop ->
 	    # the socket process must live as long as the sessions last
 	    :io.format("ws: server stopped ~n")
-	    Process.exit(self(), :kill)
+	    Process.exit(self(), :kill)	
 	end
       {:error, error} ->
        error
@@ -53,19 +53,20 @@ defmodule WebSocket do
     Process.exit(self(), :kill)
   end
 
-  def handler(socket, session) do
+  def handler(socket, decoder, session) do
     receive do
       {:msg, msg} ->
 	send(session,  {:ws, self(), {:msg, msg}})
-	handler(socket, session)
+	handler(socket, decoder, session)
       :closed ->
 	send(session,  {:ws, self(), :closed})	
 
       {:frw, msg} ->
 	:gen_tcp.send(socket,  message(msg))
-	handler(socket, session)
+	handler(socket, decoder, session)
 
       :stop ->
+	send(decoder, :stop)
 	:gen_tcp.send(socket,  close())
 
       strange ->
@@ -112,7 +113,7 @@ defmodule WebSocket do
       {:ok, more} ->
 	decoder(socket, handler, more)
       {:error, reason} ->
-	:io.format("ws: socket closed by client (~w)~n", [reason])
+	:io.format("ws: error decoding (~w)~n", [reason])
 	Process.exit(self(), :kill)	
     end
   end
@@ -127,7 +128,6 @@ defmodule WebSocket do
       :closed ->
 	:io.format("ws: websocket closed by client\n")
 	send(handler, :closed)
-	Process.exit(self(), :kill)	
       {:ok, msg, rest} ->
 	send(handler,  {:msg, msg})
 	decoder(socket, handler, rest)

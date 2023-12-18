@@ -20,7 +20,9 @@ defmodule Web do
   end
 
   ## make sure that they do not include "/../" in the path!
-  
+  ## oops, // :-) 
+
+  def warning([?/|_]) do  :warning end
   def warning(path) do
     List.foldl(path, :ok,
       fn(c,a) ->

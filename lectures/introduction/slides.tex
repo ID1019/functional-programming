@@ -18,7 +18,8 @@
 \end{frame}
 
 \begin{frame}{variables, literals and builtin operations}
-\begin{columns}
+
+\begin{columns}[t]
  \begin{column}{0.4\linewidth}
    \begin{itemize}
      \pause \item {variables:} {\tt x}, {\tt y}, {\tt foo}, ..
@@ -30,7 +31,7 @@
  \begin{column}{0.6\linewidth}
   \begin{itemize}
     \pause \item {binary operations:} {\tt +},{\tt -},{\tt *},{\tt /}, ..
-    \pause \item {arithmetic functions:} {\tt div/2}, {\tt rem/2}, {\tt *}, ..   
+    \pause \item {arithmetic functions:} {\tt div/2}, {\tt rem/2}, {\tt abs/1}, ..   
     \pause \item {comparison:} {\tt ==}, {\tt !=}, ..
     \pause \item {boolean operators:} {\tt and}, {\tt or}, ..
   \end{itemize}
@@ -39,17 +40,34 @@
 
 \vspace{20pt}{\em There are more but this is fine for now.}
 
+\vspace{20pt}{\em The notation {\tt div/2} means a function of two arguments.}
+
+
 \end{frame}
 
 
 \begin{frame}{functions}
+
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
   \begin{itemize}
    \pause \item {\tt fn x -> x + 2 end}
    \pause \item {\tt (fn x -> x + 2 end).(5)}
-   \pause \item {\tt (7 + 5)}
-   \pause \item {\tt 12}
+   \pause \item {\tt (5 + 2)}
+   \pause \item {\tt 7}
   \end{itemize}
+\end{column} \pause
+\begin{column}{0.5\textwidth}
+  \begin{itemize}
+   \pause \item {\tt add = fn(x,y) -> x + y end}
+   \pause \item {\tt add.(5, 4)}
+   \pause \item {\tt (5 + 4)}
+   \pause \item {\tt 9}
+ \end{itemize}
+\end{column}
+\end{columns}\pause
 
+\vspace{20pt}{\em Parenthesis are optional ... but quite nice to have.}
 
 \vspace{20pt}{\em Can we give names to functions?}  
 \end{frame}
@@ -79,6 +97,28 @@
 
 \end{frame}
 
+\begin{frame}[fragile]{patterns}
+
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+\begin{verbatim}
+  case <expr> do 
+    <pattern> -> <expr>
+       :
+  end
+\end{verbatim}
+    \end{column}\pause
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+      \item <pattern> = <expr> \pause
+      \item x = 4 + 8 \pause
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  
+\end{frame}
+
+
 \begin{frame}[fragile]{atoms}
 
 \begin{verbatim}
@@ -90,57 +130,6 @@
    end
  end   
 \end{verbatim}
-\end{frame}
-
-\begin{frame}{Data structures}
-
-  \begin{itemize}
-  \item integers, floating point values \pause
-  \item boolean - true or false
-  \item atoms - similar to Java enum \pause
-  \item tuples - similar to a C struct but without names\pause
-  \item lists - syntax for linked lists
-  \item strings, chars, char-lists - "hello", ?h, ?e, ?l, ?l, ?o, 'hello'
-  \end{itemize}
-
-\end{frame}
-
-\begin{frame}{Integers}
-
-  Syntax:
-  \vspace{10pt}
-  \begin{itemize}
-  \item 12345 \pause
-  \item 0b1010101 \pause
-  \item 0x1F \pause
-  \end{itemize}  
-
-  \vspace{10pt}  
-  Integers can be almost arbitrary large: \pause
-
-  \vspace{10pt}\
-  {\tt > 123456789123456789 * 123456789123456789}\pause
-
-  {\tt 15241578780673678515622620750190521} \pause
-  
-  \vspace{20pt}\pause
-  {\em arithmetic could be slow}
-\end{frame}
-
-\begin{frame}{Floating points}
-
-  Syntax:
-  \space{10pt}
-  \begin{itemize}
-  \item 1.2345 \pause
-  \item 1.2345E6 \pause
-  \end{itemize}
-
-  \vspace{20pt}
-  {\tt 2.0 == 2} is true  but {\tt 2.0 === 2} is not true
-
-  \vspace{20pt}\pause
-  {\em arithmetic is slow}  
 \end{frame}
 
 \begin{frame}{atoms}
@@ -159,7 +148,7 @@
     
 \end{frame}
 
-\begin{frame}[fragile]{module names}
+\begin{frame}[fragile]{modules and files}
 
 \begin{columns}[t]
 \begin{column}{0.5\textwidth}

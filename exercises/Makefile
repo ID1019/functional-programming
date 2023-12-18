@@ -26,6 +26,7 @@ DIRS =  avl \
 	semantics \
 	splay\
 	streams\
+	strings\
 	tracer\
 	train\
 	transport\
