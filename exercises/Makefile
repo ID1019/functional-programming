@@ -22,6 +22,7 @@ DIRS =  avl \
 	philosophers \
 	primes \
 	rick \
+	ranges \
 	server \
 	semantics \
 	splay\
