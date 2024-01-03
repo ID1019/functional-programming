@@ -79,25 +79,39 @@ nr 81 is then mapped to fertilizer 81 (since there is no special rule
 change to nr 78. This is also the humidity but the location is 82.
 
 You first job is to parse the input string and turn it in to something
-more convenient to work with. Here is some code that uses a sequence
-of {\tt String.split/2} functions to turn the input string into a
-tuple.
+more convenient to work with. To do this you could work with the following functions:
 
-\begin{minted}{elixir}
-  def parse(descr) do
-    [seeds | maps] = String.split(String.trim(descr), "\n\n")
-    [_ | seeds] = String.split(seeds, " ")
-    seeds = Enum.map(seeds, fn(str) -> {nr, _} = Integer.parse(String.trim(str)); nr end)
-    maps = Enum.map(maps, fn(map) ->
-      [_| rows] = String.split(map, "\n")
-      Enum.map(rows, fn(row) ->
-	[d,s,r] = Enum.map(String.split(row, " "), fn(str) -> {nr, _} = Integer.parse(String.trim(str)); nr end)
-	{:map, d,s,r}
-      end)
-    end)
-    {:puzzle, seeds, maps} 
-  end
-\end{minted}
+\begin{itemize}
+
+\item {\tt File.read!("sample.txt")}: assuming the sample is stored in
+  the file {\tt sample.txt} the function returns a string with the text.
+
+\item {\tt String.split(text, divider)} : if the text is our original
+  string we could first split it using a divider {\tt "\textbackslash n\textbackslash n"} i.e double
+  new-line. The function will return a list of the different segments:
+  the seeds and the different maps. The string that represents the
+  seeds can then be further divided using {\tt " "} as the divider etc.
+
+\item {\tt Integer.parse(string)} : this function will parse a string
+  and return, if successful, a tuple {\tt \{nr, rest\}} where {\tt nr}
+  is a number and {\tt rest} is what ever came after the number. The
+  string has to start with a digit so the string {\tt " 20"} will not work.
+
+\item {\tt String.trim(string)} : this function will return a string
+  where all space, newline etc has been remove from the beginning and
+  end of the string. This could come in handy before trying to parse
+  an integer. It could also be a way of removing a trailing newline on
+  the full sample text (or you might end up with an empty row).
+\end{itemize}
+
+The file "sample.txt" of course needs to be in the same directory
+where you are when you execute the program. If you run your Elixir
+shell from command line there is little discussion of where this is
+but if you're using an IDE you have to think a bit.
+
+When you parse the sample string you will of course return a data
+structure that represents the problem. To make things easier you can
+assume that the maps are always written in the same order. 
 
 Once you have the initial seed numbers and maps you should implement a
 function that applies the transformations.  If you get the
@@ -106,15 +120,16 @@ be: 82, 43, 86 and 35 so the lowest one is 35. If you pass this test
 take the real task and give it a try; what is the lowest location
 number?
 
-Describe your implementation and justify your choice of data structures.
+Describe your implementation and justify your choice of data
+structures.
 
 
 \section*{The second task}
 
 The input data is the same as in the first task but the
-interpretation has changed.  The first row in the specification does
-not specify four seeds but two ranges of seeds ( 79..(79+14-1) and
-55..(55+13-1)). The seeds are specified as the first seed number and
+interpretation has changed. The first row in the specification does
+not specify four seeds but {\bf two ranges of seeds}, 79..92 and
+55..67). The seeds are specified as the first seed number and
 how many consecutive seed numbers we have (79 14 means 79,80,81...92).
 
 You can use your original program and instead of exploring the
@@ -149,7 +164,7 @@ we solve the puzzle. The functions are:
 \begin{itemize}
  \item {\tt empty()} : return an empty sequence.
 
- \item {\tt range(from,to)} : return a sequence with one interval
+ \item {\tt range(from,to)} : return a sequence with one range
    including all number from {\em from} to {\em to}.
 
  \item {\tt union(a, b)} : given two sequences, return the {\em union}
@@ -174,6 +189,9 @@ less easy to implement these functions. We could of course choose to
 represent a range {\tt 3..5 - 8..10} as list of
 integers,{\tt \[3,4,5,8,9,10\]}, but that might be an impractical form
 if we are dealing with ranges such as {\tt 1..12345678}.
+
+Note - you don't have to, nor might it be very efficient, to use the
+Elixir representation of ranges for the segments.
 
 Choosing the right representation should be done with the operations in
 mind; some things might be easier to do depending on the
