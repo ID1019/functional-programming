@@ -19,13 +19,16 @@ DIRS =  avl \
 	morse \
 	mutex \
 	operational \
+	parallel \
 	philosophers \
 	primes \
 	rick \
 	ranges \
+	reduce \
 	server \
 	semantics \
 	splay\
+	springs\
 	streams\
 	strings\
 	tracer\

@@ -1,0 +1,94 @@
+\documentclass[a4paper,11pt]{article}
+
+\input ../include/preamble.tex
+
+
+\begin{document}
+
+
+\title{A parallel Mandelbrot}
+
+\author{Johan Montelius}
+\date{Spring Term 2024}
+
+\maketitle
+
+\defaultpagestyle
+
+\section*{Introduction}
+
+This assignment is a continuation on the Mandelbrot assignment. You
+should do this first since the task in this assignment is how to
+parallelize the computation.
+
+
+\section*{What do we have}
+
+You should have one module called {\tt Brot} that exports the
+functions {\tt mandelbort/2}. This is the function that computes the
+depth given a complex number. If you had done some statistics you
+would have realized that 99\% of the computation time is spent
+in this function. The remaining functions are simply there to decide
+which complex numbers that should be computed and how a depth value is
+turned into a color.
+
+You also have a module called {\tt Mandel} that is responsible for
+starting the calculations, gathering all depth values and turning them
+into a color code. This is the part of the program that you should
+parallelize.
+
+The crucial observation is that all depth calculations are independent
+of each other. We can do them in any order and we can do them in
+parallel. Since we are working in a functional programming language
+this is easier to determine, non of the calculation can change a
+global state that hides a dependency. 
+
+
+\section*{Let's spawn some work}
+
+In order to execute things in parallel we need to start concurrent
+threads. All though there is no need for a concurrent computation,
+we're breaking it up into concurrent task to allow the underlying
+machinery to execute them on multiple cores.
+
+To spawn a computation is easy but we need a way to get hold of the
+computed result. A general strategy is to spawn a process that
+computes something and then sends the result as a message to its
+creator. Take a look at this:
+
+\begin{minted}{elixir}
+  
+  def add(a, b) do
+     me = self()
+     spawn( fn() -> add(a, b, me) end)
+     receive do
+       {:result, res} ->
+          res
+     end
+  end
+
+  def add(a, b, mother) do
+    send(mother, {:result, a+b})
+  end
+\end{minted}
+
+This program will spawn a computation that will add two number and
+return the result. This program does of course not run any faster than
+the plain version since: 1/ the overhead of creating the thread over
+shadows any gains and 2/ the mother thread does not do anything
+besides waiting for the result.
+
+You task is to spawn many computations as quickly as possible and then
+collect their results. Since we are generating an image you need to
+keep track of which computations belong to which computations. You
+also need to figure out what to spawn. In the above examples I don't
+think we would ever be able to see a speed up since the work of adding
+two numbers is less than spawning and collecting the result. The
+computations that you should spawn need to be large enough to make it
+worth wile.
+
+
+
+
+
+\end{document}
