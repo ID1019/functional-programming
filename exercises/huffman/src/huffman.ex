@@ -1,5 +1,21 @@
 defmodule Huffman do
+
+
+
+  def read(file) do
+    {:ok, file} = File.open(file, [:read, :utf8])
+    binary = IO.read(file, :all)
+    File.close(file)
   
+    case :unicode.characters_to_list(binary, :utf8) do
+      {:incomplete, list, _} ->
+	list
+      list ->
+	list
+    end
+  end  
+
+
   # The sample text must contain alla characters that we
   # want to encode.
   def sample() do

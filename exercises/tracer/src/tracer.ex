@@ -6,7 +6,7 @@ defmodule Tracer do
 
   def tracer(camera, objects) do
     {w, h} = camera.size
-    for y <- 1..h, do: for(x <- 1..w, do: trace(x, y, camera, objects))
+    for y <- 1..h , do: for x <- 1..w, do: trace(x, y, camera, objects)
   end
 
   def trace(x, y, camera, objects) do

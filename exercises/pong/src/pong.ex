@@ -12,33 +12,33 @@ defmodule Pong do
 
     pong = self()
     ses1 = Session.start(:player1, pong)
-    #ses2 = Session.start(:player2, pong)
+    ses2 = Session.start(:player2, pong)
 
-    ses2 = Ping.start(:player2, pong)
+    #ses2 = Ping.start(:player2, pong)
     
-    websocket = WebSocket.start(@port, [ses1])
+    websocket = WebSocket.start(@port, [ses1, ses2])
 
     receive do
       {:ready, name} ->
-	:io.format("~w ready~n", [name])
+	:io.format("pong: ~w ready~n", [name])
 	receive do
 	  {:ready, name} ->
-	    :io.format("~w ready~n", [name])
+	    :io.format("pong: ~w ready~n", [name])
 	    :timer.send_after(@serve, self(), {:serve, :player1})
 	    player1 = Game.player1(:player1)
 	    player2 = Game.player2(:player2)
 	    pong(player1, player2, :na, {0,0}, [ses1, ses2])
-	    :io.format("pong: game stopped~n")	    
+	    :io.format("pong: game stopped~n", [])	    
 	  :stop ->
 	    :ok
 	end
       :stop ->
 	:ok
     end
-    :io.format("pong: server stopped~n")
     send(ses1, :stop)
     send(ses2, :stop)    
     send(websocket, :stop)
+    :io.format("pong: server stopped~n")
   end
 
   def broadcast(pids, msg) do

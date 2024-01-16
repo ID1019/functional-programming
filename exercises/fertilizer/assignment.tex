@@ -1,0 +1,172 @@
+\documentclass[a4paper,11pt]{article}
+
+\input ../include/preamble.tex
+
+
+\begin{document}
+
+
+\title{Give a seed a fertilizer}
+
+\author{Johan Montelius}
+\date{Spring Term 2023}
+
+\maketitle
+
+\defaultpagestyle
+
+\section*{Introduction}
+
+This assignment is based on the Advent of Code 2023 day 5 problem. The
+problem is divided into two parts, the first part is mandatory while
+the second part will bring you closer to a higher grade. This is the
+first part of the puzzle.
+
+\section*{Seed to location}
+
+The first task is to given a set of seeds, figure out which seed will
+give you the lowest location number. The problem is that you have some
+seeds, as in the example below: 79, 14, 55 and 13. And a sequence of
+strange lokking maps. The first map tells you how to convert a seed
+number to a soil number, the second from a soil number to
+fertilizernumber and so on. If you can apply all maps you will have
+the location number for the seed and can then figure out which seed to
+select (spoiler, it's nr 13).
+
+\begin{verbatim}
+seeds: 79 14 55 13
+
+seed-to-soil map:
+50 98 2
+52 50 48
+
+soil-to-fertilizer map:
+0 15 37
+37 52 2
+39 0 15
+
+fertilizer-to-water map:
+49 53 8
+0 11 42
+42 0 7
+57 7 4
+
+water-to-light map:
+88 18 7
+18 25 70
+
+light-to-temperature map:
+45 77 23
+81 45 19
+68 64 13
+
+temperature-to-humidity map:
+0 69 1
+1 0 69
+
+humidity-to-location map:
+60 56 37
+56 93 4
+\end{verbatim}
+
+The question is of course how to interpret the map and how to do the
+conversion. A map consists of a sequece of conversions, each
+consisting of three number: destination ,source and range. The first
+conversion of the first map above (50,98,2) means that the numbers 98
+and 99 should be converted to 50 and 51 - all other seed numbers are
+directly translated to the same soil number.
+
+The first map is thus a function that takes a seed number and converts
+it to a soil number and we could of course write it as follows:
+
+\begin{minted}{elixir}
+  def seed_to_soil(seed) do
+    cond do
+     seed < 50 -> seed
+     seed < 98 -> 52 + (seed - 50)
+     seed < 100 -> 50 + (seed - 98)
+     true -> seed
+    end
+  end
+\end{minted}
+
+You will not have time to do this by hand so you have to implement a
+function that given a seed number and a map determines the soil number
+automatically. Since the behaviour of all translations follow the same
+rules you can define one function, call it {\tt dest/2}, that takes a
+source number and returns a destination number given a map. Once you
+have you {\tt dest/2} function you can use the different maps
+recusivly to transform a seed number to a location number.
+
+\section*{Parsing a description}
+
+Your real puzzle will be much larger than the small sample above so
+you need to implement a function that reads a description and
+transates it into something that you can work with in your
+program. Start by defining a function {\tt sample/0} that returns the
+text above as one string:
+
+\begin{minted}{elixir}
+  def sample() do
+"seeds: 79 14 55 13
+
+seed-to-soil map:
+50 98 2
+52 50 48
+
+soil-to-fertilizer map:
+0 15 37
+37 52 2
+39 0 15
+
+fertilizer-to-water map:
+49 53 8
+ :
+ :
+56 93 4"
+  end
+\end{minted}
+
+Now you implement a function {\tt parse/1} that takes a string that is
+a description and returns a tuple {\tt \{seeds, maps\}} where seeds is
+a list of seed numbers and maps is a list of maps where each map is a
+list of tuples {\tt \{:map, des, src, rng\}}. 
+
+\begin{minted}{elixir}
+{:puzzle, [79, 14, 55, 13],
+ [
+   [{:map, 50, 98,  2}, {:map, 52, 50, 48}],
+   [{:map,  0, 15, 37}, {:map, 37, 52,  2}, {:map, 39,  0, 15}],
+   :
+ ]}
+\end{minted}
+
+The parser is easily implementes using the functions {\tt split/2} and
+{\tt trim/1} from the {\tt String} module and the {\tt parse/1}
+function from that {\tt Integer} module. Try by first splitting the
+original string by "\\n\\n" to get the seeds and maps separated. Then
+it's small step to parse the descriptions of the seeds and recursivly
+parse each of the maps.
+
+\subsection*{Putting it all together}
+
+So once you can parse the input description its time to put it all
+together. Implementa a function that parses the sample and then uses
+the description to find whiich seed nr results in the smallest
+location number. If you done all steps correctly the seeds should
+result in the following locations: 82, 43, 86 and 35 and the smallest
+is then of course 35 (that came from seed 13). 
+
+Once you have something that works for the sample problem it's time to
+try your solution on the real puzzle. You should find a file called
+"day5.csv" that is the real description of all seeds and maps. You
+should be able to read this file using {\tt File.read!("day5.csv")}
+(given that the file is in the same directory as your running
+program). The function should return the wole description as a string
+that you should be able to parse.
+
+What is the smallest location number that you find given the real
+description?
+
+
+\end{document}

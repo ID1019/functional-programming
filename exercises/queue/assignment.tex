@@ -1,0 +1,160 @@
+\documentclass[a4paper,11pt]{article}
+
+\input ../include/preamble.tex
+
+
+\begin{document}
+
+
+\title{Queues}
+}
+\author{Johan Montelius}
+\date{Spring Term 2024}
+
+\maketitle
+
+\defaultpagestyle
+
+\section*{Introduction}
+
+This is an exercise where you implement different versions of
+queues. The first implementation is the most natural but the
+performance is not very good as the number of elements increase. The
+second version is much better and as you will see the performance is
+rather good.
+
+
+\section*{The first queue}
+
+
+To implement a queue we need a data structure where we can easily
+implement the following functions:
+
+\begin{itemize}
+  \item {\tt @enqueue( any(),  queue()) :: queue()} : add a new item to the queue, place it "last".
+  \item {\tt @dequeue( queue()) :: \{ any(), queue()\}} : remove the "first" element, return a tuple with the element and the remaining queue
+  \item [\tt @empty( queue()) :: boolean()} : is the queue empty?
+  \item {\tt @new() :: queue()} : return an empty queue.
+\end{itemize}
+
+Since we don't know how many elements will have in the queue we might
+take the easy way out and represent the queue simply as a tuple with a
+list of items.
+
+\begin{minted}{elixir}
+  @type queue() :: {:queue, [any()]}
+\end{minted}
+
+
+Given this representation implement the three functions above in a
+module called {\tt Queue1}. What should we do if we try to dequeue an
+element from an empty queue? Should we take care of this and return
+something that the caller can recognize or should we simply crash?
+
+
+Let's implement a small benchmark program to see how our queue
+behaves. The code below is prepared to work both with the current {\tt
+  Queue1} module and a future {\tt Queue2} module.
+
+\begin{minted}{elixir}
+  defmodule Bench do
+
+  def time(module, n) do
+    :timer.tc( fn() -> test(module, n) end)
+  end
+
+  def test(module, n) do
+    q = module.new()
+    q = enqueue(module, q, n)
+    dequeue(module, q)
+  end
+
+   :
+\end{minted}
+
+As you see we have the module name as a parameter to the {\tt test/2}
+function and use it to call the right module in for example {\tt
+  module.new()}.  Implement the recursive functions {\tt enqueue/3}
+and {\tt dequeue/2} that enqueues {\tt n} dummy elements and then
+dequeues elements as long as the queue is not empty.
+
+What is the run-time complexity of the functions?
+
+
+\section*{A second try}
+
+If you were given the task to implement a better queue data structure
+you would either use an array or a linked list with a reference to the
+last node. Both of those solutions are however not possible to
+implement in Elixir since we are not allowed to modify data structures.
+
+A solution to our problem could be to represent a queue using two
+lists. The first list is used when we remove elements from the queue
+and we then of course remove the first item in the list. The second
+list is used when we add elements to the queue and now, instead of
+adding an item to the end we add it as the first element.
+
+\begin{minted}{elixir}
+  @type queue() :: {:queue, [any()], [any()]}
+\end{minted}
+
+This does of course sound very strange but it will soon be clear why
+this works. Let's first implement a solution that almost works.
+
+\begin{minted}{elixir}
+  defmodule Queue2 do
+
+  def enqueue(itm, {:queue, front, back}) do
+      {:queue, front, [itm|back]}
+  end
+  
+  def dequeue({:queue, [itm|rest], back}) do
+      (itm, {:queue, rest, back})
+  end
+  
+   :
+
+ \end{minted}
+
+ This works as long as we have items in the first list that we can
+ dequeue. If the list is empty will will now crash even if we have
+ items in the second list. How should we get hold of these items,
+ remember that they are in the "wrong" order i.e. that element that we
+ would like to remove is in the back of the list.
+
+ Removing a single item from the end of the second list would of
+ course work but there is a better solution. Why no reverse the whole
+ list and treat it as it was the first list?
+
+ 
+ \begin{minted}{elixir}
+  def dequeue({:queue, [], back}) do
+     case reverse(back) do
+        [itm|rest] ->
+               :
+     end
+  end
+  def dequeue({:queue, [itm|rest], back}) do
+      (itm, {:queue, rest, back})
+  end
+ \end{minted}
+   
+ If you get it to work do some benchmarks using the same benchmark
+ program as before. How does the new implementation of our queue
+ compare? What is the run-time complexity of the functions now?
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}

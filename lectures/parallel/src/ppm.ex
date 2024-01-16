@@ -1,6 +1,6 @@
 defmodule PPM do
 
-  ## Stream processing
+  ## Message processing
   
   def writer(file, out) do
     spawn_link(fn() -> write_init(file, out) end)
@@ -76,8 +76,36 @@ defmodule PPM do
     :ok = write_line(p, line, fd)
     write_lines(lines, p, fd)
   end  
+
+
+  ## stream interface
+
+  defstruct [:height, :width, :type, :depth, :fd]
+
+  def stream(file) do
+    {:ok, fd} = File.open(file, [:binary, :read])
+    {:ok, type, {width, height}, depth} = read_header(fd) 
+    {:image, {type, {width, height}, depth}, %PPM{height: height, width: width, type: type, depth: depth, fd: fd}}
+  end
+
   
-  ## shared functional part, used by both stream and batch interface
+  defimpl Enumerable do
+
+    def count(_) do  {:error, __MODULE__}  end
+    def member?(_, _) do {:error, __MODULE__}  end
+    def slice(_) do {:error, __MODULE__} end
+
+    def reduce(_,       {:halt, acc}, _fun),   do: {:halted, acc}
+    def reduce(stream,  {:suspend, acc}, fun), do: {:suspended, acc, fn(cmd) -> reduce(stream, cmd, fun) end}
+    def reduce(stream,  {:cont, acc}, fun) do
+      %PPM{width: w, type: t, fd: fd} = stream
+      reduce(stream, fun.(PPM.read_line(t, w, fd) , acc), fun)
+    end      
+
+  end
+
+  
+  ## shared functional part, used by both message, batch  and stream interface
 
   def read_header(fd) do
     {:ok, p} = read_type(fd)
@@ -201,7 +229,7 @@ defmodule PPM do
 
   def write_size({w,h}, fd) do
     IO.write(fd, Integer.to_charlist(w) ++ ' ' ++ Integer.to_charlist(h) ++ '\n')
-  end
+  endp
 
   def write_depth(depth, fd) do
     IO.write(fd, Integer.to_charlist(depth) ++ "\n")
