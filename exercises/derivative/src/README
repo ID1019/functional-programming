@@ -1,0 +1,51 @@
+
+How to compile leex and yecc.
+
+The tokenizer is specified in:  tokenizer.xrl
+
+The parser is specified in: parser.yrl
+
+Note that since we are now dealing with the Erlang modules we will encode strings as charlists.
+
+The tokenizer is created using:
+
+  :leex.file('tokenizer.xrl')
+
+This will creat the tokenizer.erl file that can then be compiled and loaded.
+
+  c("tokenizer.erl")
+
+The tokenizer is then used:
+
+  :tokenizer.string('12 + x')
+
+that generates the list of tokens:
+
+  {:ok, [{:num, 1, 12}, {:plus, 1}, {:atom, 1, :x}], 1}	
+
+The list consists of tuples {type, row} or {type, row, value}. Since
+we only have one row the row values are all 1. The row values are used
+for displaying error messages when parsing.
+
+The parser is generated using:
+
+   :yecc.file('parser.yrl')
+
+This will create parser.erl that can be compiled and loaded.
+
+  c("parser.erl")
+
+The parser is then used by passing it a list of tokens.
+
+  {:ok, tokens, _} = :tokenizer.string('12 + x')
+
+  :list_parser.parse(tokens)
+
+The returned value is a Elixir term:
+
+   {:ok, {:add, 12, :x}}
+
+
+
+
+
