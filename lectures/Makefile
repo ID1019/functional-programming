@@ -12,9 +12,11 @@ DIRS = 	asynchronous \
 	introduction \
 	lambda \
 	overview \
+	operational \
 	parallel \
 	pong \
 	recursion \
+	streams \
 	structures \
 	tracer \
 	transport \

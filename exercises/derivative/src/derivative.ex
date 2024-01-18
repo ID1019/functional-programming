@@ -65,7 +65,6 @@ defmodule Derivative do
   def simplify_mul({:var, v}, {:var, v}) do {:exp, {:var, v}, {:num, 2}} end
   def simplify_mul({:var, v}, {:exp, {:var, v}, {:num, n}}) do {:exp, {:var, v}, {:num, n+1}} end  
   def simplify_mul({:exp, {:var, v}, {:num, n}}, {:var, v}) do {:exp, {:var, v}, {:num, n+1}} end
-  
   def simplify_mul({:num, n1}, {:mul, {:num, n2}, e2}) do
     {:mul, {:num, n1*n2}, e2}
   end
@@ -78,8 +77,6 @@ defmodule Derivative do
   def simplify_mul({:mul, e1, {:num, n1}}, {:num, n2}) do
     {:mul, {:num, n1*n2}, e1}
   end
-
-  
   def simplify_mul(e1, e2) do {:mul, e1, e2} end  
 
   def simplify_exp(_,{:num, 0}) do  1 end  

@@ -6,6 +6,7 @@ defmodule Bench do
 
   def bench(n, r, k) do
     seq = Enum.map(1..n, fn _ -> rand(r, k) end)
+     _  = :timer.tc(fn() -> dummy(k, seq) end)
     {dt, _} = :timer.tc(fn() -> dummy(k, seq) end)
     {lt, _} = :timer.tc(fn() -> list(k, seq) end)
     {mt, _} = :timer.tc(fn() -> map(k, seq) end)
