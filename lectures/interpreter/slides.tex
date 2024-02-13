@@ -1,4 +1,5 @@
 \input{../include/preamble.tex}
+\usepackage{cancel}
 
 \title[ID1019 Interpreter]{The Interpreter}
 
@@ -176,9 +177,6 @@ C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence}) \rightarrow \perp}$$
 \end{frame}
 
 
-
-
-
 \begin{frame}[fragile]{variable scope}
 
 \vspace{20pt}
@@ -186,14 +184,16 @@ C\sigma(s, p \;{\rm -\textgreater}\;  {\rm sequence}) \rightarrow \perp}$$
 \hspace{20pt}
 \begin{verbatim}
    y = case :a do
-         :a -> z = 42, {:b, z}
-       end;
+         :a -> 
+             z = 42
+             {:b, z}
+       end
    {y, z}
 \end{verbatim}
 
-\vspace{20pt}{\em This is not allowed in our language, \texttt{Z} in
-  \texttt{\{Y,Z\}} is a free variable. However .... \pause this is
-  allowed in Elixir and Erlang (but it should not be).}
+\vspace{20pt}{\em This is not allowed in our language, \texttt{z} in
+  \texttt{\{y,z\}} is a free variable. However .... \pause this is
+  allowed in \xcancel{Elixir and} Erlang (but it should not be).}
 
 \end{frame}
  

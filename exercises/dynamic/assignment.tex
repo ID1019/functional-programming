@@ -75,7 +75,7 @@ alternative is represented by a tuple {\tt\{left, right, length\}},
 the segments to the left the ones to the right and the total length of
 the log (we will need the length later).
 
-Why not try a tail recursive function were we take a sequence
+Why not try a recursive function were we take a sequence
 and place the first element of the sequence either in the left pile or
 the right pile. Keep track of the total length as we traverse the list. 
 
@@ -562,6 +562,16 @@ smallest segments and work your way up?
 
 Does this solve the problem?
 
+\section*{A twist}
+
+An alternative problem statement is to be given a specification of the
+length of a log and {\bf where} the log should be cut i.e. the
+specification is a set of marks not lengths of the resulting pieces. A
+log of length 18 that should be cut at marks {\tt \[3, 6, 8, 14\]}
+will result in logs of lengths of: 3, 3, 2, 6 and 4. If this is our
+task the Huffman trick does not work since we can not regroup the
+pieces. The problem is solved using dynamic programming very much in
+the same way as we solved the original problem.
 
 
 

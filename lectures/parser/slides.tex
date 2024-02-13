@@ -1,0 +1,137 @@
+\input{../include/preamble.tex}
+
+\title[ID1019 Parsing]{Parsing}
+
+\author{Johan Montelius}
+\institute{KTH}
+\date{\semester}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}[fragile]{Why parsing?}
+
+$$2x^3 + 4x + 5$$
+\pause 
+
+\hspace{20pt} From this:  {\tt "2x\^{}3 + 4x + 5"}
+\pause
+\vspace{20pt}
+\hspace{20pt} To this:
+
+\begin{verbatim}
+    {:add, {:mul, {:num, 2}, 
+                  {:exp, {:var, :x}, {:num, 3}}},
+           {:add, {:mul, {:num, 4}, {:var, :x}},
+                  {:num, 5}
+           }
+    }
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{lexical scanner or tokenizer}
+
+  \pause
+  First step - identify which {\em tokens} we use in our language.
+
+  \pause\vspace{20pt}
+  \begin{itemize}
+  \item numbers : 1, 12, 123 ....
+  \item variables :  x, y, z, ....
+  \item operators : +, *, \^{}, ...
+  \end{itemize}
+
+  \pause\vspace{20pt}
+  
+  From: {\tt "2x\^{}3 + 4x + 5"}  \pause
+
+  \pause\vspace{20pt}
+  To: {\tt [\{:num, 12\}, \{:var, :x\}, :exp, \{:num, 3\}, :plus, \{:num, 4\}, \{:var, :x\}, :plus, \{:num, 5\}]}
+  
+\end{frame}
+
+\begin{frame}[fragile]{parser}
+  \pause
+   Second step - identify the grammatic rules given the tokens.
+
+  \pause 
+\begin{verbatim}
+  expr ::=  number |
+            variable |
+            expr plus expr |
+            expr times expr |
+            expr exp expr
+\end{verbatim}
+
+\pause\vspace{10pt}
+  From: {\tt [\{:num, 12\}, \{:var, :x\}, :exp, \{:num, 3\}, :plus, \{:num, 4\}, \{:var, :x\}, :plus, \{:num, 5\}]}
+\pause\vspace{20pt}  
+
+To:
+\begin{verbatim}
+ {:add, {:mul, {:num, 2}, {:exp, {:var, :x}, {:num, 3}}}, 
+        {:add, {:mul, {:num, 4}, {:var, :x}}, 
+               {:num, 5}}}
+\end{verbatim}
+\end{frame}
+
+
+\begin{frame}{tools}
+
+  You don't want to write your own tokenizer/parse - use a tool that generate the for you. \pause
+  
+  \begin{itemize}
+  \item C/C++ : lex/yacc or flex/bison
+  \item Java : JavaCC
+  \item Java/Python/.. : ANTLR
+  \item Erlang/Elixr : leex/yecc
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{tokenizer.xrl}
+
+\begin{verbatim}
+Definitions.
+NUM        = [0-9]+
+VAR        = [a-z]
+EXP        = \^
+WHITESPACE = [\s\t\n\r]
+
+Rules.
+{NUM}         : {token, {num, TokenLine, list_to_integer(TokenChars)}}.
+{VAR}         : {token, {var, TokenLine, list_to_atom(TokenChars)}}.
+{EXP}         : {token, {exp, TokenLine}}.
+\+            : {token, {plus, TokenLine}}.
+\*            : {token, {times, TokenLine}}.
+{WHITESPACE}+ : skip_token.
+
+Erlang code.
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{parser.yrl}
+\begin{verbatim}
+Nonterminals expr.
+Trminals num var plus times exp.
+Rootsymbol expr.
+
+expr -> num : value('$1').
+expr -> var : name('$1').
+expr -> expr plus expr  : {add, '$1', '$3'}.
+expr -> expr times expr : {mul, '$1', '$3'}.
+expr -> expr exp expr   : {exp, '$1', '$3'}.
+
+Erlang code.
+value({num, _, Value}) -> Value.
+name({var, _, Name}) -> Name.
+\end{verbatim}
+\end{frame}
+
+\end{document}
+
+

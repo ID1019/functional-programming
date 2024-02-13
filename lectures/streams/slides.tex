@@ -169,7 +169,7 @@ def sum(range) do foldl(range, 0, fn(x,acc) -> x + acc end) end
   end
 \end{verbatim}
 
-  \vspace{10pt}\pause{\em Our {\tt reduce/3} should work as {\tt foldl/3} (does it make sense to have a {\tt foldr/3}).}
+  \vspace{10pt}\pause{\em Our {\tt reduce/3} should work as {\tt foldl/3} (left to right, tail recursive).}
   
 \begin{verbatim}
   def reduce({:range, from , to}, acc, fun) do
