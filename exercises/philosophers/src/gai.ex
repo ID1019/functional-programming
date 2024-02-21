@@ -35,7 +35,7 @@ defmodule Gai do
 	loop(frame, bitmap, state, pos)
       :stop ->
 	:ok
-      error ->
+      _error ->
 	loop(frame, bitmap, state, pos)
     end
   end

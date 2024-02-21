@@ -40,6 +40,8 @@ ADVENT22 = day16.csv
 
 PONG = pong.ex ping.ex websocket.ex game.ex session.ex pong.html pong.js
 
+PHILOSOPHER = gai.ex
+
 REPORT = report.pdf report.tar.gz
 
 WWW =  ./www
@@ -55,6 +57,11 @@ install:
 	    mkdir -p $(WWW)/$$d;\
 	    rsync -u  ./$$d/assignment.pdf $(WWW)/$$d/$$d.pdf;\
 	done;
+	mkdir -p $(WWW)/philosophers
+	mkdir -p $(WWW)/philosophers/src
+	for f in $(PHILOSOPHER); do \
+             rsync -uL ./philosophers/src/$$f  $(WWW)/philosophers/src/$$f;\
+        done
 	mkdir -p $(WWW)/pong;
 	mkdir -p $(WWW)/pong/src;
 	for f in $(PONG); do \
