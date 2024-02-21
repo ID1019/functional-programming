@@ -3,10 +3,16 @@ defmodule Bench do
 
 
   def bench(n) do
-    for i <- 1..n do
+    Enum.reduce(1..n, 0, fn(i,p) ->
       {t,_} = :timer.tc(fn() -> Log.cust(Enum.to_list(1..i)) end)
-      IO.puts(" n = #{i}\t t = #{t} us")
-    end
+      if p != 0 do
+	:io.format(" n = ~w\t t = ~w\t  (~.2f)\n", [n, t, t/p])
+	t
+      else
+	:io.format(" n = ~w\t t = ~w\t\n", [n, t])
+	t
+      end
+    end)
   end
 
   def bench_k() do

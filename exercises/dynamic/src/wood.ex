@@ -1,4 +1,4 @@
-defmodule Test do
+defmodule Wood do
 
   ## A specification is given as [{number, lengt} ...]
 
@@ -37,7 +37,7 @@ defmodule Test do
 
   def cost([{n,s}=c], l, [], right) do  
     List.foldl(
-      [cost([c]) + cost(right) + l+(n*s), 
+      [cost([c]) + cost(right) + l+(n*s) | 
        Enum.map(alternatives(n, s),
 	 fn({lft,rgt}) ->
 	   cost([lft]) + cost([rgt|right]) + n*s + l
@@ -49,7 +49,7 @@ defmodule Test do
   end
   def cost([{n,s}=c], l, left, []) do
     List.foldl(
-      [cost(left) + cost([c]) +  l+(n*s),
+      [cost(left) + cost([c]) +  l+(n*s) |
        Enum.map(alternatives(n, s),
 	 fn({lft,rgt}) ->
 	   cost([lft|left]) + cost([rgt]) + n*s + l
