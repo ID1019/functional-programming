@@ -40,9 +40,9 @@ defmodule WebSocket do
 	  :ok ->
 	    :io.format("ws: handshake completed ~n")	    
 	    me = self()
-	    spawn_link(fn() -> decoder(socket, me, <<>>) end)
+	    decoder = spawn_link(fn() -> decoder(socket, me, <<>>) end)
 	    send(session, {:ws, self(), :open})
-	    handler(socket,  session)
+	    handler(socket, decoder, session)
 	    :gen_tcp.close(socket)
 	  {:error, reason} ->
 	    :io.format("ws: handshake failed ~w~n", [reason])
