@@ -2,11 +2,11 @@ defmodule PPM do
 
   ## Message processing
   
-  def writer(file, out) do
+  def writer(out, file) do
     spawn_link(fn() -> write_init(file, out) end)
   end
 
-  def reader(file, out) do
+  def reader(out, file) do
     spawn_link(fn() -> reader_init(file, out) end)
   end    
 
@@ -229,7 +229,7 @@ defmodule PPM do
 
   def write_size({w,h}, fd) do
     IO.write(fd, Integer.to_charlist(w) ++ ' ' ++ Integer.to_charlist(h) ++ '\n')
-  endp
+  end
 
   def write_depth(depth, fd) do
     IO.write(fd, Integer.to_charlist(depth) ++ "\n")

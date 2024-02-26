@@ -55,6 +55,7 @@ defmodule Wood do
   ## segments. Make sure that at least one element goes into the empty
   ## part.
 
+
   def cost([{n,s}=c], l, [], right, mem) do  
     Enum.reduce(
       [{[c],right, l+(n*s)} |
@@ -74,6 +75,7 @@ defmodule Wood do
 	  {acc, mem}
 	end
       end)
+
   end
 
   def cost([{n,s}=c], l, left, [], mem) do  

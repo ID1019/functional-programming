@@ -12,9 +12,8 @@ defmodule Pong do
 
     pong = self()
     ses1 = Session.start(:player1, pong)
-    ses2 = Session.start(:player2, pong)
-
-    #ses2 = Ping.start(:player2, pong)
+    #ses2 = Session.start(:player2, pong)
+    ses2 = Ping.start(:player2, pong)
     
     websocket = WebSocket.start(@port, [ses1, ses2])
 

@@ -3,6 +3,7 @@ defmodule Bench do
 
 
   def bench(n) do
+
     Enum.reduce( 1..n , 0 , fn(i,p) ->
       {t,_} = :timer.tc(fn() -> Log.cust(Enum.to_list(1..i)) end)
       if p != 0 do

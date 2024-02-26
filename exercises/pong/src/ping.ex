@@ -10,10 +10,10 @@ defmodule Ping do
   end
 
   def init(name, server) do
-    :io.format("ping: robot ~w started~n", [name])
+    :io.format("~w: robot started~n", [name])
     send(server, {:ready, name})
     ping(name, server, div(@height,2))
-    :io.format("ping: robot ~w stoped~n", [name])
+    :io.format("~w: robot stoped~n", [name])
   end
   
 
@@ -51,7 +51,8 @@ defmodule Ping do
       :stop ->
 	:ok
 
-      _ ->
+      strange ->
+	:io.format("~w: strange message ~w~n", [name, strange])
 	ping(name, server, pos)	
     end
   end    
