@@ -352,6 +352,28 @@ player misses the ball a new serve message is scheludled.
 
 \subsection*{the game module}
 
+The game module is responsible for the rules of the game, it does not
+know taht we play a game and is only there to answer questions what
+should happen next. How the game state is represented is up to the
+module and should stay inside the module.
+
+The functions exported from the game module are the following:
+
+\begin{itemize}
+\item {\tt player1(name)} : return player one given a name. The name
+  will later be used to indicate if the player scored a point. The
+  player data structure will hodl information about the position of
+  the paddle and if the player is to the left or right.
+
+\item {\tt player2(name)} : return player two given a name. Player two is 
+  of course positioned at the other side of the board.
+
+\item {\tt down(player)} : the player wish to move down, return either
+  {\tt \{:ok, updated\}} if the player can move down or {\tt :no} if
+  the player is already at the lower end of the board.
+
+\item {\tt up(player)} : same thing but now the player wants to move up.
+
 
 
 
