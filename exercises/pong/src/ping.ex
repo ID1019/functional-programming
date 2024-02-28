@@ -48,6 +48,20 @@ defmodule Ping do
       {^name, :up} ->
 	ping(name, server, pos-@move)
 
+      {_, :down} ->
+	ping(name, server, pos)
+
+      {_, :up} ->
+	ping(name, server, pos)
+
+      {^name, :score, _} ->
+	:io.format("GOOOOOOAAAAAALLLLL!!!!\n")
+	ping(name, server, pos)
+
+      {_, :score, _} ->
+	:io.format("Offside! Hands! .... VAAAAAR!!!")
+	ping(name, server, pos)
+	
       :stop ->
 	:ok
 
