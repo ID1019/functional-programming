@@ -21,6 +21,7 @@ DIRS =  avl \
 	operational \
 	parallel \
 	philosophers \
+	pong \
 	primes \
 	rick \
 	ranges \
