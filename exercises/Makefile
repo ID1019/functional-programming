@@ -21,6 +21,7 @@ DIRS =  avl \
 	operational \
 	parallel \
 	philosophers \
+	pong \
 	primes \
 	rick \
 	ranges \
@@ -39,6 +40,8 @@ DIRS =  avl \
 ADVENT22 = day16.csv
 
 PONG = pong.ex ping.ex websocket.ex game.ex session.ex pong.html pong.js
+
+MANDEL = client.ex 
 
 PHILOSOPHER = gai.ex
 
@@ -66,6 +69,11 @@ install:
 	mkdir -p $(WWW)/pong/src;
 	for f in $(PONG); do \
              rsync -uL ./pong/src/$$f  $(WWW)/pong/src/$$f;\
+        done
+	mkdir -p $(WWW)/madel;
+	mkdir -p $(WWW)/mandel/src;
+	for f in $(MANDEL); do \
+             rsync -uL ./mandel/src/$$f  $(WWW)/mandel/src/$$f;\
         done
 	mkdir -p $(WWW)/advent/2022
 	for f in $(ADVENT22); do\
