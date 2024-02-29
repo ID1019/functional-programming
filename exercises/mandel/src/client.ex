@@ -13,6 +13,10 @@ defmodule Client do
     end
   end
 
+  def start(name) do
+    spawn(fn -> init(name) end)
+  end
+  
   defp init(server), do: client(server, 0)
 
   defp client(server, n) do

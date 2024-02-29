@@ -4,15 +4,31 @@ defmodule Color do
   # represented as {:rgb, r ,g ,b} where each element is
   # 0..255. This is just one way of doing it, there are
   # more advanced ways of doing this so do experiment.
+
   def convert(d, max) do
     red(d, max)
   end
 
+  def mono(d, max) do
+    {:rgb, 50, 50, trunc(255*(d/max))}
+  end
+
+  def log(d, max) do
+    if d != 0 do 
+       red(:math.log(d), :math.log(max))
+    else
+      red(0, :math.log(max))
+    end
+  end
+  
+  
   def red(d, max) do
+
+    # f is [0 - 1.0]
     f = d / max
 
     # a is [0 - 4.0]
-    a = f * 4
+    a = f * 5
 
     # x is [0,1,2,3,4]
     x = trunc(a)

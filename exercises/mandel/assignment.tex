@@ -125,8 +125,7 @@ should always return a value in the range $0..(m-1)$.
 \begin{minted}{elixir}
 def mandelbrot(c, m) do
   z0 = Cmplx.new(..., ...)
-  i = 0
-  test(i, z0, c, m)
+  test(0, z0, c, m)
 end
 \end{minted}
 
@@ -182,24 +181,27 @@ be done in many different ways and the one presented here is only for
 inspiration.
 
 Let's assume that we have a depth of a point $d$, with the maximum
-possible depth being $m$. We could create five sections that divides
-the range $0$ to $m$. Divide $d$ by $m$ and so that you have a
-fraction $f$. Then multiply this fraction by four to generate a
-floating point $a$ from $0$ to $4$. Now truncate the value to give you
-an integer $x$ from $0$ to $4$ (this is the section) and generate an
-offset $y$ that is the truncated value of $255 * (a - x)$.
+possible depth being $m$ (or rather the maximum depth is $m -1$ since
+we return $0$ if we reach the maximum depth). We could create five
+sections that divides the range $0$ to $m$. Divide $d$ by $m$ and so
+that you have a fraction $f$. Then multiply this fraction by five to
+generate a floating point $a$ from $0$ to (not inluding) $5$. Now truncate the value
+to give you an integer $x$ from $0$ to $4$ (this is the section) and
+generate an offset $y$ that is the truncated value of $255 * (a - x)$.
 
 The two values $x$ and $y$ will now be used to give you an RGB
 value. You can use the following transformation:
 
-\begin {itemize}
-\item 0 : $\lbrace y, 0, 0 \rbrace$
-\item 1 : $\lbrace 255, y, 0 \rbrace$
-\item 2 : $\lbrace 255-y, 255, 0 \rbrace$
-\item 3 : $\lbrace 0, 255, y \rbrace$
-\item 4 : $\lbrace 0, 255-y, 255 \rbrace$
-\end{itemize}
-
+\begin{minted}{elixir}
+    case x do
+      0 -> {:rgb, y, 0, 0}
+      1 -> {:rgb, 255, y, 0}
+      2 -> {:rgb, 255 - y, 255, 0}
+      3 -> {:rgb, 0, 255, y}
+      4 -> {:rgb, 0, 255 - y, 255}
+    end  
+\end{minted}
+  
 What colors does this correspond to? Does it look anything like a
 rainbow? Close to a rainbow? The mapping from depth to colors is one
 thing that one can play with, its not at all given that the colors
