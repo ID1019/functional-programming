@@ -1,22 +1,22 @@
 defmodule Vector do
 
   # Scalar multiplication.
-  def smul({x1, x2, x3}, s) do
-    {x1 * s, x2 * s, x3 * s}
+  def smul({x, y, z}, s) do
+    {x * s, y * s, z * s}
   end
 
   # Addition and subtarction.
-  def sub({x1, x2, x3}, {y1, y2, y3}) do
-    {x1 - y1, x2 - y2, x3 - y3}
+  def sub({x1, y1, z1}, {x2, y2, z2}) do
+    {x1 - x2, y1 - y2, z1 - z2}
   end
 
-  def add({x1, x2, x3}, {y1, y2, y3}) do
-    {x1 + y1, x2 + y2, x3 + y3}
+  def add({x1, y1, z1}, {x2, y2, z2}) do
+    {x1 + x2, y1 + y2, z1 + z2}
   end
 
   # Dot product.
-  def dot({x1, x2, x3}, {y1, y2, y3}) do
-    x1 * y1 + x2 * y2 + x3 * y3
+  def dot({x1, y1, z1}, {x2, y2, z2}) do
+    x1 * x2 + y1 * y2 + z1 * z2
   end
 
   # Scaling a vector to a specified length.
@@ -37,14 +37,14 @@ defmodule Vector do
   end
 
   # The norm (length) of a vector.
-  def norm({x1, x2, x3}) do
-    :math.sqrt(x1 * x1 + x2 * x2 + x3 * x3)
+  def norm({x, y, z}) do
+    :math.sqrt(x * x + y * y + z * z)
   end
 
   # Cross product, used to find a vector that as ortogonal to 
   # both x and y.
-  def cross({x1, x2, x3}, {y1, y2, y3}) do
-    {x2 * y3 - x3 * y2, x3 * y1 - x1 * y3, x1 * y2 - x2 * y1}
+  def cross({x1, y1, z1}, {x2, y2, z2}) do
+    {y1 * z2 - z1 * y2, z1 * x2 - x1 * z2, x1 * y2 - y1 * x2}
   end
 
 end

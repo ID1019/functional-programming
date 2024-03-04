@@ -150,17 +150,17 @@ following exported functions.
 \begin{minted}{elixir}
 defmodule Vector do
 
-  def smul({x1, x2, x3}, s) do ... end
+  def smul({x, y, z}, s) do ... end
 
-  def sub({x1, x2, x3}, {y1, y2, y3}) do ... end
+  def sub({x1, y1, z1}, {x2, y2, z2}) do ... end
 
-  def add({x1, x2, x3}, {y1, y2, y3}) do ... end
+  def add({x1, y1, z1}, {x2, y2, z2}) do ... end
 
-  def dot({x1, x2, x3}, {y1, y2, y3}) do ... end  
+  def dot({x1, y1, z1}, {x2, y2, z2}) do ... end  
 
   def normalize(x) do ... end
 
-  def norm({x1, x2, x3}) do ... end
+  def norm({x, y, y}) do ... end
 
 end
 \end{minted}
@@ -170,17 +170,17 @@ end
 The first functions, scalar multiplication, addition and subtraction
 should be quite easy to implement.
 
-$$\langle x_1, x_2, x_3 \rangle  s =  \langle x_1s, x_2s, x_3s \rangle$$
+$$\langle x, y, z \rangle  s =  \langle xs, ys, zs \rangle$$
 
-$$\langle x_1, x_2, x_3 \rangle + \langle y_1, y_2, y_3\rangle = \langle x_1+y_1, x_x+y_2, x_3+y_3 \rangle$$
+$$\langle x_1, y_1, z_1 \rangle + \langle x_2, y_2, z_2\rangle = \langle x_1+x_2, y_1+y_2, z_1+z_2 \rangle$$
 
 To implement the norm, dot product and normalization of a vector you
 might have to go through your book in linear algebra but you should
 have it up and running quite quickly.
 
-$$\|\vec{x}\| = \sqrt{x_1^2 + x_2^2 + x_3^2}$$
+$$\|\vec{x}\| = \sqrt{x^2 + y^2 + z^2}$$
 
-$$ \vec{x} \cdot \vec{y} = \langle x_1\cdot y_1 + x_2\cdot y_2 + x_3\cdot y_3\rangle $$ 
+$$ \vec{x} \cdot \vec{y} = \langle x_1\cdot x_2 + y_1 \cdot y_2 + z_1 \cdot z_2\rangle $$ 
 
 $$ \hat{x} = \vec{x}/\|\vec{x}\|$$
 
