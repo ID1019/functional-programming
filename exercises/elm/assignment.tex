@@ -1,0 +1,65 @@
+\documentclass[a4paper,11pt]{article}
+
+\input ../include/preamble.tex
+
+
+\begin{document}
+
+
+\title{Elm - an event simulator}
+}
+\author{Johan Montelius}
+\date{Spring Term 2024}
+
+\maketitle
+
+\defaultpagestyle
+
+\section*{Introduction}
+
+This is a small tutorial in how to use Elm and how to build a small
+client side web application. Since we have to build someting we might
+as well build something fun so why not a particle simulator.
+
+Why Elm you might wonder and the reason is that Elm is functional
+programming language and it's fun to see how much you understand now
+that you know some Elixir. You have learnt not only a programming
+language but a programming paradigm. It's also fun to see how a
+functional programming language can be used to build a fron-end web
+application. As you hopefully will see, the functional paradigm makes
+it easy to divide you system into: model, view and control. 
+
+\section*{Hello world}
+
+To start working you need to install the Elm frame work. Everything
+you need is found at {\tt elm-lang.org}. When you're done you should
+have program called {\tt elm} installed; this is the program that will
+set up your project and compile your Elm code. Elm is compiled into
+javascript so in the end we will have a html file and a javascript
+file that we can upload to a web server.
+
+
+Start by creating a directory called {\tt hello}, open a terminal
+navigate to the directory. In the director type {\tt elm init}, this
+should ask you a question (to wich you answer {\tt Y}) and you can then read
+more at a url proposed by Elm (for axample {\tt
+  https://elm-lang.org/0.19.1/init}). In short file called {\tt
+  elm.js} and a director {\tt src} has been created.
+
+You now open a web browser and navigate to {\tt
+  elm-lang.org/examples/buttons} and find a program that you copy and
+save as the file {\tt Main.elm} in the {\tt src} directory. When this
+is done you go to the terminal and write: {\tt elm make src/Main.j}
+(and of course if you use Windows it's something different).
+
+You should now have a new file in you {\tt hello} directory; {\tt
+  index.html}, try to open it in you regular browser. If you can
+increment and decrement the counter you have your first Elm program up
+and running. Let's look at the file {\tt Main.elm} to see what i
+contains.
+
+\section*{The simulator}
+
+
+
+\end{document}
