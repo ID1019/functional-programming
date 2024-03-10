@@ -54,14 +54,14 @@ type alias Color = String
 init: Int -> Int -> Simulator
 init w h =
     let
-        sim = Simulator Dict.empty (PQ.empty lessEvent) 0 0 1.0 (toFloat w) (toFloat h)
+        sim = Simulator Dict.empty (PQ.new lessEvent) 0 0 1.0 (toFloat w) (toFloat h)
     in
         addParticle (100,200) (10,10) 10 "red" sim
             
 
 clear: Simulator -> Simulator        
 clear sim =
-    {sim | particles = Dict.empty, queue = (PQ.empty lessEvent), id = 0, time = 0}
+    {sim | particles = Dict.empty, queue = (PQ.new lessEvent), id = 0, time = 0}
 
 
 addParticle: Pos -> Vel -> Float -> Color -> Simulator -> Simulator
