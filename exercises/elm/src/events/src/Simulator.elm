@@ -4,7 +4,7 @@ import Dict exposing (Dict)
 
 import PriorityQueue as PQ exposing (PriorityQueue)
 
-type alias Simulator = 
+type alias Simulation = 
     { particles : Dict Int Particle     -- all particles in a Dict ordered by their id
     , queue : PriorityQueue Event       -- priority queue of all future events
     , id : Int                          -- next id to use for particles
@@ -16,8 +16,8 @@ type alias Simulator =
 -- Three types of events: collision between two particles, particle hitting wall and pause of simulation.    
 
 type Event
-    = WALL {wall : Wall, id : Int, time : Float}
-    | PAUSE {time : Float} 
+    = WALL Wall Int Float
+    | PAUSE Float
 
 type Wall       
     = FLOOR
@@ -48,11 +48,11 @@ type alias Color = String
       
 -- The simulator : starts with one particle. 
     
-init: Int -> Int -> Simulator
+init: Int -> Int -> Simulation
 init w h =
-    Simulator Dict.empty (PQ.new lessEvent) 0 0 (toFloat w) (toFloat h)
+    Simulation Dict.empty (PQ.new lessEvent) 0 0 (toFloat w) (toFloat h)
 
-addParticle: Pos -> Vel -> Float -> Color -> Simulator -> Simulator
+addParticle: Pos -> Vel -> Float -> Color -> Simulation -> Simulation
 addParticle pos vel rad col sim = 
     let
         id = sim.id
@@ -62,13 +62,13 @@ addParticle pos vel rad col sim =
              , particles = Dict.insert id p sim.particles
              , queue = predictPart p sim.particles sim.width sim.height sim.queue}
 
-particles: Simulator -> (List Particle)
+particles: Simulation -> (List Particle)
 particles sim =
     Dict.values sim.particles
 
 -- Running the simulation: for a given time, ie.e insert a pause event and go.
 
-run: Simulator -> Float -> Simulator
+run: Simulation -> Float -> Simulation
 run sim hold  =
     let
         queue = PQ.insert (pauseEvent (sim.time + hold)) sim.queue
@@ -85,25 +85,25 @@ step parts queue tm width height =
             (parts, queue, tm)
         Just (evt, tail) ->
             case evt of
-                WALL e ->
+                WALL wall id time ->
                     let 
-                        (updParts, updQueue) = case (Dict.get e.id parts) of
+                        (updParts, updQueue) = case (Dict.get id parts) of
                                                    Nothing ->
                                                        (parts, tail)
                                                    Just prt ->
                                                        let 
-                                                           upd = collWall e.wall prt e.time 
-                                                           updP  = Dict.insert upd.id upd (Dict.remove e.id parts)
+                                                           upd = collWall wall prt time 
+                                                           updP  = Dict.insert upd.id upd (Dict.remove id parts)
                                                            updQ = predictPart upd updP width height tail
                                                        in
                                                            (updP, updQ)
                     in
-                        step updParts updQueue e.time width height
-                PAUSE e ->
+                        step updParts updQueue time width height
+                PAUSE time ->
                     let
-                        updated = Dict.map  (\i -> \p -> moveParticle p e.time) parts
+                        updated = Dict.map  (\i -> \p -> moveParticle p time) parts
                     in
-                        (updated, tail, e.time)
+                        (updated, tail, time)
 
 -- Predicting future collisions with walls, roof and floor.
 
@@ -143,22 +143,22 @@ lessEvent: Event -> Event -> Bool
 lessEvent a b =
     let
         ta = case a of
-                 WALL r -> r.time
-                 PAUSE r -> r.time                          
+                 WALL _ _ time -> time
+                 PAUSE time -> time                          
         tb = case b of
-                 WALL r -> r.time
-                 PAUSE r -> r.time                          
+                 WALL _ _ time -> time
+                 PAUSE time -> time                          
     in
         ta < tb
 
                    
 wallEvent: Wall -> Particle -> Float -> Event
 wallEvent wl prt t =
-    WALL {wall = wl, id = prt.id, time = t}
+    WALL wl prt.id t
  
 pauseEvent: Float -> Event
 pauseEvent t =
-    PAUSE {time = t}
+    PAUSE t
 
 
     

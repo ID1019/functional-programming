@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Simulator exposing (Simulator)
+import Simulator exposing (Simulation)
 
 import Html
 import Html.Events 
@@ -30,7 +30,7 @@ main =
 
 type alias Model = 
     { run : Bool
-    , simulation : Simulator
+    , simulation : Simulation
     , width : Int
     , height : Int
     , leap : Float
@@ -55,7 +55,7 @@ init _ =
 
 type Msg =
     Tick Time.Posix
-        | Click
+
 
 -- Subscriptions 
 
@@ -74,11 +74,6 @@ update msg model =
         Tick _ -> 
             let 
                 sim = Simulator.run model.simulation model.leap
-            in
-                ({model | simulation = sim}, Cmd.none)
-        Click ->
-            let 
-                sim = Simulator.addParticle (100,200) (10,10) 10 "red" model.simulation 
             in
                 ({model | simulation = sim}, Cmd.none)
 
@@ -105,7 +100,6 @@ view model  =
                   [ Svg.svg
                         [ Svg.Attributes.width (String.fromInt model.width)
                         , Svg.Attributes.height (String.fromInt model.height)
-                        , Svg.Events.onClick Click
                         ]
                         ( (List.map (\prt ->
                                          Svg.circle

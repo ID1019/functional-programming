@@ -2,9 +2,9 @@ module Simulator exposing (..)
 
 import Dict exposing (Dict)
 
-import PriorityQueue as PQ exposing (PriorityQueue)
+import PriorityList as PQ exposing (PriorityQueue)
 
-type alias Simulator = 
+type alias Simulation = 
     { particles : Dict Int Particle     -- all particles in a Dict ordered by their id
     , queue : PriorityQueue Event       -- priority queue of all future events
     , id : Int                          -- next id to use for particles
@@ -17,9 +17,9 @@ type alias Simulator =
 -- Three types of events: collision between two particles, particle hitting wall and pause of simulation.    
 
 type Event
-    = COLLISION {idA : Int, idB : Int, countA : Int, countB : Int, time : Float}
-    | WALL {wall : Wall, id : Int, count : Int, time : Float}
-    | PAUSE {time : Float} 
+    = COLLISION (Int, Int) (Int, Int) Float
+    | WALL Wall (Int, Int) Float
+    | PAUSE Float 
 
 type Wall       
     = FLOOR
@@ -51,20 +51,20 @@ type alias Color = String
       
 -- The simulator : starts with one particle. 
     
-init: Int -> Int -> Simulator
+init: Int -> Int -> Simulation
 init w h =
     let
-        sim = Simulator Dict.empty (PQ.new lessEvent) 0 0 1.0 (toFloat w) (toFloat h)
+        sim = Simulation Dict.empty (PQ.new lessEvent) 0 0 1.0 (toFloat w) (toFloat h)
     in
         addParticle (100,200) (10,10) 10 "red" sim
             
 
-clear: Simulator -> Simulator        
+clear: Simulation -> Simulation        
 clear sim =
     {sim | particles = Dict.empty, queue = (PQ.new lessEvent), id = 0, time = 0}
 
 
-addParticle: Pos -> Vel -> Float -> Color -> Simulator -> Simulator
+addParticle: Pos -> Vel -> Float -> Color -> Simulation -> Simulation
 addParticle pos vel rad col sim = 
     let
         id = sim.id
@@ -74,13 +74,13 @@ addParticle pos vel rad col sim =
              , particles = Dict.insert id p sim.particles
              , queue = predictPart p sim.particles sim.gravity sim.width sim.height sim.queue}
 
-particles: Simulator -> (List Particle)
+particles: Simulation -> (List Particle)
 particles sim =
     Dict.values sim.particles
 
 -- Running the simulation: for a given time, ie.e insert a pause event and go.
 
-run: Simulator -> Float -> Simulator
+run: Simulation -> Float -> Simulation
 run sim hold  =
     let
         queue = PQ.insert (pauseEvent (sim.time + hold)) sim.queue
@@ -97,13 +97,13 @@ step parts queue tm gravity width height =
             (parts, queue, tm)
         Just (evt, tail) ->
             case evt of
-                COLLISION e ->
+                COLLISION (id_a, cnt_a) (id_b, cnt_b) time ->
                     let
-                        (updParts, updQueue) = case (Dict.get e.idA parts, Dict.get e.idB parts ) of
+                        (updParts, updQueue) = case (Dict.get id_a parts, Dict.get id_b parts ) of
                                                    (Just prtA, Just prtB) ->
-                                                       if ((e.countA ==  prtA.count) && (e.countB ==  prtB.count)) then
+                                                       if ((cnt_a ==  prtA.count) && (cnt_b ==  prtB.count)) then
                                                            let 
-                                                               (updA, updB) = collPart prtA prtB e.time gravity
+                                                               (updA, updB) = collPart prtA prtB time gravity
                                                                updP = List.foldl (\(i,p) -> \ps -> (Dict.insert i p ps)) 
                                                                              (List.foldl (\id -> \ps -> Dict.remove id ps) parts [prtA.id, prtB.id])
                                                                              [(updA.id, updA), (updB.id, updB)]
@@ -115,30 +115,30 @@ step parts queue tm gravity width height =
                                                    (_, _) ->
                                                        (parts, tail)
                     in
-                        step updParts updQueue e.time gravity width height                                                
+                        step updParts updQueue time gravity width height                      
 
-                WALL e ->
+                WALL wall (id,count) time ->
                         let 
-                            (updParts, updQueue) = case (Dict.get e.id parts) of
+                            (updParts, updQueue) = case (Dict.get id parts) of
                                                            Nothing ->
                                                                (parts, tail)
                                                            Just prt ->
-                                                               if (prt.count == e.count) then
+                                                               if (prt.count == count) then
                                                                    let 
-                                                                       upd = collWall e.wall prt e.time gravity
-                                                                       updP  = Dict.insert upd.id upd (Dict.remove e.id parts)
+                                                                       upd = collWall wall prt time gravity
+                                                                       updP  = Dict.insert upd.id upd (Dict.remove id parts)
                                                                        updQ = predictPart upd updP gravity width height tail
                                                                    in
                                                                        (updP, updQ)
                                                                else
                                                                    (parts, tail)            
                         in
-                            step updParts updQueue e.time gravity width height
-                PAUSE e ->
+                            step updParts updQueue time gravity width height
+                PAUSE time ->
                         let
-                            updated = Dict.map  (\i -> \p -> moveParticle p e.time gravity) parts
+                            updated = Dict.map  (\i -> \p -> moveParticle p time gravity) parts
                         in
-                            (updated, tail, e.time)
+                            (updated, tail, time)
 
 -- Predicting future collisions with other particles, walls, roof and floor.
 
@@ -193,28 +193,28 @@ lessEvent: Event -> Event -> Bool
 lessEvent a b =
     let
         ta = case a of
-                 COLLISION r -> r.time
-                 WALL r -> r.time
-                 PAUSE r -> r.time                          
+                 COLLISION _ _ time -> time
+                 WALL _ _ time -> time
+                 PAUSE time -> time                          
         tb = case b of
-                 COLLISION r -> r.time
-                 WALL r -> r.time
-                 PAUSE r -> r.time                          
+                 COLLISION _ _ time -> time
+                 WALL _ _ time -> time
+                 PAUSE time -> time                          
     in
         ta < tb
 
                    
 collEvent: Particle -> Particle -> Float -> Event
 collEvent prtA prtB t =
-    COLLISION {idA = prtA.id, idB = prtB.id, countA = prtA.count, countB = prtB.count, time = t}
+    COLLISION (prtA.id,prtA.count) (prtB.id,prtB.count) t
 
 wallEvent: Wall -> Particle -> Float -> Event
 wallEvent wl prt t =
-    WALL {wall = wl, id = prt.id, count = prt.count, time = t}
+    WALL wl (prt.id, prt.count) t
  
 pauseEvent: Float -> Event
 pauseEvent t =
-    PAUSE {time = t}
+    PAUSE t
 
 
     

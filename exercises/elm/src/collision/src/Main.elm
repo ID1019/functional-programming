@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Simulator exposing (Simulator)
+import Simulator exposing (Simulation)
 
 import Html
 import Html.Events 
@@ -31,7 +31,7 @@ main =
 type alias Model = 
     { run : Bool
     , ticks : Int
-    , simulation : Simulator
+    , simulation : Simulation
     , width : Int
     , height : Int
     , leap : Float

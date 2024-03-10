@@ -3,7 +3,7 @@ module Simulator exposing (..)
 import Dict exposing (Dict)
 
 
-type alias Simulator = 
+type alias Simulation = 
     { particles : Dict Int Particle     -- all particles in a Dict ordered by their id
     , id : Int                          -- next id to use for particles
     , time : Float                      -- current simulation time
@@ -35,20 +35,15 @@ type alias Color = String
       
 -- The simulator : starts with one particle. 
     
-init: Int -> Int -> Simulator
+init: Int -> Int -> Simulation
 init w h =
     let
-        sim = Simulator Dict.empty 0 0 (toFloat w) (toFloat h)
+        sim = Simulation Dict.empty 0 0 (toFloat w) (toFloat h)
     in
         addParticle (100,200) (10,10) 10 "red" sim
-            
-
-clear: Simulator -> Simulator        
-clear sim =
-    {sim | particles = Dict.empty, id = 0, time = 0}
 
 
-addParticle: Pos -> Vel -> Float -> Color -> Simulator -> Simulator
+addParticle: Pos -> Vel -> Float -> Color -> Simulation -> Simulation
 addParticle pos vel rad col sim = 
     let
         id = sim.id
@@ -57,13 +52,13 @@ addParticle pos vel rad col sim =
         {sim | id = id+1, particles = Dict.insert id p sim.particles}
 
 
-particles: Simulator -> (List Particle)
+particles: Simulation -> (List Particle)
 particles sim =
     Dict.values sim.particles
 
 -- Running the simulation: for a given time
 
-run: Simulator -> Float -> Simulator
+run: Simulation -> Float -> Simulation
 run sim step  =
     let
         pause = sim.time + step
@@ -76,16 +71,16 @@ run sim step  =
 
 
 newParticle: Int -> Pos -> Vel -> Float -> Float -> Color -> Particle
-newParticle i (xi, yi) (vxi, vyi) ti ri colori =
+newParticle i (x, y) (vx, vy) t r color =
     { id = i
-    , x = xi
-    , y = yi
-    , vx = vxi
-    , vy = vyi
-    , time = ti
+    , x = x
+    , y = y
+    , vx = vx
+    , vy = vy
+    , time = t
     , mass = 1
-    , radius = ri
-    , color = colori
+    , radius = r
+    , color = color
     }
 
 -- Moving a particle forward in time.
