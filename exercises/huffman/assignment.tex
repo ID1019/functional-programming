@@ -332,26 +332,20 @@ performs, try to estimate the time to encode or decode a text given
 the length of the text. 
 
 If you have time try to do some experiments where you change the size
-of the alphabet, for example using only eight characters, the regular
-alphabet, all ASCII characters. You would of course have to find
+of the alphabet, for example: using only eight characters, the regular
+alphabet, all ASCII characters, etc. You would of course have to find a
 suitable texts but you could of course work with a large text file and
 filter out a list with only the characters from your selected alphabet.
 
-
-To read a file you can use the following code:
+You can also read in files from other languages. All Elixir strings
+are encoded using UTF8 so some languages (Swedish) might use more than
+one byte per character. To read a file you can use the following code:
 
 \begin{minted}{elixir}
 def read(file) do
-  {:ok, file} = File.open(file, [:read, :utf8])
-  binary = IO.read(file, :all)
-  File.close(file)
-  
-  case :unicode.characters_to_list(binary, :utf8) do
-    {:incomplete, list, _} ->
-      list
-    list ->
-      list
-  end
+  text = File.read!(file)
+  chars = String.to_charlist(text)
+  {:ok, chars, String.length(text), Kernel.byte_size(text)}
 end
 \end{minted}
 

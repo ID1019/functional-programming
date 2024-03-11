@@ -1,0 +1,101 @@
+\documentclass[a4paper,11pt]{article}
+
+\input ../include/preamble.tex
+
+
+\begin{document}
+
+
+\title{Elm - an event simulator}
+
+\author{Johan Montelius}
+\date{Spring Term 2024}
+
+\maketitle
+
+\defaultpagestyle
+
+\section*{Introduction}
+
+This is a small tutorial in how to use Elm and how to build a small
+client side web application. Since we have to build someting we might
+as well build something fun so why not a particle simulator.
+
+Why Elm you might wonder and the reason is that Elm is functional
+programming language and it's fun to see how much you understand now
+that you know some Elixir. You have learnt not only a programming
+language but a programming paradigm. It's also fun to see how a
+functional programming language can be used to build a fron-end web
+application. As you hopefully will see, the functional paradigm makes
+it easy to divide you system into: model, view and control. 
+
+\section*{Hello world}
+
+To start working you need to install the Elm frame work. Everything
+you need is found at {\tt elm-lang.org}. When you're done you should
+have program called {\tt elm} installed; this is the program that will
+set up your project and compile your Elm code. Elm is compiled into
+javascript so in the end we will have a html file and a javascript
+file that we can upload to a web server.
+
+
+Start by creating a directory called {\tt hello}, open a terminal
+navigate to the directory. In the director type {\tt elm init}, this
+should ask you a question (to wich you answer {\tt Y}) and you can
+then read more at a URL proposed by Elm.
+
+\begin{verbatim}
+> elm init 
+Hello! Elm projects always start with an elm.json file. I can create them!
+
+Now you may be wondering, what will be in this file? How do I add Elm files to
+my project? How do I see it in the browser? How will my code grow? Do I need
+more directories? What about tests? Etc.
+
+Check out <https://elm-lang.org/0.19.1/init> for all the answers!
+
+Knowing all that, would you like me to create an elm.json file now? [Y/n]: Y
+Okay, I created it. Now read that link!
+\end{verbatim}
+
+You now open a web browser and navigate to {\tt
+  elm-lang.org/examples/buttons} and find a program that you copy and
+save as the file {\tt Main.elm} in the {\tt src} directory. The next
+step is where magic takes place, in the terminal you now execute the
+command {\tt elm reactor}.
+
+\begin{verbatim}
+> elm reactor
+Go to http://localhost:8000 to see your project dashboard.
+\end{verbatim}
+
+If you open a browser and enter the URL you will see your first Elm
+project running. Navigate to {\tt src/Main.elm} and the program
+starts.
+
+Running your program using {\tt elm reactor} is very convinient during
+development but once you have something that works you of course want
+to deploy it on a regular web server. To turn everything into a stand alone web page you use the command {\tt elm make src/Main.elm}.
+
+\begin{verbatim}
+> elm make src/Main.elm
+Success!
+
+    Main ---> index.html
+\end{verbatim}
+
+You can open the file {\tt index.html} on your local browser using the
+URL {\tt file::///..../index.html} (you have to locate where it is) or
+rename it and copy it to your KTH {\tt public_html} directory and then
+access over the web. 
+
+
+\section*{The simulator}
+
+Let's start a new project, a simulator. 
+
+
+
+
+
+\end{document}
