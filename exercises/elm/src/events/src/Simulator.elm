@@ -76,7 +76,8 @@ run sim hold  =
     in
         {sim | time = tm, particles = prts, queue = que}
 
--- Each step will take an event from the queue and update the particle, if asked to pause all particles are moved forard in time.            
+-- Each step will take an event from the queue and update the particle,
+-- if asked to pause all particles are moved forward in time.            
             
 step: (Dict Int Particle) -> PriorityQueue Event -> Float -> Float ->  Float -> (Dict Int Particle, PriorityQueue Event, Float)
 step parts queue tm width height =
@@ -94,7 +95,7 @@ step parts queue tm width height =
                                                        let 
                                                            upd = collWall wall prt time 
                                                            updP  = Dict.insert upd.id upd (Dict.remove id parts)
-                                                           updQ = predictPart upd updP width height tail
+                                                           updQ = predictPart upd  width height tail
                                                        in
                                                            (updP, updQ)
                     in
@@ -107,8 +108,8 @@ step parts queue tm width height =
 
 -- Predicting future collisions with walls, roof and floor.
 
-predictPart: Particle -> (Dict Int Particle) -> Float -> Float -> PriorityQueue Event -> PriorityQueue Event
-predictPart prt prts width height queue =
+predictPart: Particle -> Float -> Float -> PriorityQueue Event -> PriorityQueue Event
+predictPart prt width height queue =
     let
         closest = closestWall prt width height 
     in

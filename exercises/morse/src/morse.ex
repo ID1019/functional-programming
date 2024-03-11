@@ -15,42 +15,19 @@ defmodule Morse do
 
   def test4(), do:  '-. -.-- - ..-- --- .-.. . -- -- . ..-- ...- .- .-.. -- .. - - .-'
 
-  def explore(signal) do
-    table = decode_table()
-    explore(signal, table, [])
-  end
-
-  def explore([], _table, path) do [Enum.reverse(path)] end
-  def explore(signal, table, path) do
-    l = length(signal)
-    cont =  Enum.flat_map(1..l, fn(n) -> 
-      alt = Enum.take(signal, n)
-      case decode_char(alt, table) do
-	:no -> []
-	{:na, _} -> []
-	{char,[]} -> [{char, Enum.drop(signal,n)}]
-      end
-    end)
-    case cont do
-      [] -> [Enum.reverse(path)]
-      cont ->
-	Enum.flat_map(cont, fn({char,rest}) -> explore(rest, table, [char|path]) end)
-    end
-  end
-  
   def decode(signal) do
-    table = decode_table()
-    decode(signal, table)
+    tree = tree()
+    decode(signal, tree)
   end
 
   def decode([], _) do  [] end
-  def decode(signal, table) do
-    case decode_char(signal, table) do
+  def decode(signal, tree) do
+    case decode_char(signal, tree) do
       :no -> 
 	:io.format("error : ~w\n", [Enum.take(signal, 10)])
         []
       {char, rest} ->
-	[char | decode(rest, table)]
+	[char | decode(rest, tree)]
     end
   end
   
@@ -65,52 +42,50 @@ defmodule Morse do
 
   # something strange
   def decode_char(_signal, :nil) do :no end
+
   def decode_char([?\s | _signal], {:node, :na, _, _}) do :no end
 
   def decode_char([?\s | signal], {:node, char, _, _}) do
     {char, signal}
   end
 
+  ## The encoder
 
   def encode(text) do
-    table = encode_table()
+    tree = tree()
+    table = encode_table(tree)
     encode(text, [], table)
   end
-  defp encode([], all, _), do: unpack(all, [])
-  defp encode([char | rest], sofar, table) do
-    code = lookup(char, table)
-    encode(rest, [code | sofar], table)
+
+  def encode_table(tree) do
+    encode_table(tree, [], %{})
   end
 
+  def encode_table(nil, _, map) do  map end
+  def encode_table({:node, :na, long, short}, code, map) do
+    map = encode_table(long, [?-|code], map)
+    encode_table(short, [?.|code], map)
+  end
+  def encode_table({:node, char, long, short}, code, map) do
+    map = Map.put(map, char, code)
+    map = encode_table(long, [?-|code], map)
+    encode_table(short, [?.|code], map)
+  end
+  
+  defp encode([], all, _), do: unpack(all, [])
+  defp encode([char | rest], sofar, table) do
+    code = Map.get(table, char)
+    encode(rest, [code | sofar], table)
+  end
+  
   defp unpack([], done), do: done
   defp unpack([code | rest], sofar) do
     unpack(rest, code ++ [?\s | sofar])
   end
 
-  # Lookup for a character in the encoding table.
-  # Option 1: simple keyfind
-  # defp encode_table, do: codes()
-
-  # defp lookup(char, table) do
-  #   encoding = List.keyfind(table, char, 0)
-  #   elem(encoding, 1)
-  # end
-
-  # Lookup for a character in the encoding table.
-  # Option 2: constant time
-  defp encode_table() do
-    codes()
-    |> fill(0)
-    |> List.to_tuple
-  end
-  defp lookup(char, table), do: elem(table, char)
-
-  defp fill([], _), do: []
-  defp fill([{n, code} | codes], n), do: [code | fill(codes, n + 1)]
-  defp fill(codes, n), do: [:na | fill(codes, n + 1)]
 
   # Morse decoding tree.
-  defp decode_table do
+  defp tree do
     {:node, :na,
       {:node, 116,
         {:node, 109,
@@ -150,53 +125,4 @@ defmodule Morse do
             {:node, 104, {:node, 52, nil, nil}, {:node, 53, nil, nil}}}}}}
   end
 
-  # Morse representation of common characters.
-  defp codes do
-    [{32, '..--'},
-     {37,'.--.--'},
-     {44,'--..--'},
-     {45,'-....-'},
-     {46,'.-.-.-'},
-     {47,'.-----'},
-     {48,'-----'},
-     {49,'.----'},
-     {50,'..---'},
-     {51,'...--'},
-     {52,'....-'},
-     {53,'.....'},
-     {54,'-....'},
-     {55,'--...'},
-     {56,'---..'},
-     {57,'----.'},
-     {58,'---...'},
-     {61,'.----.'},
-     {63,'..--..'},
-     {64,'.--.-.'},
-     {97,'.-'},
-     {98,'-...'},
-     {99,'-.-.'},
-     {100,'-..'},
-     {101,'.'},
-     {102,'..-.'},
-     {103,'--.'},
-     {104,'....'},
-     {105,'..'},
-     {106,'.---'},
-     {107,'-.-'},
-     {108,'.-..'},
-     {109,'--'},
-     {110,'-.'},
-     {111,'---'},
-     {112,'.--.'},
-     {113,'--.-'},
-     {114,'.-.'},
-     {115,'...'},
-     {116,'-'},
-     {117,'..-'},
-     {118,'...-'},
-     {119,'.--'},
-     {120,'-..-'},
-     {121,'-.--'},
-     {122,'--..'}]
-  end
 end
